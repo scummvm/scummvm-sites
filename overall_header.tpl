@@ -29,8 +29,8 @@
     <td><img src="templates/SVMDesign/images/logo_phpVB2.gif" width="199" height="65" alt="ScummVM logo"></td>
 
     <td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: left; white-space:nowrap;">
-      <a href="http://www.scummvm.org/">ScummVM website</a> -
-      <a href="index.php">Forum Index</a>&nbsp;
+      <a href="index.php">Forum Index</a> -
+      <a href="http://www.scummvm.org/">ScummVM website</a>&nbsp;
 	</td>
 	
 	<td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: right; white-space:nowrap;">

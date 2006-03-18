@@ -5,7 +5,7 @@
       <!-- BEGIN switch_user_logged_in -->
 	  <span class="smalltext">
       <a href="{U_SEARCH_NEW}" class="smalllink">{L_SEARCH_NEW}</a><br>
-      <a href="{U_SEARCH_SELF}" class="smalllink">{L_SEARCH_SELF}</a><br>
+	  <a href="{U_PRIVATEMSGS}" class="smalllink">{PRIVATE_MESSAGE_INFO}</a><br>
 	  </span>
       <!-- END switch_user_logged_in -->
       </td>
@@ -69,7 +69,7 @@
 	 <td colspan="3" class="row1">
 
 	<!-- BEGIN switch_user_logged_in -->
-	    <a href="{U_PRIVATEMSGS}" class="mainmenu">{PRIVATE_MESSAGE_INFO}</a> <b>&nbsp;</b><br>
+	    <a href="{U_SEARCH_SELF}" class="mainmenu">{L_SEARCH_SELF}</a><br>
     <!-- END switch_user_logged_in -->
 
 	    <a href="viewonline.php" class="mainmenu">View users currently online</a> <b>&nbsp;</b><br>
@@ -86,7 +86,7 @@
             </span></td>
 -->
          <td colspan="2" class="row1" style="vertical-align: top;"> <span class="smalltext"> 
-	{TOTAL_POSTS}<br>
+		{TOTAL_POSTS}<br>
         {TOTAL_USERS}</span></td>
 
 	</tr>

@@ -12,7 +12,7 @@
       class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a
       class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a></span></td>
 
-	  <td style="vertical-align: middle;" align="right" width="20%"><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a>
+	  <td style="vertical-align: middle;" align="right"><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a>
 	  </td>
 
 	  </tr>
@@ -22,7 +22,7 @@
         <b><span class="smalltext">{PAGINATION} </span></b><span class="smalltext"><b>{LOGGED_IN_USER_LIST}</b></span>
 		</td>
 
-		<td align="right">      
+		<td align="right" style="white-space: nowrap;">
         <span class="smalltext"><a href="{U_MARK_READ}">{L_MARK_TOPICS_READ}
         </a></span>
       </td>
