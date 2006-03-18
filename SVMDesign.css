@@ -1,0 +1,159 @@
+
+/* Font Properties */
+
+body, table {
+	font-family: verdana,tahoma,arial,helvetica,sans-serif;
+	font-size: 8pt;
+	font-weight: normal;
+}
+
+body {
+	background-color: #efc418;	
+	background-repeat: repeat-x;
+}
+
+table            
+{
+font-size: 10px; 
+color: #383B3F
+}
+
+td, th
+{
+font-size: 10px; 
+color: #383B3F
+}
+
+.smalltext       
+{ 
+font-size : 10px; 
+color: #383B3F
+}
+
+.mediumtext      
+{ 
+font-size : 11px; 
+color: #383B3F
+}
+
+.largetext       
+{ 
+font-size : 13px; 
+color: #383B3F
+}
+
+.catrowtext      
+{ 
+	font-weight: bold;
+	font-size: 12px;
+	color: #FFF;
+}
+
+.toprowtext      
+{ 
+	color: #fff;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+
+/* Cell Properties */
+
+
+TD.row1
+{ 
+	background-color: #e8e7e7;
+	font-size : 13px; 
+	color: #494957
+}     
+     
+TD.row2	        /* ugly colors, to look which html uses them still - should have removed all occurences now */
+{ 
+	background-color: #00FF00;
+	font-size : 12px; 
+	color: #FF00FF
+}
+
+TD.row3
+{ 
+	background-color: #FFFFFF;
+	font-size : 12px; 
+	color: #494957
+}
+
+TD.catrow
+{ 
+font-family: Verdana; 
+font-size : 12px; 
+font-weight: bold;
+}
+
+TD.toprow, TH.toprow
+{
+	background-image: url(images/gradient_2.gif);
+	color: #fff;
+	font-weight: bold;
+	background: #a82709;
+	background-image: url(./images/par-head.png);
+	background-repeat: repeat-x;
+	padding: 6px;
+	font-size: 12px;
+}
+
+TD.tableborder	  
+{ 
+	background-color: #c0c0c0;
+}
+
+
+/* Link Properties */
+
+
+a                         { text-decoration: underline; font-size: 11px; color: #a33; }  
+a:link                    { text-decoration: underline; font-size: 11px; color: #a33; }
+a:visited                 { text-decoration: underline; font-size: 11px; color: #a33; }
+a:hover                   { text-decoration: none; font-size: 11px; color: #f00; } 
+
+a.forumlink               { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:link          { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:visited       { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:hover         { text-decoration: none; font-size: 13px; font-weight: bold; color: #f00; }
+   
+a.topiclink               { text-decoration: underline; font-size: 13px; color: #a33; }  
+a.topiclink:link          { text-decoration: underline; font-size: 13px; color: #a33; }
+a.topiclink:visited       { text-decoration: underline; font-size: 13px; color: #a33; }
+a.topiclink:hover         { text-decoration: none; font-size: 13px; color: #f00; }  
+ 
+a.catlink                 { text-decoration: none; font-weight: bold; font-size: 13px; color: #FFF; }   
+a.catlink:link            { text-decoration: none; font-weight: bold; font-size: 13px; color: #FFF; }
+a.catlink:visited         { text-decoration: none; font-weight: bold; font-size: 13px; color: #FFF; }
+a.catlink:hover           { text-decoration: underline; font-weight: bold; font-size: 13px; color: #FFF; }
+  
+a.toprowlink              { text-decoration: none; font-size: 9px; color: #000000; }   
+a.toprowlink:link         { text-decoration: none; font-size: 9px; color: #000000; }
+a.toprowlink:visited      { text-decoration: none; font-size: 9px; color: #000000; /*877751*/ }
+a.toprowlink:hover        { text-decoration: underline; font-size: 9px; color: #877751; } 
+     
+a.smalllink               { text-decoration: underline; font-size: 10px; color: #a33; }   
+a.smalllink:link          { text-decoration: underline; font-size: 10px; color: #a33; }
+a.smalllink:visited       { text-decoration: underline; font-size: 10px; color: #a33; }
+a.smalllink:hover         { text-decoration: none; font-size: 10px; color: #f00; }   
+  
+a.mediumlink              { text-decoration: underline; font-size: 11px; color: #a33; }  
+a.mediumlink:link         { text-decoration: underline; font-size: 11px; color: #a33; }
+a.mediumlink:visited      { text-decoration: underline; font-size: 11px; color: #a33; }
+a.mediumlink:hover        { text-decoration: none; font-size: 11px; color: #f00; }   
+    
+a.largelink               { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:link          { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:visited       { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:hover         { text-decoration: none; font-size: 13px; color: #f00; }         
+
+/* Form elements */
+
+input, textarea, select 
+{
+  color : #000000;
+  /*font-family : Verdana, Arial, Helvetica, sans-serif;*/
+  font-size : 10px;
+}
