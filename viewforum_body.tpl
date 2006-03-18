@@ -58,16 +58,24 @@
           </tr>
           <!-- END switch_no_topics -->
           <tr> 
-            <td width="100%" colspan="6" align="center" class="catrow"> 
-              <table border="0" cellspacing="0" cellpadding="2">
-                <tr align="center" valign="middle"> 
-                  <td><span class="largetext">{L_DISPLAY_TOPICS}:</span></td>
-                  <td>&nbsp;{S_SELECT_TOPIC_DAYS}&nbsp;</td>
-                  <td><span class="largetext"> 
-                    <input type="submit" value="{L_GO}" class="liteoption" name="submit" />
-                    </span></td>
-                </tr>
-              </table>
+            <td width="100%" colspan="6" align="center" class="catrow">              
+              <table width="100%" border="0" cellpadding="2" cellspacing="1">
+                      <tr>
+                        <td align="left" width="98%">
+                          <table border="0" cellspacing="0" cellpadding="0">
+                            <tr> 
+                              <td valign="middle"><span class="largetext">&nbsp;&nbsp;{L_DISPLAY_TOPICS}:</span></td>
+                              <td valign="middle"><span class="largetext">&nbsp;&nbsp;{S_SELECT_TOPIC_DAYS}</span></td>
+                              <td align="left" valign="middle"><span class="largetext"> 
+                                &nbsp;<input type="submit" value="{L_GO}" class="liteoption" name="submit" />
+                                </span></td>
+                            </tr>
+                          </table>
+			
+                        </td>  
+                       <td align="right" width="2%" nowrap><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a></td>                       
+                      </tr>
+               </table>              
             </td>
           </tr>
         </table>
@@ -76,9 +84,7 @@
   </table>
   <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
     <tr valign="top"> 
-      <td><a href="{U_POST_NEW_TOPIC}"><br>
-        <img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a><br><br>
-        <span class="smalltext"><a href="{U_MARK_READ}">{L_MARK_TOPICS_READ}</a></span></td>
+      <td><span class="smalltext"><a href="{U_MARK_READ}">{L_MARK_TOPICS_READ}</a></span></td>
       <td align="right"><span class="smalltext">{PAGE_NUMBER}<br>
         </span><span class="nav">{PAGINATION}</span><span class="smalltext"><br>
         {S_TIMEZONE} </span></td>
