@@ -33,24 +33,24 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
   
   
   <tr> 
-    <td class="tableborder"> 
+    <td class="tableborder">
       <table border="0" cellpadding="0" cellspacing="0" width="100%">
         {POLL_DISPLAY} 
         <tr> 
-          <td class="catrow" nowrap > 
+          <td class="catrow" nowrap >
             <table width="100%" border="0" cellspacing="0" cellpadding="2">
               <tr> 
                 <td width="186"><span class="largetext">&nbsp;&nbsp;{L_AUTHOR} 
                   </span></td>
                 <td><span class="largetext">&nbsp;&nbsp;&nbsp;Thread</span></td>
-                <td align="right"><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;<a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
+                <td align="right"><!--<a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;--><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
               </tr>
             </table>
           </td>
         </tr>
         <!-- BEGIN postrow -->
         <tr align="center"> 
-          <td class="tableborder" > 
+          <td class="tableborder">
             <table width="100%" border="0" cellspacing="1" cellpadding="4">
               <tr> 
                 <td width="186" valign="top" class="row3" nowrap> <span class="largetext"><a name="{postrow.U_POST_ID}"></a><b>{postrow.POSTER_NAME}</b></span><br />
@@ -83,11 +83,11 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
             <!-- END postrow -->
             <table border="0" cellspacing="0" cellpadding="0" width="100%">
               <tr>                
-                  <td align="center" width="100%" class="catrow">
-                      <form method="post" action="{S_POST_DAYS_ACTION}">
+                  <td valign="middle">
+                    <form method="post" action="{S_POST_DAYS_ACTION}">
                     <table width="100%" border="0" cellpadding="2" cellspacing="1">
                       <tr>
-                        <td align="left" width="98%">
+                        <td align="left" width="98%" valign="middle">
                           <table border="0" cellspacing="0" cellpadding="0">
                             <tr> 
                               <td valign="middle"><span class="largetext">&nbsp;&nbsp;{L_DISPLAY_POSTS}:</span></td>
@@ -99,12 +99,11 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
                           </table>
 			
                         </td>  
-                       <td align="right" width="2%" nowrap><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;<a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
+                       <td align="right" width="2%" nowrap><!--<a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;--><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
                       </tr>
                     </table>
                       </form>
-                    </td>
-                
+                    </td>                
               </tr>
             </table>
           </td>
