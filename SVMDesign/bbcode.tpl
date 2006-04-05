@@ -1,5 +1,3 @@
-<!-- bbcode.tpl -->
-
 <!-- BEGIN ulist_open -->
 <ul>
 <!-- END ulist_open -->

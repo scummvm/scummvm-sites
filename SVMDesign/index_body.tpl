@@ -35,7 +35,10 @@
         </tr>
         <!-- BEGIN catrow -->
         <tr> 
-          <td colspan="6" class="catrow"><a href="{catrow.U_VIEWCAT}" class=catlink>{catrow.CAT_DESC}</a></td>
+          <td colspan="6" class="catrow">
+			<!--<a href="{catrow.U_VIEWCAT}" class="catlink">{catrow.CAT_DESC}</a>-->
+			<span class="catrowtext">{catrow.CAT_DESC}</span>
+          </td>
         </tr>
         <!-- BEGIN forumrow -->
         <tr align="center"> 

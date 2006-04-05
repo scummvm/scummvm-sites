@@ -53,10 +53,10 @@
 <!--    <a href="{U_FAQ}">FAQ</a> -
 -->
     <a href="viewtopic.php?t=17">Rules</a> -
-    <a href="{U_PROFILE}">Profile</a> -
     <a href="{U_GROUP_CP}">Usergroups</a> -
     <a href="{U_SEARCH}">Search</a> -
     <a href="{U_PRIVATEMSGS}">PM's</a> -
+    <a href="{U_PROFILE}">Profile</a> -
 <!--    <a href="{U_MEMBERLIST}">Memberlist</a> -
 -->
     <a href="{U_LOGIN_LOGOUT}">Logout</a>

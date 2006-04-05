@@ -13,17 +13,21 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 
 <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
   <tr> 
-	  <td><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
-      <td style="vertical-align: middle;" width="100%"><span 
+	  <td width="1%"><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
+      <td style="vertical-align: middle;"><span 
       class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a
-      class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a></span></td>
+      class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a>&nbsp;&gt;&nbsp;<b>{TOPIC_TITLE}</b></span></td>
+      <td style="text-align: right; whitespace: nowrap; vertical-align: bottom;">
+		<!--<span class="smalltext">-->{PAGINATION}<!--<br><br></span>-->
+	  </td>
   </tr>
-      
+      <!--
   <tr>
 	<td colspan="2">
       <b><span class="smalltext">{PAGINATION}<br><br></span></b>
       </td>
   </tr>
+  -->
 </table>
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
 
@@ -60,7 +64,8 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
                   {postrow.POSTER_JOINED}<br />
                   {postrow.POSTER_POSTS}<br />
                   {postrow.POSTER_FROM}</span></td>
-                <td valign="top" class="row3"> <span class="smalltext"><b>{postrow.POST_SUBJECT}</b></span> 
+                <td valign="top" class="row3">
+                  <span class="smalltext"><b>{postrow.POST_SUBJECT}&nbsp;</b></span> 
                   <p><span class="largetext">{postrow.MESSAGE}{postrow.SIGNATURE}</span><span class="smalltext">{postrow.EDITED_MESSAGE}<br></span>
                   <div align="right"> {postrow.EDIT_IMG}&nbsp;{postrow.QUOTE_IMG}&nbsp;{postrow.DELETE_IMG}&nbsp;{postrow.IP_IMG}</div>
                 </td>
@@ -122,16 +127,19 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
               {JUMPBOX}</td>
           </tr>
         </table>
-        <span class="smalltext"> </span></td>
-      <td align="right"><span class="smalltext">{PAGE_NUMBER}<br>
+       </td>
+      <td style="text-align: right;"><!--<span class="smalltext">{PAGE_NUMBER}<br>
         <br>
-      </span><span class="nav">&lt;&nbsp; <a href="{U_VIEW_OLDER_TOPIC}" class="nav">Last 
+      </span>-->
+      	<!--<span class="smalltext">-->{PAGINATION}<!--<br><br></span>--><br><br>
+      <!--
+      <span class="nav">&lt;&nbsp; <a href="{U_VIEW_OLDER_TOPIC}" class="nav">Last 
       Thread</a>&nbsp;|&nbsp;<a href="{U_VIEW_NEWER_TOPIC}" class="nav">Next Thread 
-      </a>&nbsp;&gt;</span><span class="smalltext"> </span></td>
+      </a>&nbsp;&gt;</span>--></td>
     </tr>
   </table>
   <br>
-  <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
+  <table cellpadding="2" cellspacing="0" border="0" width="98%" align="center">
     <tr valign="bottom"> 
       <td align="left"><span class="smalltext"><b>Forum Rules:</b></span> <br>
         <table cellpadding="0" cellspacing="0" border="0" align="left">
@@ -139,7 +147,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
             <td class="tableborder"> 
               <table cellpadding="4" cellspacing="1" border="0" align="left">
                 <tr> 
-                  <td class="row3"><span class="smalltext">{S_AUTH_LIST}</span> 
+                  <td class="row3"><span class="smalltext" style="whitespace: nowrap;">{S_AUTH_LIST}</span> 
                   </td>
                 </tr>
               </table>
