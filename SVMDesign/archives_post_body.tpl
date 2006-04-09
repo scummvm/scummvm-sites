@@ -43,11 +43,11 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
           <td class="tableborder" > 
             <table width="100%" border="0" cellspacing="1" cellpadding="4">
               <tr> 
-                <td width="186" valign="top" class="row2" nowrap> <span class="largetext"><a name="{postrow.U_POST_ID}"></a><b>{postrow.POSTER_NAME}</b></span><br />
+                <td width="186" valign="top" class="row3" nowrap> <span class="largetext"><a name="{postrow.U_POST_ID}"></a><b>{postrow.POSTER_NAME}</b></span><br />
                   <span class="smalltext">{postrow.POSTER_RANK}<br />
                   <br />
                   {postrow.POSTER_FROM}</span></td>
-                <td valign="top" class="row2"> <span class="smalltext"><b>{postrow.POST_SUBJECT}</b></span> 
+                <td valign="top" class="row3"> <span class="smalltext"><b>{postrow.POST_SUBJECT}</b></span> 
                   <p><span class="largetext">{postrow.MESSAGE}</span></p>
                 </td>
               </tr>
