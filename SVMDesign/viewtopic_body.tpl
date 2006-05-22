@@ -11,7 +11,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 //-->
 </script>
 
-<table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
+<table cellpadding="2" cellspacing="0" border="0" width="98%" align="center" style="padding-bottom: 10px;">
   <tr> 
 	  <td width="1%"><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
       <td style="vertical-align: middle;"><span 

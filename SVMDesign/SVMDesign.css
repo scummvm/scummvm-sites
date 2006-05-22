@@ -15,31 +15,31 @@ body {
 table            
 {
 font-size: 10px; 
-color: #383B3F
+color: #000000; /* #383B3F */
 }
 
 td, th
 {
 font-size: 10px; 
-color: #383B3F
+color: #000000; /* #383B3F */
 }
 
 .smalltext       
 { 
 font-size : 10px; 
-color: #383B3F
+color: #000000; /* #383B3F */
 }
 
 .mediumtext      
 { 
 font-size : 11px; 
-color: #383B3F
+color: #000000; /* #383B3F */
 }
 
 .largetext       
 { 
 font-size : 13px; 
-color: #383B3F
+color: #000000; /* #383B3F */
 }
 
 .catrowtext      
