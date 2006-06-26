@@ -192,7 +192,7 @@ function bbstyle(bbnumber) {
 	storeCaret(document.post.message);
 }
 
-// Insert at Claret position. Code from
+// Insert at Caret position. Code from
 // http://www.faqts.com/knowledge_base/view.phtml/aid/1052/fid/130
 function storeCaret(textEl) {
 	if (textEl.createTextRange) textEl.caretPos = document.selection.createRange().duplicate();
@@ -295,8 +295,7 @@ function storeCaret(textEl) {
                 </tr>
               </table>
             </td>
-            <td class="row1" valign="top"><!--<span class="gen"> <span class="genmed"> 
-              </span> -->
+            <td class="row1" valign="top">
               <table width="450" border="0" cellspacing="0" cellpadding="2">
                 <tr align="center" valign="middle"> 
                   <td><span class="genmed"> 

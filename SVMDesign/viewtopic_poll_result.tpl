@@ -1,4 +1,4 @@
- 
+<!-- DEBUG: viewtopic_poll_results.tpl starts here --> 
 <tr> 
   <td class="row1" colspan="3"><br clear="all" />
         <table cellpadding="0" cellspacing="0" border="0" align="center">

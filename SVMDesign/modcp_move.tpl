@@ -1,5 +1,4 @@
 <!-- DEBUG: modcp_move.tpl starts here -->
-
 <form action="{S_MODCP_ACTION}" method="post">
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 

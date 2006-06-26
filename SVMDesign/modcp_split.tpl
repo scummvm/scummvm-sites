@@ -1,4 +1,4 @@
-
+<!-- DEBUG: modcp_split.tpl starts here -->
 <form method="post" action="{S_SPLIT_ACTION}">
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 

@@ -1,13 +1,4 @@
 <!-- groupcp_info_body.tpl -->
-<!--
- <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
-  <tr> 
-	  <td><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
-      <td style="vertical-align: middle;" width="100%"><span 
-      class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a></span></td>
-  </tr>
-</table>
--->
 <form method="post" action="{S_GROUPCP_ACTION}">
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 

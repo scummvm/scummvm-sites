@@ -76,19 +76,6 @@
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 
     <td class="tableborder">
-        <!--
-        <table width="100%" cellspacing="1" cellpadding="7" border="0" align="center">
-          <tr> 
-			<td align="left" valign="middle" class="row1" width="1%">{POST_PM_IMG}</td>	  
-			<td align="right" nowrap class="row1">
-				<span class="smalltext">{L_DISPLAY_MESSAGES}: 
-					<select name="msgdays">{S_SELECT_MSG_DAYS}</select>
-					<input type="submit" value="{L_GO}" name="submit_msgdays">
-				</span>
-			</td>
-		</tr>
-		</table>
-		-->
 
         <table border="0" cellpadding="7" cellspacing="1" width="100%">
           <tr align="center"> 

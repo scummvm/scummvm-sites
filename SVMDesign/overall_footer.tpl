@@ -1,10 +1,9 @@
 <!-- DEBUG: overall_footer.tpl starts here -->
-
 <div align="center"><br>
 <!-- BEGIN switch_user_logged_in -->
   <span class="smalltext"><b>{ADMIN_LINK}</b></span> 
 <!-- END switch_user_logged_in -->
-  <font size="-3"> Powered by phpBB &copy; 2001, 2005 <a href="http://www.phpbb.com/" class="smalllink">phpBB Group</a><br>
+  <font size="-3"> Powered by phpBB &copy; 2001, 2006 <a href="http://www.phpbb.com/" class="smalllink">phpBB Group</a><br>
 
   Design implemented by <a href="http://www.unet.univie.ac.at/~a0200586/">clem</a>, icons by raina</font></div>
 </td>

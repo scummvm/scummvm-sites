@@ -18,16 +18,7 @@
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 
     <td class="tableborder">
-<!--
-		<table width="100%" cellspacing="2" cellpadding="2" border="0">
-		<tr>
-			<td valign="middle" class="row1" width="10px">{REPLY_PM_IMG}</td>
-			<td width="100%" class="row1">
-				<span class="smalltext">&nbsp;<a href="{U_INDEX}" class="smalltext">{L_INDEX}</a></span>
-			</td>
-		</tr>
-		</table>
--->
+
 <table border="0" cellpadding="4" cellspacing="1" width="100%" class="forumline">
 	<tr> 
 	  <th colspan="3" class="toprow"><span class="toprowtext">{BOX_NAME} :: {L_MESSAGE}</span></th>

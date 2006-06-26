@@ -1,4 +1,4 @@
-
+<!-- DEBUG: archives_post_body.tpl starts here -->
 <script language="Javascript" type="text/javascript">
 <!--
 function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)

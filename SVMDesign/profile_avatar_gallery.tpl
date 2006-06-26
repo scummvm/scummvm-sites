@@ -1,5 +1,4 @@
 <!-- DEBUG: profile_avatar_gallery.tpl starts here -->
-
 <form action="{S_PROFILE_ACTION}" method="post">
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 

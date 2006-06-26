@@ -1,3 +1,4 @@
+<!-- DEBUG: viewtopic_poll_ballot.tpl starts here -->
 			<tr>
 				<td colspan="3" class="row1"><br clear="all" /><form method="POST" action="{S_POLL_ACTION}">
 				

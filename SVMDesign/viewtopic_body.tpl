@@ -13,21 +13,13 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 
 <table cellpadding="2" cellspacing="0" border="0" width="98%" align="center" style="padding-bottom: 10px;">
   <tr> 
-	  <td width="1%"><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
-      <td style="vertical-align: middle;"><span 
-      class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a
-      class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a>&nbsp;&gt;&nbsp;<b>{TOPIC_TITLE}</b></span></td>
-      <td style="text-align: right; whitespace: nowrap; vertical-align: bottom;">
-		<!--<span class="smalltext">-->{PAGINATION}<!--<br><br></span>-->
-	  </td>
+	<td width="1%"><img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder"></td>
+	<td style="vertical-align: middle;"><span 
+	class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a 
+	class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a>&nbsp;&gt;&nbsp;<b>{TOPIC_TITLE}</b></span></td>
+	<td style="text-align: right; whitespace: nowrap; vertical-align: bottom;">{PAGINATION}</td>
+	<td align="right"><span class="gensmall">{S_WATCH_TOPIC}</span></td>
   </tr>
-      <!--
-  <tr>
-	<td colspan="2">
-      <b><span class="smalltext">{PAGINATION}<br><br></span></b>
-      </td>
-  </tr>
-  -->
 </table>
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
 
@@ -47,7 +39,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
                 <td width="186"><span class="largetext">&nbsp;&nbsp;{L_AUTHOR} 
                   </span></td>
                 <td><span class="largetext">&nbsp;&nbsp;&nbsp;Thread</span></td>
-                <td align="right"><!--<a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;--><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
+                <td align="right"><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
               </tr>
             </table>
           </td>
@@ -104,7 +96,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
                           </table>
 			
                         </td>  
-                       <td align="right" width="2%" nowrap><!--<a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" align="middle" /></a>&nbsp;&nbsp;&nbsp;--><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
+                       <td align="right" width="2%" nowrap><a href="{U_POST_REPLY_TOPIC}"><img src="{REPLY_IMG}" border="0" alt="{L_POST_REPLY_TOPIC}" align="middle" /></a></td>
                       </tr>
                     </table>
                       </form>
@@ -128,14 +120,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
           </tr>
         </table>
        </td>
-      <td style="text-align: right;"><!--<span class="smalltext">{PAGE_NUMBER}<br>
-        <br>
-      </span>-->
-      	<!--<span class="smalltext">-->{PAGINATION}<!--<br><br></span>--><br><br>
-      <!--
-      <span class="nav">&lt;&nbsp; <a href="{U_VIEW_OLDER_TOPIC}" class="nav">Last 
-      Thread</a>&nbsp;|&nbsp;<a href="{U_VIEW_NEWER_TOPIC}" class="nav">Next Thread 
-      </a>&nbsp;&gt;</span>--></td>
+      <td style="text-align: right;">{PAGINATION}<br><br></td>
     </tr>
   </table>
   <br>

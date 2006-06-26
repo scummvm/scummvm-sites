@@ -1,5 +1,4 @@
 <!-- DEBUG marker: jumpbox.tpl starts here -->  
-
 <form method="post" name="jumpbox" action="{S_JUMPBOX_ACTION}">
   <table cellspacing="0" cellpadding="0" border="0">
 	<tr> 

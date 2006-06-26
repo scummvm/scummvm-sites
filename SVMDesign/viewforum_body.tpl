@@ -1,9 +1,7 @@
-<!-- DEBUG marker: viewforum_body starts here --> 
+<!-- DEBUG marker: viewforum_body.tpl starts here --> 
 <form method="post" action="{S_POST_DAYS_ACTION}">
   <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
-    <tr> 
-
-
+    <tr>
       <td style="vertical-align: middle;">	  
 	    <img src="templates/SVMDesign/images/folder_new.gif" border="0" alt="Folder">
 	  </td>
@@ -19,12 +17,12 @@
 	  <tr>
 		<td colspan="2">
         (Moderated by:<b><span class="smalltext"> {MODERATORS}</span></b>)<br>
-        <b><span class="smalltext">{PAGINATION} </span></b><span class="smalltext"><b>{LOGGED_IN_USER_LIST}</b></span>
+        <b><span class="smalltext">{PAGINATION} </span></b><br><span class="smalltext"><b>{LOGGED_IN_USER_LIST}</b></span>
 		</td>
 
 		<td align="right" style="white-space: nowrap;">
         <span class="smalltext"><a href="{U_MARK_READ}">{L_MARK_TOPICS_READ}
-        </a></span>
+        </a><br>{S_WATCH_FORUM}</span>
       </td>
     </tr>
   </table>

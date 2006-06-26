@@ -1,4 +1,4 @@
-<!-- DEBUG marker: index_body starts here -->  
+<!-- DEBUG marker: index_body.tpl starts here -->  
 <table width="98%" border="0" cellspacing="2" cellpadding="2" align="center">
   <tr> 
     <td align="left" width="50%" valign="middle">
@@ -14,10 +14,6 @@
       <!-- BEGIN switch_user_logged_in -->
       {LAST_VISIT_DATE} 
       <!-- END switch_user_logged_in -->
-
-	  <!-- does that anybody miss - links back to itself?:
-	<p><a href="{U_INDEX}" class="smalllink">{L_INDEX}</a><br></p>
-      -->
 
     </td>
   </tr>
@@ -36,7 +32,6 @@
         <!-- BEGIN catrow -->
         <tr> 
           <td colspan="6" class="catrow">
-			<!--<a href="{catrow.U_VIEWCAT}" class="catlink">{catrow.CAT_DESC}</a>-->
 			<span class="catrowtext">{catrow.CAT_DESC}</span>
           </td>
         </tr>
@@ -60,7 +55,7 @@
         <!-- END forumrow -->
         <!-- END catrow -->
         <tr> 
-          <td colspan="6" class="catrow"><!--<a href="{U_VIEWONLINE}" class="catlink">{L_WHO_IS_ONLINE}</a>-->
+          <td colspan="6" class="catrow">
 		    <span class="catrowtext">Miscellaneous</span>
 		  </td>
         </tr>
@@ -73,50 +68,19 @@
 
 	<!-- BEGIN switch_user_logged_in -->
 	    <a href="{U_SEARCH_SELF}" class="mainmenu">{L_SEARCH_SELF}</a><br>
-    <!-- END switch_user_logged_in -->
+	<!-- END switch_user_logged_in -->
 
-	    <a href="viewonline.php" class="mainmenu">View users currently online</a> <b>&nbsp;</b><br>
-	    <a href="archives.php" class="mainmenu">View archived SourceForge forums</a> <b>&nbsp;[READ ONLY]</b>
+	    <a href="viewonline.php" class="mainmenu">View users currently online</a><b>&nbsp;</b><br>
+	    <a href="archives.php" class="mainmenu">View archived SourceForge forums</a><b>&nbsp;[READ ONLY]</b>
 	</td>		  
-		  
-		  
-<!--		  
-		  <td colspan="4" class="row1"> <span class="smalltext">{TOTAL_USERS_ONLINE}
-            &nbsp; [ <b>{L_WHOSONLINE_ADMIN}</b> ] &nbsp; [ <b>{L_WHOSONLINE_MOD}</b> 
-            ]<br>
-            {LOGGED_IN_USER_LIST}<br>
-            {RECORD_USERS}
-            </span></td>
--->
-         <td colspan="2" class="row1" style="vertical-align: top;"> <span class="smalltext"> 
+
+        <td colspan="2" class="row1" style="vertical-align: top;"><span class="smalltext"> 
 		{TOTAL_POSTS}<br>
-        {TOTAL_USERS}</span></td>
+		{TOTAL_USERS}</span>
+	</td>
 
 	</tr>
 
-	<!-- who cares what the latest registered user is?
-		<tr> 
-		  <td colspan="6" class="row1"> <span class="smalltext"> 
-
-	            {NEWEST_USER} </span></td>
-	        </tr>
-	-->
-
-	<!-- BEGIN switch_user_logged_in -->
-<!--
-		<tr> 
-          <td colspan="6" class="catrow"><span class="catrowtext">Private Messages</span></td>
-        </tr>
-        <tr align="center" valign="middle"> 
-          <td class="row1"> <img src="templates/SVMDesign/images/folder_new.gif" alt="Folder"> 
-          </td>
-          <td colspan="5" class="row1" align="left"> 
-            <p><span class="smalltext">{CURRENT_TIME}</span><span class="mainmenu"><a href="{U_PRIVATEMSGS}" class="mainmenu"><br>
-              {PRIVATE_MESSAGE_INFO}</a></span></p>
-          </td>
-        </tr>
--->
-        <!-- END switch_user_logged_in -->
       </table>
     </td>
   </tr>
@@ -124,8 +88,7 @@
 <table width="98%" cellspacing="0" border="0" align="center" cellpadding="2">
   <tr> 
     <td align="left"><a href="{U_MARK_READ}" class="smalllink">{L_MARK_FORUMS_READ}</a></td>
-    <td align="right" width="50%"><span class="smalltext"> 
-      <!-- removed, since the form for it comes right below: <a href="{U_LOGIN_LOGOUT}" class="smalllink">{L_LOGIN_LOGOUT}</a> | --> {S_TIMEZONE}</span></td>
+    <td align="right" width="50%"><span class="smalltext">{S_TIMEZONE}</span></td>
   </tr>
 </table>
 <table width="98%" border="0" cellspacing="0" cellpadding="0" align="center">

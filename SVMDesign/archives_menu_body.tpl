@@ -1,4 +1,4 @@
- 
+<!-- DEBUG: archives_menu_body.tpl starts here --> 
 <form method="post" action="{S_POST_DAYS_ACTION}">
   <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
     <tr> 

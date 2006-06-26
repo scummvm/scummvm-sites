@@ -1,4 +1,4 @@
- 
+<!-- DEBUG: search_results_topics.tpl starts here --> 
 <table width="98%" cellspacing="2" cellpadding="2" border="0" align="center">
   <tr> 
 	<td align="center" valign="middle"><span class="largetext"><b>{L_SEARCH_MATCHES}</b></span></td>

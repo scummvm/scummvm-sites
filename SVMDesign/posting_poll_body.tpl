@@ -1,4 +1,4 @@
-
+<!-- DEBUG: posting_poll_body.tpl starts here -->
 			<tr>
 				
   <td class="catrow" colspan="2" align="center"><span class="catrowtext">{L_ADD_A_POLL}</span></td>

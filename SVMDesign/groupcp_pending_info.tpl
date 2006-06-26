@@ -1,5 +1,4 @@
 <!-- groupcp_pending_info.tpl -->
-
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 
     <td class="tableborder">

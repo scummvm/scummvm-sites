@@ -1,5 +1,4 @@
-<!-- DEBUG: posting_preview.tpl starts here -->
- 
+<!-- DEBUG: posting_preview.tpl starts here --> 
  <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
   <tr> 
     <td class="tableborder">
