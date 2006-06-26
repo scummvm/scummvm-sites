@@ -39,7 +39,7 @@
 
   <!-- BEGIN switch_user_logged_out -->
     <a href="viewtopic.php?t=17">Rules</a> -
-    <a href="{U_GROUP_CP}">Usergroups</a> -
+<!--    <a href="{U_GROUP_CP}">Usergroups</a> - -->
     <a href="{U_SEARCH}">Search</a> -
     <a href="{U_REGISTER}">Register</a> -
     <a href="{U_LOGIN_LOGOUT}">Login</a>
@@ -47,9 +47,9 @@
 
   <!-- BEGIN switch_user_logged_in -->
     <a href="viewtopic.php?t=17">Rules</a> -
-    <a href="{U_GROUP_CP}">Usergroups</a> -
+<!--    <a href="{U_GROUP_CP}">Usergroups</a> - -->
     <a href="{U_SEARCH}">Search</a> -
-    <a href="{U_PRIVATEMSGS}">PM's</a> -
+    <a href="{U_PRIVATEMSGS}">{PRIVATE_MESSAGE_INFO_SHORT}</a> -
     <a href="{U_PROFILE}">Profile</a> -
     <a href="{U_LOGIN_LOGOUT}">Logout</a>
   <!-- END switch_user_logged_in -->
