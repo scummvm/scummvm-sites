@@ -39,7 +39,7 @@
 <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
   <tr> 
 	<td align="left" valign="top"><span class="nav">{PAGE_NUMBER}</span></td>
-	<td align="right" valign="top" nowrap><span class="nav">{PAGINATION}</span><br /><span class="gensmall">{S_TIMEZONE}</span></td>
+	<td align="right" valign="top" nowrap><span class="nav">{PAGINATION}</span><br />{S_TIMEZONE}</td>
   </tr>
 </table>
 

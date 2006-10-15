@@ -38,8 +38,8 @@
           <!-- END topicrow -->
           <!-- BEGIN switch_no_topics -->
           <tr align="center"> 
-            <td colspan="6" class="row1"><span class="gen">Crap! Post some topics 
-              already and let the discussion begin!</span></td>
+            <td colspan="6" class="row1">Crap! Post some topics 
+              already and let the discussion begin!</td>
           </tr>
           <!-- END switch_no_topics -->
         </table>

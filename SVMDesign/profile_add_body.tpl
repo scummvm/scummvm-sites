@@ -235,18 +235,18 @@
             <TD class="row1" colspan="2">
               <TABLE width="70%" cellspacing="2" cellpadding="0" border="0" align="center">
                 <TR> 
-                  <TD width="65%"><SPAN class="gensmall">{L_AVATAR_EXPLAIN}</SPAN></TD>
-                  <TD align="center"><SPAN class="gensmall">{L_CURRENT_IMAGE}</SPAN><BR />
+                  <TD width="65%">{L_AVATAR_EXPLAIN}</TD>
+                  <TD align="center">{L_CURRENT_IMAGE}<BR />
                     {AVATAR}<BR />
                     <INPUT type="checkbox" name="avatardel" />
-                    &nbsp;<SPAN class="gensmall">{L_DELETE_AVATAR}</SPAN></TD>
+                    &nbsp;{L_DELETE_AVATAR}</TD>
                 </TR>
               </TABLE>
             </TD>
           </TR>
           <!-- BEGIN switch_avatar_local_upload -->
           <TR> 
-            <TD class="row1"><SPAN class="gen">{L_UPLOAD_AVATAR_FILE}:</SPAN></TD>
+            <TD class="row1">{L_UPLOAD_AVATAR_FILE}:</TD>
             <TD class="row1">
               <INPUT type="hidden" name="MAX_FILE_SIZE" value="{AVATAR_SIZE}" />
               <INPUT type="file" name="avatar" class="post" style="width:200px" />
@@ -255,8 +255,8 @@
           <!-- END switch_avatar_local_upload -->
           <!-- BEGIN switch_avatar_remote_upload -->
           <TR> 
-            <TD class="row1"><SPAN class="gen">{L_UPLOAD_AVATAR_URL}:</SPAN><BR />
-              <SPAN class="gensmall">{L_UPLOAD_AVATAR_URL_EXPLAIN}</SPAN></TD>
+            <TD class="row1">{L_UPLOAD_AVATAR_URL}:<BR />
+              {L_UPLOAD_AVATAR_URL_EXPLAIN}</TD>
             <TD class="row1">
               <INPUT type="text" name="avatarurl" size="40" class="post" style="width:200px" />
             </TD>
@@ -264,8 +264,8 @@
           <!-- END switch_avatar_remote_upload -->
           <!-- BEGIN switch_avatar_remote_link -->
           <TR> 
-            <TD class="row1"><SPAN class="gen">{L_LINK_REMOTE_AVATAR}:</SPAN><BR />
-              <SPAN class="gensmall">{L_LINK_REMOTE_AVATAR_EXPLAIN}</SPAN></TD>
+            <TD class="row1">{L_LINK_REMOTE_AVATAR}:<BR />
+              {L_LINK_REMOTE_AVATAR_EXPLAIN}</TD>
             <TD class="row1">
               <INPUT type="text" name="avatarremoteurl" size="40" class="post" style="width:200px" />
             </TD>
@@ -273,7 +273,7 @@
           <!-- END switch_avatar_remote_link -->
           <!-- BEGIN switch_avatar_local_gallery -->
           <TR> 
-            <TD class="row1"><SPAN class="gen">{L_AVATAR_GALLERY}:</SPAN></TD>
+            <TD class="row1">{L_AVATAR_GALLERY}:</TD>
             <TD class="row1">
               <INPUT type="submit" name="avatargallery" value="{L_SHOW_GALLERY}" class="liteoption" />
             </TD>

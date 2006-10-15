@@ -18,7 +18,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 	class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a 
 	class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a>&nbsp;&gt;&nbsp;<b>{TOPIC_TITLE}</b></span></td>
 	<td style="text-align: right; whitespace: nowrap; vertical-align: bottom;">{PAGINATION}</td>
-	<td align="right"><span class="gensmall">{S_WATCH_TOPIC}</span></td>
+	<td align="right">{S_WATCH_TOPIC}</td>
   </tr>
 </table>
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
@@ -141,7 +141,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
         </table>
       </td>
       
-    <td align="right"><span class="gensmall">{S_WATCH_TOPIC}</span><br />
+    <td align="right">{S_WATCH_TOPIC}<br />
       &nbsp;<br />
       {S_TOPIC_ADMIN}</td>
     </tr>

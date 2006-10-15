@@ -24,6 +24,10 @@
 	  <td class="row1">{L_FORUM_STATUS}</td>
 	  <td class="row2"><select name="forumstatus">{S_STATUS_LIST}</select></td>
 	</tr>
+        <tr>
+          <td class="row1">{L_SPAM_STATUS}</td>
+          <td class="row2"><select name="spamstatus">{S_SPAM_STATUS}</select></td>
+        </tr>
 	<tr> 
 	  <td class="row1">{L_AUTO_PRUNE}</td>
 	  <td class="row2"><table cellspacing="0" cellpadding="1" border="0">

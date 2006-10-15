@@ -32,7 +32,7 @@ function refresh_username(selected_username)
               </span><br />
               <!-- END switch_select_name -->
               <br />
-              <span class="mediumtext"><a href="javascript:window.close();" class="genmed">{L_CLOSE_WINDOW}</a></span></td>
+              <span class="mediumtext"><a href="javascript:window.close();">{L_CLOSE_WINDOW}</a></span></td>
           </tr>
         </table>
       </td>

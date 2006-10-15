@@ -26,7 +26,7 @@
 					</tr>
 					<tr>
 						
-		  <td align="center" class="row1"><span class="gensmall"><b><a href="{U_VIEW_RESULTS}" class="smalllink">{L_VIEW_RESULTS}</a></b></span></td>
+		  <td align="center" class="row1"><b><a href="{U_VIEW_RESULTS}" class="smalllink">{L_VIEW_RESULTS}</a></b></td>
 					</tr>
 				</table>
 				</td></tr></table>

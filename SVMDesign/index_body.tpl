@@ -5,7 +5,6 @@
       <!-- BEGIN switch_user_logged_in -->
 	  <span class="smalltext">
       <a href="{U_SEARCH_NEW}" class="smalllink">{L_SEARCH_NEW}</a><br>
-	  <a href="{U_PRIVATEMSGS}" class="smalllink">{PRIVATE_MESSAGE_INFO}</a><br>
 	  </span>
       <!-- END switch_user_logged_in -->
       </td>
@@ -46,7 +45,7 @@
           <td class="row1" align="right" nowrap> 
             <table width="100%">
               <tr> 
-                <td nowrap align="right"> <span class="gensmall">{catrow.forumrow.LAST_POST}</span></td>
+                <td nowrap align="right">{catrow.forumrow.LAST_POST}</td>
               </tr>
             </table>
           </td>

@@ -49,7 +49,7 @@
   <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
     <tr> 
 	<td align="left" valign="middle"><span class="nav">{PAGE_NUMBER}</span></td>
-	<td align="right" valign="top" nowrap><span class="gensmall">{S_TIMEZONE}</span><br /><span class="nav">{PAGINATION}</span></td>
+	<td align="right" valign="top" nowrap>{S_TIMEZONE}<br /><span class="nav">{PAGINATION}</span></td>
   </tr>
 </table>
 </form>

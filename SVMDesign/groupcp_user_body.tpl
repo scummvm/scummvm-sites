@@ -73,7 +73,7 @@
 
 <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
   <tr> 
-	<td align="right" valign="top"><span class="gensmall">{S_TIMEZONE}</span></td>
+	<td align="right" valign="top">{S_TIMEZONE}</td>
   </tr>
 </table>
 

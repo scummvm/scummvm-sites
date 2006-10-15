@@ -243,40 +243,40 @@ function storeCaret(textEl) {
           </tr>
           <!-- BEGIN switch_username_select -->
           <tr> 
-            <td class="row1"><span class="gen"><b>{L_USERNAME}</b></span></td>
-            <td class="row1"><span class="genmed">
+            <td class="row1"><b>{L_USERNAME}</b></td>
+            <td class="row1">
               <input type="text" class="post" tabindex="1" name="username" size="25" maxlength="25" value="{USERNAME}" />
-              </span></td>
+              </td>
           </tr>
           <!-- END switch_username_select -->
           <!-- This is for private messaging -->
           <!-- BEGIN switch_privmsg -->
           <tr> 
-            <td class="row1"><span class="gen"><b>{L_USERNAME}</b></span></td>
-            <td class="row1"><span class="genmed"> 
+            <td class="row1"><b>{L_USERNAME}</b></td>
+            <td class="row1">
               <input type="text"  class="post" name="username" maxlength="25" size="25" tabindex="1" value="{USERNAME}" />
               &nbsp; 
               <input type="submit" name="usersubmit" value="{L_FIND_USERNAME}" class="liteoption" onClick="window.open('{U_SEARCH_USER}', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400');return false;" />
-              </span></td>
+              </td>
           </tr>
           <!-- END switch_privmsg -->
           <tr> 
-            <td class="row1" width="22%"><span class="gen"><b>{L_SUBJECT}</b></span></td>
-            <td class="row1" width="78%"> <span class="gen"> 
+            <td class="row1" width="22%"><b>{L_SUBJECT}</b></td>
+            <td class="row1" width="78%">
               <input type="text" name="subject" size="45" maxlength="60" style="width:450px" tabindex="2" class="post" value="{SUBJECT}" />
-              </span> </td>
+              </td>
           </tr>
           <tr> 
             <td class="row1" valign="top"> 
               <table width="100%" border="0" cellspacing="0" cellpadding="1">
                 <tr> 
-                  <td><span class="gen"><b>{L_MESSAGE_BODY}</b></span> </td>
+                  <td><b>{L_MESSAGE_BODY}</b></td>
                 </tr>
                 <tr> 
                   <td valign="middle" align="center"> <br />
                     <table width="100" border="0" cellspacing="0" cellpadding="5">
                       <tr align="center"> 
-                        <td colspan="{S_SMILIES_COLSPAN}" class="gensmall"><b>{L_EMOTICONS}</b></td>
+                        <td colspan="{S_SMILIES_COLSPAN}"><b>{L_EMOTICONS}</b></td>
                       </tr>
                       <!-- BEGIN smilies_row -->
                       <tr align="center" valign="middle"> 
@@ -298,88 +298,88 @@ function storeCaret(textEl) {
             <td class="row1" valign="top">
               <table width="450" border="0" cellspacing="0" cellpadding="2">
                 <tr align="center" valign="middle"> 
-                  <td><span class="genmed"> 
+                  <td>
                     <input type="button" class="button" accesskey="b" name="addbbcode0" value=" B " style="font-weight:bold; width: 30px" onClick="bbstyle(0)" onMouseOver="helpline('b')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="i" name="addbbcode2" value=" i " style="font-style:italic; width: 30px" onClick="bbstyle(2)" onMouseOver="helpline('i')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="u" name="addbbcode4" value=" u " style="text-decoration: underline; width: 30px" onClick="bbstyle(4)" onMouseOver="helpline('u')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="q" name="addbbcode6" value="Quote" style="width: 50px" onClick="bbstyle(6)" onMouseOver="helpline('q')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="c" name="addbbcode8" value="Code" style="width: 40px" onClick="bbstyle(8)" onMouseOver="helpline('c')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="l" name="addbbcode10" value="List" style="width: 40px" onClick="bbstyle(10)" onMouseOver="helpline('l')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="o" name="addbbcode12" value="List=" style="width: 40px" onClick="bbstyle(12)" onMouseOver="helpline('o')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="p" name="addbbcode14" value="Img" style="width: 40px"  onClick="bbstyle(14)" onMouseOver="helpline('p')" />
-                    </span></td>
-                  <td><span class="genmed"> 
+                    </td>
+                  <td>
                     <input type="button" class="button" accesskey="w" name="addbbcode16" value="URL" style="text-decoration: underline; width: 40px" onClick="bbstyle(16)" onMouseOver="helpline('w')" />
-                    </span></td>
+                    </td>
                 </tr>
                 <tr> 
                   <td colspan="9"> 
                     <table width="100%" border="0" cellspacing="0" cellpadding="0">
                       <tr> 
-                        <td><span class="genmed"> &nbsp;{L_FONT_COLOR}: 
+                        <td>&nbsp;{L_FONT_COLOR}: 
                           <select name="addbbcode18" onChange="bbfontstyle('[color=' + this.form.addbbcode18.options[this.form.addbbcode18.selectedIndex].value + ']', '[/color]')" onMouseOver="helpline('s')">
-                            <option style="color:black; background-color: #FFFFFF " value="{T_FONTCOLOR1}" class="genmed">{L_COLOR_DEFAULT}</option>
-                            <option style="color:darkred; background-color: #DEE3E7" value="darkred" class="genmed">{L_COLOR_DARK_RED}</option>
-                            <option style="color:red; background-color: #DEE3E7" value="red" class="genmed">{L_COLOR_RED}</option>
-                            <option style="color:orange; background-color: #DEE3E7" value="orange" class="genmed">{L_COLOR_ORANGE}</option>
-                            <option style="color:brown; background-color: #DEE3E7" value="brown" class="genmed">{L_COLOR_BROWN}</option>
-                            <option style="color:yellow; background-color: #DEE3E7" value="yellow" class="genmed">{L_COLOR_YELLOW}</option>
-                            <option style="color:green; background-color: #DEE3E7" value="green" class="genmed">{L_COLOR_GREEN}</option>
-                            <option style="color:olive; background-color: #DEE3E7" value="olive" class="genmed">{L_COLOR_OLIVE}</option>
-                            <option style="color:cyan; background-color: #DEE3E7" value="cyan" class="genmed">{L_COLOR_CYAN}</option>
-                            <option style="color:blue; background-color: #DEE3E7" value="blue" class="genmed">{L_COLOR_BLUE}</option>
-                            <option style="color:darkblue; background-color: #DEE3E7" value="darkblue" class="genmed">{L_COLOR_DARK_BLUE}</option>
-                            <option style="color:indigo; background-color: #DEE3E7" value="indigo" class="genmed">{L_COLOR_INDIGO}</option>
-                            <option style="color:violet; background-color: #DEE3E7" value="violet" class="genmed">{L_COLOR_VIOLET}</option>
-                            <option style="color:white; background-color: #DEE3E7" value="white" class="genmed">{L_COLOR_WHITE}</option>
-                            <option style="color:black; background-color: #DEE3E7" value="black" class="genmed">{L_COLOR_BLACK}</option>
+                            <option style="color:black; background-color: #FFFFFF " value="{T_FONTCOLOR1}">{L_COLOR_DEFAULT}</option>
+                            <option style="color:darkred; background-color: #DEE3E7" value="darkred">{L_COLOR_DARK_RED}</option>
+                            <option style="color:red; background-color: #DEE3E7" value="red">{L_COLOR_RED}</option>
+                            <option style="color:orange; background-color: #DEE3E7" value="orange">{L_COLOR_ORANGE}</option>
+                            <option style="color:brown; background-color: #DEE3E7" value="brown">{L_COLOR_BROWN}</option>
+                            <option style="color:yellow; background-color: #DEE3E7" value="yellow">{L_COLOR_YELLOW}</option>
+                            <option style="color:green; background-color: #DEE3E7" value="green">{L_COLOR_GREEN}</option>
+                            <option style="color:olive; background-color: #DEE3E7" value="olive">{L_COLOR_OLIVE}</option>
+                            <option style="color:cyan; background-color: #DEE3E7" value="cyan">{L_COLOR_CYAN}</option>
+                            <option style="color:blue; background-color: #DEE3E7" value="blue">{L_COLOR_BLUE}</option>
+                            <option style="color:darkblue; background-color: #DEE3E7" value="darkblue">{L_COLOR_DARK_BLUE}</option>
+                            <option style="color:indigo; background-color: #DEE3E7" value="indigo">{L_COLOR_INDIGO}</option>
+                            <option style="color:violet; background-color: #DEE3E7" value="violet">{L_COLOR_VIOLET}</option>
+                            <option style="color:white; background-color: #DEE3E7" value="white">{L_COLOR_WHITE}</option>
+                            <option style="color:black; background-color: #DEE3E7" value="black">{L_COLOR_BLACK}</option>
                           </select>
                           &nbsp;{L_FONT_SIZE}:
                           <select name="addbbcode20" onChange="bbfontstyle('[size=' + this.form.addbbcode20.options[this.form.addbbcode20.selectedIndex].value + ']', '[/size]')" onMouseOver="helpline('f')">
-                            <option value="7" class="genmed">{L_FONT_TINY}</option>
-                            <option value="9" class="genmed">{L_FONT_SMALL}</option>
-                            <option value="12" selected class="genmed">{L_FONT_NORMAL}</option>
-                            <option value="18" class="genmed">{L_FONT_LARGE}</option>
-                            <option  value="24" class="genmed">{L_FONT_HUGE}</option>
+                            <option value="7">{L_FONT_TINY}</option>
+                            <option value="9">{L_FONT_SMALL}</option>
+                            <option value="12" selected>{L_FONT_NORMAL}</option>
+                            <option value="18">{L_FONT_LARGE}</option>
+                            <option  value="24">{L_FONT_HUGE}</option>
                           </select>
-                          </span></td>
-                        <td nowrap align="right"><span class="gensmall"><a href="javascript:bbstyle(-1)" class="genmed" onMouseOver="helpline('a')">{L_BBCODE_CLOSE_TAGS}</a></span></td>
+                          </td>
+                        <td nowrap align="right"><a href="javascript:bbstyle(-1)" onMouseOver="helpline('a')">{L_BBCODE_CLOSE_TAGS}</a></td>
                       </tr>
                     </table>
                   </td>
                 </tr>
                 <tr> 
-                  <td colspan="9"> <span class="gensmall"> 
-                    <input type="text" name="helpbox" size="45" maxlength="100" style="width:450px; font-size:10px" class="helpline" value="{L_STYLES_TIP}" />
-                    </span></td>
+                  <td colspan="9">
+                    <input type="text" name="helpbox" size="45" maxlength="100" style="width:450px;" value="{L_STYLES_TIP}" />
+                    </td>
                 </tr>
                 <tr> 
-                  <td colspan="9"><span class="gen"> 
+                  <td colspan="9">
                     <textarea name="message" rows="15" cols="35" wrap="virtual" style="width:450px" tabindex="3" class="post" onselect="storeCaret(this);" onclick="storeCaret(this);" onkeyup="storeCaret(this);">{MESSAGE}</textarea>
-                    </span></td>
+                    </td>
                 </tr>
               </table>
               </td>
           </tr>
           <tr> 
-            <td class="row1" valign="top"><span class="gen"><b>{L_OPTIONS}</b></span><br />
-              <span class="gensmall">{HTML_STATUS}<br />
+            <td class="row1" valign="top"><b>{L_OPTIONS}</b><br />
+              {HTML_STATUS}<br />
               {BBCODE_STATUS}<br />
-              {SMILIES_STATUS}</span></td>
+              {SMILIES_STATUS}</td>
             <td class="row1">
               <table cellspacing="0" cellpadding="1" border="0">
                 <!-- BEGIN switch_html_checkbox -->
@@ -387,7 +387,7 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="disable_html" {S_HTML_CHECKED} />
                   </td>
-                  <td><span class="gen">{L_DISABLE_HTML}</span></td>
+                  <td>{L_DISABLE_HTML}</td>
                 </tr>
                 <!-- END switch_html_checkbox -->
                 <!-- BEGIN switch_bbcode_checkbox -->
@@ -395,7 +395,7 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="disable_bbcode" {S_BBCODE_CHECKED} />
                   </td>
-                  <td><span class="gen">{L_DISABLE_BBCODE}</span></td>
+                  <td>{L_DISABLE_BBCODE}</td>
                 </tr>
                 <!-- END switch_bbcode_checkbox -->
                 <!-- BEGIN switch_smilies_checkbox -->
@@ -403,7 +403,7 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="disable_smilies" {S_SMILIES_CHECKED} />
                   </td>
-                  <td><span class="gen">{L_DISABLE_SMILIES}</span></td>
+                  <td>{L_DISABLE_SMILIES}</td>
                 </tr>
                 <!-- END switch_smilies_checkbox -->
                 <!-- BEGIN switch_signature_checkbox -->
@@ -411,7 +411,7 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="attach_sig" {S_SIGNATURE_CHECKED} />
                   </td>
-                  <td><span class="gen">{L_ATTACH_SIGNATURE}</span></td>
+                  <td>{L_ATTACH_SIGNATURE}</td>
                 </tr>
                 <!-- END switch_signature_checkbox -->
                 <!-- BEGIN switch_notify_checkbox -->
@@ -419,7 +419,7 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="notify" {S_NOTIFY_CHECKED} />
                   </td>
-                  <td><span class="gen">{L_NOTIFY_ON_REPLY}</span></td>
+                  <td>{L_NOTIFY_ON_REPLY}</td>
                 </tr>
                 <!-- END switch_notify_checkbox -->
                 <!-- BEGIN switch_delete_checkbox -->
@@ -427,13 +427,13 @@ function storeCaret(textEl) {
                   <td> 
                     <input type="checkbox" name="delete" />
                   </td>
-                  <td><span class="gen">{L_DELETE_POST}</span></td>
+                  <td>{L_DELETE_POST}</td>
                 </tr>
                 <!-- END switch_delete_checkbox -->
                 <!-- BEGIN switch_type_toggle -->
                 <tr> 
                   <td></td>
-                  <td><span class="gen">{S_TYPE_TOGGLE}</span></td>
+                  <td>{S_TYPE_TOGGLE}</td>
                 </tr>
                 <!-- END switch_type_toggle -->
               </table>
@@ -452,7 +452,7 @@ function storeCaret(textEl) {
   </table>
   <table width="100%" cellspacing="2" border="0" align="center" cellpadding="2">
     <tr> 
-      <td align="right" valign="top"><span class="gensmall">{S_TIMEZONE}</span></td>
+      <td align="right" valign="top">{S_TIMEZONE}</td>
     </tr>
   </table>
 </form>
