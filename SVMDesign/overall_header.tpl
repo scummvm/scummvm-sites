@@ -44,7 +44,7 @@
     <a href="{U_REGISTER}">Register</a> -
     <a href="{U_LOGIN_LOGOUT}">Login</a>
   <!-- END switch_user_logged_out -->
-
+  
   <!-- BEGIN switch_user_logged_in -->
     <a href="viewtopic.php?t=17">Rules</a> -
 <!--    <a href="{U_GROUP_CP}">Usergroups</a> - -->
@@ -69,3 +69,8 @@
       <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-left: 5px; padding-right: 5px;">
         <tr>
           <td>
+	     <!-- Ender: temp donation bar. To be removed when fundraiser ends -->
+             <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center"><tr><td>
+		<div class="largetext" align="right"><B>Fundraising Status:</B><BR><img src="http://wiki.scummvm.org/donations/progress.png"></div>
+             </td></tr></table>
+	      <!-- End donation bar -->
