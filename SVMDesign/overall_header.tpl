@@ -71,6 +71,8 @@
           <td>
 	     <!-- Ender: temp donation bar. To be removed when fundraiser ends -->
              <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center"><tr><td>
-		<div class="largetext" align="center"><B>Fundraiser Progress</B><BR><img src="http://wiki.scummvm.org/donations/progress.png"></div>
+		<a href="http://forums.scummvm.org/viewtopic.php?t=3224">
+		<div class="largetext" align="center"><B>Fundraiser Progress</B><BR><img src="http://wiki.scummvm.org/donations/progress.png" border=0></div>
+		</a>
              </td></tr></table>
 	      <!-- End donation bar -->
