@@ -69,7 +69,7 @@
         <!-- BEGIN switch_textual_confirm -->
         <tr>
           <td class="row1"><span class="gen">{TEXTUAL_CONFIRMATION_QUESTION} * </span><br /><span class="gensmall">{L_TEXTUAL_CONFIRMATION_EXPLAIN}</td>
-          <td class="row2"><input type="text" class="post" style="width: 200px" name="tc_answer" size="25" value="" /></td>
+          <td class="row1"><input type="text" class="post" style="width: 200px" name="tc_answer" size="25" value="" /></td>
         </tr>
         <!-- END switch_textual_confirm -->
           <TR align="center"> 
