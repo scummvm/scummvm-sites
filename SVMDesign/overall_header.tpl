@@ -30,7 +30,8 @@
 
     <td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: left; white-space:nowrap;">
       <a href="index.php">Forum Index</a> -
-      <a href="http://www.scummvm.org/">ScummVM website</a>&nbsp;
+      <a href="http://www.scummvm.org/">ScummVM website</a> - 
+      <a href="http://www.scummvm.org/contact.php">Contact us</a>&nbsp;
 	</td>
 	
 	<td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: right; white-space:nowrap;">
