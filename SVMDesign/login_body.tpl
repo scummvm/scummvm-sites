@@ -21,7 +21,7 @@
 		  <tr> 
 			<td align="right"><span class="mediumtext">{L_PASSWORD}:</span></td>
 			<td> 
-			  <input type="password" name="password" size="25" maxlength="25" />
+			  <input type="password" name="password" size="25" maxlength="100" />
 			</td>
 		  </tr>
 		  <tr align="center"> 
