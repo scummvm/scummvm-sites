@@ -4,7 +4,7 @@
   <span class="smalltext"><b>{ADMIN_LINK}</b></span> 
 <!-- END switch_user_logged_in -->
   <span class="smalltext"> Powered by phpBB &copy; 2001, 2006 <a href="http://www.phpbb.com/" class="smalllink">phpBB Group</a><br>
-  Design implemented by <a href="http://www.unet.univie.ac.at/~a0200586/" class="smalllink">clem</a>, icons by raina</span></div>
+  Forum design by ScummVM team, icons by raina</span></div>
 </td>
         </tr>
       </table>
