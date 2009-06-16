@@ -81,6 +81,22 @@ class Strip(ShellCommand):
 
 		ShellCommand.start(self)
 
+# Small buildstep class to handle port specific jobs prior packaging, only done on nightly builds.
+class Dist(ShellCommand):
+	name = "dist"
+	haltOnFailure = 1
+	flunkOnFailure = 1
+	description = [ "dist" ]
+	descriptionDone = [ "dist" ]
+
+	def start(self):
+		properties = self.build.getProperties()
+
+		if not properties.has_key("package"):
+			return SKIPPED
+
+		ShellCommand.start(self)
+
 # Buildstep class to package binaries, only done on nightly builds.
 class Package(ShellCommand):
 	name = "package"
@@ -124,7 +140,7 @@ class Package(ShellCommand):
 		files += [ os.path.join("../build", i) for i in self.platform_package ]
 
 		self.command = "mkdir %s && " \
-						"cp %s %s/ && " \
+						"cp -r %s %s/ && " \
 						"tar cvjf %s %s/ && " \
 						"mv %s %s/ && " \
 						"ln -sf %s %s && " \
