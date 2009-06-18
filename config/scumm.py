@@ -81,22 +81,6 @@ class Strip(ShellCommand):
 
 		ShellCommand.start(self)
 
-# Small buildstep class to handle port specific jobs prior packaging, only done on nightly builds.
-class Dist(ShellCommand):
-	name = "dist"
-	haltOnFailure = 1
-	flunkOnFailure = 1
-	description = [ "dist" ]
-	descriptionDone = [ "dist" ]
-
-	def start(self):
-		properties = self.build.getProperties()
-
-		if not properties.has_key("package"):
-			return SKIPPED
-
-		ShellCommand.start(self)
-
 # Buildstep class to package binaries, only done on nightly builds.
 class Package(ShellCommand):
 	name = "package"
@@ -106,6 +90,8 @@ class Package(ShellCommand):
 	descriptionDone = [ "package" ]
 
 	def __init__(self, **kwargs):
+		self.disttarget = kwargs["disttarget"]
+		del kwargs["disttarget"]
 		self.srcpath = kwargs["srcpath"]
 		del kwargs["srcpath"]
 		self.dstpath = kwargs["dstpath"]
@@ -117,10 +103,9 @@ class Package(ShellCommand):
 		self.platform_package = kwargs["platform_package"]
 		del kwargs["platform_package"]
 
-		kwargs["workdir"] = "package"
-
 		ShellCommand.__init__(self, **kwargs)
 
+		self.addFactoryArguments(disttarget = self.disttarget)
 		self.addFactoryArguments(srcpath = self.srcpath)
 		self.addFactoryArguments(dstpath = self.dstpath)
 		self.addFactoryArguments(package = self.package)
@@ -133,26 +118,35 @@ class Package(ShellCommand):
 		if not properties.has_key("package"):
 			return SKIPPED
 
+		disttarget = False
+
+		if len(self.disttarget) > 0:
+			disttarget = True
+
 		name = "%s-r%s" % (self.buildname, properties["got_revision"])
 		file = "%s.tar.bz2" % name
 		symlink = "%s-latest.tar.bz2" % self.buildname
-		files = [ os.path.join(self.srcpath, i) for i in self.package ]
-		files += [ os.path.join("../build", i) for i in self.platform_package ]
 
-		self.command = "mkdir %s && " \
-						"cp -r %s %s/ && " \
-						"tar cvjf %s %s/ && " \
-						"mv %s %s/ && " \
-						"ln -sf %s %s && " \
-						" rm -rf %s || " \
-						"( rm -rf %s; return 1 )" \
-						% (name,
-							" ".join(files), name,
-							file, name,
-							file, self.dstpath,
-							file, os.path.join(self.dstpath, symlink),
-							name,
-							name)
+		files = []
+
+		# dont pack up the default files if the port has its own dist target
+		if not disttarget:
+			files += [ os.path.join(self.srcpath, i) for i in self.package ]
+
+		files += self.platform_package
+
+		self.command = ""
+
+		if disttarget:
+			self.command += "make %s && " % self.disttarget
+
+		self.command += "mkdir %s && " % name
+		self.command += "cp -r %s %s/ && " % (" ".join(files), name)
+		self.command += "tar cvjf %s %s/ && " % (file, name)
+		self.command += "mv %s %s/ && " % (file, self.dstpath)
+		self.command += "ln -sf %s %s && " % (file, os.path.join(self.dstpath, symlink))
+		self.command += " rm -rf %s || " % name
+		self.command +="( rm -rf %s; false )" % name
 					
 		ShellCommand.start(self)
 
