@@ -23,14 +23,14 @@
 	  <td class="row1" align="center"><span class="mediumtext">{pending_members_row.FROM}</span></td>
 	  <td class="row1" align="center"><span class="mediumtext">{pending_members_row.EMAIL_IMG}</span></td>
 	  <td class="row1" align="center"><span class="mediumtext">{pending_members_row.WWW_IMG}</span></td>
-	  <td class="row1" align="center"><span class="smalltext"> <input type="checkbox" name="pending_members[]" value="{pending_members_row.USER_ID}" /></span></td>
+	  <td class="row1" align="center"><span class="smalltext"> <input type="checkbox" name="pending_members[]" value="{pending_members_row.USER_ID}"></span></td>
 	</tr>
 	<!-- END pending_members_row -->
 	<tr> 
 	  <td class="catrow" colspan="8" align="right"><span class="catrowtext"> 
-		<input type="submit" name="approve" value="{L_APPROVE_SELECTED}" />
+		<input type="submit" name="approve" value="{L_APPROVE_SELECTED}">
 		&nbsp; 
-		<input type="submit" name="deny" value="{L_DENY_SELECTED}" />
+		<input type="submit" name="deny" value="{L_DENY_SELECTED}">
 		</span></td>
 	</tr>
 </table>

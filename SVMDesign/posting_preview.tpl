@@ -7,7 +7,7 @@
 	      <td class="catrow" align="center"><span class="catrowtext">{L_PREVIEW}</span></td>
   </tr>
   <tr> 
-	<td class="row1"><img src="templates/SVMDesign/images/icon_minipost.gif" alt="{L_POST}" /><span class="smalltext">{L_POSTED}: 
+	<td class="row1"><img src="templates/SVMDesign/images/icon_minipost.gif" alt="{L_POST}"><span class="smalltext">{L_POSTED}: 
 	  {POST_DATE}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Post Subject: {POST_SUBJECT}</span> 
 	</td>
   </tr>
@@ -16,4 +16,4 @@
   </tr>
 </table>
 </td></tr></table>
-<br />
+<br>

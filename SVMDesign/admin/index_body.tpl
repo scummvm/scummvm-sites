@@ -48,7 +48,7 @@
 
 {VERSION_INFO}
 
-<br />
+<br>
 
 <h1>{L_WHO_IS_ONLINE}</h1>
 
@@ -83,4 +83,4 @@
   <!-- END guest_user_row -->
 </table>
 
-<br />
+<br>

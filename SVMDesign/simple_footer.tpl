@@ -15,7 +15,7 @@
 	The phpBB Group : 2001
 
 // -->
-<div align="center"> <span class="copyright"><br />Powered by phpBB {PHPBB_VERSION} &copy; 2001, 2006 <a href="http://www.phpbb.com/" target="_phpbb" class="copyright">phpBB 
+<div align="center"> <span class="copyright"><br>Powered by phpBB {PHPBB_VERSION} &copy; 2001, 2006 <a href="http://www.phpbb.com/" target="_phpbb" class="copyright">phpBB 
   Group</a></span></div>
 &nbsp;
 </body>

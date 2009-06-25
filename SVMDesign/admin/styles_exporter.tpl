@@ -9,6 +9,6 @@
 	<th class="thHead" align="center">{L_TEMPLATE_SELECT}</th>
 	</tr>
 	<tr>
-		<td class="row1" align="center">{S_TEMPLATE_SELECT}&nbsp;&nbsp;<input type="submit" name="edit" value="{L_SUBMIT}" class="mainoption" />&nbsp;</td>
+		<td class="row1" align="center">{S_TEMPLATE_SELECT}&nbsp;&nbsp;<input type="submit" name="edit" value="{L_SUBMIT}" class="mainoption">&nbsp;</td>
 	</tr>
 </table></form>

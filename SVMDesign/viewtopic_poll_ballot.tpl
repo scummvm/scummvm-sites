@@ -1,6 +1,6 @@
 <!-- DEBUG: viewtopic_poll_ballot.tpl starts here -->
 			<tr>
-				<td colspan="3" class="row1"><br clear="all" /><form method="POST" action="{S_POLL_ACTION}">
+				<td colspan="3" class="row1"><br clear="all"><form method="POST" action="{S_POLL_ACTION}">
 				
       <table cellpadding="0" cellspacing="0" border="0" align="center" width="100%">
         <tr> 
@@ -13,7 +13,7 @@
 						<td align="center" class="row1"><table cellspacing="0" cellpadding="2" border="0">
 							<!-- BEGIN poll_option -->
 							<tr>
-								<td><input type="radio" name="vote_id" value="{poll_option.POLL_OPTION_ID}" />&nbsp;</td>
+								<td><input type="radio" name="vote_id" value="{poll_option.POLL_OPTION_ID}">&nbsp;</td>
 								<td><span class="smalltext">{poll_option.POLL_OPTION_CAPTION}</span></td>
 							</tr>
 							<!-- END poll_option -->
@@ -21,7 +21,7 @@
 					</tr>
 					<tr>
 						<td align="center" class="row1">
-			<input type="submit" name="submit" value="{L_SUBMIT_VOTE}" />
+			<input type="submit" name="submit" value="{L_SUBMIT_VOTE}">
 		  </td>
 					</tr>
 					<tr>

@@ -181,8 +181,8 @@ $template->assign_vars(array(
 }
 
 function nl2br_mine($string){
-    // replace any newlines that aren't preceded by a > with a <br />
-    $string = preg_replace('/(?<!>)\n/', "<br />\n", $string);
+    // replace any newlines that aren't preceded by a > with a <br>
+    $string = preg_replace('/(?<!>)\n/', "<br>\n", $string);
  
     return $string;
  }

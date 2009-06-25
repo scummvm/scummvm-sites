@@ -16,7 +16,7 @@
 		<td width="33%" class="row1"><span class="mediumtext">{L_YOU_BELONG_GROUPS}</span></td>
 		<td width="33%" align="center"><span class="smalltext">{GROUP_MEMBER_SELECT}</span></td>
 		<td align="center" width="33%"> 
-			  <input type="submit" value="{L_VIEW_INFORMATION}" />{S_HIDDEN_FIELDS}
+			  <input type="submit" value="{L_VIEW_INFORMATION}">{S_HIDDEN_FIELDS}
 			</td>
 		</tr>
 	  </table>
@@ -36,7 +36,7 @@
 			<td class="row1" width="33%" align="center">
 				<span class="smalltext">{GROUP_PENDING_SELECT}</span></td>
 			<td align="center" width="33%"> 
-			  <input type="submit" value="{L_VIEW_INFORMATION}" />{S_HIDDEN_FIELDS}
+			  <input type="submit" value="{L_VIEW_INFORMATION}">{S_HIDDEN_FIELDS}
 			</td>
 		</tr>
 	  </table>
@@ -58,7 +58,7 @@
 		<td width="33%"><span class="mediumtext">{L_SELECT_A_GROUP}</span></td>
 		<td width="33%" class="row1" align="center"><span class="smalltext">{GROUP_LIST_SELECT}</span></td>
 		<td width="33%" class="row1" align="center">
-		  <input type="submit" value="{L_VIEW_INFORMATION}" />{S_HIDDEN_FIELDS}
+		  <input type="submit" value="{L_VIEW_INFORMATION}">{S_HIDDEN_FIELDS}
 		</td>
 	  </tr>
 	  </table>
@@ -77,7 +77,7 @@
   </tr>
 </table>
 
-<br clear="all" />
+<br clear="all">
 
 <table width="98%" cellspacing="2" border="0" align="center">
   <tr> 

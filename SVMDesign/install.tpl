@@ -19,7 +19,7 @@
     <td class="tableborder">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 					<tr>
-						<td><img src="templates/subSilver/images/logo_phpBB.gif" border="0" alt="Forum Home" vspace="1" /></td>
+						<td><img src="templates/subSilver/images/logo_phpBB.gif" border="0" alt="Forum Home" vspace="1"></td>
 						<td align="center" width="100%" valign="middle"><span class="maintitle">{L_INSTALLATION}</span></td>
 					</tr>
 				</table></td></tr></table>
@@ -60,23 +60,23 @@
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_DB_HOST}: </span></td>
-						<td class="row1"><input type="text" name="dbhost" value="{DB_HOST}" /></td>
+						<td class="row1"><input type="text" name="dbhost" value="{DB_HOST}"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_DB_NAME}: </span></td>
-						<td class="row1"><input type="text" name="dbname" value="{DB_NAME}" /></td>
+						<td class="row1"><input type="text" name="dbname" value="{DB_NAME}"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_DB_USER}: </span></td>
-						<td class="row1"><input type="text" name="dbuser" value="{DB_USER}" /></td>
+						<td class="row1"><input type="text" name="dbuser" value="{DB_USER}"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_DB_PASSWORD}: </span></td>
-						<td class="row1"><input type="password" name="dbpasswd" /></td>
+						<td class="row1"><input type="password" name="dbpasswd"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_DB_PREFIX}: </span></td>
-						<td class="row1"><input type="text" name="prefix" value="{DB_PREFIX}" /></td>
+						<td class="row1"><input type="text" name="prefix" value="{DB_PREFIX}"></td>
 					</tr>
 					
           <tr align="center"> 
@@ -84,15 +84,15 @@
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_ADMIN_USERNAME}: </span></td>
-						<td class="row1"><input type="text" name="admin_name" value="{ADMIN_USERNAME}" /></td>
+						<td class="row1"><input type="text" name="admin_name" value="{ADMIN_USERNAME}"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_ADMIN_PASSWORD}: </span></td>
-						<td class="row1"><input type="password" name="admin_pass1" /></td>
+						<td class="row1"><input type="password" name="admin_pass1"></td>
 					</tr>
 					<tr>
 						<td class="row1" align="right"><span class="mediumtext">{L_ADMIN_CONFIRM_PASSWORD}: </span></td>
-						<td class="row1"><input type="password" name="admin_pass2" /></td>
+						<td class="row1"><input type="password" name="admin_pass2"></td>
 					</tr>
 					<!-- END switch_stage_one_install -->
 					<!-- BEGIN switch_error_install -->
@@ -138,7 +138,7 @@
 					<!-- END switch_ftp_option -->
 					<!-- BEGIN switch_common_install -->
 					<tr> 
-					  <td class="catrow" align="center" colspan="2">{S_HIDDEN_FIELDS}<input type="submit" value="{L_SUBMIT}" /></td>
+					  <td class="catrow" align="center" colspan="2">{S_HIDDEN_FIELDS}<input type="submit" value="{L_SUBMIT}"></td>
 					</tr>
 					<!-- END switch_common_install -->
 					<!-- BEGIN switch_upgrade_install -->
@@ -146,7 +146,7 @@
 						<td class="catrow" align="center" colspan="2"><span class="catrowtext">{L_UPGRADE_INST}</span></td>
 					</tr>
 					<tr>
-						<td class="catrow" align="center" colspan="2"><input type="submit" name="upgrade_now" value="{L_UPGRADE_SUBMIT}" />
+						<td class="catrow" align="center" colspan="2"><input type="submit" name="upgrade_now" value="{L_UPGRADE_SUBMIT}">
 						</td>
 					</tr></table></td></tr></table>
 </form>

@@ -20,13 +20,13 @@
   </tr>
   <!-- BEGIN searchresults -->
   <tr> 
-	<td class="row1" align="center" valign="middle"><img src="{searchresults.TOPIC_FOLDER_IMG}" width="19" height="18" alt="{searchresults.L_TOPIC_FOLDER_ALT}" title="{searchresults.L_TOPIC_FOLDER_ALT}" /></td>
+	<td class="row1" align="center" valign="middle"><img src="{searchresults.TOPIC_FOLDER_IMG}" width="19" height="18" alt="{searchresults.L_TOPIC_FOLDER_ALT}" title="{searchresults.L_TOPIC_FOLDER_ALT}"></td>
 	<td class="row1"><span class="smalltext"><a href="{searchresults.U_VIEW_FORUM}" class="forumlink">{searchresults.FORUM_NAME}</a></span></td>
-	<td class="row1"><span class="smalltext">{searchresults.NEWEST_POST_IMG}{searchresults.TOPIC_TYPE}<a href="{searchresults.U_VIEW_TOPIC}" class="topiclink">{searchresults.TOPIC_TITLE}</a></span><br /><span class="smalltext">{searchresults.GOTO_PAGE}</span></td>
+	<td class="row1"><span class="smalltext">{searchresults.NEWEST_POST_IMG}{searchresults.TOPIC_TYPE}<a href="{searchresults.U_VIEW_TOPIC}" class="topiclink">{searchresults.TOPIC_TITLE}</a></span><br><span class="smalltext">{searchresults.GOTO_PAGE}</span></td>
 	<td class="row1" align="center" valign="middle"><span class="smalltext"><a href="{searchresults.U_TOPIC_POSTER_PROFILE}" class="smalllink">{searchresults.TOPIC_AUTHOR}</a></span></td>
 	<td class="row1" align="center" valign="middle"><span class="smalltext">{searchresults.REPLIES}</span></td>
 	<td class="row1" align="center" valign="middle"><span class="smalltext">{searchresults.VIEWS}</span></td>
-	<td class="row1" align="center" valign="middle" nowrap><span class="smalltext">{searchresults.LAST_POST_TIME}<br />{searchresults.LAST_POST_AUTHOR} {searchresults.LAST_POST_IMG}</span></td>
+	<td class="row1" align="center" valign="middle" nowrap><span class="smalltext">{searchresults.LAST_POST_TIME}<br>{searchresults.LAST_POST_AUTHOR} {searchresults.LAST_POST_IMG}</span></td>
   </tr>
   <!-- END searchresults -->
   <tr> 
@@ -39,7 +39,7 @@
 <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
   <tr> 
 	<td align="left" valign="top"><span class="nav">{PAGE_NUMBER}</span></td>
-	<td align="right" valign="top" nowrap><span class="nav">{PAGINATION}</span><br />{S_TIMEZONE}</td>
+	<td align="right" valign="top" nowrap><span class="nav">{PAGINATION}</span><br>{S_TIMEZONE}</td>
   </tr>
 </table>
 

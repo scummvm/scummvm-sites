@@ -3,7 +3,7 @@
   <table width="98%" cellspacing="2" cellpadding="2" border="0" align="center">
     <tr> 
       <td align="right"><span class="mediumtext">{L_SELECT_SORT_METHOD}:&nbsp;{S_MODE_SELECT}&nbsp;&nbsp;{L_ORDER}&nbsp;{S_ORDER_SELECT}&nbsp;&nbsp; 
-        <input type="submit" name="submit" value="{L_SUBMIT}" />
+        <input type="submit" name="submit" value="{L_SUBMIT}">
         </span></td>
     </tr>
   </table>
@@ -54,7 +54,7 @@
   <table width="98%" cellspacing="0" cellpadding="0" border="0" align="center">
     <tr> 
 	<td><span class="smalltext">{PAGE_NUMBER}</span></td>
-	<td align="right"><span class="smalltext">{S_TIMEZONE}</span><br /><span class="smalltext">{PAGINATION}&nbsp;</span></td>
+	<td align="right"><span class="smalltext">{S_TIMEZONE}</span><br><span class="smalltext">{PAGINATION}&nbsp;</span></td>
   </tr>
 </table></form>
 

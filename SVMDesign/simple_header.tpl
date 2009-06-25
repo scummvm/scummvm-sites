@@ -7,11 +7,11 @@
 
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset={S_CONTENT_ENCODING}"  />
-<meta http-equiv="Content-Style-Type" content="text/css" />
+<meta http-equiv="Content-Type" content="text/html; charset={S_CONTENT_ENCODING}" >
+<meta http-equiv="Content-Style-Type" content="text/css">
 
 <title>{SITENAME} :: {PAGE_TITLE}</title>
-<link rel="stylesheet" href="templates/SVMDesign/SVMDesign.css" type="text/css" />
+<link rel="stylesheet" href="templates/SVMDesign/SVMDesign.css" type="text/css">
 
 <style type="text/css">
 

@@ -21,24 +21,24 @@
 
 	<!-- BEGIN topicrow -->
 	<tr> 
-	  <td class="row1" align="center" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}" /></td>
+	  <td class="row1" align="center" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}"></td>
 	  <td class="row1">&nbsp;<span class="smalltext">{topicrow.TOPIC_TYPE}<a href="{topicrow.U_VIEW_TOPIC}" class="topiclink">{topicrow.TOPIC_TITLE}</a></span></td>
 	  <td class="row1" align="center" valign="middle"><span class="mediumlink">{topicrow.REPLIES}</span></td>
 	  <td class="row1" align="center" valign="middle"><span class="mediumlink">{topicrow.LAST_POST_TIME}</span></td>
 	  <td class="row1" align="center" valign="middle"> 
-		<input type="checkbox" name="topic_id_list[]" value="{topicrow.TOPIC_ID}" />
+		<input type="checkbox" name="topic_id_list[]" value="{topicrow.TOPIC_ID}">
 	  </td>
 	</tr>
 	<!-- END topicrow -->
 	<tr align="right"> 
 	  <td class="catrow" colspan="5"> {S_HIDDEN_FIELDS} 
-		<input type="submit" name="delete" class="liteoption" value="{L_DELETE}" />
+		<input type="submit" name="delete" class="liteoption" value="{L_DELETE}">
 		&nbsp; 
-		<input type="submit" name="move" class="liteoption" value="{L_MOVE}" />
+		<input type="submit" name="move" class="liteoption" value="{L_MOVE}">
 		&nbsp; 
-		<input type="submit" name="lock" class="liteoption" value="{L_LOCK}" />
+		<input type="submit" name="lock" class="liteoption" value="{L_LOCK}">
 		&nbsp; 
-		<input type="submit" name="unlock" class="liteoption" value="{L_UNLOCK}" />
+		<input type="submit" name="unlock" class="liteoption" value="{L_UNLOCK}">
 	  </td>
 	</tr>
   </table>
@@ -49,7 +49,7 @@
   <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
     <tr> 
 	<td align="left" valign="middle"><span class="nav">{PAGE_NUMBER}</span></td>
-	<td align="right" valign="top" nowrap>{S_TIMEZONE}<br /><span class="nav">{PAGINATION}</span></td>
+	<td align="right" valign="top" nowrap>{S_TIMEZONE}<br><span class="nav">{PAGINATION}</span></td>
   </tr>
 </table>
 </form>

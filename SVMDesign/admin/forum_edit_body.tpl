@@ -10,7 +10,7 @@
 	</tr>
 	<tr> 
 	  <td class="row1">{L_FORUM_NAME}</td>
-	  <td class="row2"><input type="text" size="25" name="forumname" value="{FORUM_NAME}" class="post" /></td>
+	  <td class="row2"><input type="text" size="25" name="forumname" value="{FORUM_NAME}" class="post"></td>
 	</tr>
 	<tr> 
 	  <td class="row1">{L_FORUM_DESCRIPTION}</td>
@@ -33,22 +33,22 @@
 	  <td class="row2"><table cellspacing="0" cellpadding="1" border="0">
 		  <tr> 
 			<td align="right" valign="middle">{L_ENABLED}</td>
-			<td align="left" valign="middle"><input type="checkbox" name="prune_enable" value="1" {S_PRUNE_ENABLED} /></td>
+			<td align="left" valign="middle"><input type="checkbox" name="prune_enable" value="1" {S_PRUNE_ENABLED}></td>
 		  </tr>
 		  <tr> 
 			<td align="right" valign="middle">{L_PRUNE_DAYS}</td>
-			<td align="left" valign="middle">&nbsp;<input type="text" name="prune_days" value="{PRUNE_DAYS}" size="5" class="post" />&nbsp;{L_DAYS}</td>
+			<td align="left" valign="middle">&nbsp;<input type="text" name="prune_days" value="{PRUNE_DAYS}" size="5" class="post">&nbsp;{L_DAYS}</td>
 		  </tr>
 		  <tr> 
 			<td align="right" valign="middle">{L_PRUNE_FREQ}</td>
-			<td align="left" valign="middle">&nbsp;<input type="text" name="prune_freq" value="{PRUNE_FREQ}" size="5" class="post" />&nbsp;{L_DAYS}</td>
+			<td align="left" valign="middle">&nbsp;<input type="text" name="prune_freq" value="{PRUNE_FREQ}" size="5" class="post">&nbsp;{L_DAYS}</td>
 		  </tr>
 	  </table></td>
 	</tr>
 	<tr> 
-	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption" /></td>
+	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption"></td>
 	</tr>
   </table>
 </form>
 		
-<br clear="all" />
+<br clear="all">

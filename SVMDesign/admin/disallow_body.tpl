@@ -8,15 +8,15 @@
 		<th class="thHead" colspan="2">{L_ADD_DISALLOW}</th>
 	</tr>
 	<tr> 
-		<td class="row1">{L_USERNAME}<br /><span class="gensmall">{L_ADD_EXPLAIN}</span></td>
-		<td class="row2"><input class="post" type="text" name="disallowed_user" size="30" />&nbsp;<input type="submit" name="add_name" value="{L_ADD}" class="mainoption" /></td>
+		<td class="row1">{L_USERNAME}<br><span class="gensmall">{L_ADD_EXPLAIN}</span></td>
+		<td class="row2"><input class="post" type="text" name="disallowed_user" size="30">&nbsp;<input type="submit" name="add_name" value="{L_ADD}" class="mainoption"></td>
 	</tr>
 	<tr> 
 		<th class="thHead" colspan="2">{L_DELETE_DISALLOW}</th>
 	</tr>
 	<tr> 
-		<td class="row1">{L_USERNAME}<br /><span class="gensmall">{L_DELETE_EXPLAIN}</span></td>
-		<td class="row2">{S_DISALLOW_SELECT}&nbsp;<input type="submit" name="delete_name" value="{L_DELETE}" class="liteoption" /></td>
+		<td class="row1">{L_USERNAME}<br><span class="gensmall">{L_DELETE_EXPLAIN}</span></td>
+		<td class="row2">{S_DISALLOW_SELECT}&nbsp;<input type="submit" name="delete_name" value="{L_DELETE}" class="liteoption"></td>
 	</tr>
 	<tr> 
 		<td class="catBottom" colspan="2" align="center">&nbsp;</td>

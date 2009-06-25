@@ -12,7 +12,7 @@
   </tr>
 </table>
 
-<br clear="all" />
+<br clear="all">
 
 <form method="post" action="{S_PRIVMSGS_ACTION}">
 <table cellpadding="0" cellspacing="0" border="0" width="98%" align="center">
@@ -62,9 +62,9 @@
 	</tr>
 	<tr>
 	  <td class="catrow" colspan="3" align="right"> {S_HIDDEN_FIELDS} 
-		<input type="submit" name="save" value="{L_SAVE_MSG}" class="liteoption" />
+		<input type="submit" name="save" value="{L_SAVE_MSG}" class="liteoption">
 		&nbsp; 
-		<input type="submit" name="delete" value="{L_DELETE_MSG}" class="liteoption" />
+		<input type="submit" name="delete" value="{L_DELETE_MSG}" class="liteoption">
 	  </td>
 	</tr>
   </table>

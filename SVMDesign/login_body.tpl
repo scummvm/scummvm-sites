@@ -15,20 +15,20 @@
 		  <tr> 
 			<td width="45%" align="right"><span class="mediumtext">{L_USERNAME}:</span></td>
 			<td> 
-			  <input type="text" name="username" size="25" maxlength="40" value="{USERNAME}" />
+			  <input type="text" name="username" size="25" maxlength="40" value="{USERNAME}">
 			</td>
 		  </tr>
 		  <tr> 
 			<td align="right"><span class="mediumtext">{L_PASSWORD}:</span></td>
 			<td> 
-			  <input type="password" name="password" size="25" maxlength="100" />
+			  <input type="password" name="password" size="25" maxlength="100">
 			</td>
 		  </tr>
 		  <tr align="center"> 
-			<td colspan="2"><span class="mediumtext">{L_AUTO_LOGIN}: <input type="checkbox" name="autologin" /></span></td>
+			<td colspan="2"><span class="mediumtext">{L_AUTO_LOGIN}: <input type="checkbox" name="autologin"></span></td>
 		  </tr>
 		  <tr align="center"> 
-			<td colspan="2">{S_HIDDEN_FIELDS}<input type="submit" name="login" class="mainoption" value="{L_LOGIN}" /></td>
+			<td colspan="2">{S_HIDDEN_FIELDS}<input type="submit" name="login" class="mainoption" value="{L_LOGIN}"></td>
 		  </tr>
 		  <tr align="center"> 
 			<td colspan="2"><span class="smalltext"><a href="{U_SEND_PASSWORD}" class="smalllink">{L_SEND_PASSWORD}</a></span></td>

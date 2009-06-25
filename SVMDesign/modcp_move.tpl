@@ -14,15 +14,15 @@
 			<td>&nbsp;</td>
 		  </tr>
 		  <tr> 
-			<td align="center"><span class="mediumtext">{L_MOVE_TO_FORUM} &nbsp; {S_FORUM_SELECT}<br /><br />
-			  <input type="checkbox" name="move_leave_shadow" checked />{L_LEAVESHADOW}<br />
-			  <br />
-			  {MESSAGE_TEXT}</span><br />
-			  <br />
+			<td align="center"><span class="mediumtext">{L_MOVE_TO_FORUM} &nbsp; {S_FORUM_SELECT}<br><br>
+			  <input type="checkbox" name="move_leave_shadow" checked>{L_LEAVESHADOW}<br>
+			  <br>
+			  {MESSAGE_TEXT}</span><br>
+			  <br>
 			  {S_HIDDEN_FIELDS} 
-			  <input type="submit" name="confirm" value="{L_YES}" />
+			  <input type="submit" name="confirm" value="{L_YES}">
 			  &nbsp;&nbsp; 
-			  <input type="submit" name="cancel" value="{L_NO}" />
+			  <input type="submit" name="cancel" value="{L_NO}">
 			</td>
 		  </tr>
 		  <tr> 

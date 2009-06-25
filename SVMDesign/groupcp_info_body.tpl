@@ -19,17 +19,17 @@
 	  <td class="row1" width="20%"><span class="mediumtext">{L_GROUP_MEMBERSHIP}:</span></td>
 	  <td class="row1"><span class="mediumtext">{GROUP_DETAILS} &nbsp;&nbsp;
 	  <!-- BEGIN switch_subscribe_group_input -->
-	  <input type="submit" name="joingroup" value="{L_JOIN_GROUP}" />
+	  <input type="submit" name="joingroup" value="{L_JOIN_GROUP}">
 	  <!-- END switch_subscribe_group_input -->
 	  <!-- BEGIN switch_unsubscribe_group_input -->
-	  <input type="submit" name="unsub" value="{L_UNSUBSCRIBE_GROUP}" />
+	  <input type="submit" name="unsub" value="{L_UNSUBSCRIBE_GROUP}">
 	  <!-- END switch_unsubscribe_group_input -->
 	  </span></td>
 	</tr>
 	<!-- BEGIN switch_mod_option -->
 	<tr> 
 	  <td class="row1" width="20%"><span class="mediumtext">{L_GROUP_TYPE}:</span></td>
-	  <td class="row1"><span class="mediumtext"><span class="mediumtext"><input type="radio" name="group_type" value="{S_GROUP_OPEN_TYPE}" {S_GROUP_OPEN_CHECKED} /> {L_GROUP_OPEN} &nbsp;&nbsp;<input type="radio" name="group_type" value="{S_GROUP_CLOSED_TYPE}" {S_GROUP_CLOSED_CHECKED} />	{L_GROUP_CLOSED} &nbsp;&nbsp;<input type="radio" name="group_type" value="{S_GROUP_HIDDEN_TYPE}" {S_GROUP_HIDDEN_CHECKED} />	{L_GROUP_HIDDEN} &nbsp;&nbsp; <input type="submit" name="groupstatus" value="{L_UPDATE}" /></span></span></td>
+	  <td class="row1"><span class="mediumtext"><span class="mediumtext"><input type="radio" name="group_type" value="{S_GROUP_OPEN_TYPE}" {S_GROUP_OPEN_CHECKED}> {L_GROUP_OPEN} &nbsp;&nbsp;<input type="radio" name="group_type" value="{S_GROUP_CLOSED_TYPE}" {S_GROUP_CLOSED_CHECKED}>	{L_GROUP_CLOSED} &nbsp;&nbsp;<input type="radio" name="group_type" value="{S_GROUP_HIDDEN_TYPE}" {S_GROUP_HIDDEN_CHECKED}>	{L_GROUP_HIDDEN} &nbsp;&nbsp; <input type="submit" name="groupstatus" value="{L_UPDATE}"></span></span></td>
 	</tr>
 	<!-- END switch_mod_option -->
   </table>
@@ -82,7 +82,7 @@
 	  <td class="row1" align="center"> {member_row.WWW_IMG}</td>
 	  <td class="row1" align="center"> 
 	  <!-- BEGIN switch_mod_option -->
-	  <input type="checkbox" name="members[]" value="{member_row.USER_ID}" /> 
+	  <input type="checkbox" name="members[]" value="{member_row.USER_ID}"> 
 	  <!-- END switch_mod_option -->
 	  </td>
 	</tr>
@@ -103,7 +103,7 @@
 	<!-- BEGIN switch_mod_option -->
 	<tr>
 		<td class="catrow" colspan="8" align="right"><span class="catrowtext">
-			<input type="submit" name="remove" value="{L_REMOVE_SELECTED}" />
+			<input type="submit" name="remove" value="{L_REMOVE_SELECTED}">
 		</span></td>
 	</tr>
 	<!-- END switch_mod_option -->
@@ -116,10 +116,10 @@
     <tr>
 		<td align="left" valign="top">
 		<!-- BEGIN switch_mod_option -->
-		<span class="mediumtext"><input type="text" name="username" maxlength="50" size="20" /> <input type="submit" name="add" value="{L_ADD_MEMBER}" /> <input type="submit" name="usersubmit" value="{L_FIND_USERNAME}" onClick="window.open('{U_SEARCH_USER}', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400');return false;" /></span><br /><br />
+		<span class="mediumtext"><input type="text" name="username" maxlength="50" size="20"> <input type="submit" name="add" value="{L_ADD_MEMBER}"> <input type="submit" name="usersubmit" value="{L_FIND_USERNAME}" onClick="window.open('{U_SEARCH_USER}', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400');return false;"></span><br><br>
 		<!-- END switch_mod_option -->
 		<span class="mediumtext">{PAGE_NUMBER}</span></td>
-		<td align="right" valign="top"><span class="smalltext">{S_TIMEZONE}</span><br /><span class="nav">{PAGINATION}</span></td>
+		<td align="right" valign="top"><span class="smalltext">{S_TIMEZONE}</span><br><span class="nav">{PAGINATION}</span></td>
 	</tr>
 </table>
 

@@ -10,12 +10,12 @@
 	</tr>
 	<tr> 
 	  <td class="row1">{L_CATEGORY}</td>
-	  <td class="row2"><input class="post" type="text" size="25" name="cat_title" value="{CAT_TITLE}" /></td>
+	  <td class="row2"><input class="post" type="text" size="25" name="cat_title" value="{CAT_TITLE}"></td>
 	</tr>
 	<tr> 
-	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption" /></td>
+	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption"></td>
 	</tr>
   </table>
 </form>
 		
-<br clear="all" />
+<br clear="all">

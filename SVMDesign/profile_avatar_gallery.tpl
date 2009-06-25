@@ -9,26 +9,26 @@
 	</tr>
 	<tr> 
 	        <td class="row1" align="center" valign="middle" colspan="6"><span class="mediumtext">{L_CATEGORY}:&nbsp; 
-              {S_CATEGORY_SELECT}&nbsp;<input type="submit" value="{L_GO}" name="avatargallery" /></span></td>
+              {S_CATEGORY_SELECT}&nbsp;<input type="submit" value="{L_GO}" name="avatargallery"></span></td>
 	</tr>
 	<!-- BEGIN avatar_row -->
 	<tr> 
 	<!-- BEGIN avatar_column -->
-		<td class="row1" align="center"><img src="{avatar_row.avatar_column.AVATAR_IMAGE}" alt="Avatar" /></td>
+		<td class="row1" align="center"><img src="{avatar_row.avatar_column.AVATAR_IMAGE}" alt="Avatar"></td>
 	<!-- END avatar_column -->
 	</tr>
 	<tr>
 	<!-- BEGIN avatar_option_column -->
-		<td class="row1" align="center"><input type="radio" name="avatarselect" value="{avatar_row.avatar_option_column.S_OPTIONS_AVATAR}" /></td>
+		<td class="row1" align="center"><input type="radio" name="avatarselect" value="{avatar_row.avatar_option_column.S_OPTIONS_AVATAR}"></td>
 	<!-- END avatar_option_column -->
 	</tr>
 
 	<!-- END avatar_row -->
 	<tr> 
 	        <td class="catrow" colspan="{S_COLSPAN}" align="center">{S_HIDDEN_FIELDS} 
-              <input type="submit" name="submitavatar" value="{L_SELECT_AVATAR}" class="mainoption" />
+              <input type="submit" name="submitavatar" value="{L_SELECT_AVATAR}" class="mainoption">
 		&nbsp;&nbsp; 
-		<input type="submit" name="cancelavatar" value="{L_RETURN_PROFILE}" class="liteoption" />
+		<input type="submit" name="cancelavatar" value="{L_RETURN_PROFILE}" class="liteoption">
 	  </td>
 	</tr>
   </table>

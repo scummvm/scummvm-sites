@@ -36,7 +36,7 @@
         </tr>
         <!-- BEGIN forumrow -->
         <tr align="center"> 
-          <td valign="middle" class="row1" align="center"><img src="{catrow.forumrow.FORUM_FOLDER_IMG}" alt="{catrow.forumrow.L_FORUM_FOLDER_ALT}" title="{catrow.forumrow.L_FORUM_FOLDER_ALT}" /></td>
+          <td valign="middle" class="row1" align="center"><img src="{catrow.forumrow.FORUM_FOLDER_IMG}" alt="{catrow.forumrow.L_FORUM_FOLDER_ALT}" title="{catrow.forumrow.L_FORUM_FOLDER_ALT}"></td>
           <td align="left" class="row1" width="80%"><a href="{catrow.forumrow.U_VIEWFORUM}" class="forumlink">{catrow.forumrow.FORUM_NAME}</a><br>
             <span class="smalltext"> {catrow.forumrow.FORUM_DESC}<br>
             </span></td>
@@ -60,7 +60,7 @@
         </tr>
         <tr> 
 
-          <td valign="middle" class="row1" align="center"><img src="templates/SVMDesign/images/folder_new.gif" alt="{catrow.forumrow.L_FORUM_FOLDER_ALT}" title="{catrow.forumrow.L_FORUM_FOLDER_ALT}" /></td>
+          <td valign="middle" class="row1" align="center"><img src="templates/SVMDesign/images/folder_new.gif" alt="{catrow.forumrow.L_FORUM_FOLDER_ALT}" title="{catrow.forumrow.L_FORUM_FOLDER_ALT}"></td>
 
 		  
 	 <td colspan="3" class="row1">
@@ -95,13 +95,13 @@
     <td align="center" width="100%"> 
       <table cellspacing="3" border="0" align="center" cellpadding="0">
         <tr> 
-          <td width="20" align="center"><img src="templates/SVMDesign/images/folder_new.gif" alt="{L_NEW_POSTS}"/></td>
+          <td width="20" align="center"><img src="templates/SVMDesign/images/folder_new.gif" alt="{L_NEW_POSTS}"></td>
           <td><span class="smalltext">{L_NEW_POSTS}</span></td>
           <td>&nbsp;&nbsp;</td>
-          <td width="20" align="center"><img src="templates/SVMDesign/images/folder.gif" alt="{L_NO_NEW_POSTS}" /></td>
+          <td width="20" align="center"><img src="templates/SVMDesign/images/folder.gif" alt="{L_NO_NEW_POSTS}"></td>
           <td><span class="smalltext">{L_NO_NEW_POSTS}</span></td>
           <td>&nbsp;&nbsp;</td>
-          <td width="20" align="center"><img src="templates/SVMDesign/images/folder_lock.gif" alt="{L_FORUM_LOCKED}" /></td>
+          <td width="20" align="center"><img src="templates/SVMDesign/images/folder_lock.gif" alt="{L_FORUM_LOCKED}"></td>
           <td><span class="smalltext">A Closed Forum</span></td>
         </tr>
       </table>
@@ -115,11 +115,11 @@
           </tr>
           <tr> 
             <td nowrap align="center"> 
-              <input class="post" type="text" name="username" size="10" />
-              <input class="post" type="password" name="password" size="10" />
+              <input class="post" type="text" name="username" size="10">
+              <input class="post" type="password" name="password" size="10">
               <b>Auto Login?</b> 
-              <input class="text" type="checkbox" name="autologin" value="ON" />
-              <input type="submit" class="mainoption" name="login" value="{L_LOGIN}" />
+              <input class="text" type="checkbox" name="autologin" value="ON">
+              <input type="submit" class="mainoption" name="login" value="{L_LOGIN}">
               <br>
             </td>
           </tr>

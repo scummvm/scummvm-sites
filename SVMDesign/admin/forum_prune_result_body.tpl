@@ -18,4 +18,4 @@
 	<!-- END prune_results -->
 </table>
 
-<br />
+<br>

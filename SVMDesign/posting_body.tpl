@@ -230,7 +230,7 @@ function storeCaret(textEl) {
     </td>
   </tr>
 </table>
-<br clear="all" />
+<br clear="all">
 <!-- END switch_privmsg -->
 <form action="{S_POST_ACTION}" method="post" name="post" onsubmit="return checkForm(this)">
   {POST_PREVIEW_BOX} {ERROR_BOX}   
@@ -245,7 +245,7 @@ function storeCaret(textEl) {
           <tr> 
             <td class="row1"><b>{L_USERNAME}</b></td>
             <td class="row1">
-              <input type="text" class="post" tabindex="1" name="username" size="25" maxlength="25" value="{USERNAME}" />
+              <input type="text" class="post" tabindex="1" name="username" size="25" maxlength="25" value="{USERNAME}">
               </td>
           </tr>
           <!-- END switch_username_select -->
@@ -254,16 +254,16 @@ function storeCaret(textEl) {
           <tr> 
             <td class="row1"><b>{L_USERNAME}</b></td>
             <td class="row1">
-              <input type="text"  class="post" name="username" maxlength="25" size="25" tabindex="1" value="{USERNAME}" />
+              <input type="text"  class="post" name="username" maxlength="25" size="25" tabindex="1" value="{USERNAME}">
               &nbsp; 
-              <input type="submit" name="usersubmit" value="{L_FIND_USERNAME}" class="liteoption" onClick="window.open('{U_SEARCH_USER}', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400');return false;" />
+              <input type="submit" name="usersubmit" value="{L_FIND_USERNAME}" class="liteoption" onClick="window.open('{U_SEARCH_USER}', '_phpbbsearch', 'HEIGHT=250,resizable=yes,WIDTH=400');return false;">
               </td>
           </tr>
           <!-- END switch_privmsg -->
           <tr> 
             <td class="row1" width="22%"><b>{L_SUBJECT}</b></td>
             <td class="row1" width="78%">
-              <input type="text" name="subject" size="45" maxlength="60" style="width:450px" tabindex="2" class="post" value="{SUBJECT}" />
+              <input type="text" name="subject" size="45" maxlength="60" style="width:450px" tabindex="2" class="post" value="{SUBJECT}">
               </td>
           </tr>
           <tr> 
@@ -273,7 +273,7 @@ function storeCaret(textEl) {
                   <td><b>{L_MESSAGE_BODY}</b></td>
                 </tr>
                 <tr> 
-                  <td valign="middle" align="center"> <br />
+                  <td valign="middle" align="center"> <br>
                     <table width="100" border="0" cellspacing="0" cellpadding="5">
                       <tr align="center"> 
                         <td colspan="{S_SMILIES_COLSPAN}"><b>{L_EMOTICONS}</b></td>
@@ -281,7 +281,7 @@ function storeCaret(textEl) {
                       <!-- BEGIN smilies_row -->
                       <tr align="center" valign="middle"> 
                         <!-- BEGIN smilies_col -->
-                        <td><a href="javascript:emoticon('{smilies_row.smilies_col.SMILEY_CODE}')"><img src="{smilies_row.smilies_col.SMILEY_IMG}" border="0" alt="{smilies_row.smilies_col.SMILEY_DESC}" title="{smilies_row.smilies_col.SMILEY_DESC}" /></a></td>
+                        <td><a href="javascript:emoticon('{smilies_row.smilies_col.SMILEY_CODE}')"><img src="{smilies_row.smilies_col.SMILEY_IMG}" border="0" alt="{smilies_row.smilies_col.SMILEY_DESC}" title="{smilies_row.smilies_col.SMILEY_DESC}"></a></td>
                         <!-- END smilies_col -->
                       </tr>
                       <!-- END smilies_row -->
@@ -299,31 +299,31 @@ function storeCaret(textEl) {
               <table width="450" border="0" cellspacing="0" cellpadding="2">
                 <tr align="center" valign="middle"> 
                   <td>
-                    <input type="button" class="button" accesskey="b" name="addbbcode0" value=" B " style="font-weight:bold; width: 30px" onClick="bbstyle(0)" onMouseOver="helpline('b')" />
+                    <input type="button" class="button" accesskey="b" name="addbbcode0" value=" B " style="font-weight:bold; width: 30px" onClick="bbstyle(0)" onMouseOver="helpline('b')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="i" name="addbbcode2" value=" i " style="font-style:italic; width: 30px" onClick="bbstyle(2)" onMouseOver="helpline('i')" />
+                    <input type="button" class="button" accesskey="i" name="addbbcode2" value=" i " style="font-style:italic; width: 30px" onClick="bbstyle(2)" onMouseOver="helpline('i')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="u" name="addbbcode4" value=" u " style="text-decoration: underline; width: 30px" onClick="bbstyle(4)" onMouseOver="helpline('u')" />
+                    <input type="button" class="button" accesskey="u" name="addbbcode4" value=" u " style="text-decoration: underline; width: 30px" onClick="bbstyle(4)" onMouseOver="helpline('u')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="q" name="addbbcode6" value="Quote" style="width: 50px" onClick="bbstyle(6)" onMouseOver="helpline('q')" />
+                    <input type="button" class="button" accesskey="q" name="addbbcode6" value="Quote" style="width: 50px" onClick="bbstyle(6)" onMouseOver="helpline('q')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="c" name="addbbcode8" value="Code" style="width: 40px" onClick="bbstyle(8)" onMouseOver="helpline('c')" />
+                    <input type="button" class="button" accesskey="c" name="addbbcode8" value="Code" style="width: 40px" onClick="bbstyle(8)" onMouseOver="helpline('c')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="l" name="addbbcode10" value="List" style="width: 40px" onClick="bbstyle(10)" onMouseOver="helpline('l')" />
+                    <input type="button" class="button" accesskey="l" name="addbbcode10" value="List" style="width: 40px" onClick="bbstyle(10)" onMouseOver="helpline('l')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="o" name="addbbcode12" value="List=" style="width: 40px" onClick="bbstyle(12)" onMouseOver="helpline('o')" />
+                    <input type="button" class="button" accesskey="o" name="addbbcode12" value="List=" style="width: 40px" onClick="bbstyle(12)" onMouseOver="helpline('o')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="p" name="addbbcode14" value="Img" style="width: 40px"  onClick="bbstyle(14)" onMouseOver="helpline('p')" />
+                    <input type="button" class="button" accesskey="p" name="addbbcode14" value="Img" style="width: 40px"  onClick="bbstyle(14)" onMouseOver="helpline('p')">
                     </td>
                   <td>
-                    <input type="button" class="button" accesskey="w" name="addbbcode16" value="URL" style="text-decoration: underline; width: 40px" onClick="bbstyle(16)" onMouseOver="helpline('w')" />
+                    <input type="button" class="button" accesskey="w" name="addbbcode16" value="URL" style="text-decoration: underline; width: 40px" onClick="bbstyle(16)" onMouseOver="helpline('w')">
                     </td>
                 </tr>
                 <tr> 
@@ -364,7 +364,7 @@ function storeCaret(textEl) {
                 </tr>
                 <tr> 
                   <td colspan="9">
-                    <input type="text" name="helpbox" size="45" maxlength="100" style="width:450px;" value="{L_STYLES_TIP}" />
+                    <input type="text" name="helpbox" size="45" maxlength="100" style="width:450px;" value="{L_STYLES_TIP}">
                     </td>
                 </tr>
                 <tr> 
@@ -376,16 +376,16 @@ function storeCaret(textEl) {
               </td>
           </tr>
           <tr> 
-            <td class="row1" valign="top"><b>{L_OPTIONS}</b><br />
-              {HTML_STATUS}<br />
-              {BBCODE_STATUS}<br />
+            <td class="row1" valign="top"><b>{L_OPTIONS}</b><br>
+              {HTML_STATUS}<br>
+              {BBCODE_STATUS}<br>
               {SMILIES_STATUS}</td>
             <td class="row1">
               <table cellspacing="0" cellpadding="1" border="0">
                 <!-- BEGIN switch_html_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="disable_html" {S_HTML_CHECKED} />
+                    <input type="checkbox" name="disable_html" {S_HTML_CHECKED}>
                   </td>
                   <td>{L_DISABLE_HTML}</td>
                 </tr>
@@ -393,7 +393,7 @@ function storeCaret(textEl) {
                 <!-- BEGIN switch_bbcode_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="disable_bbcode" {S_BBCODE_CHECKED} />
+                    <input type="checkbox" name="disable_bbcode" {S_BBCODE_CHECKED}>
                   </td>
                   <td>{L_DISABLE_BBCODE}</td>
                 </tr>
@@ -401,7 +401,7 @@ function storeCaret(textEl) {
                 <!-- BEGIN switch_smilies_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="disable_smilies" {S_SMILIES_CHECKED} />
+                    <input type="checkbox" name="disable_smilies" {S_SMILIES_CHECKED}>
                   </td>
                   <td>{L_DISABLE_SMILIES}</td>
                 </tr>
@@ -409,7 +409,7 @@ function storeCaret(textEl) {
                 <!-- BEGIN switch_signature_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="attach_sig" {S_SIGNATURE_CHECKED} />
+                    <input type="checkbox" name="attach_sig" {S_SIGNATURE_CHECKED}>
                   </td>
                   <td>{L_ATTACH_SIGNATURE}</td>
                 </tr>
@@ -417,7 +417,7 @@ function storeCaret(textEl) {
                 <!-- BEGIN switch_notify_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="notify" {S_NOTIFY_CHECKED} />
+                    <input type="checkbox" name="notify" {S_NOTIFY_CHECKED}>
                   </td>
                   <td>{L_NOTIFY_ON_REPLY}</td>
                 </tr>
@@ -425,7 +425,7 @@ function storeCaret(textEl) {
                 <!-- BEGIN switch_delete_checkbox -->
                 <tr> 
                   <td> 
-                    <input type="checkbox" name="delete" />
+                    <input type="checkbox" name="delete">
                   </td>
                   <td>{L_DELETE_POST}</td>
                 </tr>
@@ -442,8 +442,8 @@ function storeCaret(textEl) {
           {POLLBOX} 
           <tr> 
             <td class="toprow" colspan="2" align="center"> {S_HIDDEN_FORM_FIELDS} 
-              <input type="submit" accesskey="s" tabindex="6" name="post" class="mainoption" value="{L_SUBMIT}" />
-              <input type="submit" tabindex="5" name="preview" class="mainoption" value="{L_PREVIEW}" />
+              <input type="submit" accesskey="s" tabindex="6" name="post" class="mainoption" value="{L_SUBMIT}">
+              <input type="submit" tabindex="5" name="preview" class="mainoption" value="{L_PREVIEW}">
               &nbsp; </td>
           </tr>
         </table>

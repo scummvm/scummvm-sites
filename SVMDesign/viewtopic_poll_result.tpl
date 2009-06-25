@@ -1,6 +1,6 @@
 <!-- DEBUG: viewtopic_poll_results.tpl starts here --> 
 <tr> 
-  <td class="row1" colspan="3"><br clear="all" />
+  <td class="row1" colspan="3"><br clear="all">
         <table cellpadding="0" cellspacing="0" border="0" align="center">
         <tr> 
     <td class="tableborder">
@@ -17,9 +17,9 @@
 			  <td> 
 				<table cellspacing="0" cellpadding="0" border="0">
 				  <tr> 
-					<td><img src="templates/SVMDesign/images/vote_lcap.gif" width="4" alt="" height="12" /></td>
-					<td><img src="{poll_option.POLL_OPTION_IMG}" width="{poll_option.POLL_OPTION_IMG_WIDTH}" height="12" alt="{poll_option.POLL_OPTION_PERCENT}" /></td>
-					<td><img src="templates/SVMDesign/images/vote_rcap.gif" width="4" alt="" height="12" /></td>
+					<td><img src="templates/SVMDesign/images/vote_lcap.gif" width="4" alt="" height="12"></td>
+					<td><img src="{poll_option.POLL_OPTION_IMG}" width="{poll_option.POLL_OPTION_IMG_WIDTH}" height="12" alt="{poll_option.POLL_OPTION_PERCENT}"></td>
+					<td><img src="templates/SVMDesign/images/vote_rcap.gif" width="4" alt="" height="12"></td>
 				  </tr>
 				</table>
 			  </td>
@@ -37,6 +37,6 @@
 	</td>
 	</tr>
 	</table>
-	<br clear="all" />
+	<br clear="all">
   </td>
 </tr>

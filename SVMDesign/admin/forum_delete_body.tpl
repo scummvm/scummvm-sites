@@ -17,7 +17,7 @@
 	  <td class="row1">{S_SELECT_TO}</td>
 	</tr>
 	<tr> 
-	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption" /></td>
+	  <td class="catBottom" colspan="2" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{S_SUBMIT_VALUE}" class="mainoption"></td>
 	</tr>
   </table>
 </form>

@@ -28,7 +28,7 @@
 	  <table width="100%" cellspacing="0" cellpadding="0" border="0">
 		<tr> 
 		  <td>&nbsp;<span class="smalltext"><a href="{userrow.U_PROFILE}" class="smalltext">{userrow.USERNAME}</a></span></td>
-		  <td align="right"><a href="{userrow.U_SEARCHPOSTS}" class="smalltext"><img src="{SEARCH_IMG}" border="0" alt="{L_SEARCH_POSTS}" /></a> 
+		  <td align="right"><a href="{userrow.U_SEARCHPOSTS}" class="smalltext"><img src="{SEARCH_IMG}" border="0" alt="{L_SEARCH_POSTS}"></a> 
 			&nbsp;</td>
 		</tr>
 	  </table>
@@ -53,4 +53,4 @@
 </td>
 </tr>
 </table>
-<br clear="all" />
+<br clear="all">

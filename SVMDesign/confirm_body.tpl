@@ -9,13 +9,13 @@
   <tr> 
 	<td class="row1" align="center"> 
 	  <form action="{S_CONFIRM_ACTION}" method="POST">
-		<span class="mediumtext"><br />
-		{MESSAGE_TEXT}<br />
-		<br />
+		<span class="mediumtext"><br>
+		{MESSAGE_TEXT}<br>
+		<br>
 		{S_HIDDEN_FIELDS} 
-		<input type="submit" name="confirm" value="{L_YES}" />
+		<input type="submit" name="confirm" value="{L_YES}">
 		&nbsp;&nbsp; 
-		<input type="submit" name="cancel" value="{L_NO}" />
+		<input type="submit" name="cancel" value="{L_NO}">
 		</span> 
 	  </form>
 	</td>
@@ -24,4 +24,4 @@
 </td>
 </tr>
 </table>
-<br />
+<br>

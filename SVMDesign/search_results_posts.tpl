@@ -31,10 +31,10 @@
 	</td>
   </tr>
   <tr> 
-	<td width="22%" align="left" valign="top" class="row1" rowspan="2"><span class="smalltext"><b><a href="{searchresults.U_USER_PROFILE}" class="smalllink"></a>{searchresults.POSTER_NAME}</b></span><br />
-	  <br />
-	  <span class="smalltext">{L_REPLIES}: <b>{searchresults.TOPIC_REPLIES}</b><br />
-	  {L_VIEWS}: <b>{searchresults.TOPIC_VIEWS}</b></span><br />
+	<td width="22%" align="left" valign="top" class="row1" rowspan="2"><span class="smalltext"><b><a href="{searchresults.U_USER_PROFILE}" class="smalllink"></a>{searchresults.POSTER_NAME}</b></span><br>
+	  <br>
+	  <span class="smalltext">{L_REPLIES}: <b>{searchresults.TOPIC_REPLIES}</b><br>
+	  {L_VIEWS}: <b>{searchresults.TOPIC_VIEWS}</b></span><br>
 	</td>
 	<td valign="top" class="row1"> <img src="templates/SVMDesign/images/icon_minipost.gif" alt="{searchresults.L_MINI_POST_ALT}"><span class="smalltext">{L_FORUM}:&nbsp;<b><a href="{searchresults.U_FORUM}" class="smalllink">{searchresults.FORUM_NAME}</a></b>&nbsp;&nbsp;&nbsp;{L_POSTED}: 
 	  {searchresults.POST_DATE}&nbsp;&nbsp;&nbsp;Subject: <b><a href="{searchresults.U_POST}">{searchresults.POST_SUBJECT}</a></b></span></td>
@@ -53,7 +53,7 @@
 <table width="98%" cellspacing="2" border="0" align="center" cellpadding="2">
   <tr> 
 	<td align="left" valign="top"><span class="smalltext">{PAGE_NUMBER}</span></td>
-	<td align="right" valign="top" nowrap><span class="smalltext">{PAGINATION}</span><br /><span class="smalltext">{S_TIMEZONE}</span></td>
+	<td align="right" valign="top" nowrap><span class="smalltext">{PAGINATION}</span><br><span class="smalltext">{S_TIMEZONE}</span></td>
   </tr>
 </table>
 

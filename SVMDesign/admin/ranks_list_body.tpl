@@ -21,6 +21,6 @@
 	</tr>
 	<!-- END ranks -->			
 	<tr>
-		<td class="catBottom" align="center" colspan="6"><input type="submit" class="mainoption" name="add" value="{L_ADD_RANK}" /></td>
+		<td class="catBottom" align="center" colspan="6"><input type="submit" class="mainoption" name="add" value="{L_ADD_RANK}"></td>
 	</tr>
 </table></form>

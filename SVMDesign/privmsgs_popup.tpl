@@ -17,7 +17,7 @@ function jump_to_inbox()
 	  <td>
 		<table width="100%" border="0" cellspacing="1" cellpadding="4">
 		  <tr> 
-			<td valign="top" class="row1" align="center"><br /><span class="mediumtext">{L_MESSAGE}</span><br /><br /><span class="mediumtext"><a href="javascript:window.close();" class="mediumlink">{L_CLOSE_WINDOW}</a></span><br /><br /></td>
+			<td valign="top" class="row1" align="center"><br><span class="mediumtext">{L_MESSAGE}</span><br><br><span class="mediumtext"><a href="javascript:window.close();" class="mediumlink">{L_CLOSE_WINDOW}</a></span><br><br></td>
 		  </tr>
 		</table>
 	  </td>

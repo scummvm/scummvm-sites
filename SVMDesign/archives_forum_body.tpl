@@ -27,13 +27,13 @@
           </tr>
           <!-- BEGIN topicrow -->
           <tr align="center"> 
-            <td class="row1" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}" /></td>
-            <td align="left" class="row3" width="100%"><span class="smalltext">{topicrow.NEWEST_POST_IMG}{topicrow.TOPIC_TYPE}<a href="{topicrow.U_VIEW_TOPIC}" class="topiclink">{topicrow.TOPIC_TITLE}</a></span><span class="smalltext"><br />
+            <td class="row1" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}"></td>
+            <td align="left" class="row3" width="100%"><span class="smalltext">{topicrow.NEWEST_POST_IMG}{topicrow.TOPIC_TYPE}<a href="{topicrow.U_VIEW_TOPIC}" class="topiclink">{topicrow.TOPIC_TITLE}</a></span><span class="smalltext"><br>
               {topicrow.GOTO_PAGE}</span></td>
             <td nowrap class="row1"><span class="smalltext">{topicrow.TOPIC_AUTHOR}</span></td>
             <td class="row3" nowrap><span class="mediumtext">{topicrow.REPLIES}</span></td>
             <td class="row1" nowrap><span class="mediumtext">{topicrow.VIEWS}</span></td>
-            <td class="row3" align="right" nowrap><span class="smalltext">{topicrow.LAST_POST_TIME}<br />{topicrow.LAST_POST_AUTHOR} {topicrow.LAST_POST_IMG}</span></td>
+            <td class="row3" align="right" nowrap><span class="smalltext">{topicrow.LAST_POST_TIME}<br>{topicrow.LAST_POST_AUTHOR} {topicrow.LAST_POST_IMG}</span></td>
           </tr>
           <!-- END topicrow -->
           <!-- BEGIN switch_no_topics -->
@@ -49,7 +49,7 @@
   <table cellpadding="2" cellspacing="0" border="0" width="98%"  align="center">
     <tr valign="top"> 
       <td><a href="{U_POST_NEW_TOPIC}"><br>
-        <img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a><br>
+        <img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}"></a><br>
         <span class="smalltext">
         {S_WATCH_FORUM}<br><a href="{U_MARK_READ}">{L_MARK_TOPICS_READ}</a></span></td>
       <td align="right"><span class="smalltext">{PAGE_NUMBER}<br>

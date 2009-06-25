@@ -1,5 +1,5 @@
 <!-- DEBUG: admin_message_body.tpl starts here -->
-<br /><br />
+<br><br>
 
 <table width="100%" cellpadding="4" cellspacing="1" border="0" class="forumline">
 	<tr>
@@ -10,4 +10,4 @@
 	</tr>
 </table>
 
-<br />
+<br>

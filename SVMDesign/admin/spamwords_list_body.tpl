@@ -16,6 +16,6 @@
 	</tr>
 	<!-- END words -->
 	<tr>
-		<td colspan="5" align="center" class="catBottom">{S_HIDDEN_FIELDS}<input type="submit" name="add" value="{L_ADD_WORD}" class="mainoption" /></td>
+		<td colspan="5" align="center" class="catBottom">{S_HIDDEN_FIELDS}<input type="submit" name="add" value="{L_ADD_WORD}" class="mainoption"></td>
 	</tr>
 </table></form>

@@ -26,13 +26,13 @@
           <td class="row1" height="28" valign="top">
             <table width="100%" border="0" cellspacing="0" cellpadding="0">
               <tr> 
-                <td width="100%"><img src="{postrow.MINI_POST_IMG}" alt="{postrow.L_MINI_POST_ALT}" title="{postrow.L_MINI_POST_ALT}" border="0" /><span class="postdetails">{L_POSTED}: 
+                <td width="100%"><img src="{postrow.MINI_POST_IMG}" alt="{postrow.L_MINI_POST_ALT}" title="{postrow.L_MINI_POST_ALT}" border="0"><span class="postdetails">{L_POSTED}: 
                   {postrow.POST_DATE}&nbsp;&nbsp;&nbsp;&nbsp;{L_POST_SUBJECT}: 
                   {postrow.POST_SUBJECT}</span></td>
               </tr>
               <tr> 
                 <td colspan="2">
-                  <hr />
+                  <hr>
                 </td>
               </tr>
               <tr> 

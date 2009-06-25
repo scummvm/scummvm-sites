@@ -8,6 +8,6 @@
 		<th class="thHead">{L_SELECT_FILE}</th>
 	</tr>
 	<tr>
-		<td class="row1" align="center">&nbsp;<input type="file" name="backup_file">&nbsp;&nbsp;{S_HIDDEN_FIELDS}<input type="submit" name="restore_start" value="{L_START_RESTORE}" class="mainoption" />&nbsp;</td>
+		<td class="row1" align="center">&nbsp;<input type="file" name="backup_file">&nbsp;&nbsp;{S_HIDDEN_FIELDS}<input type="submit" name="restore_start" value="{L_START_RESTORE}" class="mainoption">&nbsp;</td>
 	</tr>
 </table></form>

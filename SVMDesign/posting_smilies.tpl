@@ -28,7 +28,7 @@ function emoticon(text) {
 					<!-- BEGIN smilies_row -->
 					<tr align="center" valign="middle"> 
 						<!-- BEGIN smilies_col -->
-						<td><a href="javascript:emoticon('{smilies_row.smilies_col.SMILEY_CODE}')"><img src="{smilies_row.smilies_col.SMILEY_IMG}" border="0" alt="{smilies_row.smilies_col.SMILEY_DESC}" title="{smilies_row.smilies_col.SMILEY_DESC}" /></a></td>
+						<td><a href="javascript:emoticon('{smilies_row.smilies_col.SMILEY_CODE}')"><img src="{smilies_row.smilies_col.SMILEY_IMG}" border="0" alt="{smilies_row.smilies_col.SMILEY_DESC}" title="{smilies_row.smilies_col.SMILEY_DESC}"></a></td>
 						<!-- END smilies_col -->
 					</tr>
 					<!-- END smilies_row -->
@@ -40,7 +40,7 @@ function emoticon(text) {
 				</table></td>
 			</tr>
 			<tr>
-				<td align="center"><br /><span class="mediumtext"><a href="javascript:window.close();" class="mediumlink">{L_CLOSE_WINDOW}</a></span></td>
+				<td align="center"><br><span class="mediumtext"><a href="javascript:window.close();" class="mediumlink">{L_CLOSE_WINDOW}</a></span></td>
 			</tr>
 		</table>
 </td>

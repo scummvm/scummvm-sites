@@ -37,24 +37,24 @@ function checkForm(formObj) {
 	</tr>
 	<tr> 
 		<td class="row1" width="22%"><span class="mediumtext"><b>{L_SUBJECT}</b></span></td>
-		<td class="row1" width="78%"><span class="mediumtext"><input type="text" name="subject" size="45" maxlength="100" style="width:450px" tabindex="2" value="{SUBJECT}" /></span> </td>
+		<td class="row1" width="78%"><span class="mediumtext"><input type="text" name="subject" size="45" maxlength="100" style="width:450px" tabindex="2" value="{SUBJECT}"></span> </td>
 	</tr>
 	<tr> 
-		<td class="row1" valign="top"><span class="mediumtext"><b>{L_MESSAGE_BODY}</b></span><br /><span class="smalltext">{L_MESSAGE_BODY_DESC}</span></td>
+		<td class="row1" valign="top"><span class="mediumtext"><b>{L_MESSAGE_BODY}</b></span><br><span class="smalltext">{L_MESSAGE_BODY_DESC}</span></td>
 		<td class="row1"><span class="mediumtext"><textarea name="message" rows="25" cols="40" wrap="virtual" style="width:500px" tabindex="3">{MESSAGE}</textarea></span></td>
 	</tr>
 	<tr> 
 		<td class="row1" valign="top"><span class="mediumtext"><b>{L_OPTIONS}</b></span></td>
 		<td class="row1"><table cellspacing="0" cellpadding="1" border="0">
 			<tr> 
-				<td><input type="checkbox" name="cc_email"  value="1" checked /></td>
+				<td><input type="checkbox" name="cc_email"  value="1" checked></td>
 				<td><span class="mediumtext">{L_CC_EMAIL}</span></td>
 			</tr>
 		</table></td>
 	</tr>
 	<tr>
 		<td class="catBottom" colspan="2" align="center" height="28"> {S_HIDDEN_FORM_FIELDS} 
-		&nbsp;<input type="submit" tabindex="6" name="submit" class="mainoption" value="{L_SEND_EMAIL}" /></td>
+		&nbsp;<input type="submit" tabindex="6" name="submit" class="mainoption" value="{L_SEND_EMAIL}"></td>
 	</tr>
 </table>
 </td>

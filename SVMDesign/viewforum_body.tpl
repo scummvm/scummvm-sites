@@ -10,7 +10,7 @@
       class="largetext"><a href="{U_INDEX}" class="largelink"><b>Forum Index</b></a>&nbsp;&gt;&nbsp;<a
       class="largelink" href="{U_VIEW_FORUM}"><b>{FORUM_NAME}</b></a></span></td>
 
-	  <td style="vertical-align: middle;" align="right"><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a>
+	  <td style="vertical-align: middle;" align="right"><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}"></a>
 	  </td>
 
 	  </tr>
@@ -40,13 +40,13 @@
           </tr>
           <!-- BEGIN topicrow -->
           <tr align="center"> 
-            <td class="row1" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}" /></td>
-            <td align="left" class="row1" width="100%"><span class="smalltext">{topicrow.NEWEST_POST_IMG}{topicrow.TOPIC_TYPE}<a href="{topicrow.U_VIEW_TOPIC}" class="topiclink">{topicrow.TOPIC_TITLE}</a></span><span class="smalltext"><br />
+            <td class="row1" valign="middle"><img src="{topicrow.TOPIC_FOLDER_IMG}" alt="{topicrow.L_TOPIC_FOLDER_ALT}" title="{topicrow.L_TOPIC_FOLDER_ALT}"></td>
+            <td align="left" class="row1" width="100%"><span class="smalltext">{topicrow.NEWEST_POST_IMG}{topicrow.TOPIC_TYPE}<a href="{topicrow.U_VIEW_TOPIC}" class="topiclink">{topicrow.TOPIC_TITLE}</a></span><span class="smalltext"><br>
               {topicrow.GOTO_PAGE}</span></td>
             <td nowrap class="row1"><span class="smalltext">{topicrow.TOPIC_AUTHOR}</span></td>
             <td class="row1" nowrap><span class="mediumtext">{topicrow.REPLIES}</span></td>
             <td class="row1" nowrap><span class="mediumtext">{topicrow.VIEWS}</span></td>
-            <td class="row1" align="right" nowrap><span class="smalltext">{topicrow.LAST_POST_TIME}<br />{topicrow.LAST_POST_AUTHOR} {topicrow.LAST_POST_IMG}</span></td>
+            <td class="row1" align="right" nowrap><span class="smalltext">{topicrow.LAST_POST_TIME}<br>{topicrow.LAST_POST_AUTHOR} {topicrow.LAST_POST_IMG}</span></td>
           </tr>
           <!-- END topicrow -->
           <!-- BEGIN switch_no_topics -->
@@ -65,13 +65,13 @@
                               <td valign="middle"><span class="largetext">&nbsp;&nbsp;{L_DISPLAY_TOPICS}:</span></td>
                               <td valign="middle"><span class="largetext">&nbsp;&nbsp;{S_SELECT_TOPIC_DAYS}</span></td>
                               <td align="left" valign="middle"><span class="largetext"> 
-                                &nbsp;<input type="submit" value="{L_GO}" class="liteoption" name="submit" />
+                                &nbsp;<input type="submit" value="{L_GO}" class="liteoption" name="submit">
                                 </span></td>
                             </tr>
                           </table>
 			
                         </td>  
-                       <td align="right" width="2%" nowrap><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}" /></a></td>                       
+                       <td align="right" width="2%" nowrap><a href="{U_POST_NEW_TOPIC}"><img src="{POST_IMG}" border="0" alt="{L_POST_NEW_TOPIC}"></a></td>                       
                       </tr>
                </table>              
             </td>

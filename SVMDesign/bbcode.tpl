@@ -85,7 +85,7 @@ quote:</span>
 <!-- END size_close -->
 
 <!-- BEGIN img -->
-<img src="{URL}" border="0" />
+<img src="{URL}" border="0">
 <!-- END img -->
 
 <!-- BEGIN url -->

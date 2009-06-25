@@ -21,7 +21,7 @@
 		<th>{L_SIMPLE_NAME}</th>
 	</tr>
 	<tr>
-		<td class="row1">{L_STYLESHEET}:<br /><span class="gensmall">{L_STYLESHEET_EXPLAIN}</span></td>
+		<td class="row1">{L_STYLESHEET}:<br><span class="gensmall">{L_STYLESHEET_EXPLAIN}</span></td>
 		<td class="row2"><input class="post" type="text" size="25" maxlength="100" name="head_stylesheet" value="{HEAD_STYLESHEET}"></td>
 		<td class="row2">&nbsp;</td>		
 	</tr>
@@ -238,7 +238,7 @@
 
 
 	<tr>
-		<td class="catBottom" colspan="3" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{L_SAVE_SETTINGS}" class="mainoption" />
+		<td class="catBottom" colspan="3" align="center">{S_HIDDEN_FIELDS}<input type="submit" name="submit" value="{L_SAVE_SETTINGS}" class="mainoption">
 		</td>
 	</tr>
 </table></form>

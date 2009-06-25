@@ -6,7 +6,7 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 {
 	if( icq_user_addr.length && icq_user_addr.indexOf("&nbsp;") == -1 )
 	{
-		document.write('<table width="59" border="0" cellspacing="0" cellpadding="0"><tr><td nowrap="nowrap" style=" background-image: url(\'' + icq_add_img + '\'); background-repeat: no-repeat"><img src="images/spacer.gif" width="3" height="18" alt = "">' + icq_status_img + '<a href="http://wwp.icq.com/scripts/search.dll?to=' + icq_user_addr + '"><img src="images/spacer.gif" width="35" height="18" border="0" alt="{L_ICQ_NUMBER}" /><\/a><\/td><\/tr><\/table>');
+		document.write('<table width="59" border="0" cellspacing="0" cellpadding="0"><tr><td nowrap="nowrap" style=" background-image: url(\'' + icq_add_img + '\'); background-repeat: no-repeat"><img src="images/spacer.gif" width="3" height="18" alt = "">' + icq_status_img + '<a href="http://wwp.icq.com/scripts/search.dll?to=' + icq_user_addr + '"><img src="images/spacer.gif" width="35" height="18" border="0" alt="{L_ICQ_NUMBER}"><\/a><\/td><\/tr><\/table>');
 	}
 }
 //-->
@@ -91,6 +91,6 @@ function create_icq_subsilver(icq_user_addr, icq_status_img, icq_add_img)
 <p>&nbsp;</p>
 <table width="100%" border="0" cellspacing="0" cellpadding="0" align="center">
   <tr> 
-	<td align="right"><br />{JUMPBOX}</td>
+	<td align="right"><br>{JUMPBOX}</td>
   </tr>
 </table>

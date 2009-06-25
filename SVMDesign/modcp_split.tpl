@@ -13,7 +13,7 @@
 	<tr> 
 	  <td class="row1" nowrap><span class="mediumtext">{L_SPLIT_SUBJECT}</span></td>
 	  <td class="row1" colspan="2"><span class="smalltext"> 
-		<input type="text" size="35" style="width: 350px" maxlength="100" name="subject" />
+		<input type="text" size="35" style="width: 350px" maxlength="100" name="subject">
 		</span></td>
 	</tr>
 	<tr> 
@@ -25,10 +25,10 @@
 		<table width="60%" cellspacing="0" cellpadding="0" border="0" align="center">
 		  <tr> 
 			<td width="50%" align="center"> 
-			  <input type="submit" name="split_type_all" value="{L_SPLIT_POSTS}" />
+			  <input type="submit" name="split_type_all" value="{L_SPLIT_POSTS}">
 			</td>
 			<td width="50%" align="center"> 
-			  <input type="submit" name="split_type_beyond" value="{L_SPLIT_AFTER}" />
+			  <input type="submit" name="split_type_beyond" value="{L_SPLIT_AFTER}">
 			</td>
 		  </tr>
 		</table>
@@ -50,12 +50,12 @@
 		  </tr>
 		  <tr> 
 			<td valign="top"> 
-			  <hr size="1" />
+			  <hr size="1">
 			  <span class="mediumtext">{postrow.MESSAGE}</span></td> 
 		  </tr>
 		</table>
 	  </td>
-	  <td width="5%" align="center" class="row1"><input type="checkbox" name="post_id_list[]" value="{postrow.POST_ID}" /></td>
+	  <td width="5%" align="center" class="row1"><input type="checkbox" name="post_id_list[]" value="{postrow.POST_ID}"></td>
 	</tr>
 	<!-- END postrow -->
 	<tr> 
@@ -63,10 +63,10 @@
 		<table width="60%" cellspacing="0" cellpadding="0" border="0" align="center">
 		  <tr> 
 			<td width="50%" align="center"> 
-			  <input type="submit" name="split_type_all" value="{L_SPLIT_POSTS}" />
+			  <input type="submit" name="split_type_all" value="{L_SPLIT_POSTS}">
 			</td>
 			<td width="50%" align="center"> 
-			  <input type="submit" name="split_type_beyond" value="{L_SPLIT_AFTER}" />
+			  <input type="submit" name="split_type_beyond" value="{L_SPLIT_AFTER}">
 			  {S_HIDDEN_FIELDS} </td>
 		  </tr>
 		</table>

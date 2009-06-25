@@ -8,21 +8,21 @@
 	  <td class="toprow" colspan="4"><span class="toprowtext">{L_SEARCH_QUERY}</span></td>
 	</tr>
 	<tr> 
-	  <td class="row1" colspan="2" width="50%"><span class="mediumtext">{L_SEARCH_KEYWORDS}:</span><br />
+	  <td class="row1" colspan="2" width="50%"><span class="mediumtext">{L_SEARCH_KEYWORDS}:</span><br>
 		<span class="smalltext">{L_SEARCH_KEYWORDS_EXPLAIN}</span></td>
 	  <td class="row1" colspan="2" valign="top"><span class="mediumtext"> 
-		<input type="text" style="width: 300px" name="search_keywords" size="30" />
-		<br />
-		<input type="radio" name="search_terms" value="any" />
-		{L_SEARCH_ANY_TERMS}<br />
-		<input type="radio" name="search_terms" value="all" checked="checked" />
+		<input type="text" style="width: 300px" name="search_keywords" size="30">
+		<br>
+		<input type="radio" name="search_terms" value="any">
+		{L_SEARCH_ANY_TERMS}<br>
+		<input type="radio" name="search_terms" value="all" checked="checked">
 		{L_SEARCH_ALL_TERMS}</span></td>
 	</tr>
 	<tr> 
-	  <td class="row1" colspan="2"><span class="mediumtext">{L_SEARCH_AUTHOR}:</span><br />
+	  <td class="row1" colspan="2"><span class="mediumtext">{L_SEARCH_AUTHOR}:</span><br>
 		<span class="smalltext">{L_SEARCH_AUTHOR_EXPLAIN}</span></td>
 	  <td class="row1" colspan="2" valign="middle"><span class="mediumtext"> 
-		<input type="text" style="width: 300px" name="search_author" size="30" />
+		<input type="text" style="width: 300px" name="search_author" size="30">
 		</span> </td>
 	</tr>
 	<tr> 
@@ -51,18 +51,18 @@
 		<select class="post" name="sort_by">{S_SORT_OPTIONS}
 			  
 		</select>
-		<br />
-		<input type="radio" name="sort_dir" value="ASC" />
-		{L_SORT_ASCENDING}<br />
-		<input type="radio" name="sort_dir" value="DESC" checked="checked" />
+		<br>
+		<input type="radio" name="sort_dir" value="ASC">
+		{L_SORT_ASCENDING}<br>
+		<input type="radio" name="sort_dir" value="DESC" checked="checked">
 		{L_SORT_DESCENDING}</span>&nbsp;</td>
 	</tr>
 	<tr> 
 	  <td class="row1" align="right" nowrap><span class="mediumtext">{L_DISPLAY_RESULTS}:&nbsp;</span></td>
 	  <td class="row1" nowrap> 
-		<input type="radio" name="show_results" value="posts" />
+		<input type="radio" name="show_results" value="posts">
 		<span class="mediumtext">{L_POSTS}
-		<input type="radio" name="show_results" value="topics" checked="checked" />
+		<input type="radio" name="show_results" value="topics" checked="checked">
 		{L_TOPICS}</span></td>
 	  <td class="row1" align="right" nowrap><span class="mediumtext">{L_SEARCH_PREVIOUS}:&nbsp;</span></td>
 	  <td class="row1" valign="middle"><span class="mediumtext">
@@ -72,7 +72,7 @@
 	</tr>
 	<tr> 
 	  <td class="catrow" colspan="4" align="center" >	  
-		{S_HIDDEN_FIELDS}<input class="liteoption" type="submit" value="{L_SEARCH}" />
+		{S_HIDDEN_FIELDS}<input class="liteoption" type="submit" value="{L_SEARCH}">
 	  </td>
 	</tr>
   </table>
