@@ -30,7 +30,7 @@ PROJECT_NUMBER         = SVNHEAD
 # If a relative path is entered, it will be relative to the location 
 # where doxygen was started. If left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = /home/sev/doxygen
+OUTPUT_DIRECTORY       = /var/www/doxygen
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 
 # 4096 sub-directories (in 2 levels) under the output directory of each output 
@@ -448,7 +448,7 @@ WARN_FORMAT            = "$file:$line: $text"
 # and error messages should be written. If left blank the output is written 
 # to stderr.
 
-WARN_LOGFILE           = /home/sev/doxygen/doxygen.log
+WARN_LOGFILE           = /home/joostp/doxygen/doxygen.log
 
 #---------------------------------------------------------------------------
 # configuration options related to the input files
@@ -459,19 +459,19 @@ WARN_LOGFILE           = /home/sev/doxygen/doxygen.log
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = /home/sev/doxygen/scummvm-SVN-trunk/backends/events \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/fs \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/midi \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/plugins \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/saves \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/timer \
-                         /home/sev/doxygen/scummvm-SVN-trunk/backends/platform/sdl \
-                         /home/sev/doxygen/scummvm-SVN-trunk/base \
-                         /home/sev/doxygen/scummvm-SVN-trunk/common \
-                         /home/sev/doxygen/scummvm-SVN-trunk/engines \
-                         /home/sev/doxygen/scummvm-SVN-trunk/graphics \
-                         /home/sev/doxygen/scummvm-SVN-trunk/gui \
-                         /home/sev/doxygen/scummvm-SVN-trunk/sound
+INPUT                  = /home/joostp/doxygen/scummvm-SVN-trunk/backends/events \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/fs \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/midi \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/plugins \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/saves \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/timer \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/platform/sdl \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/base \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/common \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/engines \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/graphics \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/gui \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/sound
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 
@@ -492,9 +492,9 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = /home/sev/doxygen/scummvm-SVN-trunk/engines/sky/skydefs.h \
-                         /home/sev/doxygen/scummvm-SVN-trunk/engines/sword1/swordres.h \
-                         /home/sev/doxygen/scummvm-SVN-trunk/engines/queen/restables.cpp
+EXCLUDE                = /home/joostp/doxygen/scummvm-SVN-trunk/engines/sky/skydefs.h \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/engines/sword1/swordres.h \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/engines/queen/restables.cpp
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix filesystem feature) are excluded 

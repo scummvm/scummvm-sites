@@ -1,6 +1,6 @@
 #!/bin/sh -ev
 
-BASEPATH=/home/sev/doxygen
+BASEPATH=/home/joostp/doxygen
 
 source ${BASEPATH}/lock_unlock
 
