@@ -1,354 +1,157 @@
-BODY,H1,H2,H3,H4,H5,H6,P,CENTER,TD,TH,UL,DL,DIV {
-	font-family: Geneva, Arial, Helvetica, sans-serif;
-}
-BODY,TD {
-       font-size: 90%;
-}
-H1 {
-	text-align: center;
-       font-size: 160%;
-}
-H2 {
-       font-size: 120%;
-}
-H3 {
-       font-size: 100%;
-}
-CAPTION { font-weight: bold }
-DIV.qindex {
-	width: 100%;
-	background-color: #e8eef2;
-	border: 1px solid #84b0c7;
-	text-align: center;
-	margin: 2px;
-	padding: 2px;
-	line-height: 140%;
-}
-DIV.nav {
-	width: 100%;
-	background-color: #e8eef2;
-	border: 1px solid #84b0c7;
-	text-align: center;
-	margin: 2px;
-	padding: 2px;
-	line-height: 140%;
-}
-DIV.navtab {
-       background-color: #e8eef2;
-       border: 1px solid #84b0c7;
-       text-align: center;
-       margin: 2px;
-       margin-right: 15px;
-       padding: 2px;
-}
-TD.navtab {
-       font-size: 70%;
-}
-A.qindex {
-       text-decoration: none;
-       font-weight: bold;
-       color: #1A419D;
-}
-A.qindex:visited {
-       text-decoration: none;
-       font-weight: bold;
-       color: #1A419D
-}
-A.qindex:hover {
-	text-decoration: none;
-	background-color: #ddddff;
-}
-A.qindexHL {
-	text-decoration: none;
-	font-weight: bold;
-	background-color: #6666cc;
-	color: #ffffff;
-	border: 1px double #9295C2;
-}
-A.qindexHL:hover {
-	text-decoration: none;
-	background-color: #6666cc;
-	color: #ffffff;
-}
-A.qindexHL:visited { text-decoration: none; background-color: #6666cc; color: #ffffff }
-A.el { text-decoration: none; font-weight: bold }
-A.elRef { font-weight: bold }
-A.code:link { text-decoration: none; font-weight: normal; color: #0000FF}
-A.code:visited { text-decoration: none; font-weight: normal; color: #0000FF}
-A.codeRef:link { font-weight: normal; color: #0000FF}
-A.codeRef:visited { font-weight: normal; color: #0000FF}
-A:hover { text-decoration: none; background-color: #f2f2ff }
-DL.el { margin-left: -1cm }
-.fragment {
-       font-family: monospace, fixed;
-       font-size: 95%;
-}
-PRE.fragment {
-	border: 1px solid #CCCCCC;
-	background-color: #f5f5f5;
-	margin-top: 4px;
-	margin-bottom: 4px;
-	margin-left: 2px;
-	margin-right: 8px;
-	padding-left: 6px;
-	padding-right: 6px;
-	padding-top: 4px;
-	padding-bottom: 4px;
-}
-DIV.ah { background-color: black; font-weight: bold; color: #ffffff; margin-bottom: 3px; margin-top: 3px }
-
-DIV.groupHeader {
-       margin-left: 16px;
-       margin-top: 12px;
-       margin-bottom: 6px;
-       font-weight: bold;
-}
-DIV.groupText { margin-left: 16px; font-style: italic; font-size: 90% }
-BODY {
-	background: white;
-	color: black;
-	margin-right: 20px;
-	margin-left: 20px;
-}
-TD.indexkey {
-	background-color: #e8eef2;
-	font-weight: bold;
-	padding-right  : 10px;
-	padding-top    : 2px;
-	padding-left   : 10px;
-	padding-bottom : 2px;
-	margin-left    : 0px;
-	margin-right   : 0px;
-	margin-top     : 2px;
-	margin-bottom  : 2px;
-	border: 1px solid #CCCCCC;
-}
-TD.indexvalue {
-	background-color: #e8eef2;
-	font-style: italic;
-	padding-right  : 10px;
-	padding-top    : 2px;
-	padding-left   : 10px;
-	padding-bottom : 2px;
-	margin-left    : 0px;
-	margin-right   : 0px;
-	margin-top     : 2px;
-	margin-bottom  : 2px;
-	border: 1px solid #CCCCCC;
-}
-TR.memlist {
-   background-color: #f0f0f0; 
-}
-P.formulaDsp { text-align: center; }
-IMG.formulaDsp { }
-IMG.formulaInl { vertical-align: middle; }
-SPAN.keyword       { color: #008000 }
-SPAN.keywordtype   { color: #604020 }
-SPAN.keywordflow   { color: #e08000 }
-SPAN.comment       { color: #800000 }
-SPAN.preprocessor  { color: #806020 }
-SPAN.stringliteral { color: #002080 }
-SPAN.charliteral   { color: #008080 }
-.mdescLeft {
-       padding: 0px 8px 4px 8px;
-	font-size: 80%;
-	font-style: italic;
-	background-color: #FAFAFA;
-	border-top: 1px none #E0E0E0;
-	border-right: 1px none #E0E0E0;
-	border-bottom: 1px none #E0E0E0;
-	border-left: 1px none #E0E0E0;
-	margin: 0px;
-}
-.mdescRight {
-       padding: 0px 8px 4px 8px;
-	font-size: 80%;
-	font-style: italic;
-	background-color: #FAFAFA;
-	border-top: 1px none #E0E0E0;
-	border-right: 1px none #E0E0E0;
-	border-bottom: 1px none #E0E0E0;
-	border-left: 1px none #E0E0E0;
-	margin: 0px;
-}
-.memItemLeft {
-	padding: 1px 0px 0px 8px;
-	margin: 4px;
-	border-top-width: 1px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-top-color: #E0E0E0;
-	border-right-color: #E0E0E0;
-	border-bottom-color: #E0E0E0;
-	border-left-color: #E0E0E0;
-	border-top-style: solid;
-	border-right-style: none;
-	border-bottom-style: none;
-	border-left-style: none;
-	background-color: #FAFAFA;
-	font-size: 80%;
-}
-.memItemRight {
-	padding: 1px 8px 0px 8px;
-	margin: 4px;
-	border-top-width: 1px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-top-color: #E0E0E0;
-	border-right-color: #E0E0E0;
-	border-bottom-color: #E0E0E0;
-	border-left-color: #E0E0E0;
-	border-top-style: solid;
-	border-right-style: none;
-	border-bottom-style: none;
-	border-left-style: none;
-	background-color: #FAFAFA;
-	font-size: 80%;
-}
-.memTemplItemLeft {
-	padding: 1px 0px 0px 8px;
-	margin: 4px;
-	border-top-width: 1px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-top-color: #E0E0E0;
-	border-right-color: #E0E0E0;
-	border-bottom-color: #E0E0E0;
-	border-left-color: #E0E0E0;
-	border-top-style: none;
-	border-right-style: none;
-	border-bottom-style: none;
-	border-left-style: none;
-	background-color: #FAFAFA;
-	font-size: 80%;
-}
-.memTemplItemRight {
-	padding: 1px 8px 0px 8px;
-	margin: 4px;
-	border-top-width: 1px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-top-color: #E0E0E0;
-	border-right-color: #E0E0E0;
-	border-bottom-color: #E0E0E0;
-	border-left-color: #E0E0E0;
-	border-top-style: none;
-	border-right-style: none;
-	border-bottom-style: none;
-	border-left-style: none;
-	background-color: #FAFAFA;
-	font-size: 80%;
-}
-.memTemplParams {
-	padding: 1px 0px 0px 8px;
-	margin: 4px;
-	border-top-width: 1px;
-	border-right-width: 1px;
-	border-bottom-width: 1px;
-	border-left-width: 1px;
-	border-top-color: #E0E0E0;
-	border-right-color: #E0E0E0;
-	border-bottom-color: #E0E0E0;
-	border-left-color: #E0E0E0;
-	border-top-style: solid;
-	border-right-style: none;
-	border-bottom-style: none;
-	border-left-style: none;
-       color: #606060;
-	background-color: #FAFAFA;
-	font-size: 80%;
-}
-.search     { color: #003399;
-              font-weight: bold;
-}
-FORM.search {
-              margin-bottom: 0px;
-              margin-top: 0px;
-}
-INPUT.search { font-size: 75%;
-               color: #000080;
-               font-weight: normal;
-               background-color: #e8eef2;
-}
-TD.tiny      { font-size: 75%;
-}
-a {
-	color: #1A41A8;
-}
-a:visited {
-	color: #2A3798;
-}
-.dirtab { padding: 4px;
-          border-collapse: collapse;
-          border: 1px solid #84b0c7;
-}
-TH.dirtab { background: #e8eef2;
-            font-weight: bold;
-}
-HR { height: 1px;
-     border: none;
-     border-top: 1px solid black;
+body {
+  background-image: url('/images/body-bg.png'); margin: 10px;
+  background-color: #efc418;	
+	background-repeat: repeat-x;
 }
 
-/* Style for detailed member documentation */
-.memtemplate {
-  font-size: 80%;
-  color: #606060;
-  font-weight: normal;
-} 
-.memnav { 
-  background-color: #e8eef2;
-  border: 1px solid #84b0c7;
-  text-align: center;
-  margin: 2px;
-  margin-right: 15px;
-  padding: 2px;
+body, table {
+	font-family: verdana,tahoma,arial,helvetica,sans-serif;
+	font-size: 8pt;
+	font-weight: normal;
 }
-.memitem {
-  padding: 4px;
-  background-color: #eef3f5;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #dedeee;
-  -moz-border-radius: 8px 8px 8px 8px;
+
+table            
+{
+font-size: 10px; 
+color: #000000;
 }
-.memname {
-  white-space: nowrap;
-  font-weight: bold;
+
+td, th
+{
+font-size: 10px; 
+color: #000000;
 }
-.memdoc{
-  padding-left: 10px;
+
+.smalltext       
+{ 
+font-size : 10px; 
+color: #000000;
 }
-.memproto {
-  background-color: #d5e1e8;
-  width: 100%;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #84b0c7;
-  font-weight: bold;
-  -moz-border-radius: 8px 8px 8px 8px;
+
+.mediumtext      
+{ 
+font-size : 11px; 
+color: #000000;
 }
-.paramkey {
-  text-align: right;
+
+.largetext       
+{ 
+font-size : 13px; 
+color: #000000;
 }
-.paramtype {
-  white-space: nowrap;
+
+.catrowtext      
+{ 
+	font-weight: bold;
+	font-size: 13px;
+	color: #444444;
 }
-.paramname {
-  color: #602020;
-  font-style: italic;
-  white-space: nowrap;
+
+.toprowtext      
+{ 
+	color: #fff;
+	font-size: 12px;
+	font-weight: bold;
 }
-/* End Styling for detailed member documentation */
+
+/* Cell Properties */
+
+TD.row1
+{ 
+	background-color: #e8e7e7;
+	font-size : 13px; 
+	color: #494957
+}     
+     
+TD.row2	        /* ugly colors, to look which html uses them still - should have removed all occurences now */
+{ 
+	background-color: #00FF00;
+	font-size : 12px; 
+	color: #FF00FF
+}
+
+TD.row3
+{ 
+	background-color: #FFFFFF;
+	font-size : 12px; 
+	color: #494957
+}
+
+TD.catrow
+{ 
+	/* font-family: Verdana; */
+font-size : 12px; 
+font-weight: bold;
+}
+
+TD.toprow, TH.toprow
+{
+	background-image: url('/images/gradient_2.gif');
+	color: #fff;
+	font-weight: bold;
+	background: #a82709;
+	background-image: url('/images/par-head.png');
+	background-repeat: repeat-x;
+	padding: 6px;
+	font-size: 12px;
+}
+
+TD.tableborder	  
+{ 
+	background-color: #c0c0c0;
+}
+
+/* Link Properties */
+
+a                         { text-decoration: underline; font-size: 11px; color: #a33; }  
+a:link                    { text-decoration: underline; font-size: 11px; color: #a33; }
+a:visited                 { text-decoration: underline; font-size: 11px; color: #a33; }
+a:hover                   { text-decoration: none; font-size: 11px; color: #f00; } 
+
+a.forumlink               { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:link          { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:visited       { text-decoration: underline; font-weight: bold; font-size: 13px; color: #a33; }
+a.forumlink:hover         { text-decoration: none; font-size: 13px; font-weight: bold; color: #f00; }
+   
+a.topiclink               { text-decoration: underline; font-size: 13px; color: #a33; }  
+a.topiclink:link          { text-decoration: underline; font-size: 13px; color: #a33; }
+a.topiclink:visited       { text-decoration: underline; font-size: 13px; color: #a33; }
+a.topiclink:hover         { text-decoration: none; font-size: 13px; color: #f00; }  
+
+a.toprowlink              { text-decoration: none; font-size: 9px; color: #000000; }   
+a.toprowlink:link         { text-decoration: none; font-size: 9px; color: #000000; }
+a.toprowlink:visited      { text-decoration: none; font-size: 9px; color: #000000; }
+a.toprowlink:hover        { text-decoration: underline; font-size: 9px; color: #877751; } 
+     
+a.smalllink               { text-decoration: underline; font-size: 10px; color: #a33; }   
+a.smalllink:link          { text-decoration: underline; font-size: 10px; color: #a33; }
+a.smalllink:visited       { text-decoration: underline; font-size: 10px; color: #a33; }
+a.smalllink:hover         { text-decoration: none; font-size: 10px; color: #f00; }   
+  
+a.mediumlink              { text-decoration: underline; font-size: 11px; color: #a33; }  
+a.mediumlink:link         { text-decoration: underline; font-size: 11px; color: #a33; }
+a.mediumlink:visited      { text-decoration: underline; font-size: 11px; color: #a33; }
+a.mediumlink:hover        { text-decoration: none; font-size: 11px; color: #f00; }   
+    
+a.largelink               { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:link          { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:visited       { text-decoration: underline; font-size: 13px; color: #a33; }
+a.largelink:hover         { text-decoration: none; font-size: 13px; color: #f00; }         
+
+/* Form elements */
+
+input, textarea, select 
+{
+  color : #000000;
+  font-size : 12px;
+}
 
 /* for the tree view */
 .ftvtree {
-	font-family: sans-serif;
-	margin:0.5em;
+	font: normal 8pt/normal verdana, tahoma, arial, helvetica, sans-serif;
+	background: rgb(239, 196, 24) url('/images/body-bg.png') repeat-x scroll 0 0;
+	margin-top: 0px;
+	margin:0.5em;	
 }
 .directory { font-size: 9pt; font-weight: bold; }
 .directory h3 { margin: 0px; margin-top: 1em; font-size: 11pt; }

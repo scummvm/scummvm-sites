@@ -1,6 +1,45 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html><head><meta http-equiv="Content-Type" content="text/html;charset=iso-8859-1">
-<title>$title</title>
-<link href="$relpath$doxygen.css" rel="stylesheet" type="text/css">
-<link href="$relpath$tabs.css" rel="stylesheet" type="text/css">
-</head><body>
+<html>
+  <head>
+    <title>ScummVM::Doxygen</title>
+    <base href="http://doxygen.scummvm.org/">
+    <link rel="stylesheet" href="/layout.css" type="text/css">
+    <link rel="stylesheet" href="/tabs.css" type="text/css">
+    <link rel="stylesheet" href="/scummvm.css" type="text/css">
+  </head>
+  <body>
+<table width="90%" border="0" cellspacing="0" cellpadding="0" align="center">
+  <tr> 
+    <td><img src="/images/logo.png" width="199" height="65" alt="ScummVM logo"></td>
+
+    <td width="50%" style="background-image: url('/images/top_bg.png'); vertical-align: middle; text-align: left; white-space:nowrap;">
+      <a href="http://www.scummvm.org/" target="_parent">ScummVM website</a> - 
+      <a href="http://forums.scummvm.org/" target="_parent">Forums</a> -
+      <a href="http://www.scummvm.org/contact.php" target="_parent">Contact us</a> -
+      <b><a href="http://www.gog.com/en/frontpage/pp/22d200f8670dbdb3e253a90eee5098477c95c23d" target="_parent">Buy Supported Games</a></b>&nbsp;
+	</td>
+	
+	<td width="50%" style="background-image: url('/images/top_bg.png'); vertical-align: middle; text-align: right; white-space:nowrap;">
+
+  <!-- new nav table -->
+
+    <a href="http://buildbot.scummvm.org" target="_parent">BuildBot</a> -
+    <a href="http://doxygen.scummvm.org" target="_parent">Doxygen</a> -
+    <a href="http://planet.scummvm.org" target="_parent">Planet</a> -
+    <a href="http://wiki.scummvm.org" target="_parent">Wiki</a>
+
+  <!-- end of new nav table -->
+
+    </td>
+
+    <td><img src="/images/curve_tr.png" width="20" height="65" alt="curved edge"></td>
+
+  </tr>
+
+  <!-- top logo, navbar ends here, now on to the main forum body -->
+
+  <tr bgcolor="#fbf1ce"> 
+    <td colspan="4">
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-left: 5px; padding-right: 5px;">
+        <tr>
+          <td>
+  
