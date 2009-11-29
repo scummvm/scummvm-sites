@@ -1,5 +1,5 @@
 body {
-  background-image: url('/images/body-bg.png'); margin: 10px;
+  background-image: url('images/body-bg.png'); margin: 10px;
   background-color: #efc418;	
 	background-repeat: repeat-x;
 }
@@ -86,11 +86,11 @@ font-weight: bold;
 
 TD.toprow, TH.toprow
 {
-	background-image: url('/images/gradient_2.gif');
+	background-image: url('images/gradient_2.gif');
 	color: #fff;
 	font-weight: bold;
 	background: #a82709;
-	background-image: url('/images/par-head.png');
+	background-image: url('images/par-head.png');
 	background-repeat: repeat-x;
 	padding: 6px;
 	font-size: 12px;
@@ -149,7 +149,7 @@ input, textarea, select
 /* for the tree view */
 .ftvtree {
 	font: normal 8pt/normal verdana, tahoma, arial, helvetica, sans-serif;
-	background: rgb(239, 196, 24) url('/images/body-bg.png') repeat-x scroll 0 0;
+	background: rgb(239, 196, 24) url('images/body-bg.png') repeat-x scroll 0 0;
 	margin-top: 0px;
 	margin:0.5em;	
 }

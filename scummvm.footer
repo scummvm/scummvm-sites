@@ -12,9 +12,9 @@ Generated on $datetime for $projectname by&nbsp;<a href="http://www.doxygen.org/
     <td colspan="4">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-          <td><img src="/images/curve_bl.png" width="20" height="20" alt="curved edge"></td>
+          <td><img src="$relpath$images/curve_bl.png" width="20" height="20" alt="curved edge"></td>
           <td width="100%" bgcolor="#fbf1ce">&nbsp;</td>
-          <td align="right" valign="bottom"><img src="images/curve_br.png" width="20" height="20" alt="curved edge"></td>
+          <td align="right" valign="bottom"><img src="$relpath$images/curve_br.png" width="20" height="20" alt="curved edge"></td>
         </tr>
       </table>
     </td>
