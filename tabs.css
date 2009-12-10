@@ -42,17 +42,17 @@ DIV.tabs A:hover
    background-position: 100% -150px;
 }
 
-DIV.tabs A:link, DIV.tabs A:visited,
-DIV.tabs A:active, DIV.tabs A:hover
-{
-       color: #1A419D;
+div.tabs a:link, div.tabs a:visited, 
+div.tabs a:active, div.tabs a:hover 
+{ 
+   color: #fff !important; 
 }
 
 DIV.tabs SPAN
 {
    float            : left;
    display          : block;
-   background       : url("tab_l.gif") no-repeat left top;
+   background       : url("images/tab_l.png") no-repeat left top;
    padding          : 5px 9px;
    white-space      : nowrap;
 }
