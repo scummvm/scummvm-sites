@@ -1558,3 +1558,11 @@ div#mw-search-interwiki-caption {
 .os-suggest {
 	font-size: 127%;
 }
+
+/* Syntax highloghting (GeSHi) display */
+div.mw-geshi {
+    padding: 0.6em; 
+    margin: 1em 0; 
+    border: 1px solid #bbbbbb;
+    background: #fffaf0;
+}
