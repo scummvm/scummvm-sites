@@ -143,6 +143,7 @@ class Package(ShellCommand):
 		self.command += "mkdir %s && " % name
 		self.command += "cp -r %s %s/ && " % (" ".join(files), name)
 		self.command += "tar cvjf %s %s/ && " % (file, name)
+		self.command += "mkdir -p %s/ && " % (self.dstpath)
 		self.command += "mv %s %s/ && " % (file, self.dstpath)
 		self.command += "ln -sf %s %s && " % (file, os.path.join(self.dstpath, symlink))
 		self.command += " rm -rf %s || " % name
