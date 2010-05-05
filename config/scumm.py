@@ -181,6 +181,7 @@ class IrcStatusBot(irc.IRCClient):
 		self.status.subscribe(self)
 
 	silly = {
+				"ping": "pong",
 				"hello": "yes?",
 				"hi": "hello"
 			}
@@ -192,7 +193,7 @@ class IrcStatusBot(irc.IRCClient):
 		self.msg(self.channel, message.encode("ascii", "replace"))
 
 	def act(self, action):
-		self.me(self.channel, action.encode("ascii", "replace"))
+		self.describe(self.channel, action.encode("ascii", "replace"))
 
 	def getAllBuilders(self):
 		names = self.status.getBuilderNames(categories = self.categories)
@@ -200,13 +201,17 @@ class IrcStatusBot(irc.IRCClient):
 		builders = [self.status.getBuilder(n) for n in names]
 		return builders
 
-	def getFailureBuilders(self):
+	def getBuildersStatus(self):
+		success = []
 		failure = []
 		for b in self.getAllBuilders():
 			last = b.getLastFinishedBuild()
-			if last != None and last.getResults() == FAILURE:
-				failure.append(b.getName())
-		return failure
+			if last != None:
+				if last.getResults() == SUCCESS:
+					success.append(b.getName())
+				if last.getResults() == FAILURE:
+					failure.append(b.getName())
+		return success, failure
 
 	def buildsetSubmitted(self, buildset):
 		self.log('Buildset %s added' % (buildset))
@@ -290,11 +295,11 @@ class IrcStatusBot(irc.IRCClient):
 			m += "\x0304Failure\x0f: %s" % ", ".join(self.delayedFailure)
 			self.delayedFailure = []
 
-		failure = self.getFailureBuilders()
+		success, failure = self.getBuildersStatus()
 		if len(failure) == 0:
 			m += ". Nice work, all ports built fine now"
-
-		m += ". %s" % scumm_buildbot_root_url
+		elif len(success) == 0:
+			m += ". And now all ports are broken :\\"
 
 		self.send(m)
 
@@ -315,7 +320,6 @@ class IrcStatusBot(irc.IRCClient):
 		reactor.callLater(timeout, self.act, response)
 
 	def handleMessage(self, message, who):
-		message = message.lstrip()
 		if self.silly.has_key(message):
 			return self.doSilly(message)
 
@@ -361,11 +365,8 @@ class IrcStatusBot(irc.IRCClient):
 	def command_VERSION(self, args, who):
 		self.send("buildbot-%s at your service" % version)
 
-	def command_PING(self, args, who):
-		self.send("pong")
-
 	def command_STATUS(self, args, who):
-		failure = self.getFailureBuilders()
+		success, failure = self.getBuildersStatus()
 
 		if len(failure) < 1:
 			self.send("Last time I checked, all ports built just fine")
@@ -375,10 +376,12 @@ class IrcStatusBot(irc.IRCClient):
 			self.send("%s is currently not building" % failure[0])
 			return
 
-		self.send("%d ports are currently not building: %s, see %s" % \
-					(len(failure),
-					 ", ".join(failure),
-					 scumm_buildbot_root_url))
+		if len(success) < 1:
+			self.send("Uh oh, all ports are currently broken")
+			return
+
+		self.send("%d ports are currently not building: %s" % \
+					(len(failure), ", ".join(failure)))
 
 	# the following irc.IRCClient methods are called when we have input
 
@@ -391,7 +394,6 @@ class IrcStatusBot(irc.IRCClient):
 		if message.startswith("%s:" % self.nickname) or message.startswith("%s," % self.nickname):
 			message = message[len("%s:" % self.nickname):]
 			self.handleMessage(message.strip(), user)
-		# to track users comings and goings, add code here
 
 	def action(self, user, channel, data):
 		data = data.strip()
@@ -416,6 +418,7 @@ class IrcStatusBot(irc.IRCClient):
 		self.log("I have been kicked from %s by %s: %s" % (channel,
 														  kicker,
 														  message))
+		self.join(self.channel)
 
 	# we can using the following irc.IRCClient methods to send output.
 	#
