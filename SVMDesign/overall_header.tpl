@@ -31,7 +31,8 @@
     <td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: left; white-space:nowrap;">
       <a href="index.php">Forum Index</a> -
       <a href="http://www.scummvm.org/">ScummVM website</a> - 
-      <a href="http://www.scummvm.org/contact.php">Contact us</a>&nbsp;
+      <a href="http://www.scummvm.org/contact.php">Contact us</a> -
+	  <b><a href="http://www.gog.com/en/frontpage/pp/22d200f8670dbdb3e253a90eee5098477c95c23d">Buy Supported Games</a></b>&nbsp;
 	</td>
 	
 	<td width="50%" style="background-image: url('templates/SVMDesign/images/top_bg.gif'); vertical-align: middle; text-align: right; white-space:nowrap;">
