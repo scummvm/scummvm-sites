@@ -1,38 +1,200 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-15">
-<title>ScummVM :: Buildbot</title>
+    <meta http-equiv="content-type" content="text/html; charset=iso-8859-15">
+    <title>ScummVM :: Buildbot</title>
+    <link rel="stylesheet" href="SVMDesign.css" type="text/css">
+    <link rel="shortcut icon" href="favicon.ico">
 </head>
-
-<body>
-<h1>Welcome to the <a href="http://scummvm.org/">ScummVM</a> Buildbot!</h1>
-
-<ul>
-  <li>the <a href="buildbot/waterfall?category=trunk;category=branch">Waterfall Display</a> will give you a
-  time-oriented summary of recent buildbot activity.</li>
-
-  <li>the <a href="buildbot/console?category=trunk;category=branch">Console Display</a> will give you a
-  revision-oriented summary of recent buildbot activity.</li>
-
-  <li>the <a href="buildbot/grid?category=trunk;category=branch">Grid Display</a> will give you a
-  developer-oriented summary of recent buildbot activity.</li>
-
-  <li>the <a href="buildbot/tgrid?category=trunk;category=branch">Transposed Grid Display</a> presents
-  the same information as the grid, but lists the revisions down the side.</li>
-
-  <li>The <a href="buildbot/one_box_per_builder">Latest Build</a> for each builder is
-  here.</li>
-
-  <li><a href="buildbot/one_line_per_build">Recent Builds</a> are summarized here, one
-  per line.</li>
-
-  <li><a href="buildbot/buildslaves">Buildslave</a> information</li>
-  <li><a href="buildbot/changes">ChangeSource</a> information.</li>
-
-  <br />
-  <li><a href="buildbot/about">About this Buildbot</a></li>
-</ul>
-
-
-</body> </html>
+<body style="margin: 10px; background-image: url(images/div-bg.png);">
+    <!-- TODO: Make this into a nice theme not a quick and dirty hack. -->
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="90%">
+        <tbody>
+            <tr>
+                <td>
+                    <img src="images/logo.gif" alt="ScummVM logo" height="65" width="199">
+                </td>
+                <td style="background-image: url(images/top_bg.gif); vertical-align: middle; text-align: left;
+                    white-space: nowrap;" width="50%">
+                    <a href="index.html">BuildBot Index</a> - <a href="builds.html">Snapshots</a> <a href="/snapshots">(all)</a> - <a
+                        href="http://www.scummvm.org/">ScummVM website</a> - <a href="http://www.scummvm.org/contact.php">
+                            Contact us</a>&nbsp;
+                </td>
+                <td style="background-image: url(images/top_bg.gif); vertical-align: middle; text-align: right;
+                    white-space: nowrap;" width="50%">
+                    <!-- nav table -->
+                    Build Views - <a href="buildbot/waterfall?category=trunk;category=branch">Waterfall</a>
+                    - <a href="buildbot/console?category=trunk;category=branch">Console</a> - <a href="buildbot/grid?category=trunk;category=branch">
+                        Grid</a> - <a href="buildbot/tgrid?category=trunk;category=branch">Transposed Grid</a>
+                    <!-- end of nav table -->
+                </td>
+                <td>
+                    <img src="images/curve_tr.gif" alt="curved edge" height="65" width="20">
+                </td>
+            </tr>
+            <!-- top logo, navbar ends here, now on to the main page body -->
+            <tr bgcolor="#fbf1ce">
+                <td colspan="4">
+                    <table style="padding-left: 5px; padding-right: 5px;" border="0" cellpadding="0"
+                        cellspacing="0" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <!-- DEBUG marker: index_body.tpl starts here -->
+                                    <table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
+                                        <tbody>
+                                            <tr>
+                                                <td align="left" valign="middle" width="100%">
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
+                                        <tbody>
+                                            <tr>
+                                                <td class="tableborder">
+                                                    <table border="0" cellpadding="2" cellspacing="1" width="100%">
+                                                        <tbody>
+                                                            <tr align="center">
+                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+                                                                    <b><span class="toprowtext">Welcome to the ScummVM Buildbot&nbsp;service...</span></b>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3" class="catrow">
+                                                                    <span class="catrowtext">Build Views: These views will allow you to examine the state
+                                                                        of recent buildbot activity.</span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" class="row1" colspan="1" valign="middle">
+                                                                    The <a href="buildbot/waterfall?category=trunk;category=branch">Waterfall Display</a>
+                                                                    will give you a time-oriented summary of recent buildbot activity.
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/waterfall?category=trunk">trunk</a>
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/waterfall?category=branch">latest branch</a>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+                                                                    The <a href="buildbot/console?category=trunk;category=branch">Console Display</a>
+                                                                    will give you a revision-oriented summary of recent buildbot activity.
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/console?category=trunk">trunk</a>
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/console?category=branch">latest branch</a>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+                                                                    The <a href="buildbot/grid?category=trunk;category=branch">Grid Display</a> will
+                                                                    give you a developer-oriented summary of recent buildbot activity.
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/grid?category=trunk">trunk</a>
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/grid?category=branch">latest branch</a>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+                                                                    The <a href="buildbot/tgrid?category=trunk;category=branch">Transposed Grid Display</a>
+                                                                    presents the same information as the grid, but lists the revisions down the side.
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/tgrid?category=trunk">trunk</a>
+                                                                </td>
+                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
+                                                                    <a href="buildbot/tgrid?category=branch">latest branch</a>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    The <a href="buildbot/one_box_per_builder">Latest Build</a> information for each
+                                                                    build target is here.
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    The <a href="buildbot/one_line_per_build">Recent Builds</a> are summarized here,
+                                                                    one per line.
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3" class="catrow">
+                                                                    <span class="catrowtext">Other Links.</span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="left">
+                                                                <td colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    Download the latest&nbsp;<a href="builds.html">Untested Builds</a> for&nbsp;platforms
+                                                                    built by this buildbot.
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="left">
+                                                                <td colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    Information on the <a href="buildbot/buildslaves">Build Slaves</a> managed by this
+                                                                    buildbot.
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="left">
+                                                                <td colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    Information on the&nbsp;<a href="buildbot/changes">Sourcecode Repositories</a> being
+                                                                    monitored by this buildbot.
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="left">
+                                                                <td colspan="3" rowspan="1" class="row1" valign="middle">
+                                                                    Information on how we <a href="http://wiki.scummvm.org/index.php/Buildbot">Have Configured</a>&nbsp;buildbot.
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3" class="catrow">
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                    <div align="center">
+                                        <span class="smalltext">Powered by <a href="http://buildbot.net/" class="smalllink">
+                                            Buildbot</a><br>
+                                            About this <a href="buildbot/about" class="smalllink">Buildbot setup</a><br>
+                                            Design by the ScummVM team</span></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="4">
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                        <tbody>
+                            <tr>
+                                <td>
+                                    <img src="images/curve_bl.gif" alt="curved edge" height="20" width="20">
+                                </td>
+                                <td bgcolor="#fbf1ce" width="100%">
+                                    &nbsp;
+                                </td>
+                                <td align="right" valign="bottom">
+                                    <img src="images/curve_br.gif" alt="curved edge" height="20" width="20">
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
