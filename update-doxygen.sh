@@ -13,7 +13,7 @@ lock_unlock action=lock name=$LOCKFILE
 # And if it is not, we might be able to automatically recreate it...
 echo "Updating SVN..."
 cd ${BASEPATH}/scummvm-SVN-trunk
-svn up
+nice svn up
 
 #echo "Fixing permissions in the checkout"
 #chmod -f -R g+w,a+r .
@@ -21,7 +21,10 @@ svn up
 
 echo Updating doxygen docs
 cd ${BASEPATH}
-doxygen config
+nice doxygen config
+
+# Fix the index.html file <title> if necessary
+perl -pi -e 's,<title>ScummVM</title>,<title>ScummVM :: Doxygen</title>,g' /var/www/doxygen/html/index.html
 
 #echo "Fixing permissions"
 #chmod -f -R g+w,a+r .
