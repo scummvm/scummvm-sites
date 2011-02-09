@@ -548,12 +548,12 @@ INPUT                  = /home/joostp/doxygen/scummvm-SVN-trunk/backends/audiocd
                          /home/joostp/doxygen/scummvm-SVN-trunk/backends/timer \
                          /home/joostp/doxygen/scummvm-SVN-trunk/backends/vkeybd \
                          /home/joostp/doxygen/scummvm-SVN-trunk/backends/platform/sdl \
+                         /home/joostp/doxygen/scummvm-SVN-trunk/audio \
                          /home/joostp/doxygen/scummvm-SVN-trunk/base \
                          /home/joostp/doxygen/scummvm-SVN-trunk/common \
                          /home/joostp/doxygen/scummvm-SVN-trunk/engines \
                          /home/joostp/doxygen/scummvm-SVN-trunk/graphics \
                          /home/joostp/doxygen/scummvm-SVN-trunk/gui \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/sound \
                          /home/joostp/doxygen/scummvm-SVN-trunk/video
 
 # This tag can be used to specify the character encoding of the source files 
