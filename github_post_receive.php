@@ -12,7 +12,8 @@ define('SHOW_AGGREGATE', false);  // Aggregate the files changed list at the end
                                   // (not recommended if send_diff set)
 define('USE_LOCAL', true);       // Use a local git repo instead of the github API
 
-define('EMAIL_FROM', 'noreply@example.com');
+define('EMAIL_FROM', 'noreply@scummvm.org');
+define('EMAIL_FROM_NAME', 'ScummVM git');
 
 // some constants for HTML tags
 define('HTML_HEADER',         SEND_HTML_EMAIL ? '<html><body>' : '');
@@ -53,14 +54,14 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
         exit(0);
     }
 
-    // create the subject line
-    $branch = str_replace('refs/heads/', '', $obj->{'ref'});
-    $last_commit = $obj->{'after'};
-    $subj = "$subj_header $branch -> $last_commit";
-
     // repo details for diff
     $repo_owner = $obj->{'repository'}->{'owner'}->{'name'};
     $repo = $obj->{'repository'}->{'name'};
+
+    // create the subject line
+    $branch = str_replace('refs/heads/', '', $obj->{'ref'});
+    $last_commit = $obj->{'after'};
+    $subj = ltrim("$subj_header $repo $branch -> $last_commit");
 
     // extract information about each commit
     $commits = '';
@@ -149,14 +150,14 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
     $commits_noun = ($num_commits == 1) ? 'commit' : 'commits';
     $body = HTML_HEADER .
         "This automated email contains information about $num_commits new $commits_noun which have been\n" .
-        "pushed to the '$name' repo located at $url.\n" .
+        "pushed to the '$name' repo located at $url .\n" .
         "\n" .
         $commits .
         $changes_txt .
         HTML_FOOTER;
 
     // build the mail headers
-    $headers = "From: " . EMAIL_FROM . " (GIT diff mailer)\r\n";
+    $headers = "From: " . EMAIL_FROM . " (" . EMAIL_FROM_NAME . ")\r\n";
     if(SEND_HTML_EMAIL)
         $headers .= "MIME-Version: 1.0\r\n" .
                     "Content-type: text/html\r\n";
@@ -190,12 +191,12 @@ function github_get_diff($repo_owner, $repo, $commit)
             }
         }
     } else {
-        if (preg_match('/^[0-9a-f]+$/', $commit)) {
+        if (preg_match('/^[0-9a-f]+$/', $commit) && preg_match('/^[\-0-9a-z_]+$/', $repo)) {
             ob_start();
-            passthru('./diff_local.sh ' . escapeshellarg($commit));
+            passthru('./diff_local.sh ' . escapeshellarg($repo) . ' ' . escapeshellarg($commit));
             $ret = ob_get_contents();
             ob_end_clean();
-        }
+        } else { $ret = $repo; }
     }
 
     return $ret;
