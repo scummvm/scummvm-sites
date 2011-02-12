@@ -7,6 +7,7 @@
  */
 
 define('SEND_HTML_EMAIL', false); // HTML or plaintext?
+define('SEND_SUMMARY', true); // Add a log --oneline to the top?
 define('SEND_DIFF', true);        // Add a diff of the changes?
 define('SHOW_AGGREGATE', false);  // Aggregate the files changed list at the end of the email
                                   // (not recommended if send_diff set)
@@ -65,6 +66,9 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
 
     // extract information about each commit
     $commits = '';
+    $summary = '';
+    if (SEND_SUMMARY)
+        $summary = "Summary:\n";
     $added = array();
     $deleted = array();
     $modified = array();
@@ -105,6 +109,11 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
            }
         }
 
+        if (SEND_SUMMARY) {
+            $lines = explode("\n", $msg);
+            $shortmsg = substr($lines[0], 0, 120);
+            $summary .= substr($id, 0, 10) . " " . $shortmsg . "\n";
+        }
 
         if(SEND_DIFF)
             $msg = "Commit Message:\n$msg";
@@ -143,6 +152,9 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
         }
     }
 
+    if (SEND_SUMMARY)
+        $summary .= "\n";
+
     // create the body of the mail
     $repo = $obj->{'repository'};
     $name = $repo->{'name'};
@@ -152,6 +164,7 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
         "This automated email contains information about $num_commits new $commits_noun which have been\n" .
         "pushed to the '$name' repo located at $url .\n" .
         "\n" .
+        $summary .
         $commits .
         $changes_txt .
         HTML_FOOTER;
