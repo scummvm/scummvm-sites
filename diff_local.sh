@@ -27,6 +27,6 @@ fi
 
 cd "$REPO/$REPONAME"
 $GIT fetch -a -q > /dev/null
-$GIT diff -p --no-color  $REV~1..$REV -- | head -n 10000
+$GIT show --format="format:" $REV | head -n 10000
 
 rmdir $LOCKDIR
