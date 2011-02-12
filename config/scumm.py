@@ -136,7 +136,7 @@ class Package(ShellCommand):
 		if len(self.disttarget) > 0:
 			disttarget = True
 
-		name = "%s-r%s" % (self.buildname, properties["revision"])
+		name = "%s-%s" % (self.buildname, properties["revision"][:8])
 		file = "%s.tar.bz2" % name
 		symlink = "%s-latest.tar.bz2" % self.buildname
 
@@ -151,7 +151,7 @@ class Package(ShellCommand):
 		self.command = ""
 
 		if disttarget:
-			self.command += "make VER_SVNREV=%s %s && " % (properties["revision"], self.disttarget)
+			self.command += "make %s && " % self.disttarget
 
 		self.command += "mkdir %s && " % name
 		self.command += "cp -r %s %s/ && " % (" ".join(files), name)
