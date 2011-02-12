@@ -20,7 +20,12 @@ fi
 REPONAME=$1
 REV=$2
 
-cd $REPO/$REPONAME
+if [ ! -d "$REPO/$REPONAME" ]
+then
+  exit 0
+fi
+
+cd "$REPO/$REPONAME"
 $GIT fetch -a -q > /dev/null
 $GIT diff -p --no-color  $REV~1..$REV -- | head -n 10000
 
