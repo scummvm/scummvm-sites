@@ -13,7 +13,6 @@ from twisted.application import internet
 from buildbot import interfaces, util
 from buildbot import version
 from buildbot.sourcestamp import SourceStamp
-from buildbot.process.base import BuildRequest
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, SKIPPED
 from buildbot import scheduler
@@ -261,8 +260,8 @@ class IrcStatusBot(irc.IRCClient):
 			self.timer.reset(0)
 
 	def requestSubmitted(self, brstatus):
-		self.log('BuildRequest for %s submiitted to Builder %s' % 
-			(brstatus.getSourceStamp(), brstatus.builderName))
+		self.log('BuildRequest for %s submitted to Builder %s' % 
+			(brstatus.getSourceStamp(), brstatus.getBuilderName()))
 
 	def builderRemoved(self, builderName):
 		self.msg('Builder %s removed' % (builderName))
@@ -284,7 +283,11 @@ class IrcStatusBot(irc.IRCClient):
 		if not result in [ SUCCESS, FAILURE ]:
 			return
 
-		prevResult = build.getPreviousBuild().getResults()
+		prevBuild = build.getPreviousBuild()
+		if not prevBuild:
+			return
+
+		prevResult = prevBuild.getResults()
 		if not prevResult in [ SUCCESS, FAILURE ]:
 			return
 
