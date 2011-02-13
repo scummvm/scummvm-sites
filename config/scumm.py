@@ -308,12 +308,12 @@ class IrcStatusBot(irc.IRCClient):
 
 		self.timer = reactor.callLater(self.stableTimer,
 										self.reportBuildStatus,
-										build.getProperty("revision"))
+										build.getProperty("revision")[:8])
 
 	def reportBuildStatus(self, revision):
 		self.timer = None
 
-		m = "Port build status changed with r\x02%s\x0f: " % revision
+		m = "Port build status changed with \x02%s\x0f: " % revision
 
 		if len(self.delayedSuccess) > 0:
 			m += "\x0303Success\x0f: %s" % ", ".join(self.delayedSuccess)
