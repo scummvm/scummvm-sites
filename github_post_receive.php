@@ -15,6 +15,7 @@ define('USE_LOCAL', true);       // Use a local git repo instead of the github A
 
 define('EMAIL_FROM', 'noreply@scummvm.org');
 define('EMAIL_FROM_NAME', 'ScummVM git');
+define('USE_PUSHER_AS_SENDER', true);
 
 // some constants for HTML tags
 define('HTML_HEADER',         SEND_HTML_EMAIL ? '<html><body>' : '');
@@ -63,6 +64,11 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
     $branch = str_replace('refs/heads/', '', $obj->{'ref'});
     $last_commit = $obj->{'after'};
     $subj = ltrim("$subj_header $repo $branch -> $last_commit");
+
+    // details about pusher
+    $pusher = $obj->{'pusher'};
+    $pusher_name = $pusher->{'name'};
+    $pusher_email = $pusher->{'email'};
 
     // extract information about each commit
     $commits = '';
@@ -170,7 +176,16 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
         HTML_FOOTER;
 
     // build the mail headers
-    $headers = "From: " . EMAIL_FROM . " (" . EMAIL_FROM_NAME . ")\r\n";
+
+    if(USE_PUSHER_AS_SENDER && $pusher_name && $pusher_email) {
+        $headers = "From: $pusher_name <$pusher_email>\r\n";
+//        $headers = "From: " . EMAIL_FROM . " (" . $pusher_name . ")\r\n";
+    } else {
+        $headers = "From: " . EMAIL_FROM . " (" . EMAIL_FROM_NAME . ")\r\n";
+    }
+
+    $headers .= "X-Git-Pusher: $pusher_name <$pusher_email>\r\n";
+
     if(SEND_HTML_EMAIL)
         $headers .= "MIME-Version: 1.0\r\n" .
                     "Content-type: text/html\r\n";
