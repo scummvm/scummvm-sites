@@ -1,0 +1,5 @@
+#topHeader, #menu, .tabs, .shadow-text, #f-poweredbyico, #f-copyrightico, #viewcount, #privacy, #about, #disclaimer, #tableFooter { display: none; }
+#tableColor, tr, td { background-color:white; }
+.shadow-container { font-size: 2em; float:left; display: inline; color: black !important; font-weight: bold;}
+.rbcontent { padding-top: 3%; display: block}
+

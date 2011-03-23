@@ -1,0 +1,106 @@
+#menu {
+	right: -150px;
+	position: absolute;
+	top: 0px;
+	width: 145px;
+}
+
+#menu div a.float_left {
+	margin-bottom: 2px;
+}
+
+div.menugroup {
+	background: transparent url('menu-bottom.png') scroll no-repeat bottom left;
+	/*font-size: 9pt;*/
+	margin-bottom: 8px;
+	overflow: hidden;
+	padding-bottom: 12px;
+	width: 145px;
+}
+
+div.menugroup h1 {
+	background-repeat: no-repeat;
+	color: rgb(221, 221, 0);
+	font-size: 7.5pt;
+	line-height: 3.3;
+	height: 34px;
+	margin: 0px;
+	padding: 0px 24px;
+	text-align: left;
+}
+
+div.menugroup h1.menu-main {
+	background: url('menu-main.png');
+	font-weight: bold;
+}
+
+div.menugroup h1.menu-docs {
+	background: url('menu-misc.png');
+	font-weight: bold;
+}
+
+div.menugroup h1.menu-sf {
+	background: url('menu-sf.png');
+	font-weight: bold;
+}
+
+div.menugroup h1.menu-misc {
+	background: url('menu-misc.png');
+	font-weight: bold;
+}
+
+div.menugroup ul {
+	background: rgb(168, 39, 9);
+	color: rgb(255, 255, 255);
+	list-style-image: url('bullet.png');
+	margin: 0px;
+	padding: 8px 8px 0px 30px;
+}
+
+div.menugroup ul li {
+	padding-bottom: 8px;
+}
+
+div.menugroup ul li a:first-letter,
+div.menugroup ul li:first-letter {
+	font-weight: bold;
+}
+
+div.menugroup a {
+	color: rgb(255, 255, 255);
+	text-decoration: none;
+}
+
+div.menugroup a:hover {
+	color: rgb(255, 255, 0);
+}
+
+#menu .monkey {
+border: 0px;
+padding: 0px;
+position: relative;
+top: -8px;
+}
+
+#menu_banners a {
+float: left;
+margin-bottom: 3px;
+}
+
+/* [ SeparatorSidebar] extension*/
+#menu hr {
+width: 80%;
+background-color: rgb(221, 221, 0); 
+color: rgb(221, 221, 0); 
+border: none; 
+height: 1px; /* line thickness */
+}
+
+.pBody {
+background: rgb(168, 39, 9); /* make sure background on hr is correct */
+}
+
+#menu h1, h2, h3, h4, h5, h6 {
+	border-bottom: 0;
+}
+

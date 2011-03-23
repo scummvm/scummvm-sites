@@ -1,0 +1,700 @@
+body {
+  background-image: url('body-bg.png'); margin: 10px;
+  background-color: #efc418;	
+	background-repeat: repeat-x;
+}
+
+body, table {
+	font-family: verdana,tahoma,arial,helvetica,sans-serif;
+	font-size: 8pt;
+	font-weight: normal;
+}
+
+table            
+{
+font-size: 10px; 
+color: #000000;
+}
+
+td, th
+{
+font-size: 10px; 
+color: #000000;
+}
+
+.smalltext       
+{ 
+font-size : 10px; 
+color: #000000;
+}
+
+.mediumtext      
+{ 
+font-size : 11px; 
+color: #000000;
+}
+
+.largetext       
+{ 
+font-size : 13px; 
+color: #000000;
+}
+
+.catrowtext      
+{ 
+	font-weight: bold;
+	font-size: 13px;
+	color: #444444;
+}
+
+.toprowtext      
+{ 
+	color: #fff;
+	font-size: 12px;
+	font-weight: bold;
+}
+
+/* Cell Properties */
+
+TD.row1
+{ 
+	background-color: #e8e7e7;
+	font-size : 13px; 
+	color: #494957
+}     
+     
+TD.row2	        /* ugly colors, to look which html uses them still - should have removed all occurences now */
+{ 
+	background-color: #00FF00;
+	font-size : 12px; 
+	color: #FF00FF
+}
+
+TD.row3
+{ 
+	background-color: #FFFFFF;
+	font-size : 12px; 
+	color: #494957
+}
+
+TD.catrow
+{ 
+	/* font-family: Verdana; */
+font-size : 12px; 
+font-weight: bold;
+}
+
+TD.toprow, TH.toprow
+{
+	background-image: url(gradient_2.png);
+	color: #fff;
+	font-weight: bold;
+	background: #a82709;
+	background-image: url(par-head.png);
+	background-repeat: repeat-x;
+	padding: 6px;
+	font-size: 12px;
+}
+
+TD.tableborder	  
+{ 
+	background-color: #c0c0c0;
+}
+
+/* Link Properties */
+
+a                         { text-decoration: underline; font-size: 11px; color: #002bb8; }  
+a:link                    { text-decoration: underline; font-size: 11px; color: #002bb8; }
+a:visited                 { text-decoration: underline; font-size: 11px; color: #5a3696; }
+a:hover                   { text-decoration: none; font-size: 11px; } 
+
+a.new               { font-style: italic; }
+a.new:link          { font-style: italic; color: #a33 }
+a.new:visited       { font-style: italic; }
+a.new:hover         { font-style: italic; }
+span.editsection a { color: #002bb8 }
+
+/* Form elements */
+
+input, textarea, select 
+{
+  color : #000000;
+  font-size : 12px;
+}
+
+textarea {
+position: relative;
+padding: 0.1em;
+width: 100%;
+}
+
+#container {
+	background: rgb(251, 241, 206);
+	margin: 0;
+	margin: 0px auto;
+	min-height: 970px;
+	position: relative;
+	max-width: 90%;
+	width: 90%;
+	left: -4%;
+}
+
+/* From Web */
+#content {
+	margin-right: 8%;
+	margin-left: -6%;
+	padding: 0px 0px 54px 8px;
+}
+
+.float_left {
+	float: left;
+}
+.float_right {
+	float: right;
+}
+.float_clear {
+	clear: both;
+}
+.float_clear_left {
+	clear: left;
+}
+.float_clear_right {
+	clear: right;
+}
+
+.spacing {
+	clear: both;
+	font-size: 0px;
+	height: 0px;
+}
+
+.shadow-container {
+	left: 1px;
+	position: relative;
+	top: 1px;
+}
+
+.shadow-text {
+	left: -2px;
+	position: absolute;
+	top: -2px;
+}
+
+.shadow-text-em {
+	left: -2px;
+	padding-left: 1em;
+	position: absolute;
+	top: -2px;
+}
+/* Kudos to http://www.redmelon.net/tstme/4corners/ */
+.rbtop div  {
+	background: url('header-left-corner.png') no-repeat top left;
+}
+.rbtop p {
+	background: url('header-background.png') repeat-x top center;
+	display: block;
+	color: rgb(53, 106, 2);
+	font: bold large/1.4 "Trebuchet MS", Verdana, Tahoma, Sans-Serif;
+	height: 28px;
+	margin: 0px 8px;
+	padding-left: 1em;
+}
+.rbtop {
+	background: url('header-right-corner.png') no-repeat top right;
+}
+.rbbot div {
+	background: url('left-low-corner.png') no-repeat bottom left;
+}
+.rbbot {
+	background: url('right-low-corner.png') no-repeat bottom right;
+}
+.rbbot p {
+	background: #fff;
+	border-bottom: solid 1px rgb(235, 177, 118);
+	font-size: 1px;
+	height: 7px;
+	margin: 0px 8px;
+}
+
+.rbtop,
+.rbtop div {
+	height: 28px;
+	width: 100%;
+}
+
+.rbbot,
+.rbbot div {
+	height: 8px;
+	width: 100%;
+}
+
+.rbcontent  {
+	background: #fff;
+	border-left: 1px solid rgb(235, 177, 118);
+	border-right: 1px solid rgb(235, 177, 118);
+	min-height: 840px;
+	margin: 0px;
+	overflow: hidden;
+	padding-top: 10px;
+	
+}
+* html .rbcontent{height:840px}
+.rbcontent .rbwrapper {
+	display: block;
+	padding: 0px 15px;
+}
+.rbroundbox {
+	margin: auto;
+}
+
+/*
+** Search portlet
+*/
+#searchform
+{
+  margin: 0;
+  padding: 0;
+	margin-bottom: 0px;
+}
+#p-search {
+	position: relative;
+	z-index: 3;
+}
+input.searchButton {
+	margin-top: 1px;
+	font-size: 95%;
+}
+#searchGoButton {
+	padding-left: .5em;
+	padding-right: .5em;
+	font-weight: bold;
+}
+#searchInput {
+	width: 10.9em;
+	margin: 0;
+	font-size: 95%;
+}
+#p-search .pBody {
+	padding: .5em .4em .4em .4em;
+	text-align: center;
+}
+#p-search #searchform div div {
+	margin-top: .4em;
+	font-size: 95%;
+
+}
+
+/* From ScummVM Doxygen's scummvm_tabs.css */
+/* tabs styles, based on http://www.alistapart.com/articles/slidingdoors */
+
+DIV.tabs
+{
+   /*float            : left;*/
+   width            : 100%;
+   /*background       : url("tab_b.png") repeat-x bottom;*/
+   height: 23px;
+position:relative;
+top:2px;
+}
+/* HACK: To align tabs */
+@-moz-document url-prefix() {
+
+DIV.tab
+{
+margin-bottom: 2px;
+position:relative;
+top:0px !important;
+}
+
+}
+
+DIV.tabs UL
+{
+   margin           : 0px;
+   padding-left     : 10px;
+   list-style       : none;
+}
+
+DIV.tabs LI, DIV.tabs FORM
+{
+   display          : inline;
+   margin           : 0px;
+   padding          : 0px;
+}
+
+DIV.tabs FORM
+{
+   float            : right;
+}
+
+DIV.tabs A
+{
+   /*float            : left;*/
+   background       : url("tab_r.png") no-repeat right top;
+   padding-bottom   : 6px;
+   padding-top      : 5px;
+   /*border-bottom    : 1px solid #947825;*/
+   font-size        : x-small;
+   font-weight      : bold;
+   text-decoration  : none;
+}
+
+DIV.tabs A:hover
+{
+   background-position: 100% -150px;
+}
+
+div.tabs a:link, div.tabs a:visited, 
+div.tabs a:active, div.tabs a:hover 
+{ 
+   color: black !important; 
+}
+
+DIV.tabs SPAN
+{
+   float            : left;
+   display          : block;
+   display          : inline-block;
+   background       : url("tab_l.png") no-repeat left top;
+   padding          : 5px 9px;
+   white-space      : nowrap;
+/*border-bottom    : 1px solid #ebb716;*/
+}
+
+DIV.tabs INPUT
+{
+   float            : right;
+   display          : inline;
+   font-size        : 1em;
+}
+
+DIV.tabs TD
+{
+   font-size        : x-small;
+   text-decoration  : none;
+}
+
+
+
+/* Commented Backslash Hack hides rule from IE5-Mac \*/
+DIV.tabs SPAN {float : none;}
+/* End IE5-Mac hack */
+
+DIV.tabs A:hover SPAN
+{
+   background-position: 0% -150px;
+font-size: x-small;
+}
+
+DIV.tabs LI.selected A
+{
+   background-position: 100% -150px;
+   border-width     : 0px;
+   font-size: x-small;
+   text-decoration: none;
+
+}
+
+DIV.tabs LI.selected SPAN
+{
+   background-position: 0% -150px;
+   padding          : 5px 9px;
+
+}
+#ltabs {height:22px; float:left;}
+#rtabs { float:right; padding-right:10px; }
+#ca-unwatch #ca-watch A
+{
+   background       : url("tab_r.png")
+}
+#footer {
+	border-top: 1px;
+	border-bottom: 1px;
+	margin: .6em 0 1em 0;
+	padding: .4em 0 1.2em 0;
+	text-align: center;
+	font-size: 90%;
+}
+/* #footer {
+	bottom: 0px;
+	height: 32px;
+	margin: 0px;
+	padding: 10px;
+	position: relative;
+	text-align: center;
+} 
+
+#footer a {
+	float: left;
+	width: 16%;
+} */
+
+#f-list { 
+list-style:none;
+display: block;
+	position: relative;
+	max-width: 85%;
+	width: 85%;
+}
+
+#f-poweredbyico, #f-copyrightico {
+	margin: 0 8px;
+	position: relative;
+	top: -2px; /* Bump it up just a tad */
+}
+#f-poweredbyico {
+	float: right;
+	height: 1%;
+}
+#f-copyrightico {
+	float: left;
+	height: 1%;
+}
+#footer li {
+	list-style:none;
+	display:inline;
+}
+/* js pref toc */
+#preftoc {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	clear: both;
+}
+#preftoc li {
+	background-color: #f0f0f0;
+	color: #000;
+}
+#preftoc li {
+	margin: 1px -2px 1px 2px;
+	float: left;
+	padding: 2px 0 3px 0;
+	border: 1px solid #fff;
+	border-right-color: #716f64;
+	border-bottom: 0;
+	position: relative;
+	white-space: nowrap;
+	list-style-type: none;
+	list-style-image: none;
+	z-index: 3;
+}
+#preftoc li.selected {
+
+	font-weight: bold;
+	background-color: #f9f9f9;
+	border: 1px solid #aaa;
+	border-bottom: none;
+	cursor: default;
+	top: 1px;
+	padding-top: 2px;
+	margin-right: -3px;
+}
+#preftoc > li.selected {
+	top: 2px;
+}
+#preftoc a,
+#preftoc a:active {
+	display: block;
+	color: #000;
+	padding: 0 .7em;
+	position: relative;
+	text-decoration: none;
+}
+#preftoc li.selected a {
+	cursor: default;
+	text-decoration: none;
+}
+
+#prefcontrol {
+	padding-top: 2em;
+	clear: both;
+}
+#preferences {
+	margin: 0;
+	border: 1px solid #aaa;
+	clear: both;
+	padding: 1.5em;
+	background-color: #F9F9F9;
+}
+.prefsection {
+	border: none;
+	padding: 0;
+	margin: 0;
+}
+.prefsection fieldset {
+	border: 1px solid #aaa;
+	float: left;
+	margin-right: 2em;
+}
+.prefsection legend {
+	font-weight: bold;   
+}
+.prefsection table, .prefsection legend {
+	background-color: #F9F9F9;
+}
+
+/* Syntax highloighting (GeSHi) display */ 
+div.mw-geshi { 
+    padding: 0.6em; 
+    margin: 1em 0; 
+    border: 1px solid #bbbbbb; 
+    background: #fffaf0; 
+}
+
+/*
+** keep the whitespace in front of the ^=, hides rule from konqueror
+** this is css3, the validator doesn't like it when validating as css2
+*/
+#container a.external,
+#container a[href ^="gopher://"] {
+	background: url(external.png) center right no-repeat;
+	padding: 0 13px;
+}
+.rtl #container a.external,
+.rtl #container a[href ^="gopher://"] {
+	background-image: url(external-rtl.png);
+}
+#container a[href ^="https://"],
+.link-https {
+	background: url(lock_icon.png) center right no-repeat;
+	padding: 0 16px;
+}
+#container a[href ^="mailto:"],
+.link-mailto {
+	background: url(mail_icon.png) center right no-repeat;
+	padding: 0 18px;
+}
+#container a[href ^="news://"] {
+	background: url(news_icon.png) center right no-repeat;
+	padding: 0 18px;
+}
+#container a[href ^="ftp://"],
+.link-ftp {
+	background: url(file_icon.png) center right no-repeat;
+	padding: 0 18px;
+}
+#container a[href ^="irc://"],
+#container a.extiw[href ^="irc://"],
+.link-irc {
+	background: url(discussionitem_icon.png) center right no-repeat;
+	padding: 0 18px;
+}
+#container a.external[href $=".ogg"], #container a.external[href $=".OGG"],
+#container a.external[href $=".mid"], #container a.external[href $=".MID"],
+#container a.external[href $=".midi"], #container a.external[href $=".MIDI"],
+#container a.external[href $=".mp3"], #container a.external[href $=".MP3"],
+#container a.external[href $=".wav"], #container a.external[href $=".WAV"],
+#container a.external[href $=".wma"], #container a.external[href $=".WMA"],
+.link-audio {
+	background: url("audio.png") center right no-repeat;
+	padding: 0 13px;
+}
+#container a.external[href $=".ogm"], #container a.external[href $=".OGM"],
+#container a.external[href $=".avi"], #container a.external[href $=".AVI"],
+#container a.external[href $=".mpeg"], #container a.external[href $=".MPEG"],
+#container a.external[href $=".mpg"], #container a.external[href $=".MPG"],
+.link-video {
+	background: url("video.png") center right no-repeat;
+	padding: 0 13px;
+}
+#container a.external[href $=".pdf"], #container a.external[href $=".PDF"],
+#container a.external[href *=".pdf#"], #container a.external[href *=".PDF#"],
+#container a.external[href *=".pdf?"], #container a.external[href *=".PDF?"],
+.link-document {
+	background: url("document.png") center right no-repeat;
+	padding: 0 12px;
+}
+
+/* the icon in front of the user name, single quotes
+in bg url to hide it from iemac */
+li#pt-userpage,
+li#pt-anonuserpage,
+li#pt-login {
+	background: url(user.png) top left no-repeat;
+	padding-left: 20px;
+	text-transform: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+	color: black;
+	background: none;
+	font-weight: normal;
+	margin: 0;
+	padding-top: .5em;
+	padding-bottom: .17em;
+	border-bottom: 1px solid #aaa;
+}
+
+h1 { font-size: 188%; }
+h1 .editsection { font-size: 53%; }
+h2 { font-size: 150%; }
+h2 .editsection { font-size: 67%; }
+h3, h4, h5, h6 {
+	border-bottom: none;
+	font-weight: bold;
+}
+h3 { font-size: 132%; }
+h3 .editsection { font-size: 76%; font-weight: normal; }
+h4 { font-size: 116%; }
+h4 .editsection { font-size: 86%; font-weight: normal; }
+h5 { font-size: 100%; }
+h5 .editsection { font-weight: normal; }
+h6 { font-size: 80%;  }
+h6 .editsection { font-size: 125%; font-weight: normal; }
+
+.ltr #bodyContent a.external {
+padding-left:0;
+}
+
+.editsection { float: right; }
+a.toplinks { color: #A33; }
+
+img { border: none; }
+
+/* thumbnails */
+
+div.thumb { 
+   margin-bottom: .5em; 
+   border-style: solid; 
+   border-color: white; 
+   width: auto; 
+} 
+div.tright { 
+   clear: right; 
+   float: right; 
+   border-width: .5em 0 .8em 1.4em; 
+} 
+
+div.thumbinner {
+	border: 1px solid #ccc;
+	padding: 3px !important;
+	background-color: #f9f9f9;
+	font-size: 94%;
+	text-align: center;
+	overflow: hidden;
+}
+html .thumbimage {
+	border: 1px solid #ccc;
+}
+html .thumbcaption {
+	border: none;
+	text-align: left;
+	line-height: 1.4em;
+	padding: 3px !important;
+	font-size: 94%;
+}
+
+div.magnify {
+	float: right;
+	border: none !important;
+	background: none !important;
+}
+div.magnify a, div.magnify img {
+	display: block;
+	border: none !important;
+	background: none !important;
+}
+
+.printfooter {
+	display: none;
+}
