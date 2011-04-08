@@ -140,7 +140,7 @@ class ScummModernTemplate extends QuickTemplate {
       <a href="http://doxygen.scummvm.org" target="_parent" class="toplinks" id="tl_d">Doxygen</a> -
       <a href="http://planet.scummvm.org" target="_parent" class="toplinks" id="tl_p">Planet</a> <br />
       <a href="http://www.scummvm.org/contact.php" target="_parent" class="toplinks" id="tl_cu">Contact us</a> -
-      <b><a href="http://www.gog.com/en/frontpage/pp/22d200f8670dbdb3e253a90eee5098477c95c23d" target="_parent" class="toplinks" id="tl_go">Buy Supported Games</a></b>&nbsp;
+      <b><a href="http://www.gog.com/en/frontpage/?pp=22d200f8670dbdb3e253a90eee5098477c95c23d" target="_parent" class="toplinks" id="tl_go">Buy Supported Games</a></b>&nbsp;
 	  </td>
 	
 	  <td width="50%" style="background-image: url('<?php $this->text('stylepath') ?>/<?php $this->text('stylename') ?>/top_bg.png'); vertical-align: middle; text-align: right; white-space:nowrap;">
@@ -428,7 +428,7 @@ class ScummModernTemplate extends QuickTemplate {
 				<a href="http://combobreaker.com/">
 					<img src="<?php $this->text('stylepath') ?>/<?php $this->text('stylename') ?>/scummvm_cb.png" alt="Combobreaker.com T-Shirts" width="88" height="32" />
 				</a>
-				<a href="http://www.gog.com/en/frontpage/pp/22d200f8670dbdb3e253a90eee5098477c95c23d">
+				<a href="http://www.gog.com/en/frontpage/?pp=22d200f8670dbdb3e253a90eee5098477c95c23d">
 					<img src="<?php $this->text('stylepath') ?>/<?php $this->text('stylename') ?>/GOG_button_small.png" alt="Buy with GOG.com" width="88" height="32" />
 				</a>
 			</div>
