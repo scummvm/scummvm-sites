@@ -66,10 +66,9 @@ $wgExtensionCredits['other'][] = array(
   'author'       => array('Dirk Nuyens'),
   'url'          => 'http://www.mediawiki.org/wiki/Extension:MathJax',
   'description'  => 'Enables MathJax (http://www.mathjax.org/) for typesetting TeX '
-                   .'and LaTeX formulae in MediaWiki inside <tt><nowiki>$</nowiki>'
-                   .'</tt>, <tt>\(</tt> and <tt>&lt;math&gt;</tt> (for inline) and '
-                   .'<tt><nowiki>$$</nowiki></tt>, <tt>\[</tt> and <tt>:&lt;math&gt;'
-                   .'</tt> (for display) math environments.'
+                   .'and LaTeX formulae in MediaWiki inside <tt>\(</tt> and '
+                   .'<tt>&lt;math&gt;</tt> (for inline) and <tt>\[</tt> and '
+                   .'<tt>:&lt;math&gt;</tt> (for display) math environments.'
                    .' This gives nice and scalable mathematics. The extension also '
                    .'enables the usage of <tt>\label{}</tt> and <tt><nowiki>\eqref{}'
                    .'</nowiki></tt> tags with automatic formula numbering. If needed'
@@ -167,9 +166,9 @@ function MathJax_change_edit_toolbar(&$toolbar)
   if(empty($wgMathJaxDisplayButton))
     $wgMathJaxDisplayButton = "$wgStylePath/common/images/button_math.png";
   $inline_math = 'addButton("' . $wgMathJaxInlineButton . '"'
-    . ',"Inline mathematical formula (LaTeX)","$","$","Insert formula here","mw-editbutton-math");' . "\n";
+    . ',"Inline mathematical formula (LaTeX)","\\(","\\)","Insert formula here","mw-editbutton-math");' . "\n";
   $display_math = 'addButton("'. $wgMathJaxDisplayButton . '"'
-    . ',"Display-style mathematical formula (LaTeX)","$$","$$",'
+    . ',"Display-style mathematical formula (LaTeX)","\\[","\\]",'
     . '"Insert formula here, optionally \\\\tag{manual-number}","mw-editbutton-math2");' . "\n";
   $toolbar = substr_replace($toolbar, $inline_math . $display_math, $b, $l);
   return true;
@@ -351,7 +350,7 @@ function MathJax_parser_stage2(&$parser, &$text, &$strip_state)
   // Parser::Parse just before the ParserBeforeTidy hook
   $text = preg_replace_callback('/(\\\\begin{(.*?)})(.*?)(\\\\end{\\2})/s', 'MathJax_register_and_strip_math', $text);
   // watch out for \$ in TeX using negative look behind:
-  $text = preg_replace_callback('/((\${1,2}))(.*?)((?<!\\\\)\\2)/s', 'MathJax_register_and_strip_math', $text);
+  // $text = preg_replace_callback('/((\${1,2}))(.*?)((?<!\\\\)\\2)/s', 'MathJax_register_and_strip_math', $text);
   $text = preg_replace_callback('/((\\\\\\[))(.*?)(\\\\\\])/s', 'MathJax_register_and_strip_math', $text);
   $text = preg_replace_callback('/((\\\\\\())(.*?)(\\\\\\))/s', 'MathJax_register_and_strip_math', $text);
  

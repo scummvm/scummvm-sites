@@ -1,9 +1,9 @@
-MathJax.Hub.Config({
+    MathJax.Hub.Config({
         extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
         jax: ["input/TeX", "output/HTML-CSS"],
         tex2jax: {
-            inlineMath: [ ['$','$'], ["\\(","\\)"] ],
-            displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+            inlineMath: [ ["\\(","\\)"] ],
+            displayMath: [ ["\\[","\\]"] ],
             processEscapes: false,
             element: "content",
             ignoreClass: "(tex2jax_ignore|mw-search-results|searchresults)", /* note: this is part of a regex, check the docs! */
@@ -34,7 +34,7 @@ MathJax.Hub.Config({
             Q: '\\mathbb{Q}',        /* the rational numbers */
             R: '\\mathbb{R}',        /* the real numbers */
             Z: '\\mathbb{Z}',        /* the integer numbers */
- 
+
             /* some extre macros for ease of use; these are non-standard! */
             F: '\\mathbb{F}',        /* a finite field */
             HH: '\\mathcal{H}',      /* a Hilbert space */
@@ -51,10 +51,10 @@ MathJax.Hub.Config({
             rd: '\\,\\mathrm{d}',      /*  roman d for use in integrals: $\int f(x) \rd x$ */
             rdelta: '\\,\\delta',      /* delta operator for use in sums */
             rD: '\\mathrm{D}',         /* differential operator D */
- 
+
             /* example from MathJax on how to define macros with parameters: */
             /* bold: ['{\\bf #1}', 1] */
- 
+
             RR: '\\mathbb{R}',
             ZZ: '\\mathbb{Z}',
             NN: '\\mathbb{N}',
