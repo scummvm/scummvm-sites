@@ -1,0 +1,22 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<table border="0" cellpadding="2" cellspacing="1" width="100%">
+                                                        <tbody>
+                                                            <tr align="center">
+                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+                                                                    <b><span class="toprowtext">Changesources</span></b>
+                                                                </td>
+                                                            </tr>
+  {% if sources %}
+  {% for s in sources -%}
+      <tr align="center">
+                                                                <td style="text-align: left;" class="{{ loop.cycle('row1', 'row2') }}" colspan="1" valign="middle">{{ s.describe() }}</td></tr>
+  {% endfor -%}
+{% else %}
+   <tr align="center">
+                                                                <td style="text-align: left;" class="row1" colspan="1" valign="middle">none (push only)</td></tr>
+{% endif %}
+
+{% endblock %}
+</tbody></table>

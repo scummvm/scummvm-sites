@@ -1,63 +1,19 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <meta http-equiv="content-type" content="text/html; charset=iso-8859-15">
-    <title>ScummVM :: Buildbot</title>
-    <link rel="stylesheet" href="SVMDesign.css" type="text/css">
-    <link rel="shortcut icon" href="favicon.ico">
-</head>
-<body style="margin: 10px; background-image: url(images/body-bg.png);">
-    <!-- TODO: Make this into a nice theme not a quick and dirty hack. -->
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="90%">
-        <tbody>
-            <tr>
-                <td>
-                    <img src="images/logo.png" alt="ScummVM logo" height="65" width="199">
-                </td>
-                <td style="background-image: url(images/top_bg.png); vertical-align: middle; text-align: left;
-                    white-space: nowrap;" width="50%">
-                    <a href="/">BuildBot Index</a> - <a href="builds.html">Snapshots</a> <a href="/snapshots/">(all)</a> - <a
-                        href="http://www.scummvm.org/">ScummVM website</a> - <a href="http://www.scummvm.org/contact.php">
-                            Contact us</a>&nbsp;
-                </td>
-                <td style="background-image: url(images/top_bg.png); vertical-align: middle; text-align: right;
-                    white-space: nowrap;" width="50%">
-                    <!-- nav table -->
-                    Build Views - <a href="waterfall?category=changes;category=master;category=stable">Waterfall</a>
-                    - <a href="console?category=changes;category=master;category=stable">Console</a> - <a href="grid?category=changes;category=master;category=stable">
-                        Grid</a> - <a href="tgrid?category=changes;category=master;category=stable">Transposed Grid</a>
-                    <!-- end of nav table -->
-                </td>
-                <td>
-                    <img src="images/curve_tr.png" alt="curved edge" height="65" width="20">
-                </td>
-            </tr>
-            <!-- top logo, navbar ends here, now on to the main page body -->
-            <tr bgcolor="#fbf1ce">
-                <td colspan="4">
-                    <table style="padding-left: 5px; padding-right: 5px;" border="0" cellpadding="0"
-                        cellspacing="0" width="100%">
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <!-- DEBUG marker: index_body.tpl starts here -->
-                                    <table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
-                                        <tbody>
-                                            <tr>
-                                                <td align="left" valign="middle" width="100%">
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <table align="center" border="0" cellpadding="0" cellspacing="0" width="98%">
-                                        <tbody>
-                                            <tr>
-                                                <td class="tableborder">
-                                                    <table border="0" cellpadding="2" cellspacing="1" width="100%">
+{% extends 'layout.html' %}
+{% import 'forms.html' as forms %}
+
+{% block content %}
+<td class="tableborder"> 
+<table border="0" cellpadding="2" cellspacing="1" width="100%">
                                                         <tbody>
                                                             <tr align="center">
                                                                 <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Welcome to the ScummVM Buildbot&nbsp;service...</span></b>
+                                                                    <b><span class="toprowtext">Welcome to the Buildbot
+{%- if project_name -%}
+  &nbsp;for the
+    {{ project_name }}
+project
+{%- endif -%}
+...</span></b>
                                                                 </td>
                                                             </tr>
                                                             <tr>
@@ -160,41 +116,13 @@
                                                             </tr>
                                                         </tbody>
                                                     </table>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                    <div align="center">
-                                        <span class="smalltext">Powered by <a href="http://buildbot.net/" class="smalllink">
-                                            Buildbot</a><br>
-                                            About this <a href="about" class="smalllink">Buildbot setup</a><br>
-                                            Design by the ScummVM team</span></div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-            <tr>
-                <td colspan="4">
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
-                        <tbody>
-                            <tr>
-                                <td>
-                                    <img src="images/curve_bl.png" alt="curved edge" height="20" width="20">
-                                </td>
-                                <td bgcolor="#fbf1ce" width="100%">
-                                    &nbsp;
-                                </td>
-                                <td align="right" valign="bottom">
-                                    <img src="images/curve_br.png" alt="curved edge" height="20" width="20">
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</body>
-</html>
+
+{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if shutting_down -%}
+Master is shutting down<br/>
+{{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}
+{%- else -%}
+{{ forms.clean_shutdown(shutdown_url, authz) }}
+{%- endif -%}
+{%- endif -%}
+{% endblock %}

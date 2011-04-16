@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<td class="tableborder">
+{% set item_class=cycler('row1', 'row3') %}
+<!--[insert table scummvm-style]--><table border="0" cellpadding="2" cellspacing="1" width="100%">
+                                                        <tbody>
+                                                            <tr align="center">
+                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+                                                                    <b><span class="toprowtext">About this Buildbot</span></b>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3" class="catrow">
+                                                                    <span class="catrowtext">Version Information</span>
+                                                                </td>
+                                                            </tr>
+                                                            <tr align="center">
+                                                                <td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Buildbot: {{ buildbot }}</td>
+</tr><tr align="center">
+<td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Twisted: {{ twisted }}</td>
+</tr><tr align="center">
+<td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Jinja: {{ jinja }}</td>
+</tr><tr align="center">
+<td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Python: {{ python }}</td>
+</tr><tr align="center">
+ <td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Buildmaster platform: {{ platform }}</td>
+
+                                                            </tr>
+<tr>
+<td colspan="3" class="catrow"><span class="catrowtext">Source code</span><td></tr>
+<tr>
+<td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Buildbot is a free software project, released under the terms of the
+<a href="http://www.gnu.org/licenses/gpl.html">GNU GPL</a>.</tr></td>
+</tr></td>
+<td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Please visit the <a href="http://buildbot.net/">Buildbot Home Page</a> for
+more information, including documentation, bug reports, and source
+downloads.</tr></td>
+
+                                                            <tr>
+                                                                <td colspan="3" class="catrow">
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+						</table>
+
+{% endblock %}
