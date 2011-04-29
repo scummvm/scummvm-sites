@@ -281,6 +281,12 @@ div.BuildWaterfall {
         border-color: #4F8530;
 }
 
+.skipped {
+	color: #000000;
+	background-color: #e1e1e1;
+        border-color: #aaaaaa;
+}
+
 .failure {
 	color: #FFFFFF;
 	background-color: #e98080;
