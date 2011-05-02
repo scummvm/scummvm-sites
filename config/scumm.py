@@ -161,7 +161,7 @@ class Package(ShellCommand):
 		self.command += "ln -sf %s %s && " % (file, os.path.join(self.dstpath, symlink))
 		self.command += " rm -rf %s || " % name
 		self.command +="( rm -rf %s; false )" % name
-					
+
 		ShellCommand.start(self)
 
 # buildstep class to wipe all build folders (eg "trunk-*") and to clear the ccache cache
@@ -238,14 +238,14 @@ class IrcStatusBot(irc.IRCClient):
 		return success, failure
 
 	def buildsetSubmitted(self, buildset):
-		self.log('Buildset %s added' % (buildset))
+		#self.log('Buildset %s added' % (buildset))
 
 	def builderAdded(self, builderName, builder):
-		self.log('Builder %s added' % (builder))
+		#self.log('Builder %s added' % (builder))
 		builder.subscribe(self)
 
 	def builderChangedState(self, builderName, state):
-		self.log('Builder %s changed state to %s' % (builderName, state))
+		#self.log('Builder %s changed state to %s' % (builderName, state))
 		idle = True
 		for b in self.getAllBuilders():
 			if b.getState()[0] != "idle":
@@ -260,21 +260,21 @@ class IrcStatusBot(irc.IRCClient):
 			self.timer.reset(0)
 
 	def requestSubmitted(self, brstatus):
-		self.log('BuildRequest for %s submitted to Builder %s' % 
-			(brstatus.getSourceStamp(), brstatus.getBuilderName()))
+		#self.log('BuildRequest for %s submitted to Builder %s' %
+		#	(brstatus.getSourceStamp(), brstatus.getBuilderName()))
 
 	def builderRemoved(self, builderName):
-		self.msg('Builder %s removed' % (builderName))
+		#self.msg('Builder %s removed' % (builderName))
 
 	def buildStarted(self, builderName, build):
-		builder = build.getBuilder()
-		self.log('Builder %r in category %s started' % (builder, builder.category))
+		#builder = build.getBuilder()
+		#self.log('Builder %r in category %s started' % (builder, builder.category))
 
 	def buildFinished(self, builderName, build, results):
 		builder = build.getBuilder()
 
 		# only notify about builders we are interested in
-		self.log('Builder %r in category %s finished' % (builder, builder.category))
+		#self.log('Builder %r in category %s finished' % (builder, builder.category))
 
 		if (self.categories != None and builder.category not in self.categories):
 			return
