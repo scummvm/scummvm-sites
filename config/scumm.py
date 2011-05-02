@@ -237,8 +237,9 @@ class IrcStatusBot(irc.IRCClient):
 					failure.append(b.getName())
 		return success, failure
 
-	#def buildsetSubmitted(self, buildset):
-	#	self.log('Buildset %s added' % (buildset))
+	def buildsetSubmitted(self, buildset):
+		#self.log('Buildset %s added' % (buildset))
+		return
 
 	def builderAdded(self, builderName, builder):
 		#self.log('Builder %s added' % (builder))
@@ -259,16 +260,19 @@ class IrcStatusBot(irc.IRCClient):
 			self.log('All builders are idle, reporting now')
 			self.timer.reset(0)
 
-	#def requestSubmitted(self, brstatus):
-	#	self.log('BuildRequest for %s submitted to Builder %s' %
-	#		(brstatus.getSourceStamp(), brstatus.getBuilderName()))
+	def requestSubmitted(self, brstatus):
+		#self.log('BuildRequest for %s submitted to Builder %s' %
+		#	(brstatus.getSourceStamp(), brstatus.getBuilderName()))
+		return
 
-	#def builderRemoved(self, builderName):
-	#	self.msg('Builder %s removed' % (builderName))
+	def builderRemoved(self, builderName):
+		#self.msg('Builder %s removed' % (builderName))
+		return
 
-	#def buildStarted(self, builderName, build):
-	#	builder = build.getBuilder()
-	#	self.log('Builder %r in category %s started' % (builder, builder.category))
+	def buildStarted(self, builderName, build):
+		#builder = build.getBuilder()
+		#self.log('Builder %r in category %s started' % (builder, builder.category))
+		return
 
 	def buildFinished(self, builderName, build, results):
 		builder = build.getBuilder()
