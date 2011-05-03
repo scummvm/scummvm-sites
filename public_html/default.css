@@ -305,7 +305,13 @@ div.BuildWaterfall {
         border-color: #ACA0B3;
 }
 
-.start,.running, td.building {
+.start {
+	color: #666666;
+	background-color: #dddd88;
+        border-color: #C5C56D;
+}
+
+.running, td.building {
 	color: #666666;
 	background-color: #fffc6c;
         border-color: #C5C56D;
