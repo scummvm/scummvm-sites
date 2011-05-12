@@ -456,11 +456,10 @@ font-weight: bold;
 
 TD.toprow, TH.toprow
 {
-	background-image: url(images/gradient_2.png);
 	color: #fff;
 	font-weight: bold;
 	background: #a82709;
-	background-image: url(./images/par-head.png);
+	background-image: url('images/par-head.png');
 	background-repeat: repeat-x;
 	padding: 6px;
 	font-size: 12px;
