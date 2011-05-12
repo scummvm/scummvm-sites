@@ -1,13 +1,13 @@
-body {
-  background-image: url('images/body-bg.png'); margin: 10px;
-  background-color: #efc418;	
-	background-repeat: repeat-x;
-}
-
 body, table {
 	font-family: verdana,tahoma,arial,helvetica,sans-serif;
 	font-size: 8pt;
 	font-weight: normal;
+}
+
+body {
+	background-image: url('images/body-bg.png'); margin: 10px;
+	background-color: #efc418;	
+	background-repeat: repeat-x;
 }
 
 table            
@@ -86,7 +86,6 @@ font-weight: bold;
 
 TD.toprow, TH.toprow
 {
-	background-image: url('images/gradient_2.gif');
 	color: #fff;
 	font-weight: bold;
 	background: #a82709;
@@ -159,11 +158,3 @@ input, textarea, select
 .directory p { margin: 0px; white-space: nowrap; }
 .directory div { display: none; margin: 0px; }
 .directory img { vertical-align: -30%; }
-
-
-
-
-
-
-
-
