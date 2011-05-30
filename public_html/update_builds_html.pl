@@ -24,20 +24,21 @@ sub add_platform {
 	my $icon = shift;
 	my $file_abbrev = shift;
 	my $desc = shift;
-	# TODO: Display more info, e.g. file sizes
+	# TODO: Display more info, e.g. file sizes and build date (that would require using
+	# PHP or SSI or something like that)
 
 	print FILE '<tr align="center">';
-	print FILE '<td style="text-align: left; width: 784px;" class="row1" valign="middle">';
+	print FILE '<td style="text-align: left; " class="row1" valign="middle">';
 	print FILE '<img style="width: 24px; height: 24px;" alt=""';
 	print FILE 'src="http://www.scummvm.org/images/catpl-' . $icon . '.png">' . $desc;
 	print FILE '</td>';
 	# master nightly builds are disabled atm
-#	print FILE '<td style="text-align: center; width: 114px;" class="row1">';
-#	print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.tar.bz2">master</a>';
+#	print FILE '<td style="text-align: center; width: 20em;" class="row1">';
+#	print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.tar.bz2">Download latest development build</a>';
 #	print FILE '</td>';
 
-	print FILE '<td style="text-align: center; width: 114px;" class="row1" nowrap="nowrap">';
-	print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">stable branch</a>';
+	print FILE '<td style="text-align: center; width: 20em;" class="row1" nowrap="nowrap">';
+	print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">Download latest stable build</a>';
 	print FILE '</td>';
 	print FILE '</tr>';
 }
