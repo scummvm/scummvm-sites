@@ -164,7 +164,7 @@ class Package(ShellCommand):
 
 		ShellCommand.start(self)
 
-# buildstep class to wipe all build folders (eg "trunk-*") and to clear the ccache cache
+# buildstep class to wipe all build folders (eg "trunk-*")
 class Clean(ShellCommand):
 	name = "clean"
 	haltOnFailure = 1
@@ -181,7 +181,6 @@ class Clean(ShellCommand):
 		self.addFactoryArguments(prefix = self.prefix)
 
 	def start(self):
-		self.command = "ccache -C && rm -rf ../../%s-*" % self.prefix
 		ShellCommand.start(self)
 
 # IRC stuff
