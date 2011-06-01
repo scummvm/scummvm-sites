@@ -125,7 +125,7 @@ class Package(ShellCommand):
 	def start(self):
 		properties = self.build.getProperties()
 
-		if not properties.has_key("revision"):
+		if not properties.has_key("revision") or properties["revision"] == None:
 			return SKIPPED
 
 		if not properties.has_key("package"):
