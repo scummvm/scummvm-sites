@@ -534,20 +534,24 @@ WARN_LOGFILE           = /home/joostp/doxygen/doxygen.log
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = /home/joostp/doxygen/scummvm-SVN-trunk/backends/audiocd \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/events \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/fs \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/graphics \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/keymapper \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/log \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/midi \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/mixer \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/mutex \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/plugins \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/saves \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/timer \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/vkeybd \
-                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/platform/sdl \
+#INPUT                  = /home/joostp/doxygen/scummvm-SVN-trunk/backends/audiocd \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/events \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/fs \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/graphics \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/keymapper \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/log \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/midi \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/mixer \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/mutex \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/plugins \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/saves \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/timer \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/vkeybd \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/base-backend.* \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/modular-backend.* \
+#                         /home/joostp/doxygen/scummvm-SVN-trunk/backends/platform/sdl \
+
+INPUT                  = /home/joostp/doxygen/scummvm-SVN-trunk/backends \
                          /home/joostp/doxygen/scummvm-SVN-trunk/audio \
                          /home/joostp/doxygen/scummvm-SVN-trunk/base \
                          /home/joostp/doxygen/scummvm-SVN-trunk/common \
