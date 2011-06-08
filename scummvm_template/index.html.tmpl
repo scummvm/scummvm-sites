@@ -1,25 +1,98 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-
-### ScummVM Planet HTML template.
-
-<!-- HTML/CSS coding by John Willis using the great work of Yaroslav Fedevych jaroslaw@nospam.kiev.ua as a starting point -->
-
-<head>
-<title>Planet ScummVM - Updated: <TMPL_VAR date></title>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en" dir="ltr"> 
+ 
+<head> 
+<title>ScummVM :: Planet :: Updated: <TMPL_VAR date></title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 <meta name="generator" content="<TMPL_VAR generator ESCAPE="HTML">">
 <link rel="stylesheet" href="planet.css" type="text/css">
+<link rel="stylesheet" href="menu.css" type="text/css">
+<link rel="stylesheet" href="layout.css" type="text/css">
 <TMPL_IF feedtype>
 <link rel="alternate" href="<TMPL_VAR feed ESCAPE="HTML">" title="<TMPL_VAR channel_title_plain ESCAPE="HTML">" type="application/<TMPL_VAR feedtype>+xml">
 </TMPL_IF>
 </head>
 
-<body>
-<h1><TMPL_VAR name></h1>
+<body class="mediawiki ltr ns-0 ns-subject page-Main_Page skin-scummmodern"> 
+	
+<table width="90%" border="0" cellspacing="0" cellpadding="0" align="center" id="tableMain"> 
+  <tr id="topHeader"> 
+    <td width="199px"><a href="http://planet.scummvm.org"><img src="./images/logo_phpVB2.png" width="199" height="65" alt="ScummVM logo" /></a></td> 
+ 
+    <td width="50%" style="background-image: url('./images/top_bg.png'); vertical-align: middle; text-align: left; white-space:nowrap;"> 
+      <a href="http://www.scummvm.org/" target="_parent" class="toplinks" id="tl_mw">ScummVM website</a> - 
+      <a href="http://forums.scummvm.org/" target="_parent" class="toplinks" id="tl_f">Forums</a> -
+      <a href="http://buildbot.scummvm.org" target="_parent" class="toplinks" id="tl_b">BuildBot</a> -
+      <a href="http://doxygen.scummvm.org" target="_parent" class="toplinks" id="tl_d">Doxygen</a><br /> 
+      <a href="http://www.scummvm.org/contact.php" target="_parent" class="toplinks" id="tl_cu">Contact us</a> -
+      <b><a href="http://www.gog.com/en/frontpage/?pp=22d200f8670dbdb3e253a90eee5098477c95c23d" target="_parent" class="toplinks" id="tl_go">Buy Supported Games</a></b>&nbsp;
+	  </td> 
+	
+	  <td width="50%" style="background-image: url('images/top_bg.png'); vertical-align: middle; text-align: right; white-space:nowrap;"> 
+      <!-- new nav table --> 
+      				<!-- nothing here -->
+          </td> 
+    <td><img src="./images/curve_tr.png" width="20" height="65" alt="curved edge" /></td> 
+  </tr> 
+  <!-- top logo, navbar ends here, now on to the main forum body --> 
+  <tr id="tableColor" bgcolor="#fbf1ce"> 
+    <td colspan="4"> 
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-left: 5px; padding-right: 5px;"> 
+        <tr> 
+          <td> 
+	          <div id="container"> 
+  	          <a name="top" id="top"></a> 
+  				      <div id="menu"> <!-- start of menu --> 
+                 	<div class='menugroup' id='p-Users'> 
+		<h1 class="menu-main">Main Menu</h1> 
+		<div class='pBody'> 
+<ul><li><a href='http://www.scummvm.org/'>Home</a></li><li><a href='http://forums.scummvm.org/'>Forums</a></li><li><a href='http://wiki.scummvm.org/'>Wiki</a></li><li><a href='http://sourceforge.net/donate/index.php?group_id=37116'>Donate to ScummVM</a>
+</li></ul>		</div> 
+	</div> 
+	<div class='menugroup' id='p-rss-links'> 
+		<h1 class="menu-misc">Subscription Links</h1> 
+		<div class='pBody'> 
+<ul><li>
+<a href="rss20.xml">Planet</a>
+</li>
 
+<li>
+<a href="http://www.scummvm.org/feed-rss20.php">News Posts</a>
+</li></ul>		</div> 
+	</div> 
+  <div class="menugroup"> 
+		<h1 class="menu-sf">Aggregated blogs</h1><div class='pBody'>  <ul>
+
+<TMPL_LOOP Channels>
+<li>
+<a <TMPL_IF link>href="<TMPL_VAR link ESCAPE="HTML">" </TMPL_IF><TMPL_IF message>class="message" title="<TMPL_VAR message ESCAPE="HTML">"</TMPL_IF><TMPL_UNLESS message>title="<TMPL_VAR title_plain ESCAPE="HTML">"</TMPL_UNLESS>><TMPL_VAR name></a>
+</li>
+</TMPL_LOOP>
+</ul>
+	</div> </div> 
+<div><img src="./images/hangmonk.gif" alt="monkey" width="55" height="57" class="monkey float_right" /></div> 
+	<div id="menu_banners"> 
+<strong>Last updated:</strong><br>
+<TMPL_VAR date><br>
+<em>All times are UTC.</em><br>
+<br>
+Powered by:<br>
+<a href="http://www.planetplanet.org/"><img src="images/planet.png" width="80" height="15" alt="Planet" border="0"></a>
+			</div> 
+				
+                </div><!-- end of menu --> 
+  		          
+  		        <div class="rbtop"> <!-- start of title --> 
+			         <div> 
+				        <p><span class="shadow-container" style="color: #fff;">Planet<span class="shadow-text" style="color: #821d06;">Planet</span></span><br /></p> 
+               </div> 
+              </div> <!-- end of title --> 
+		          <div class="rbcontent"> 
+			         <div class="rbwrapper"> 
+		            <div id="bodyContent"> 
+			           <div id="contentSub"></div> 
+			                     			           			 <!-- start content --> 
 Welcome to the ScummVM planet - This aggregates the personal blogs of developers, teams members and active participants from all around the ScummVM community.<br>If you wish to subscribe to updates to the planet or individual blogs please use the links on the right hand side.<br>To add your blog to the planet contact DJWillis.
-
 <TMPL_LOOP Items>
 <TMPL_IF new_date>
 <TMPL_UNLESS __FIRST__>
@@ -81,83 +154,38 @@ Welcome to the ScummVM planet - This aggregates the personal blogs of developers
 </TMPL_IF>
 </TMPL_LOOP>
 
-<div class="sidebar">
-
-<td class="menus">
-  <table class="menu" cellspacing="0">
-  <tfoot>
-    <tr>
-      <td><img src="./images/menu-bottom.gif" alt="" width="145" height="13"></td>
-    </tr>
-  </tfoot>
-  <tr class="menu-main"><th>Main Menu</th></tr>
-  <tbody><tr><td><ul>
-<li><a href='http://www.scummvm.org/'>Home</a></li><li><a href='http://forums.scummvm.org/'>Forums</a></li><li><a href='http://wiki.scummvm.org/'>Wiki</a></li><li><a href='http://sourceforge.net/donate/index.php?group_id=37116'>Donate to ScummVM</a>
-</li>
-
-</ul></td></tr>
-</tbody>
+          			           			 <!-- end content --> 
+          			           			 <div class="visualClear"></div> 
+		            </div> 
+             	 </div> 
+		          </div> 
+ 
+<div class="rbbot"><div><p>&nbsp;</p></div></div> 
+      <div class="visualClear"></div> 
+			<div id="footer"> 
+			<ul id="f-list"> 
+					<li id="copyright">Theme by ScummVM Team</li> 
+			</ul> 
+		</div> 
+</div> 
+</td> 
+        </tr> 
+      </table> 
+    </td> 
+  </tr> 
+  <tr> 
+    <td colspan="4"> 
+      <table width="100%" border="0" cellspacing="0" cellpadding="0" id="tableFooter"> 
+        <tr> 
+          <td><img src="./images/curve_bl.png" width="20" height="20" alt="curved edge" /></td> 
+ 
+          <td width="100%" bgcolor="#fbf1ce">&nbsp;</td> 
+          <td align="right" valign="bottom"><img src="./images/curve_br.png" width="20" height="20" alt="curved edge" /></td> 
+        </tr> 
+      </table> 
+    </td> 
+  </tr> 
 </table> 
-
-<table class="menu-rss" cellspacing="0">
-  <tfoot>
-    <tr>
-      <td><img src="./images/menu-bottom.gif" alt="" width="145" height="13"></td>
-    </tr>
-  </tfoot>
-  <tr class="menu-subs"><th>Subscription Links</th></tr>
-  <tbody><tr><td>
-<ul>
-<li>
-<a href="rss20.xml">Planet ScummVM</a>
-</li>
-
-<li>
-<a href="http://www.scummvm.org/feed-rss20.php">ScummVM News</a>
-</li>
-</ul>
-
-</td></tr>
-</tbody>
-</table>  
-
-<table class="menu" cellspacing="0">
-  <tfoot>
-    <tr>
-      <td><img src="./images/menu-bottom.gif" alt="" width="145" height="13"></td>
-    </tr>
-  </tfoot>
-  <tr class="menu-subs"><th>Aggregated blogs</th></tr>
-  <tbody><tr><td>
-<ul>
-
-<TMPL_LOOP Channels>
-<li>
-<a <TMPL_IF link>href="<TMPL_VAR link ESCAPE="HTML">" </TMPL_IF><TMPL_IF message>class="message" title="<TMPL_VAR message ESCAPE="HTML">"</TMPL_IF><TMPL_UNLESS message>title="<TMPL_VAR title_plain ESCAPE="HTML">"</TMPL_UNLESS>><TMPL_VAR name></a>
-</li>
-</TMPL_LOOP>
-</ul>
-
-</td></tr>
-</tbody>
-</table>  
-
-<table class="menu" cellspacing="0">
-  <tfoot>
-<tr><td><img src="./images/hangmonk.gif" alt="monkey" align="right" width="55" height="57">
-</td></tr>  
-</tfoot>
-  </table>
-</td>
-</tr>
-<strong>Last updated:</strong><br>
-<TMPL_VAR date><br>
-<em>All times are UTC.</em><br>
-<br>
-Powered by:<br>
-<a href="http://www.planetplanet.org/"><img src="images/planet.png" width="80" height="15" alt="Planet" border="0"></a>
-
-</div>
-</body>
-
-</html>
+</div> 
+</body> 
+</html> 

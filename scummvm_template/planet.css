@@ -1,0 +1,33 @@
+img.face {
+	float: right;
+	margin-top: -3em;
+}
+
+.entry {
+	margin-bottom: 2em;
+	font-family: "Bitstream Vera Sans", sans-serif;
+	padding-top: 5px;
+	padding-left: 5px;
+	padding-right: 5px;
+	padding-bottom: 5px;
+	background-color: #f6e08b;
+	border: 1px solid #000000;
+	/* font-size: 75%; */
+}
+
+.entry .date {
+	font-family: "Bitstream Vera Sans", sans-serif;
+	color: grey;
+}
+
+.entry .date a {
+	text-decoration: none;
+	color: inherit;
+}
+
+.entry img {
+	margin: 4px;
+	background-color: #f6e08b;
+	border: 1px solid #000000;
+}
+
