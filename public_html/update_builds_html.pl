@@ -33,14 +33,20 @@ sub add_platform {
 	print FILE 'src="http://www.scummvm.org/images/catpl-' . $icon . '.png">' . $desc;
 	print FILE '</td>';
 
-# master nightly builds are disabled atm
-#	print FILE '<td style="text-align: center; width: 20em;" class="row1">';
-#	print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.tar.bz2">Download latest development build</a>';
-#	print FILE '</td>';
+	# master daily builds
+	if (1) {
+		print FILE '<td style="text-align: center; width: 20em;" class="row1">';
+		print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.tar.bz2">Download latest development build</a>';
+		print FILE '</td>';
+	}
 
-	print FILE '<td style="text-align: center; width: 20em;" class="row1" nowrap="nowrap">';
-	print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">Download latest stable build</a>';
-	print FILE '</td>';
+	# stable daily builds
+	if (0) {
+		print FILE '<td style="text-align: center; width: 20em;" class="row1" nowrap="nowrap">';
+		print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">Download latest stable build</a>';
+		print FILE '</td>';
+	}
+
 	print FILE '</tr>';
 }
 
