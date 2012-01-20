@@ -96,6 +96,9 @@ function checkMouseLeave(element, event) {
 {% if repository %}
         <br><b>Repository:</b> {{ repository|e }}
 {% endif %}
+{% if project %}
+        <br><b>Project:</b> {{ project|e }}
+{% endif %}
 {% if branch != ANYBRANCH %}
         <br><b>Branch:</b> {{ branch|e }}
 {% endif %}
@@ -173,7 +176,7 @@ function checkMouseLeave(element, event) {
         <tr>          
     {% for s in slaves[c.name] %}          
           <td class='DevSlaveBox'>
-            <a href='{{ s.url }}' title='{{ s.title }}' class='DevSlaveBox {{ s.color }}' target="_blank">
+            <a href='{{ s.url }}' title='{{ s.pageTitle }}' class='DevSlaveBox {{ s.color }}' target="_blank">
             </a>
           </td>
     {% endfor %}            
@@ -203,7 +206,7 @@ function checkMouseLeave(element, event) {
     {% for b in r.builds[c.name] %}
           <td class='DevStatusBox'>
             <a href='#' onclick='showBuildBox("{{ b.url }}", event); return false;'
-               title='{{ b.title|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
+               title='{{ b.pageTitle|e }}' class='DevStatusBox {{ b.color }} {{ b.tag }}'
                target="_blank"></a>
           </td>
     {% endfor %}    

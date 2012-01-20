@@ -12,7 +12,7 @@
     {% if refresh %}
       <meta http-equiv="refresh" content="{{ refresh|e }}"/>
     {% endif %}
-    <title>{{ title|e }}</title>
+    <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
     <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
     <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
@@ -74,11 +74,11 @@
 <div align="center"> 
                                         <span class="smalltext">Powered by <a href="http://buildbot.net/">BuildBot</a> ({{version}})<br /> 
                                             About this <a href="{{ path_to_root }}about" class="smalllink">Buildbot setup</a><br /> 
-                                            Design by the       {% if project_name -%}
-        {%- if project_url -%}
-          <a href="{{ project_url }}">{{ project_name }}</a>
+                                            Design by the       {% if title -%}
+        {%- if title_url -%}
+          <a href="{{ title_url }}">{{ title }}</a>
         {%- else -%}
-          {{ project_name }}
+          {{ title }}
         {%- endif -%}
         &nbsp;
       {%- endif -%} team      <br/>
