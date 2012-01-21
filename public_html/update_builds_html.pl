@@ -52,7 +52,7 @@ sub add_platform {
 
 add_platform("android", "android", "Android");
 add_platform("dc", "dc", "Dreamcast plain files");
-add_platform("debian", "debian_x86", "Debian 32bit");
+add_platform("debian", "debian-x86", "Debian 32bit");
 add_platform("debian", "debian-x86_64", "Debian 64bit");
 add_platform("dingux", "dingux", "Dingux");
 add_platform("n64", "n64", "Nintendo 64");
