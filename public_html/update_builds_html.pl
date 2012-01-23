@@ -67,6 +67,7 @@ add_platform("macos-universal", "osx_intel", "Mac OS X (Intel)");
 add_platform("macos-universal", "osx_ppc", "Mac OS X (PowerPC)");
 add_platform("linuxmoto", "motoezx", "Motorola (MotoEZX)");
 add_platform("linuxmoto", "motomagx", "Motorola (MotoMAGX)");
+add_platform("openpandora", "openpandora", "OpenPandora");
 add_platform("ps2", "ps2", "Playstation 2");
 add_platform("ps3", "ps3", "Playstation 3");
 add_platform("psp", "psp", "Playstation Portable");
