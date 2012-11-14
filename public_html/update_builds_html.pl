@@ -41,7 +41,7 @@ sub add_platform {
 	}
 
 	# stable daily builds
-	if (0) {
+	if (1) {
 		print FILE '<td style="text-align: center; width: 20em;" class="row1" nowrap="nowrap">';
 		print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">Download latest stable build</a>';
 		print FILE '</td>';
