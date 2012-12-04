@@ -62,7 +62,7 @@ sub add_platform {
 	print FILE '</tr>';
 }
 
-add_platform("amiga", "amigaos4", "Amiga OS4", "0");
+add_platform("amiga", "amigaos4", "Amiga OS4", "1");
 add_platform("android", "android", "Android", "0");
 add_platform("dc", "dc", "Dreamcast plain files", "0");
 add_platform("debian", "debian-x86", "Debian 32bit", "1");
