@@ -88,7 +88,9 @@ add_platform("webos", "webos", "HP webOS", "0");
 add_platform("windows", "mingw-w32", "Windows (32bit)", "1");
 add_platform("win64", "mingw-w64", "Windows (64bit)", "1");
 add_platform("wince", "wince", "Windows CE (ARM)", "0");
-
+add_platform("wince", "wince-split1", "Windows CE (ARM) - Split Build #1", "0");
+add_platform("wince", "wince-split2", "Windows CE (ARM) - Split Build #2", "0");
+add_platform("wince", "wince-split3", "Windows CE (ARM) - Split Build #3", "0");
 
 print FILE $html_footer;
 close FILE;
