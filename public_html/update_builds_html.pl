@@ -25,6 +25,7 @@ sub add_platform {
 	my $file_abbrev = shift;
 	my $desc = shift;
 	my $build_tools = shift;
+	my $archive_format = shift;
 	# TODO: Display more info, e.g. file sizes and build date (that would require using
 	# PHP or SSI or something like that)
 
@@ -37,14 +38,14 @@ sub add_platform {
 	# master daily builds
 	if (1) {
 		print FILE '<td style="text-align: center; width: 20em;" class="row1">';
-		print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.tar.bz2">Download latest development build</a>';
+		print FILE '<a href="/snapshots/master/' . $file_abbrev . '-master-latest.' . $archive_format . '">Download latest development build</a>';
 		print FILE '</td>';
 	}
 
 	# stable daily builds
 	if (1) {
 		print FILE '<td style="text-align: center; width: 20em;" class="row1" nowrap="nowrap">';
-		print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.tar.bz2">Download latest stable build</a>';
+		print FILE '<a href="/snapshots/stable/' . $file_abbrev . '-stable-latest.' . $archive_format . '">Download latest stable build</a>';
 		print FILE '</td>';
 	}
 
@@ -52,7 +53,7 @@ sub add_platform {
 	if (1) {
 		print FILE '<td style="text-align: center; width: 20em;" class="row1">';
 		if ($build_tools) {
-			print FILE '<a href="/snapshots/tools-master/' . $file_abbrev . '-tools-master-latest.tar.bz2">Download latest tools build</a>';
+			print FILE '<a href="/snapshots/tools-master/' . $file_abbrev . '-tools-master-latest.' . $archive_format . '">Download latest tools build</a>';
 		} else {
 			print FILE 'N/A';
 		}
@@ -62,36 +63,36 @@ sub add_platform {
 	print FILE '</tr>';
 }
 
-add_platform("amiga", "amigaos4", "Amiga OS4", "1");
-add_platform("android", "android", "Android", "0");
-add_platform("dc", "dc", "Dreamcast plain files", "0");
-add_platform("dc", "dc-serial", "Dreamcast plain files with Serial Debug", "0");
-add_platform("debian", "debian-x86", "Debian 32bit", "1");
-add_platform("debian", "debian-x86_64", "Debian 64bit", "1");
-add_platform("dingux", "dingux", "Dingux", "0");
-add_platform("n64", "n64", "Nintendo 64", "0");
-add_platform("ds", "ds", "Nintendo DS", "0");
-add_platform("gc", "gamecube", "Nintendo Gamecube", "0");
-add_platform("wii", "wii", "Nintendo Wii", "0");
-add_platform("caanoo", "caanoo", "GamePark Caanoo", "0");
-add_platform("gp2x", "gp2x", "GamePark GP2X", "0");
-add_platform("gp2xwiz", "gp2xwiz", "GamePark GP2XWiz", "0");
-add_platform("iphone", "iphone", "iPhone", "0");
-add_platform("macos-universal", "osx_intel", "Mac OS X (Intel)", "1");
-add_platform("macos-universal", "osx_ppc", "Mac OS X (PowerPC)", "1");
-add_platform("linuxmoto", "motoezx", "Motorola (MotoEZX)", "0");
-add_platform("linuxmoto", "motomagx", "Motorola (MotoMAGX)", "0");
-add_platform("openpandora", "openpandora", "OpenPandora", "0");
-add_platform("ps2", "ps2", "Playstation 2", "0");
-add_platform("ps3", "ps3", "Playstation 3", "0");
-add_platform("psp", "psp", "Playstation Portable", "0");
-add_platform("webos", "webos", "HP webOS", "0");
-add_platform("windows", "mingw-w32", "Windows (32bit)", "1");
-add_platform("win64", "mingw-w64", "Windows (64bit)", "1");
-add_platform("wince", "wince", "Windows CE (ARM)", "0");
-add_platform("wince", "wince-split1", "Windows CE (ARM) - Split Build #1", "0");
-add_platform("wince", "wince-split2", "Windows CE (ARM) - Split Build #2", "0");
-add_platform("wince", "wince-split3", "Windows CE (ARM) - Split Build #3", "0");
+add_platform("amiga", "amigaos4", "Amiga OS4", "1", "tar.bz2");
+add_platform("android", "android", "Android", "0", "tar.bz2");
+add_platform("dc", "dc", "Dreamcast plain files", "0", "tar.bz2");
+add_platform("dc", "dc-serial", "Dreamcast plain files with Serial Debug", "0", "tar.bz2");
+add_platform("debian", "debian-x86", "Debian 32bit", "1", "tar.bz2");
+add_platform("debian", "debian-x86_64", "Debian 64bit", "1", "tar.bz2");
+add_platform("dingux", "dingux", "Dingux", "0", "tar.bz2");
+add_platform("n64", "n64", "Nintendo 64", "0", "tar.bz2");
+add_platform("ds", "ds", "Nintendo DS", "0", "tar.bz2");
+add_platform("gc", "gamecube", "Nintendo Gamecube", "0", "tar.bz2");
+add_platform("wii", "wii", "Nintendo Wii", "0", "tar.bz2");
+add_platform("caanoo", "caanoo", "GamePark Caanoo", "0", "tar.bz2");
+add_platform("gp2x", "gp2x", "GamePark GP2X", "0", "tar.bz2");
+add_platform("gp2xwiz", "gp2xwiz", "GamePark GP2XWiz", "0", "tar.bz2");
+add_platform("iphone", "iphone", "iPhone", "0", "tar.bz2");
+add_platform("macos-universal", "osx_intel", "Mac OS X (Intel)", "1", "tar.bz2");
+add_platform("macos-universal", "osx_ppc", "Mac OS X (PowerPC)", "1", "tar.bz2");
+add_platform("linuxmoto", "motoezx", "Motorola (MotoEZX)", "0", "tar.bz2");
+add_platform("linuxmoto", "motomagx", "Motorola (MotoMAGX)", "0", "tar.bz2");
+add_platform("openpandora", "openpandora", "OpenPandora", "0", "tar.bz2");
+add_platform("ps2", "ps2", "Playstation 2", "0", "tar.bz2");
+add_platform("ps3", "ps3", "Playstation 3", "0", "tar.bz2");
+add_platform("psp", "psp", "Playstation Portable", "0", "tar.bz2");
+add_platform("webos", "webos", "HP webOS", "0", "tar.bz2");
+add_platform("windows", "mingw-w32", "Windows (32bit)", "1", "tar.bz2");
+add_platform("win64", "mingw-w64", "Windows (64bit)", "1", "tar.bz2");
+add_platform("wince", "wince", "Windows CE (ARM)", "0", "tar.bz2");
+add_platform("wince", "wince-split1", "Windows CE (ARM) - Split Build #1", "0", "tar.bz2");
+add_platform("wince", "wince-split2", "Windows CE (ARM) - Split Build #2", "0", "tar.bz2");
+add_platform("wince", "wince-split3", "Windows CE (ARM) - Split Build #3", "0", "tar.bz2");
 
 print FILE $html_footer;
 close FILE;

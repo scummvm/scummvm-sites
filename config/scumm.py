@@ -112,6 +112,8 @@ class Package(ShellCommand):
 		del kwargs["buildname"]
 		self.platform_package = kwargs["platform_package"]
 		del kwargs["platform_package"]
+		self.archive_format = kwargs["archive_format"]
+		del kwargs["archive_format"]
 
 		ShellCommand.__init__(self, **kwargs)
 
@@ -121,6 +123,7 @@ class Package(ShellCommand):
 		self.addFactoryArguments(package = self.package)
 		self.addFactoryArguments(buildname = self.buildname)
 		self.addFactoryArguments(platform_package = self.platform_package)
+		self.addFactoryArguments(archive_format = self.archive_format)
 
 	def start(self):
 		properties = self.build.getProperties()
@@ -136,9 +139,14 @@ class Package(ShellCommand):
 		if len(self.disttarget) > 0:
 			disttarget = True
 
+		archive_format = "tar.bz2"
+
+		if len(self.archive_format) > 0:
+			archive_format = self.archive_format
+
 		name = "%s-%s" % (self.buildname, properties["revision"][:8])
-		file = "%s.tar.bz2" % name
-		symlink = "%s-latest.tar.bz2" % self.buildname
+		file = "%s.%s" % (name, archive_format)
+		symlink = "%s-latest.%s" % (self.buildname, archive_format)
 
 		files = []
 
@@ -153,9 +161,21 @@ class Package(ShellCommand):
 		if disttarget:
 			self.command += "make %s && " % self.disttarget
 
+		# default to tar.bz2
+		archive_command = "tar cvjf"
+
+		if archive_format == "zip":
+			archive_command = "zip -r"
+
+		if archive_format == "tar.bz2":
+			archive_command = "tar cvjf"
+
+		if archive_format == "tar.gz":
+			archive_command = "tar cvzf"
+
 		self.command += "mkdir %s && " % name
 		self.command += "cp -r %s %s/ && " % (" ".join(files), name)
-		self.command += "tar cvjf %s %s/ && " % (file, name)
+		self.command += "%s %s %s/ && " % (archive_command, file, name)
 		self.command += "mkdir -p %s/ && " % (self.dstpath)
 		self.command += "mv %s %s/ && " % (file, self.dstpath)
 		self.command += "ln -sf %s %s && " % (file, os.path.join(self.dstpath, symlink))
