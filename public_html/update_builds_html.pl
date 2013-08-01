@@ -63,7 +63,7 @@ sub add_platform {
 	print FILE '</tr>';
 }
 
-add_platform("amiga", "amigaos4", "Amiga OS4", "1", "tar.bz2");
+add_platform("amiga", "amigaos4", "Amiga OS4", "1", "zip");
 add_platform("android", "android", "Android", "0", "zip");
 add_platform("dc", "dc", "Dreamcast plain files", "0", "tar.bz2");
 add_platform("dc", "dc-serial", "Dreamcast plain files with Serial Debug", "0", "tar.bz2");
