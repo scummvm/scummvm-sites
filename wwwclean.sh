@@ -7,13 +7,17 @@
 # As this is 1 per day, this is approx the number of
 # builds to keep as well (assuming no manual runs).
 KEEP_N_DAYS=7
+
+# Directory that snapshot builds are kept in.
+SNAPSHOT_DIR=/var/www/snapshots/
+
 # FIXME - Need to ensure that in the event that older build is the
 # only build, they are not removed i.e. nightlies are not rebuilt
 # if not commits have been made during that day, so 7 days of no
 # commits means the snapshot is removed :/
 # This has occurred for stable builds and should be avoided...
 # Somehow...
-find /var/www/snapshots/ -type f -mtime +${KEEP_N_DAYS} -delete
-find /var/www/snapshots/ -type l -mtime +${KEEP_N_DAYS} -delete
-find /var/www/snapshots/ -type d -empty -delete
+find ${SNAPSHOT_DIR} -type f -mtime +${KEEP_N_DAYS} -delete
+find ${SNAPSHOT_DIR} -type l -mtime +${KEEP_N_DAYS} -delete
+find ${SNAPSHOT_DIR} -type d -empty -delete
 
