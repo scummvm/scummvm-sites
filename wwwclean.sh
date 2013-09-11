@@ -11,13 +11,21 @@ KEEP_N_DAYS=7
 # Directory that snapshot builds are kept in.
 SNAPSHOT_DIR=/var/www/snapshots/
 
-# FIXME - Need to ensure that in the event that older build is the
-# only build, they are not removed i.e. nightlies are not rebuilt
-# if not commits have been made during that day, so 7 days of no
-# commits means the snapshot is removed :/
-# This has occurred for stable builds and should be avoided...
-# Somehow...
-find ${SNAPSHOT_DIR} -type f -mtime +${KEEP_N_DAYS} -delete
-find ${SNAPSHOT_DIR} -type l -mtime +${KEEP_N_DAYS} -delete
-find ${SNAPSHOT_DIR} -type d -empty -delete
+# Iterate across snapshot directories, removing older builds..
+# BUT skipping removal if they are the only remaining build.
+for snapsubdir in `find ${SNAPSHOT_DIR} -type d`; do
+	# If number of builds determined by native build name
+	# is greater than 2, remove older ones ie. Just current and symlink 
+	# will be left
+	NATIVE_BUILD="debian-x86-`basename ${snapsubdir}`"
+	NUM_OF_BUILDS=`find ${NATIVE_BUILD}-* | wc -l`
+	if [ "${NUM_OF_BUILDS}" -gt 2 ]; then
+		# Remove any files older than KEEP_N_DAYS
+		find ${snapsubdir} -type f -mtime +${KEEP_N_DAYS} -delete
+		# Remove any symbolic links older than KEEP_N_DAYS
+		find ${snapsubdir} -type l -mtime +${KEEP_N_DAYS} -delete
+	fi
+done
 
+# Remove any empty directories
+find ${SNAPSHOT_DIR} -type d -empty -delete
