@@ -6,7 +6,7 @@
 # Number of days to keep nightlies builds for.
 # As this is 1 per day, this is approx the number of
 # builds to keep as well (assuming no manual runs).
-KEEP_N_DAYS=7
+KEEP_N_DAYS=5
 
 # Directory that snapshot builds are kept in.
 SNAPSHOT_DIR=/var/www/snapshots/
