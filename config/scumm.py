@@ -353,7 +353,14 @@ class IrcStatusBot(irc.IRCClient):
 		elif len(success) == 0:
 			m += ". And now all ports are broken :\\"
 
-		self.send(m)
+		# Workaround for twisted IRC bug where lines longer than the maximum
+		# supported by various IRC networks are not transparently split, but
+		# are instead truncated.
+		# The relevant bug is http://twistedmatrix.com/trac/ticket/4416
+		# irc_max_characters = 510 # Absolute limit
+		irc_max_characters = 400 # Conservative limit
+		for mpart in (m[i:i+irc_max_characters] for i in xrange(0, len(m), irc_max_characters)):
+			self.send(mpart)
 
 	def handleAction(self, data, user):
 		if not data.endswith("s %s" % self.nickname):
