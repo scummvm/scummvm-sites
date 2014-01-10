@@ -167,6 +167,9 @@ class Package(ShellCommand):
 		if archive_format == "zip":
 			archive_command = "zip -r"
 
+		if archive_format == "tar.xz":
+			archive_command = "tar cvJf"
+
 		if archive_format == "tar.bz2":
 			archive_command = "tar cvjf"
 
