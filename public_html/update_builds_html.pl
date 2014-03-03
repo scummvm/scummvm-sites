@@ -67,7 +67,6 @@ add_platform("amiga", "amigaos4", "Amiga OS4", "1", "zip");
 add_platform("android", "android_arm", "Android (ARM)", "0", "zip");
 add_platform("android", "android_mips", "Android (MIPS)", "0", "zip");
 add_platform("android", "android_x86", "Android (x86)", "0", "zip");
-add_platform("ouya", "ouya", "OUYA", "0", "zip");
 add_platform("dc", "dc", "Dreamcast plain files", "0", "tar.xz");
 add_platform("dc", "dc-serial", "Dreamcast plain files with Serial Debug", "0", "tar.xz");
 add_platform("debian", "debian-x86", "Debian 32bit", "1", "tar.xz");
