@@ -204,7 +204,7 @@ class Clean(ShellCommand):
 		self.addFactoryArguments(prefix = self.prefix)
 
 	def start(self):
-		self.command = "rm -rf ../../%s-*" % self.prefix
+		self.command = "rm -vrf ../../%s-*" % self.prefix
 		ShellCommand.start(self)
 
 # IRC stuff
