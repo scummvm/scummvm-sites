@@ -141,7 +141,7 @@ project
                                                         </tbody>
                                                     </table>
 
-{%- if authz.advertiseAction('cleanShutdown') -%}
+{%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
 Master is shutting down<br/>
 {{ forms.cancel_clean_shutdown(cancel_shutdown_url, authz) }}

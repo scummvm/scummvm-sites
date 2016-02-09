@@ -9,7 +9,7 @@
 KEEP_N_DAYS=14
 
 # Directory that snapshot builds are kept in.
-SNAPSHOT_DIR=/var/www/snapshots/
+SNAPSHOT_DIR=/var/www/buildbot/snapshots/
 
 # Iterate across snapshot directories, removing older builds..
 # BUT skipping removal if they are the only remaining build.
