@@ -81,7 +81,7 @@ add_platform("gp2x", "gp2x", "GamePark GP2X", "0", "tar.bz2");
 add_platform("gp2xwiz", "gp2xwiz", "GamePark GP2XWiz", "0", "tar.bz2");
 add_platform("iphone", "ios", "iOS (All Devices, iOS 3.1+)", "0", "tar.bz2");
 add_platform("iphone", "ios7", "iOS (Modern Devices, iOS 7.1+)", "0", "tar.bz2");
-add_platform("iphone", "iphone-clang", "iPhone", "0", "tar.bz2");
+#add_platform("iphone", "iphone-clang", "iPhone", "0", "tar.bz2");
 add_platform("macos-universal", "osx_intel", "Mac OS X (Intel)", "1", "tar.xz");
 #add_platform("macos-universal", "osx_ppc", "Mac OS X (PowerPC)", "1", "tar.xz");
 add_platform("linuxmoto", "motoezx", "Motorola (MotoEZX)", "0", "tar.xz");
