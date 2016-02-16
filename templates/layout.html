@@ -71,6 +71,29 @@
                                             </tr> 
                                         </tbody> 
                                     </table>
+		</td>
+	</tr>
+	<tr>
+		<td>
+			<table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
+				<tr>
+					<td width="33%">
+    <div class="auth">
+    {% if authz.authenticated(request) %}
+    {{ authz.getUsernameHTML(request) }}
+    |<a href="{{ path_to_root }}logout">Logout</a>
+    {% elif authz.useHttpHeader and authz.httpLoginUrl %}
+    <a href="{{ authz.httpLoginUrl }}">Login</a>
+    {% elif authz.auth %}
+    <form method="post" name="login" action="{{ path_to_root }}login">
+    <input type="text" name="username" size="10" />
+    <input type="password" name="passwd" size="10" />
+    <input type="submit" value="login" />
+    </form>
+    {% endif %}
+    </div>
+					</td>
+					<td width="33%">
 <div align="center"> 
                                         <span class="smalltext">Powered by <a href="http://buildbot.net/">BuildBot</a> ({{version}})<br /> 
                                             About this <a href="{{ path_to_root }}about" class="smalllink">Buildbot setup</a><br /> 
@@ -83,6 +106,11 @@
         &nbsp;
       {%- endif -%} team      <br/>
       Page built: <b>{{ time }}</b> ({{ tz }})</span></div> 
+					</td>
+					<td width="33%">
+					</td>
+				</tr>
+			</table>
                                 </td> 
                             </tr> 
                         </tbody> 

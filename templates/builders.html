@@ -38,13 +38,20 @@
     {{ forms.stop_build(path_to_root+"builders/_all/stopall", authz, on_all=True, label='All Builds') }}
   {% endif %}
 {% endif %}
-  
+
+{% if authz.advertiseAction('cancelAllPendingBuilds', request) %}
+  <h2>Cancel Selected Pending Builds</h2>
+  {{ forms.cancel_build(path_to_root+"builders/_selected/cancelpendingselected", authz, on_selected=True, builders=builders, label='Selected Pending Builds') }}
+  <h2>Cancel All Pending Builds</h2>
+  {{ forms.cancel_build(path_to_root+"builders/_all/cancelpendingall", authz, on_all=True, label='All Pending Builds') }}
+{% endif %}
+
 {% if num_online > 0 %}
   {% if authz.advertiseAction('forceAllBuilds', request) or authz.advertiseAction('forceBuild', request) %}
     <h2>Force Selected Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, on_selected=True, builders=builders) }}
+    {{ forms.force_build(path_to_root+"builders/_selected/forceselected", authz, request, on_selected=True, builders=builders, force_schedulers=force_schedulers, default_props=default_props) }}
     <h2>Force All Builds</h2>
-    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz, on_all=True) }}
+    {{ forms.force_build(path_to_root+"builders/_all/forceall", authz,request, on_all=True, force_schedulers=force_schedulers, default_props=default_props) }}
   {% endif %}
 {% endif %}
 
