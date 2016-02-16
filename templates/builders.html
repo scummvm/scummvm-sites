@@ -2,32 +2,38 @@
 {% import 'forms.html' as forms %}
 {% from "box_macros.html" import box %}
 
-{% block content %}
-{% set item_class=cycler('row1', 'row3') %}
-<td class="tableborder"> 
-<table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Builders: {{ branches|join(', ')|e }}</span></b>
-                                                                </td>
-                                                            </tr>
+{% block content_td %}
+<td class="tableborder">
+{% endblock %}
 
-{% for b in builders %}
-  <tr>
-  <td class="box {{ item_class.current }}"><a href="{{ b.link }}">{{ b.name|e }}</a></td>
-  {% if b.build_url %}
-    <td class="LastBuild box {{ b.build_css_class }}">
-        <a href="{{ b.build_url }}">{{ b.build_label }}</a>
-        <br/>{{ b.build_text }}
+{% block content %}
+{% set item_class_cycler=cycler('row3', 'row1') %}
+
+<table border="0" cellpadding="2" cellspacing="1" width="100%">
+  <tr align="center">
+    <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Builders: {{ branches|join(', ')|e }}</span></b>
     </td>
-  {% else %}
-    <td class="LastBuild box {{ item_class.next() }}">no build</td>
-  {% endif %}  
-  {{ box(**b.current_box) }}  
   </tr>
-{% endfor %}
-</tbody>
+  {% for b in builders %}
+  <tr>
+    {% set item_class = item_class_cycler.next() %}
+    <td class="box {{ item_class }}">
+      <a href="{{ b.link }}">{{ b.name|e }}</a>
+    </td>
+    {% if b.build_url %}
+    <td class="LastBuild box {{ b.build_css_class }}">
+      <a href="{{ b.build_url }}">{{ b.build_label }}</a><br/>
+      {{ b.build_text }}
+    </td>
+    {% else %}
+    <td class="LastBuild box {{ item_class }}">
+      no build
+    </td>
+    {% endif %}
+    {{ box(**b.current_box) }}
+  </tr>
+  {% endfor %}
 </table>
 
 {% if num_building > 0 %}

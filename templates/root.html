@@ -1,145 +1,131 @@
 {% extends 'layout.html' %}
 {% import 'forms.html' as forms %}
 
+{% block content_td %}
+<td class="tableborder">
+{% endblock %}
+
 {% block content %}
-<td class="tableborder"> 
+{% if authz.advertiseAction('view', request) %}
 <table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="5" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Welcome to the Buildbot
-{%- if title -%}
-  &nbsp;for the
-    {{ title }}
-project
-{%- endif -%}
-...</span></b>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="5" class="catrow">
-                                                                    <span class="catrowtext">Build Views: These views will allow you to examine the state
-                                                                        of recent buildbot activity.</span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" class="row1" colspan="1" valign="middle">
-                                                                    The <a href="waterfall?category=changes;category=master;category=stable">Waterfall Display</a>
-                                                                    will give you a time-oriented summary of recent buildbot activity.
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="waterfall?category=changes;category=master">master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="waterfall?category=changes;category=stable">stable</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="waterfall?category=changes;category=tools-master">tools-master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="waterfall?category=changes;category=nightly">nightly</a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
-                                                                    The <a href="console?category=changes;category=master;category=stable">Console Display</a>
-                                                                    will give you a revision-oriented summary of recent buildbot activity.
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="console?category=changes;category=master;branch=master">master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="console?category=changes;category=stable;branch=stable">stable</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="console?category=changes;category=tools-master;branch=master">tools-master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="console?category=changes;category=nightly">nightly</a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
-                                                                    The <a href="grid?category=changes;category=master;category=stable">Grid Display</a> will
-                                                                    give you a developer-oriented summary of recent buildbot activity.
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="grid?category=changes;category=master">master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="grid?category=changes;category=stable">stable</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="grid?category=changes;category=tools-master">tools-master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="grid?category=changes;category=nightly">nightly</a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
-                                                                    The <a href="tgrid?category=changes;category=master;category=stable">Transposed Grid Display</a>
-                                                                    presents the same information as the grid, but lists the revisions down the side.
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="tgrid?category=changes;category=master">master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="tgrid?category=changes;category=stable">stable</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="tgrid?category=changes;category=tools-master">tools-master</a>
-                                                                </td>
-                                                                <td style="text-align: center;" class="row1" nowrap="nowrap">
-                                                                    <a href="tgrid?category=changes;category=nightly">nightly</a>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    The <a href="builders">Latest Build</a> information for each
-                                                                    build target is here.
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    The <a href="one_line_per_build">Recent Builds</a> are summarized here,
-                                                                    one per line.
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="5" class="catrow">
-                                                                    <span class="catrowtext">Other Links.</span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="left">
-                                                                <td colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    Download the latest&nbsp;<a href="builds.html">Untested Builds</a> for&nbsp;platforms
-                                                                    built by this buildbot.
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="left">
-                                                                <td colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    Information on the <a href="buildslaves">Build Slaves</a> managed by this
-                                                                    buildbot.
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="left">
-                                                                <td colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    Information on the&nbsp;<a href="changes">Sourcecode Repositories</a> being
-                                                                    monitored by this buildbot.
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="left">
-                                                                <td colspan="5" rowspan="1" class="row1" valign="middle">
-                                                                    Information on how we <a href="http://wiki.scummvm.org/index.php/Buildbot">Have Configured</a>&nbsp;buildbot.
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="5" class="catrow">
-                                                                </td>
-                                                            </tr>
-                                                        </tbody>
-                                                    </table>
+  <tr align="center">
+    <td class="toprow" colspan="5" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Welcome to the Buildbot{%- if title -%}&nbsp;for the{{ title }}project{%- endif -%}...</span></b>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5" class="catrow">
+      <span class="catrowtext">Build Views: These views will allow you to examine the state of recent buildbot activity.</span>
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" class="row1" colspan="1" valign="middle">
+      The <a href="waterfall?category=changes;category=master;category=stable">Waterfall Display</a> will give you a time-oriented summary of recent buildbot activity.
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="waterfall?category=changes;category=master">master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="waterfall?category=changes;category=stable">stable</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="waterfall?category=changes;category=tools-master">tools-master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="waterfall?category=changes;category=nightly">nightly</a>
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+      The <a href="console?category=changes;category=master;category=stable">Console Display</a> will give you a revision-oriented summary of recent buildbot activity.
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="console?category=changes;category=master;branch=master">master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="console?category=changes;category=stable;branch=stable">stable</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="console?category=changes;category=tools-master;branch=master">tools-master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="console?category=changes;category=nightly">nightly</a>
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+      The <a href="grid?category=changes;category=master;category=stable">Grid Display</a> will give you a developer-oriented summary of recent buildbot activity.
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="grid?category=changes;category=master">master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="grid?category=changes;category=stable">stable</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="grid?category=changes;category=tools-master">tools-master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="grid?category=changes;category=nightly">nightly</a>
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" colspan="1" rowspan="1" class="row1" valign="middle">
+      The <a href="tgrid?category=changes;category=master;category=stable">Transposed Grid Display</a> presents the same information as the grid, but lists the revisions down the side.
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="tgrid?category=changes;category=master">master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="tgrid?category=changes;category=stable">stable</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="tgrid?category=changes;category=tools-master">tools-master</a>
+    </td>
+    <td style="text-align: center;" class="row1" nowrap="nowrap">
+      <a href="tgrid?category=changes;category=nightly">nightly</a>
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" colspan="5" rowspan="1" class="row1" valign="middle">
+      The <a href="builders">Latest Build</a> information for each build target is here.
+    </td>
+  </tr>
+  <tr align="center">
+    <td style="text-align: left;" colspan="5" rowspan="1" class="row1" valign="middle">
+      The <a href="one_line_per_build">Recent Builds</a> are summarized here, one per line.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5" class="catrow">
+      <span class="catrowtext">Other Links.</span>
+    </td>
+  </tr>
+  <tr align="left">
+    <td colspan="5" rowspan="1" class="row1" valign="middle">
+      Download the latest&nbsp;<a href="builds.html">Untested Builds</a> for platforms built by this buildbot.
+    </td>
+  </tr>
+  <tr align="left">
+    <td colspan="5" rowspan="1" class="row1" valign="middle">
+      Information on the <a href="buildslaves">Build Slaves</a> managed by this buildbot.
+    </td>
+  </tr>
+  <tr align="left">
+    <td colspan="5" rowspan="1" class="row1" valign="middle">
+      Information on the&nbsp;<a href="changes">Sourcecode Repositories</a> being monitored by this buildbot.
+    </td>
+  </tr>
+  <tr align="left">
+    <td colspan="5" rowspan="1" class="row1" valign="middle">
+      Information on how we <a href="http://wiki.scummvm.org/index.php/Buildbot">Have Configured</a> buildbot.
+    </td>
+  </tr>
+  <tr>
+    <td colspan="5" class="catrow">
+    </td>
+  </tr>
+</table>
 
 {%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
@@ -149,4 +135,7 @@ Master is shutting down<br/>
 {{ forms.clean_shutdown(shutdown_url, authz) }}
 {%- endif -%}
 {%- endif -%}
+
+{% endif %}
+
 {% endblock %}

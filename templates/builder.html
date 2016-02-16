@@ -3,10 +3,14 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<td> 
+
 <h1>Builder {{ name }}</h1>
 
 <p>(<a href="{{ path_to_root }}waterfall?show={{ name }}">view in waterfall</a>)</p>
+
+{% if description %}
+  <div class="BuilderDescription">{{ description }}</div>
+{% endif %}
 
 <div class="column">
 
@@ -23,40 +27,47 @@
 
     {% if authz.advertiseAction('stopBuild', request) %}
       {{ forms.stop_build(b.stop_url, authz, on_all=False, short=True, label='Build') }}
-    {% endif %}    
+    {% endif %}
     </li>
   {% endfor %}
   </ul>
 {% else %}
   <h2>No current builds</h2>
-{% endif %}    
- 
+{% endif %}
+
 {% if pending %}
   <h2>Pending Build Requests:</h2>
   <ul>
   {% for b in pending %}
-    <li><small>({{ b.when }}, waiting {{ b.delay }})</small> 
-    
+    <li><small>({{ b.when }}, waiting {{ b.delay }})</small>
+
     {% if authz.advertiseAction('cancelPendingBuild', request) %}
       {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=True, id=b.id) }}
-    {% endif %}    
-    
+    {% endif %}
+
     {% if b.num_changes < 4 %}
         {% for c in b.changes %}{{ c.revision|shortrev(c.repo) }}
-        (<a href="{{ c.url }}">{{ c.who }}</a>){% if not loop.last %},{% endif %}
+        (<a href="{{ c.url }}">{{ c.who|email }}</a>){% if not loop.last %},{% endif %}
         {% endfor %}
     {% else %}
         ({{ b.num_changes }} changes)
-    {% endif %}    
+    {% endif %}
 
+      {% if 'owner' in b.properties %}
+        <b>Forced build</b>
+        by {{b.properties['owner'][0]}}
+        {% if 'reason' in b.properties %}
+          <small>{{b.properties['reason'][0]}}</small>
+        {% endif %}
+      {% endif %}
     </li>
   {% endfor %}
-  </ul>  
-  
+  </ul>
+
   {% if authz.advertiseAction('cancelPendingBuild', request) %}
     {{ forms.cancel_pending_build(builder_url+"/cancelbuild", authz, short=False, id='all') }}
-  {% endif %}    
-     
+  {% endif %}
+
 {% else %}
   <h2>No Pending Build Requests</h2>
 {% endif %}
@@ -64,6 +75,8 @@
 <h2>Recent Builds:</h2>
 
 {{ build_table(recent) }}
+
+<a href="?numbuilds={{numbuilds + 5}}">Show more</a>
 
 </div>
 <div class="column">
@@ -81,12 +94,15 @@
   <tr class="{{ loop.cycle('alt', '') }}">
   <td><b><a href="{{ s.link|e }}">{{ s.name|e }}</a></b></td>
   {% if s.connected %}
-    <td class="idle">connected</td>
-    <td>{{ s.admin|email if s.admin else ""}}</td>
+    {% if s.paused %}
+      <td class="paused">paused</td>
+    {% else %}
+      <td class="idle">connected</td>
+    {% endif %}
   {% else %}
-    <td class="offline">offline</td> 
-    <td/>
+    <td class="offline">offline</td>
   {% endif %}
+  <td>{{ s.admin|email if s.admin else ""}}</td>
   </tr>
 {% else %}
   <td>no slaves attached</td>
@@ -98,9 +114,9 @@
   {{ forms.ping_builder(builder_url+"/ping", authz) }}
 {% endif %}
 
-{% if authz.advertiseAction('forceBuild', request) %}
+{% if authz.advertiseAction('forceBuild', request) and force_schedulers != {} %}
   <h2>Force build</h2>
-  {{ forms.force_build(builder_url+"/force", authz, False) }}
+  {{ forms.force_build(builder_url+"/force", authz, request, False, force_schedulers=force_schedulers,default_props=default_props) }}
 {% endif %}
 
 </div>

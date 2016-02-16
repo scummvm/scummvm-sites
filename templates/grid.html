@@ -2,16 +2,15 @@
 {% import 'grid_macros.html' as grid with context %}
 
 {% block content %}
-<td>
 <table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Grid View</span></b>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="3" class="row3">  
+  <tr align="center">
+    <td class="toprow" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Grid View</span></b>
+    </td>
+  </tr>
+  <tr>
+    <td class="row3">
+
 <table class="Grid" border="0" cellspacing="0">
 
 <tr>
@@ -34,5 +33,9 @@
 {% endfor %}
 
 </table>
-</tr></td></tbody></table>
+
+    </td>
+  </tr>
+</table>
+
 {% endblock %}

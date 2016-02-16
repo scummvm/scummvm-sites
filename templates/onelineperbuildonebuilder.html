@@ -2,29 +2,26 @@
 {% from 'build_line.html' import build_line %}
 
 {% block content %}
-{% set item_class=cycler('row1', 'row3') %}
 <table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Last {{ num_builds }} builds of builder {{ builder_name|e }}: 
-    {{ branches|join(', ')|e }}</span></b>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="3" class="catrow">
-                                                                    <span class="catrowtext">Version Information</span>
-                                                                </td>
-                                                            </tr>
-                                                            <tr align="center">
-                                                                <td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">Buildbot: {{ buildbot }}</td>
-
-{% for b in builds %}
   <tr align="center">
-                                                                <td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">{{ build_line(b) }}</td></tr>
-{% else %}
-<tr align="center">
-   <td style="text-align: left;" class="{{ item_class.next() }}" colspan="1" valign="middle">{{ build_line(b) }}</td>No matching builds found</td></tr>
-{% endfor %}
+    <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Last {{ num_builds }} builds of builder {{ builder_name|e }}: {{ branches|join(', ')|e }}</span></b>
+    </td>
+  </tr>
+
+  {% for b in builds %}
+  <tr>
+    <td>
+      {{ build_line(b) }}
+    </td>
+  </tr>
+  {% else %}
+  <tr>
+    <td>
+      No matching builds found
+    </td>
+  </tr>
+  {% endfor %}
+</table>
 
 {% endblock %}

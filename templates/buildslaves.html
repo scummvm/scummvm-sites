@@ -1,79 +1,87 @@
 {% extends "layout.html" %}
 
-{% block content %}
+{% block content_td %}
 <td class="tableborder">
-{% set item_class=cycler('row1', 'row3') %}
-<!--[insert table scummvm-style]--><table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="7" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Buildslaves</span></b>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <th>Name</th>
-  {%- if show_builder_column %}
-    <th>Builders</th>
-  {%- endif %}
-  <th>BuildBot</th>
-  <th>Admin</th>
-  <th>Last heard from</th>
-  <th>Connects/Hour</th>
-  <th>Status</th>
-                                                                </td>
-                                                            </tr>
+{% endblock %}
 
-{% for s in slaves %}
+{% block content %}
+{% set item_class_cycler=cycler('row1', 'row3') %}
+
+<table border="0" cellpadding="2" cellspacing="1" width="100%">
   <tr align="center">
-  <td style="text-align: left;" class="{{ item_class.current }}" colspan="1" valign="middle"><b><a href="{{ s.link }}">{{ s.name }}</a></b></td>
-  
-  {%- if show_builder_column %}
-    <td style="text-align: left;" class="{{ item_class.current }}" colspan="1" valign="middle">
-    {%- if s.builders %}
-      {%- for b in s.builders %}
+    <td class="toprow" colspan="7" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Buildslaves</span></b>
+    </td>
+  </tr>
+
+  <tr>
+    <th>Name</th>
+    {%- if show_builder_column %}
+    <th>Builders</th>
+    {%- endif %}
+    <th>BuildBot</th>
+    <th>Admin</th>
+    <th>Last heard from</th>
+    <th>Connects/Hour</th>
+    <th>Status</th>
+  </tr>
+
+  {% for s in slaves %}
+  {% set item_class = item_class_cycler.next() %}
+  <tr align="center">
+    <td class="{{ item_class }}">
+      <b><a href="{{ s.link }}">{{ s.name }}</a></b>
+    </td>
+
+    {%- if show_builder_column %}
+    <td style="text-align: left;" class="{{ item_class }}">
+      {%- if s.builders %}
+        {%- for b in s.builders %}
         <a href="{{ b.link }}">{{ b.name }}</a>
-      {%- endfor %}
-    {%- else %}
+        {%- endfor %}
+      {%- else %}
       <span class="Warning">no builders</span>
-    {%- endif -%}
+      {%- endif -%}
     </td>
-  {%- endif %}
+    {%- endif %}
 
 
-  <td class="{{ item_class.current }}" >{{ (s.version or '-')|e }}</td>
- 
-  {%- if s.admin -%}
-    <td>{{ s.admin|email }}</td>
-  {%- else -%}
-    <td>-</td>
-  {%- endif -%}
-    
-    <td  class="{{ item_class.current }}" >
+    <td class="{{ item_class }}">
+      {{ (s.version or '-')|e }}
+    </td>
+
+    {%- if s.admin -%}
+    <td class="{{ item_class }}">{{ s.admin|email }}</td>
+    {%- else -%}
+    <td class="{{ item_class }}">-</td>
+    {%- endif -%}
+
+    <td class="{{ item_class }}">
     {%- if s.last_heard_from_age -%}
-      {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
+    {{ s.last_heard_from_age }} <small>({{ s.last_heard_from_time }})</small>
     {%- endif -%}
     </td>
-        
-    <td class="{{ item_class.next() }}">
+
+    <td class="{{ item_class }}">
     {{ s.connectCount }}
     </td>
-        
-  {% if s.connected %}
-    {% if s.running_builds %}
+
+    {% if s.connected %}
+      {% if s.running_builds %}
       <td class="building">Running {{ s.running_builds }} build(s)</td>
-    {% else %}
+      {% elif s.paused %}
+      <td class="paused">Paused</td>
+      {% else %}
       <td class="idle">Idle</td>
-    {% endif %}
-        
-  {% else %}
+      {% endif %}
+    {% else %}
     <td class="offline">Not connected</td>
-  {% endif %}
-  
+    {% endif %}
+
   </tr>
-{% endfor %}
-</tbody>
+  {% endfor %}
 </table>
 
 </div>
-  
+
 {% endblock %}

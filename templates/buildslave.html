@@ -3,7 +3,6 @@
 
 {% extends "layout.html" %}
 {% block content %}
-<td> 
 <h1>Buildslave: {{ slavename|e }}</h1>
 
 <div class="column">
@@ -26,7 +25,7 @@
 
 <h2>Recent builds</h2>
 {{ build_table(recent, True) }}
-  
+
 </div>
 <div class="column">
 {% if access_uri %}
@@ -38,10 +37,36 @@
   <p>{{ admin|email }}</p>
 {% endif %}
 
-{% if host %}
+{% if host or info %}
   <h2>Slave information</h2>
+
+{% if host %}
   Buildbot-Slave {{ slave_version }}
   <pre>{{ host|e }}</pre>
+{% endif %}
+
+{% if info %}
+<table class="info" width="100%">
+<tr><th>Name</th><th>Value</th></tr>
+
+{% for info_name, info_val in info.iteritems() %}
+  <tr class="{{ loop.cycle('alt', '') }}">
+    <td class="left">{{ info_name|e }}</td>
+      {% if info_val is not mapping %}
+          <td>{{ info_val|e }}</td>
+      {% else %}
+          <td>
+              <table class="info" width="100%">
+                  {%- for key, value in info_val.items() recursive %}
+                      <tr><td>{{ key|e }}</td><td>{{ value|e }}</td></tr>
+                  {% endfor %}
+              </table>
+          </td>
+      {% endif %}
+  </tr>
+{% endfor %}
+</table>
+{% endif %}
 {% endif %}
 
 <h2>Connection Status</h2>
@@ -59,7 +84,11 @@
       {{ forms.graceful_shutdown(shutdown_url, authz) }}
     {% endif %}
   {% endif %}
+  {% if authz.advertiseAction('pauseSlave', request) %}
+    <h2>Pause Slave</h2>
+    {{ forms.pause_slave(pause_url, authz, slave.isPaused()) }}
+  {% endif %}
 {% endif %}
 </div>
-  
+
 {% endblock %}

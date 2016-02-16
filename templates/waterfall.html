@@ -2,16 +2,15 @@
 {% from "box_macros.html" import box %}
 
 {% block content %}
-<td>
 <table border="0" cellpadding="2" cellspacing="1" width="100%">
-                                                        <tbody>
-                                                            <tr align="center">
-                                                                <td class="toprow" colspan="3" style="text-align: left; margin-left: 0pt; margin-right: auto;">
-                                                                    <b><span class="toprowtext">Waterfall</span></b>
-                                                                </td>
-                                                            </tr>
-                                                            <tr>
-                                                                <td colspan="3" class="row3"> 
+  <tr align="center">
+    <td class="toprow" style="text-align: left; margin-left: 0pt; margin-right: auto;">
+      <b><span class="toprowtext">Waterfall</span></b>
+    </td>
+  </tr>
+  <tr>
+    <td class="row3">
+
 <table border="0" cellspacing="0">
 
 <tr class="LastBuild">
@@ -19,7 +18,7 @@
    last build
   </td>
 
-{% for b in builders %}  
+{% for b in builders %}
   <td align="center" class="{{ b.top_class }}">
     <a href="{{ b.url }}">{{ b.name }}</a><br/>
     {{ " ".join(b.top) }}
@@ -30,7 +29,7 @@
 <tr class="Activity">
 <td align="right" colspan="2">current activity</td>
 
-{% for b in builders %}  
+{% for b in builders %}
   <td align="center" class="{{ b.status_class }}">
     {{ "<br/>".join(b.status) }}
   </td>
@@ -46,10 +45,10 @@
 {% endfor %}
 </tr>
 
-{# waterfall contents goes here #}    
+{# waterfall contents goes here #}
 {% for i in range(gridlen) -%}
   <tr>
-  {% for strip in grid -%}        
+  {% for strip in grid -%}
     {%- if strip[i] -%}{{ box(**strip[i]) }}
     {%- elif no_bubble -%}{{ box() }}
     {%- endif -%}
@@ -64,9 +63,11 @@
 {% endif %}
 
 {% if no_reload_page %}
- <a href="{{ no_reload_page }}">Stop Reloading</a> 
+ <a href="{{ no_reload_page }}">Stop Reloading</a>
 {% endif %}
 
-<a href="{{ help_url }}">waterfall help</a>
-</tr></td></tbody></table>
+      <a href="{{ help_url }}">waterfall help</a>
+    </td>
+  </tr>
+</table>
 {% endblock %}

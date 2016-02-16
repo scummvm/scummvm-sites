@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 {% block content %}
-<td>
+
 <form action="../waterfall" method="get">
 
 <h1>The Waterfall Display</h1>
@@ -32,15 +32,15 @@ be displayed that occurred <b>before</b> this timestamp. Instead of providing
 <p>The display normally shows the latest 200 events that occurred in the
 given interval, where each timestamp on the left hand edge counts as a single
 event. You can add a <tt>num_events=</tt> argument to override this this.</p>
-    
+
 <h2>Showing non-Build events</h2>
 
-<p>By passing <tt>show_events=true</tt>, you can remove the "buildslave
+<p>By passing <tt>show_events=true</tt>, you can add the "buildslave
 attached", "buildslave detached", and "builder reconfigured" events that
 appear in-between the actual builds.</p>
 
 <p>
-<input type="checkbox" name="show_events" value="true" 
+<input type="checkbox" name="show_events" value="true"
 {% if show_events_checked %} checked="checked" {% endif %}/>
 Show non-Build events
 </p>
@@ -57,7 +57,7 @@ Erase the text from these "Show Branch:" boxes to remove that branch filter.
 <table>
   {% for b in branches %}
   <tr>
-    <td>Show Branch: 
+    <td>Show Branch:
       <input type="text" name="branch" value="{{ b|e }}"/>
     </td>
   </tr>
@@ -74,7 +74,7 @@ arguments are provided, all Builders will be displayed.</p>
 
 <p>To view a Waterfall page with only a subset of Builders displayed, select
 the Builders you are interested in here.</p>
-       
+
 <table>
 {% for bn in all_builders %}
  <tr><td><input type="checkbox" name="builder" value="{{ bn }}"
@@ -83,7 +83,27 @@ the Builders you are interested in here.</p>
 {% endfor %}
 </table>
 
+<h2>Limiting the Categories that are displayed</h2>
+
+<p>By adding one or more <tt>category=</tt> arguments, the display will be
+limited to showing builds that ran on the builders with those categories.
+This serves to limit the display to the specific named columns.
+If no <tt>category=</tt> arguments are provided, all Categories will be displayed.</p>
+
+<p>To view a Waterfall page with only a subset of Categories displayed, select
+the Categories you are interested in here.</p>
+
+<table>
+{% for cat in all_categories %}
+ <tr><td><input type="checkbox" name="category" value="{{ cat }}"
+  {% if cat in show_categories %}checked="checked"{% endif %} />
+ </td><td>{{cat}}</td></tr>
+{% endfor %}
+</table>
+
 <h2>Limiting the Builds that are Displayed</h2>
+
+<h3>Filter on commiters</h3>
 
 <p>By adding one or more <tt>committer=</tt> arguments, the display will be
 limited to showing builds that were started by the given committer.  If no
@@ -106,6 +126,29 @@ Erase the text from these "Show Committer:" boxes to remove that filter.
   </table>
 {% endif %}
 
+<h3>Filter on projects</h3>
+
+<p>By adding one or more <tt>project=</tt> arguments, the display
+will be limited to showing builds that were started for the given project.
+If no <tt>project=</tt> arguments are provided, all builds will be displayed.</p>
+
+<p>To view a Waterfall page with only a subset of Builds displayed, select
+the projects your are interested in here.</p>
+
+Erase the text from these "Show Project:" boxes to remove that filter.
+
+{% if projects %}
+  <table>
+    {% for cn in projects %}
+      <tr>
+        <td>
+          Show Project: <input type="text" name="project" value="{{ cn }}">
+        </td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
+
 <h2>Showing only the Builders with failures</h2>
 
 <p>By adding the <tt>failures_only=true</tt> argument, the display will be limited
@@ -114,8 +157,8 @@ failing if the last finished build was not successful, a step in the current
 build(s) failed, or if the builder is offline.</p>
 
 <p>
-  <input type="checkbox" name="failures_only" value="true" 
-    {% if failures_only %}checked="checked"{% endif %}/>  
+  <input type="checkbox" name="failures_only" value="true"
+    {% if failures_only %}checked="checked"{% endif %}/>
     Show failures only
 </p>
 

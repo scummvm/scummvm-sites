@@ -14,136 +14,127 @@
     {% endif %}
     <title>{{ pageTitle|e }}</title>
     <link rel="stylesheet" href="{{ stylesheet }}" type="text/css" />
-    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss">
-    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico">
+    <link rel="alternate" type="application/rss+xml" title="RSS" href="{{ path_to_root }}rss" />
+    <link rel="shortcut icon" href="{{ path_to_root }}favicon.ico" />
     {% endblock %}
   </head>
   <body class="" style="margin: 10px; background-image: url({{ path_to_root }}images/body-bg.png);">
-    {% block header %}
-<table align="center" border="0" cellpadding="0" cellspacing="0" width="90%">
-        <tbody>
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="90%">
+      {% block header -%}
+      <tr>
+        <td style="width: 199px;">
+          <img src="{{ path_to_root }}images/logo.png" alt="ScummVM logo" height="65" width="199" />
+        </td>
+        <td style="background-image: url({{ path_to_root }}images/top_bg.png); vertical-align: middle; text-align: left; white-space: nowrap;" width="50%">
+            <a href="{{ path_to_root or '.' }}">BuildBot Index</a>
+          - <a href="{{ path_to_root}}builds.html">Snapshots</a> <a href="{{ path_to_root }}snapshots">(all)</a>
+          - <a href="http://www.scummvm.org/">ScummVM website</a>
+          - <a href="http://www.scummvm.org/contact.php">Contact us</a>
+          {% if authz.advertiseAction('showUsersPage', request) %}
+          - <a href="{{ path_to_root }}users">Users</a>
+          {% endif %}
+        </td>
+        <td style="background-image: url({{ path_to_root }}images/top_bg.png); vertical-align: middle; text-align: right; white-space: nowrap;" width="50%">
+          {% if authz.advertiseAction('view', request) %}
+            Build Views
+          - <a href="{{ path_to_root }}waterfall">Waterfall</a>
+          - <a href="{{ path_to_root }}console">Console</a>
+          - <a href="{{ path_to_root }}grid">Grid</a>
+          - <a href="{{ path_to_root }}tgrid">Transposed Grid</a>
+          {% endif %}
+        </td>
+        <td>
+          <img src="{{ path_to_root }}images/curve_tr.png" alt="curved edge" height="65" width="20" />
+        </td>
+      </tr>
+      {% endblock %}
+
+      {%- block barecontent -%}
+      <tr id="tableColor" bgcolor="#fbf1ce">
+        <td colspan="4">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-left: 5px; padding-right: 5px;">
             <tr>
-                <td style="width: 199px;">
-                    <img src="{{ path_to_root }}images/logo.png" alt="ScummVM logo" height="65" width="199" />
-                </td>
-                <td style="background-image: url({{ path_to_root }}images/top_bg.png); vertical-align: middle; text-align: left;
-                    white-space: nowrap;" width="50%">
-                    <a href="{{ path_to_root or '.' }}">BuildBot Index</a> - <a href="{{ path_to_root}}builds.html">Snapshots</a> <a href="{{ path_to_root }}snapshots">(all)</a> - <a href="http://www.scummvm.org/">ScummVM website</a> - <a href="http://www.scummvm.org/contact.php">
-                            Contact us</a>&nbsp;
-                </td>
-                <td style="background-image: url({{ path_to_root }}images/top_bg.png); vertical-align: middle; text-align: right;
-                    white-space: nowrap;" width="50%">
-                    <!-- nav table -->
-                    Build Views - <a href="{{ path_to_root }}waterfall">Waterfall</a>
-                    - <a href="{{ path_to_root }}console">Console</a> - <a href="{{ path_to_root }}grid">
-                        Grid</a> - <a href="{{ path_to_root }}tgrid">Transposed Grid</a>
-                    <!-- end of nav table -->
-                </td>
-                <td>
-                    <img src="{{ path_to_root }}images/curve_tr.png" alt="curved edge" height="65" width="20" />
-                </td>
+              <td>
+                <table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
+                  {% if alert_msg != "" %}
+                  <tr>
+                    <td>
+                      {{ alert_msg }}
+                    </td>
+                  </tr>
+                  {% endif %}
+                  <tr>
+                    {%- block content_td -%}
+                    <td>
+                    {%- endblock -%}
+                      {%- block content -%}
+                      {%- endblock -%}
+                    </td>
+                  </tr>
+                </table>
+              </td>
             </tr>
-            <!-- top logo, navbar ends here, now on to the main page body -->
-    {% endblock %}
-
-  <tr id="tableColor" bgcolor="#fbf1ce"> 
-    <td colspan="4"> 
-      <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding-left: 5px; padding-right: 5px;"> 
-<tbody> 
-                            <tr> 
-                                <td> 
-                                    <table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
-                                        <tbody>
-                                            <tr>
-                                                <td align="left" valign="middle" width="100%">
-                                                </td>
-                                            </tr>
-<tr>
-                                        <!-- </tbody>
-                                    </table> -->
-    {%- block barecontent -%}
-      {%- block content -%}     
+          </table>
+        </td>
+      </tr>
       {%- endblock -%}
-    {%- endblock -%}
 
-    {%- block footer -%} 
-             </td> 
-                                            </tr> 
-                                        </tbody> 
-                                    </table>
-		</td>
-	</tr>
-	<tr>
-		<td>
-			<table align="center" border="0" cellpadding="2" cellspacing="2" width="98%">
-				<tr>
-					<td width="33%">
-    <div class="auth">
-    {% if authz.authenticated(request) %}
-    {{ authz.getUsernameHTML(request) }}
-    |<a href="{{ path_to_root }}logout">Logout</a>
-    {% elif authz.useHttpHeader and authz.httpLoginUrl %}
-    <a href="{{ authz.httpLoginUrl }}">Login</a>
-    {% elif authz.auth %}
-    <form method="post" name="login" action="{{ path_to_root }}login">
-    <input type="text" name="username" size="10" />
-    <input type="password" name="passwd" size="10" />
-    <input type="submit" value="login" />
-    </form>
-    {% endif %}
-    </div>
-					</td>
-					<td width="33%">
-<div align="center"> 
-                                        <span class="smalltext">Powered by <a href="http://buildbot.net/">BuildBot</a> ({{version}})<br /> 
-                                            About this <a href="{{ path_to_root }}about" class="smalllink">Buildbot setup</a><br /> 
-                                            Design by the       {% if title -%}
-        {%- if title_url -%}
-          <a href="{{ title_url }}">{{ title }}</a>
-        {%- else -%}
-          {{ title }}
-        {%- endif -%}
-        &nbsp;
-      {%- endif -%} team      <br/>
-      Page built: <b>{{ time }}</b> ({{ tz }})</span></div> 
-					</td>
-					<td width="33%">
-					</td>
-				</tr>
-			</table>
-                                </td> 
-                            </tr> 
-                        </tbody> 
-                    </table> 
-                </td> 
-            </tr> 
-            <tr> 
-                <td colspan="4"> 
-                    <table border="0" cellpadding="0" cellspacing="0" width="100%"> 
-                        <tbody> 
-                            <tr> 
-                                <td> 
-                                    <img src="{{ path_to_root }}images/curve_bl.png" alt="curved edge" height="20" width="20" /> 
-                                </td> 
-                                <td bgcolor="#fbf1ce" width="100%"> 
-                                    &nbsp;
-                                </td> 
-                                <td align="right" valign="bottom"> 
-                                    <img src="{{ path_to_root }}images/curve_br.png" alt="curved edge" height="20" width="20" /> 
-                                </td> 
-                            </tr> 
-                        </tbody> 
-                    </table> 
-                </td> 
-            </tr> 
-        </tbody> 
-    </table> 
-{% endblock -%}
-</body> 
+      {%- block footer -%}
+      <tr id="tableColor" bgcolor="#fbf1ce">
+        <td colspan="4">
+          <table align="center"  border="0" cellpadding="2" cellspacing="2" width="98%">
+            <tr>
+              <td width="33%">
+                <div class="auth">
+                  {% if authz.authenticated(request) %}
+                   {{ authz.getUsernameHTML(request) }}
+                  |<a href="{{ path_to_root }}logout">Logout</a>
+                  {% elif authz.useHttpHeader and authz.httpLoginUrl %}
+                  <a href="{{ authz.httpLoginUrl }}">Login</a>
+                  {% elif authz.auth %}
+                  <form method="post" name="login" action="{{ path_to_root }}login">
+                  <input type="text" name="username" size="10" />
+                  <input type="password" name="passwd" size="10" />
+                  <input type="submit" value="login" />
+                  </form>
+                  {% endif %}
+                </div>
+              </td>
+              <td width="33%">
+                <div align="center">
+                  <span class="smalltext">
+                    Powered by <a href="http://buildbot.net/">BuildBot</a> ({{version}})<br />
+                    About this <a href="{{ path_to_root }}about" class="smalllink">Buildbot setup</a><br />
+                    Design by the {% if title -%}{%- if title_url -%}<a href="{{ title_url }}">{{ title }}</a>{%- else -%}{{ title }}{%- endif -%}&nbsp;{%- endif -%} team <br/>
+                    Page built: <b>{{ time }}</b> ({{ tz }})
+                  </span>
+                </div>
+              </td>
+              <td width="33%">
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="4">
+          <table border="0" cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td>
+                <img src="{{ path_to_root }}images/curve_bl.png" alt="curved edge" height="20" width="20" />
+              </td>
+              <td bgcolor="#fbf1ce" width="100%">
+                &nbsp;
+              </td>
+              <td align="right" valign="bottom">
+                <img src="{{ path_to_root }}images/curve_br.png" alt="curved edge" height="20" width="20" />
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+      {% endblock -%}
+    </table>
+  </body>
 </html>
-<!-- Other urls
-        <a href="{{ path_to_root }}builders">Builders</a>
-        <a href="{{ path_to_root }}one_line_per_build">Recent Builds</a>
-        <a href="{{ path_to_root }}buildslaves">Buildslaves</a>
-        <a href="{{ path_to_root }}changes">Changesources</a>
--->
