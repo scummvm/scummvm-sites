@@ -10,10 +10,12 @@ done
 
 if [ ! -n "$1" ]
 then
+  rmdir $LOCKDIR
   exit 0
 fi
 if [ ! -n "$2" ]
 then
+  rmdir $LOCKDIR
   exit 0
 fi
 
@@ -22,11 +24,13 @@ REV=$2
 
 if [ ! -d "$REPO/$REPONAME" ]
 then
+  rmdir $LOCKDIR
   exit 0
 fi
 
 cd "$REPO/$REPONAME"
-$GIT fetch -a -q > /dev/null
+$GIT fetch -q origin '+refs/heads/*:refs/remotes/origin/*' > /dev/null
 $GIT show --format="format:" $REV | head -n 10000
+$GIT gc --auto --quiet > /dev/null
 
 rmdir $LOCKDIR
