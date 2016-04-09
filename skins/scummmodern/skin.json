@@ -1,0 +1,35 @@
+{
+	"name": "ScummModern",
+	"version": "1.0",
+	"author": "William Claydon",
+	"url": "https://www.mediawiki.org/wiki/Skin:Example",
+	"descriptionmsg": "Modern Theme for ScummVM",
+	"namemsg": "scummmodern",
+	"license-name": "GPL",
+	"type": "skin",
+	"ValidSkinNames": {
+		"scummmodern": "ScummModern"
+	},
+	"MessagesDirs": {
+		"ScummModern": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"skins.scummmodern": {
+			"styles": {
+						"scummmodern/menu.css": { "media": "screen" },
+						"scummmodern/layout.css": { "media": "screen" },
+						"scummmodern/chart.css": { "media": "screen" }
+			}
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteSkinPath": "ScummModern"
+	},
+	"AutoloadClasses": {
+		"SkinScummModern": "ScummModern.skin.php"
+	},
+	"manifest_version": 1
+}

@@ -1,6 +1,9 @@
 // MediaWiki JavaScript support functions
 // scummmodern version
 // changetext now uses innerHTML instead
+// TODO: Depricate this and use jquery 
+// @see https://www.mediawiki.org/wiki/ResourceLoader/Legacy_JavaScript
+// @see https://www.mediawiki.org/wiki/JavaScript
 
 var clientPC = navigator.userAgent.toLowerCase(); // Get client info
 var is_gecko = /gecko/.test( clientPC ) &&
