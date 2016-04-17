@@ -1,7 +1,7 @@
 {
 	"@metadata": {
-		"authors": [ "..." ]
+		"authors": [ "William Claydon (billwashere)" ]
 	},
-	"skinname-example": "Example",
-	"example-desc": "An example skin showcasing the best practices"
+	"scummmodern-example": "Example",
+	"scummmodern-desc": "Modern Theme for ScummVM"
 }

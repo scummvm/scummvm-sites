@@ -1,11 +1,11 @@
 {
 	"name": "ScummModern",
 	"version": "1.0",
-	"author": "William Claydon",
+	"author": "William Claydon (billwashere)",
 	"url": "https://www.mediawiki.org/wiki/Skin:Example",
 	"descriptionmsg": "Modern Theme for ScummVM",
 	"namemsg": "scummmodern",
-	"license-name": "GPL",
+	"license-name": "GPL2+",
 	"type": "skin",
 	"ValidSkinNames": {
 		"scummmodern": "ScummModern"
@@ -22,6 +22,16 @@
 						"scummmodern/layout.css": { "media": "screen" },
 						"scummmodern/chart.css": { "media": "screen" }
 			}
+		},
+		"skins.scummmodern.js": {
+			"scripts": [
+				"ScummModern.js"
+			],
+			"dependencies": [
+				"mediawiki.api",
+				"mediawiki.util"
+			],
+			"position": "top"
 		}
 	},
 	"ResourceFileModulePaths": {
