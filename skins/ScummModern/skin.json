@@ -17,6 +17,7 @@
 	},
 	"ResourceModules": {
 		"skins.scummmodern": {
+			"position" : "top",
 			"styles": {
 						"scummmodern/menu.css": { "media": "screen" },
 						"scummmodern/layout.css": { "media": "screen" },
