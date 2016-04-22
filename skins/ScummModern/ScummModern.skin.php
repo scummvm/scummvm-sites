@@ -108,11 +108,6 @@ class ScummModernTemplate extends BaseTemplate {
 		echo $returnVal;
 	}
 
-	function getResourcePath($resource) {
-		echo $this->text('stylepath' ) +"/"+$this->text('stylename') +"/scummmodern/"+$resource;
-	}
-
-
 	function execute() {
 		global $wgRequest;
 		$this->skin = $skin = $this->data['skin'];
