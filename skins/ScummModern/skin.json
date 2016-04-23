@@ -1,0 +1,46 @@
+{
+	"name": "ScummModern",
+	"version": "1.0",
+	"author": "William Claydon (billwashere)",
+	"url": "https://www.mediawiki.org/wiki/Skin:Example",
+	"descriptionmsg": "Modern Theme for ScummVM",
+	"namemsg": "scummmodern",
+	"license-name": "GPL2+",
+	"type": "skin",
+	"ValidSkinNames": {
+		"scummmodern": "ScummModern"
+	},
+	"MessagesDirs": {
+		"ScummModern": [
+			"i18n"
+		]
+	},
+	"ResourceModules": {
+		"skins.scummmodern": {
+			"position" : "top",
+			"styles": {
+						"scummmodern/menu.css": { "media": "screen" },
+						"scummmodern/layout.css": { "media": "screen" },
+						"scummmodern/chart.css": { "media": "screen" }
+			}
+		},
+		"skins.scummmodern.js": {
+			"scripts": [
+				"ScummModern.js"
+			],
+			"dependencies": [
+				"mediawiki.api",
+				"mediawiki.util"
+			],
+			"position": "top"
+		}
+	},
+	"ResourceFileModulePaths": {
+		"localBasePath": "",
+		"remoteSkinPath": "ScummModern"
+	},
+	"AutoloadClasses": {
+		"SkinScummModern": "ScummModern.skin.php"
+	},
+	"manifest_version": 1
+}
