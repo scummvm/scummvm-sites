@@ -11,7 +11,7 @@
 
 div.menugroup {
 	background: transparent url('./images/menu-bottom.png') scroll no-repeat bottom left;
-	/*font-size: 9pt;*/
+	font-size: 9pt;
 	margin-bottom: 8px;
 	overflow: hidden;
 	padding-bottom: 12px;
