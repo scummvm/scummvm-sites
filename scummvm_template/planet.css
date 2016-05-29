@@ -5,18 +5,17 @@ img.face {
 
 .entry {
 	margin-bottom: 2em;
-	font-family: "Bitstream Vera Sans", sans-serif;
+	font: normal 9pt/normal verdana, tahoma, arial, helvetica, sans-serif;
 	padding-top: 5px;
 	padding-left: 5px;
 	padding-right: 5px;
 	padding-bottom: 5px;
 	background-color: #f6e08b;
 	border: 1px solid #000000;
-	/* font-size: 75%; */
 }
 
 .entry .date {
-	font-family: "Bitstream Vera Sans", sans-serif;
+	font-family: verdana, tahoma, arial, helvetica, sans-serif;
 	color: grey;
 }
 

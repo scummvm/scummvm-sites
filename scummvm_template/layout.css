@@ -18,7 +18,7 @@ color: #000000;
 
 td, th
 {
-font-size: 10px; 
+font-size: 9pt; 
 color: #000000;
 }
 
@@ -477,17 +477,17 @@ h3 a:link, h3 a:visited, h3 a:hover {
 h4 a:link, h4 a:visited, h4 a:hover { 
 	font-size: 150%;
 } 
-h1 { font-size: 188%; }
+h1 { font-size: 150%; }
 h1 .editsection { font-size: 53%; }
-h2 { font-size: 150%; }
+h2 { font-size: 125%; }
 h2 .editsection { font-size: 67%; }
 h3, h4, h5, h6 {
 	font-weight: bold;
 	color: black;
 }
-h3 { font-size: 132%; }
+h3 { font-size: 110%; }
 h3 .editsection { font-size: 76%; font-weight: normal; }
-h4 { font-size: 116%; }
+h4 { font-size: 100%; }
 h4 .editsection { font-size: 86%; font-weight: normal; }
 h5 { font-size: 100%; }
 h5 .editsection { font-weight: normal; }
