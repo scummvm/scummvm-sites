@@ -1,0 +1,31 @@
+%h1 Listing versions
+
+%table
+  %thead
+    %tr
+      %th Platform
+      %th Game
+      %th Release date
+      %th Aliases
+      %th Language
+      %th Introductory release
+      %th
+      %th
+      %th
+
+  %tbody
+    - @versions.each do |version|
+      %tr
+        %td= version.platform
+        %td= version.game
+        %td= version.release_date
+        %td= version.aliases
+        %td= version.language
+        %td= version.introductory_release_id
+        %td= link_to 'Show', version
+        %td= link_to 'Edit', edit_version_path(version)
+        %td= link_to 'Destroy', version, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Version', new_version_path

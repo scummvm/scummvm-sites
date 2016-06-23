@@ -1,0 +1,56 @@
+!!! 5
+%html(lang="en")
+  %head
+    %meta(charset="utf-8")
+    %meta(http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1")
+    %meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    %title= content_for?(:title) ? yield(:title) : "ScummVM GamesDb"
+    = csrf_meta_tags
+    = stylesheet_link_tag "application", :media => "all"
+    = favicon_link_tag 'apple-touch-icon-144x144-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '144x144'
+    = favicon_link_tag 'apple-touch-icon-114x114-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '114x114'
+    = favicon_link_tag 'apple-touch-icon-72x72-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png', :sizes => '72x72'
+    = favicon_link_tag 'apple-touch-icon-precomposed.png', :rel => 'apple-touch-icon-precomposed', :type => 'image/png'
+    = favicon_link_tag 'favicon.ico', :rel => 'shortcut icon'
+    = javascript_include_tag "application"
+    / Le HTML5 shim, for IE6-8 support of HTML elements
+    /[if lt IE 9]
+      = javascript_include_tag "//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.2/html5shiv.min.js"
+
+
+  %body
+    = nav_bar brand: "ScummVM GamesDb".html_safe, brand_link: root_url, inverse: false, responsive: true, fluid: true, brand_html_left: image_tag("logo.jpg", align: :left) do
+      .navbar-collapse.collapse.navbar-responsive-collapse
+        %ul.nav.navbar-nav
+          %li= link_to "Users", users_path
+          %li= link_to "Releases", releases_path
+          %li= link_to "Engines", engines_path
+          %li= link_to "Platforms", platforms_path
+          %li= link_to "Games", games_path
+          - if current_user
+            = menu_group :pull => :right do
+              - if defined?(true_user) && (current_user != true_user)
+                - username = "#{true_user.username} (#{current_user.username})"
+              - else
+                - username = current_user.username
+              = drop_down username do
+                - if defined?(true_user) && (current_user != true_user)
+                  = menu_item "Stop Impersonating", stop_impersonating_users_path
+                = menu_item "My Account", user_path(current_user)
+                = drop_down_divider
+                = menu_item "Logout", destroy_user_session_path, method: :delete
+    .container-fluid
+      .row
+        .col-lg-12
+          = bootstrap_flash
+          = yield
+      /   .col-lg-3
+      /     .well.sidebar-nav
+      /       %h3 Sidebar
+      /       %ul.nav.nav-list
+      /         %li.nav-header Sidebar
+      /         %li= link_to "Link 1", "/path1"
+      /         %li= link_to "Link 2", "/path2"
+      /         %li= link_to "Link 3", "/path3"
+      / %footer
+      /   %p &copy; Company 2016

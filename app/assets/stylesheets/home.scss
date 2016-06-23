@@ -1,0 +1,203 @@
+// Place all the styles related to the Home controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+/*
+* Aesome
+*/
+
+body, html{
+  padding: 0 0;
+}
+
+.activityView{
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+
+  .activtyLeft{
+    text-align: right;
+    padding-top: 15px;
+    font-size: 12px;
+
+    &:before{
+      content: "";
+      position: absolute;
+      right: -4px;
+      width: 10px;
+      top: 18px;
+      background: pink;
+      z-index: 2;
+      height: 10px;
+    }
+
+    .pull-right{
+      &:after{
+        display: block;
+        content: "";
+        position: absolute;
+        right: -40px;
+        top: 22px;
+        width: 40px;
+        height: 2px;
+        background: pink;
+      }
+    }
+  }
+
+  .activtyRight{
+    .activity{
+      border: 1px solid #EEE;
+      padding: 15px;
+      margin-bottom: 30px;
+      background: #FFF;
+      margin-left: 20px;
+      background: #f5f5f5;
+
+      .meta{
+        overflow: auto;
+        margin-bottom: 10px;
+
+        .profile{
+          float: left;
+          margin-right: 10px;
+        }
+        .details{
+          float: left;
+          font-size: 14px;
+          line-height: 16px;
+        }
+      }
+
+      .profilePic{
+        border-radius: 10px;
+        border: 2px solid white;
+      }
+
+      .actions{
+        overflow: auto;
+        margin-top: 10px;
+      }
+    }
+
+    &:before{
+      content: "";
+      position: absolute;
+      left: -2px;
+      width: 2px;
+      background: pink;
+      z-index: 2;
+      height: 100%;
+    }
+
+  }
+
+  .milestone{
+    span{
+      position: absolute;
+      padding: 4px;
+      display: block;
+      right: -70px;
+      width: 140px;
+      text-align: center;
+      z-index: 3;
+      font-size: 13px;
+      line-height: 14px;
+      color: #999;
+      border: 1px solid #999;
+      background: #FFF;
+    }
+
+    .activity{
+      border:none;
+      background: none;
+    }
+
+
+
+    &.showMore{
+      .activtyRight:before{
+        display: none;
+      }
+      span{
+        padding: 0;
+        margin:0;
+        border: none;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px){
+  .activityView{
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    .activtyLeft{
+      //background: #EEE;
+      text-align: right;
+      padding-top: 15px;
+      text-align: left;
+
+      &:before{
+        display: none;
+      }
+
+      .pull-right{
+        display: inline-block;
+        &:after{
+          display: none;
+        }
+      }
+    }
+
+    .activtyRight{
+      .activity{
+        border: 1px solid #EEE;
+        padding: 15px;
+        margin: 0;
+        margin-bottom: 30px;
+        background: #f5f5f5;
+        margin-top: 10px;
+      }
+
+      &:before{
+        display: none;
+      }
+    }
+
+    .milestone{
+      span{
+        position: relative;
+        padding: 8px;
+        display: inline-block;
+        right: 0;
+        width: auto;
+        text-align: left;
+        color: #999;
+        border: 1px solid #999;
+        background: #FFF;
+        font-size: 20px;
+      }
+
+      &:before{
+        content: "";
+        height: 1px;
+        background: #EEE;
+        width: 100%;
+        margin-bottom: 20px;
+      }
+
+      &.showMore:before{
+        display: none;
+      }
+
+      span{
+        padding: 0;
+        margin:0;
+        border: none;
+      }
+    }
+  }
+}

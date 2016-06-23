@@ -1,0 +1,4 @@
+= render_activities(@activities, layout: :activity, fallback: 'default')
+
+= page_entries_info(@activities)
+= paginate(@activities, theme: 'twitter-bootstrap-3', pagination_class: 'pagination-sm')

@@ -1,0 +1,12 @@
+%p#notice= notice
+
+%p
+  %b Name:
+  = @engine.name
+%p
+  %b Code:
+  = @engine.code
+
+= link_to 'Edit', edit_engine_path(@engine)
+\|
+= link_to 'Back', engines_path

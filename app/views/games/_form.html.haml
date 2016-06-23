@@ -1,0 +1,44 @@
+= form_for @game do |f|
+  - if @game.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(@game.errors.count, "error")} prohibited this game from being saved:"
+      %ul
+        - @game.errors.full_messages.each do |msg|
+          %li= msg
+
+  %table.table.table-striped
+    %thead
+      %tr
+        %th= f.label :name
+        %th= f.label :developer
+        %th Year of first release
+        %th= f.label :engine
+        %th= f.label :introductory_release
+        %th Box Art
+    %tbody
+      %tr
+        %td= f.text_field :name
+        %td= f.text_field :developer
+        %td= f.text_field :first_release
+        %td= f.collection_select(:engine_id, Engine.all, :id, :name)
+        %td= f.collection_select(:introductory_release_id, Release.all, :id, :name, include_blank: true)
+        %td= f.file_field :box_art
+
+  %h3 Versions
+  .pull-right
+    = link_to_add_association 'Add Version', f, :versions
+  %table#versions.table.table-striped
+    %thead
+      %tr
+        %th= f.label :platform
+        %th= f.label :release_date
+        %th= f.label :aliases
+        %th= f.label :language
+        %th= f.label :introductory_release_id
+        %th
+    %tbody.versions
+      = f.fields_for :versions do |version|
+        = render 'version_fields', f: version
+
+  .actions
+    = f.submit 'Save'

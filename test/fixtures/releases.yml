@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  major: 
+  minor: 
+  patch: 
+  release_date: 2016-05-24
+
+two:
+  major: 
+  minor: 
+  patch: 
+  release_date: 2016-05-24

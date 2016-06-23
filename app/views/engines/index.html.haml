@@ -1,0 +1,18 @@
+%h1 Engines
+
+%table.table.table-striped
+  %thead
+    %tr
+      %th Name
+      %th Code
+      %th
+  %tbody
+    - @engines.each do |engine|
+      %tr
+        %td= link_to engine.name, engine
+        %td= engine.code
+        %td= link_to 'Destroy', engine, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Engine', new_engine_path

@@ -1,0 +1,27 @@
+%h1 Listing tests
+
+%table
+  %thead
+    %tr
+      %th Version
+      %th User
+      %th Compatibility
+      %th Comment
+      %th
+      %th
+      %th
+
+  %tbody
+    - @tests.each do |test|
+      %tr
+        %td= test.version
+        %td= test.user
+        %td= test.compatibility
+        %td= test.comment
+        %td= link_to 'Show', test
+        %td= link_to 'Edit', edit_test_path(test)
+        %td= link_to 'Destroy', test, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Test', new_test_path

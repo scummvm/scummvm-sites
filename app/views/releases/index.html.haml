@@ -1,0 +1,27 @@
+%h1 Listing releases
+
+%table
+  %thead
+    %tr
+      %th Major
+      %th Minor
+      %th Patch
+      %th Release date
+      %th
+      %th
+      %th
+
+  %tbody
+    - @releases.each do |release|
+      %tr
+        %td= release.major
+        %td= release.minor
+        %td= release.patch
+        %td= release.release_date
+        %td= link_to 'Show', release
+        %td= link_to 'Edit', edit_release_path(release)
+        %td= link_to 'Destroy', release, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Release', new_release_path

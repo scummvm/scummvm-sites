@@ -1,0 +1,18 @@
+%p#notice= notice
+
+%p
+  %b Version:
+  = @test.version
+%p
+  %b User:
+  = @test.user
+%p
+  %b Compatibility:
+  = @test.compatibility
+%p
+  %b Comment:
+  = @test.comment
+
+= link_to 'Edit', edit_test_path(@test)
+\|
+= link_to 'Back', tests_path

@@ -1,0 +1,20 @@
+.row
+  .col-md-3
+    %p
+      %b Major:
+      = @release.major
+    %p
+      %b Minor:
+      = @release.minor
+    %p
+      %b Patch:
+      = @release.patch
+    %p
+      %b Release date:
+      = @release.release_date
+  .col-md-4
+    = raw Kramdown::Document.new(@release.notes).to_html
+
+= link_to 'Edit', edit_release_path(@release)
+\|
+= link_to 'Back', releases_path

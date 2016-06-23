@@ -1,0 +1,15 @@
+%li.col-xs-12
+  .activtyLeft.col-xs-12.col-sm-2
+    .pull-right
+      %small{title: activity.created_at} #{time_ago_in_words(activity.created_at)} ago
+      %br/
+      = activity.key
+      %br/
+      = activity.owner.username
+  .activtyRight.col-xs-12.col-sm-10.col-md-9.col-lg-8
+    .activity
+      / .meta
+      /   %img.profilePic{src: "https://placekitten.com/32/32"}/
+      /   = activity.owner.username
+      .message
+        = activity.trackable.to_s

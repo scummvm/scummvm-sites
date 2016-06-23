@@ -1,0 +1,21 @@
+%h1 Listing platforms
+
+%table
+  %thead
+    %tr
+      %th Name
+      %th
+      %th
+      %th
+
+  %tbody
+    - @platforms.each do |platform|
+      %tr
+        %td= platform.name
+        %td= link_to 'Show', platform
+        %td= link_to 'Edit', edit_platform_path(platform)
+        %td= link_to 'Destroy', platform, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New Platform', new_platform_path

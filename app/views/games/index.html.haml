@@ -1,0 +1,27 @@
+.alert.alert-info
+  .pull-right
+    = link_to 'New Game', new_game_path, class: "btn btn-default"
+  = search_form_for @q do |f|
+    = f.label :name_cont
+    = f.search_field :name_cont
+
+%table.table.table-striped
+  %tbody
+    %tr
+      %th= sort_link(@q, :name, 'Game')
+      %th Developer
+      %th First Released (Year)
+      %th First Released (ScummVM Version)
+      %th Last Test Date
+  %tbody
+    - @games.each do |game|
+      %tr
+        %td= link_to game.name, game_path(game)
+        %td= game.developer
+        %td= game.first_release
+        %td= game.release.try(:name)
+        %td= game.last_tested_at
+
+
+= page_entries_info(@games)
+= paginate(@games, theme: 'twitter-bootstrap-3', pagination_class: 'pagination-sm')

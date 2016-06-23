@@ -1,0 +1,62 @@
+.row
+  .col-xs-2
+    %img{src: @game.box_art.url, width: 150, height: 150}
+  .col-md-8
+    %table.table
+      %tr
+        %th{width: 150} Name
+        %td= @game.name
+      %tr
+        %th Developer
+        %td= @game.developer
+      %tr
+        %th First Release
+        %td= @game.first_release
+      %tr
+        %th Supported Since
+        %td= @game.release.try(:name)
+      %tr
+        %td
+        %td
+          = link_to 'Edit', edit_game_path(@game)
+          \|
+          = link_to 'Back', games_path
+          \|
+          = link_to 'Destroy', @game, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%table.table.table-striped
+  %thead
+    %th Platform
+    %th Release Date
+    %th Aliases
+    %th Language
+    %th Introductory Release
+  %tbody
+    - @game.versions.each do |version|
+      %tr
+        %td= version.platform.name
+        %td= version.release_date
+        %td= version.aliases
+        %td= version.language.code
+        %td= version.release.try(:name)
+
+= link_to "Add New Test", new_game_test_url(@game), class: "btn btn-default"
+
+%br/
+%table.table.table-striped
+  %thead
+    %th
+    %th Compatibility
+    %th Release
+    %th Release_notes
+    %th User System
+    %th User
+  %tbody
+    - @game.tests.each do |test|
+      %tr
+        %td{title: test.created_at} #{time_ago_in_words(test.created_at)} ago
+        %td= test.compatibility
+        %td= test.release.name
+        %td= test.release_notes
+        %td= test.user_system
+        %td= test.user.username

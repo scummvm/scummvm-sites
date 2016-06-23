@@ -1,0 +1,18 @@
+- test = activity.trackable
+%li.col-xs-12
+  .activtyLeft.col-xs-12.col-sm-2
+    .pull-right
+      %small{title: test.created_at} #{time_ago_in_words(test.created_at)} ago
+      %br/
+      Test Added
+      %br/
+      = test.user.username
+  .activtyRight.col-xs-12.col-sm-10.col-md-9.col-lg-8
+    .activity
+      .message
+        Tested
+        %em= test.game.name
+        for
+        %em= test.user_system
+        %br/
+        Compatibility #{test.compatibility}%

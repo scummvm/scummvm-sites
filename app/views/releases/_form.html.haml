@@ -1,0 +1,25 @@
+= form_for @release do |f|
+  - if @release.errors.any?
+    #error_explanation
+      %h2= "#{pluralize(@release.errors.count, "error")} prohibited this release from being saved:"
+      %ul
+        - @release.errors.full_messages.each do |msg|
+          %li= msg
+
+  .field
+    = f.label :major
+    = f.number_field :major
+  .field
+    = f.label :minor
+    = f.number_field :minor
+  .field
+    = f.label :patch
+    = f.number_field :patch
+  .field
+    = f.label :release_date
+    = f.text_field :release_date, data: { provide: 'datepicker' }
+  .field
+    = f.label :notes
+    = f.text_area :notes
+  .actions
+    = f.submit 'Save'

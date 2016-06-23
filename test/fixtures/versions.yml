@@ -1,0 +1,17 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  platform: 
+  game: 
+  release_date: 2016-05-24
+  aliases: MyString
+  language: MyString
+  introductory_release_id: 
+
+two:
+  platform: 
+  game: 
+  release_date: 2016-05-24
+  aliases: MyString
+  language: MyString
+  introductory_release_id: 

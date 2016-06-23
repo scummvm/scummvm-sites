@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  version_id: 
+  user_id: 
+  compatibility: 1
+  comment: MyString
+
+two:
+  version_id: 
+  user_id: 
+  compatibility: 1
+  comment: MyString

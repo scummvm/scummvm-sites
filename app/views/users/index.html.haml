@@ -1,0 +1,27 @@
+%h1 Listing users
+
+%table.table.table-striped
+  %thead
+    %tr
+      %th
+      %th Username
+      %th Email Address
+      %th
+  %tbody
+    - @users.each do |user|
+      %tr
+        %td
+          - if current_user != user
+            = link_to "Impersonate", impersonate_user_path(user)
+        %td= user.username
+        %td= user.email
+        %td
+          = link_to 'Show', user
+          \|
+          = link_to 'Edit', edit_user_path(user)
+          \|
+          = link_to 'Destroy', user, :method => :delete, :data => { :confirm => 'Are you sure?' }
+
+%br
+
+= link_to 'New User', new_user_path
