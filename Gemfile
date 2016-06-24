@@ -47,7 +47,6 @@ end
 
 gem 'puma'
 gem 'twitter-bootstrap-rails'
-gem 'bootstrap-datepicker-rails'
 gem 'haml-rails'
 gem 'devise'
 gem 'ransack'

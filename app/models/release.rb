@@ -5,7 +5,6 @@ class Release < ActiveRecord::Base
   tracked only: [:create], owner: Proc.new { |controller, model| controller.current_user }
 
   validates :major, uniqueness: { scope: [:minor, :patch] }
-  validates :release_date, presence: true
 
   default_scope { order(release_date: :desc) }
 

@@ -17,7 +17,9 @@
     = f.number_field :patch
   .field
     = f.label :release_date
-    = f.text_field :release_date, data: { provide: 'datepicker' }
+    = f.text_field :release_date
+    %span.help-block
+      Expected format for date is YYYY-MM-DD
   .field
     = f.label :notes
     = f.text_area :notes

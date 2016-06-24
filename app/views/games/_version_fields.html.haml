@@ -1,6 +1,9 @@
 %tr
   %td= f.collection_select(:platform_id, Platform.all, :id, :name)
-  %td= f.text_field :release_date, data: { provide: 'datepicker' }
+  %td
+    = f.text_field :release_date
+    %br/
+    %small.help-block Expected format YYYY-MM-DD
   %td= f.text_field :aliases
   %td= f.collection_select(:language_id, Language.all, :id, :code)
   %td= f.collection_select(:introductory_release_id, Release.all, :id, :name, include_blank: true)
