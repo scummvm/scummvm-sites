@@ -1,6 +1,32 @@
-%p#notice= notice
+.row
+  .col-xs-2
+    %img{width: 150, height: 150}
+  .col-md-8
+    %h3 User
+    %br/
+    %table.table
+      %tr
+        %th{width: 150} Username
+        %td= @user.username
+      %tr
+        %th{width: 150} Email
+        %td= @user.email
 
+    %h3 Tests
+    %br/
+    %table.table.table-striped
+      %thead
+        %th Test Added
+        %th Test Date
+        %th Game
+        %th Compatibility
+        %th Release
+      %tbody
+        - @user.tests.each do |test|
+          %tr
+            %td{title: test.created_at} #{time_ago_in_words(test.created_at)} ago
+            %td= test.tested_at
+            %td= link_to test.game.name, game_path(test.game)
+            %td= test.compatibility
+            %td= test.release.name
 
-= link_to 'Edit', edit_user_path(@user)
-\|
-= link_to 'Back', users_path

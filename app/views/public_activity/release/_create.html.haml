@@ -6,7 +6,7 @@
       %br/
       Release Added
       %br/
-      = activity.owner.username
+      = link_to activity.owner.username, user_path(activity.owner)
   .activtyRight.col-xs-12.col-sm-10.col-md-9.col-lg-8
     .activity
       .message

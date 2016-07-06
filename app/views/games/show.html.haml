@@ -62,5 +62,5 @@
         %td= test.release.name
         %td= test.release_notes
         %td= test.user_system
-        %td= test.user.username
+        %td= link_to test.user.username, user_path(test.user)
         %td= test.comment
