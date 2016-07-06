@@ -11,7 +11,7 @@
     .activity
       .message
         Tested
-        %em= test.game.name
+        %em= link_to test.game.name, game_path(test.game)
         for
         %em= test.user_system
         %br/
