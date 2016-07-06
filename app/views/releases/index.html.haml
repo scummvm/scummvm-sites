@@ -3,9 +3,7 @@
 %table
   %thead
     %tr
-      %th Major
-      %th Minor
-      %th Patch
+      %th Name
       %th Release date
       %th
       %th
@@ -14,9 +12,7 @@
   %tbody
     - @releases.each do |release|
       %tr
-        %td= release.major
-        %td= release.minor
-        %td= release.patch
+        %td= release.name
         %td= release.release_date
         %td= link_to 'Show', release
         %td= link_to 'Edit', edit_release_path(release)
