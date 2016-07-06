@@ -7,6 +7,11 @@
           %li= msg
 
   .form-group
+    = f.label :tested_at, class: "control-label col-sm-2"
+    .col-sm-6
+      = f.text_field :tested_at
+      %span.help-block Expected format for date is YYYY-MM-DD
+  .form-group
     = f.label :version, class: "control-label col-sm-2"
     .col-sm-6
       = f.collection_select(:version_id, @game.versions, :id, :name, include_blank: true, class: "form-control")

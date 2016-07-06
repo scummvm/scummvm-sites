@@ -45,18 +45,22 @@
 %br/
 %table.table.table-striped
   %thead
-    %th
+    %th Test Added
+    %th Test Date
     %th Compatibility
     %th Release
     %th Release_notes
     %th User System
     %th User
+    %th Comment
   %tbody
     - @game.tests.each do |test|
       %tr
         %td{title: test.created_at} #{time_ago_in_words(test.created_at)} ago
+        %td= test.tested_at
         %td= test.compatibility
         %td= test.release.name
         %td= test.release_notes
         %td= test.user_system
         %td= test.user.username
+        %td= test.comment

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609004409) do
+ActiveRecord::Schema.define(version: 20160706085140) do
 
   create_table "activities", force: :cascade do |t|
     t.integer  "trackable_id"
@@ -101,6 +101,7 @@ ActiveRecord::Schema.define(version: 20160609004409) do
     t.datetime "created_at",    null: false
     t.datetime "updated_at",    null: false
     t.integer  "game_id"
+    t.string   "tested_at"
   end
 
   add_index "tests", ["release_id"], name: "index_tests_on_release_id"
