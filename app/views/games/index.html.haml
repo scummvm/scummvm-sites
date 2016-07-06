@@ -4,6 +4,9 @@
   = search_form_for @q do |f|
     = f.label :name_cont
     = f.search_field :name_cont
+    = f.label Engine
+    = f.select :engine_id_eq, options_from_collection_for_select(Engine.all, "id", "name", @q.engine_id_eq), include_blank: true
+    = f.submit "Search"
 
 %table.table.table-striped
   %tbody
