@@ -7,7 +7,6 @@ class Test < ActiveRecord::Base
   belongs_to :release
   belongs_to :game
 
-  validates :comment, presence: true
   validates :user_system, presence: true
   validates :tested_at,
     format: {
