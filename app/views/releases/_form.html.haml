@@ -7,14 +7,8 @@
           %li= msg
 
   .field
-    = f.label :major
-    = f.number_field :major
-  .field
-    = f.label :minor
-    = f.number_field :minor
-  .field
-    = f.label :patch
-    = f.number_field :patch
+    = f.label :name
+    = f.text_field :name
   .field
     = f.label :release_date
     = f.text_field :release_date

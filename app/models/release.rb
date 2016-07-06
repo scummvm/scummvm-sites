@@ -4,11 +4,7 @@ class Release < ActiveRecord::Base
   include PublicActivity::Model
   tracked only: [:create], owner: Proc.new { |controller, model| controller.current_user }
 
-  validates :major, uniqueness: { scope: [:minor, :patch] }
+  validates :name, uniqueness: true
 
   default_scope { order(release_date: :desc) }
-
-  def name
-    "#{major}.#{minor}.#{patch}"
-  end
 end

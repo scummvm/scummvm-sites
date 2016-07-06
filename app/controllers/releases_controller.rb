@@ -69,6 +69,6 @@ class ReleasesController < ApplicationController
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def release_params
-      params.require(:release).permit(:major, :minor, :patch, :release_date, :notes)
+      params.require(:release).permit(:name, :release_date, :notes)
     end
 end
