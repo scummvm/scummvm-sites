@@ -1,0 +1,15 @@
+- release = activity.trackable
+%li.col-xs-12
+  .activtyLeft.col-xs-12.col-sm-2
+    .pull-right
+      %small{title: release.created_at} #{time_ago_in_words(release.created_at)} ago
+      %br/
+      Release Added
+      %br/
+      = activity.owner.username
+  .activtyRight.col-xs-12.col-sm-10.col-md-9.col-lg-8
+    .activity
+      .message
+        = release.name
+        released on
+        = release.release_date
