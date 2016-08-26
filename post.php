@@ -1,5 +1,7 @@
 <?php
 
+//error_reporting(E_ALL);
+
 // two ways to address the email
 // option 1) manually set the list
 //$email_to = "wjp@usecode.org";
@@ -19,6 +21,8 @@ $email_subj_prefix = "";
 if(isset($_POST['payload']))
 {
     $json = $_POST['payload'];
+    // debug:
+    file_put_contents('/tmp/gitmailer.log', $json, FILE_APPEND);
     include 'github_post_receive.php';
     mail_github_post_receive($email_to, $email_subj_prefix, $json);
 }
