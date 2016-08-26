@@ -2,7 +2,9 @@
 
 // two ways to address the email
 // option 1) manually set the list
-$email_to = "scummvm-cvs-logs@lists.sourceforge.net";
+//$email_to = "wjp@usecode.org";
+//$email_to = "scummvm-cvs-logs@lists.sourceforge.net";
+$email_to = "scummvm-git-logs@lists.scummvm.org";
 
 // option 2) use the list maintainer so people can sign-up for the list (and
 // leave) on their own (recommended)
