@@ -1,0 +1,25 @@
+{
+	"name": "GoogleDocs4MW",
+	"version": "1.3",
+	"author": [
+		"Jack Phoenix"
+	],
+	"license-name": "GPL-2.0+",
+	"url": "https://www.mediawiki.org/wiki/Extension:GoogleDocs4MW",
+	"descriptionmsg": "googledocs4mw-desc",
+	"type": "parserhook",
+	"MessagesDirs": {
+		"GoogleDocs4MW": [
+			"i18n"
+		]
+	},
+	"AutoloadClasses": {
+		"GoogleDocs4MW": "GoogleDocs4MW.class.php"
+	},
+	"Hooks": {
+		"ParserFirstCallInit": [
+			"GoogleDocs4MW::registerTag"
+		]
+	},
+	"manifest_version": 1
+}

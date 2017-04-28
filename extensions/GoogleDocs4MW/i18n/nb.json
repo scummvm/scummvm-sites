@@ -1,0 +1,8 @@
+{
+	"@metadata": {
+		"authors": [
+			"Jon Harald Søby"
+		]
+	},
+	"googledocs4mw-desc": "Legger til en <code>&lt;googlespreadsheet&gt;</code>-tagg for visning av regneark fra Google Docs"
+}
