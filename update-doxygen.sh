@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export LANGUAGE=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+
 BASEPATH=/home/doxygen
 
 source ${BASEPATH}/lock_unlock
@@ -13,7 +17,7 @@ lock_unlock action=lock name=$LOCKFILE
 # And if it is not, we might be able to automatically recreate it...
 echo "Updating git..."
 cd ${BASEPATH}/scummvm-git-master
-nice git pull 
+nice git pull
 
 #echo "Fixing permissions in the checkout"
 #chmod -f -R g+w,a+r .
