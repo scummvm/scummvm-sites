@@ -1,4 +1,4 @@
-#!/bin/sh -ev
+#!/bin/bash
 
 BASEPATH=/home/joostp/doxygen
 
@@ -11,9 +11,9 @@ lock_unlock action=lock name=$LOCKFILE
 
 # TODO: Verify that the SVN checkout exists, is valid, etc.
 # And if it is not, we might be able to automatically recreate it...
-echo "Updating SVN..."
-cd ${BASEPATH}/scummvm-SVN-trunk
-nice svn up
+echo "Updating git..."
+cd ${BASEPATH}/scummvm-git-master
+nice git pull 
 
 #echo "Fixing permissions in the checkout"
 #chmod -f -R g+w,a+r .
