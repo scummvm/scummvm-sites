@@ -1169,20 +1169,47 @@ INCLUDE_FILE_PATTERNS  =
 # undefined via #undef or recursively expanded use the := operator
 # instead of the = operator.
 
-PREDEFINED             = USE_FLAC \
+PREDEFINED             = USE_ALSA \
+                         USE_BINK \
+                         USE_CLOUD \
+                         USE_FAAD \
+                         USE_FLAC \
+                         USE_FLUIDSYNTH \
+                         USE_FREETYPE2 \
+                         USE_HIGHRES \
+                         USE_HQ_SCALERS \
+                         USE_INDEO3 \
+                         USE_JPEG \
+                         USE_LIBCURL \
                          USE_MAD \
+                         USE_MPEG2 \
+                         USE_MT32EMU \
+                         USE_OPENGL \
+                         USE_OGG \
+                         USE_PNG \
+                         USE_RGB_COLOR \
+                         USE_SAVEGAME_TIMESTAMP \
+                         USE_SCALERS \
+                         USE_SDL2 \
+                         USE_SDL_NET \
+                         USE_SPARKLE \
+                         USE_TASKBAR \
+                         USE_THEORADEC \
+                         USE_TRANSLATION \
+                         USE_UPDATES \
                          USE_VORBIS \
                          USE_ZLIB \
-                         USE_ALSA \
-                         USE_PNG \
-                         USE_THEORADEC \
-                         USE_FLUIDSYNTH \
-                         USE_MT32EMU \
-                         USE_RGB_COLOR \
-                         USE_INDEO3 \
                          UNIX \
                          SDL_BACKEND \
+                         ENABLE_EVENTRECORDER \
+                         ENABLE_CSTIME \
+                         ENABLE_EOB \
+                         ENABLE_GROOVIE2 \
                          ENABLE_HE \
+                         ENABLE_LOL \
+                         ENABLE_MYST \
+                         ENABLE_RIVEN \
+                         ENABLE_SAGA2 \
                          ENABLE_SCUMM_7_8 \
                          ENABLE_SCI32 \
                          DYNAMIC_MODULES
