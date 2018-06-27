@@ -523,7 +523,7 @@ WARN_FORMAT            = "$file:$line: $text"
 # and error messages should be written. If left blank the output is written 
 # to stderr.
 
-WARN_LOGFILE           = /home/joostp/doxygen/doxygen.log
+WARN_LOGFILE           = /home/doxygen/doxygen.log
 
 #---------------------------------------------------------------------------
 # configuration options related to the input files
@@ -534,31 +534,15 @@ WARN_LOGFILE           = /home/joostp/doxygen/doxygen.log
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-#INPUT                  = /home/joostp/doxygen/scummvm-git-master/backends/audiocd \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/events \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/fs \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/graphics \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/keymapper \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/log \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/midi \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/mixer \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/mutex \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/plugins \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/saves \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/timer \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/vkeybd \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/base-backend.* \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/modular-backend.* \
-#                         /home/joostp/doxygen/scummvm-git-master/backends/platform/sdl \
-
-INPUT                  = /home/joostp/doxygen/scummvm-git-master/backends \
-                         /home/joostp/doxygen/scummvm-git-master/audio \
-                         /home/joostp/doxygen/scummvm-git-master/base \
-                         /home/joostp/doxygen/scummvm-git-master/common \
-                         /home/joostp/doxygen/scummvm-git-master/engines \
-                         /home/joostp/doxygen/scummvm-git-master/graphics \
-                         /home/joostp/doxygen/scummvm-git-master/gui \
-                         /home/joostp/doxygen/scummvm-git-master/video
+INPUT                  = /home/doxygen/scummvm-git-master/backends \
+                         /home/doxygen/scummvm-git-master/audio \
+                         /home/doxygen/scummvm-git-master/base \
+                         /home/doxygen/scummvm-git-master/common \
+                         /home/doxygen/scummvm-git-master/engines \
+                         /home/doxygen/scummvm-git-master/graphics \
+                         /home/doxygen/scummvm-git-master/gui \
+                         /home/doxygen/scummvm-git-master/sound \
+                         /home/doxygen/scummvm-git-master/video
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
@@ -587,10 +571,10 @@ RECURSIVE              = YES
 # excluded from the INPUT source files. This way you can easily exclude a 
 # subdirectory from a directory tree whose root is specified with the INPUT tag.
 
-EXCLUDE                = /home/joostp/doxygen/scummvm-git-master/engines/sky/skydefs.h \
-                         /home/joostp/doxygen/scummvm-git-master/engines/sword1/swordres.h \
-                         /home/joostp/doxygen/scummvm-git-master/engines/queen/restables.cpp \
-                         /home/joostp/doxygen/scummvm-git-master/gui/themes/scummtheme.py
+EXCLUDE                = /home/doxygen/scummvm-git-master/engines/sky/skydefs.h \
+                         /home/doxygen/scummvm-git-master/engines/sword1/swordres.h \
+                         /home/doxygen/scummvm-git-master/engines/queen/restables.cpp \
+                         /home/doxygen/scummvm-git-master/gui/themes/scummtheme.py
 
 # The EXCLUDE_SYMLINKS tag can be used select whether or not files or 
 # directories that are symbolic links (a Unix filesystem feature) are excluded 
