@@ -1,4 +1,6 @@
 <!-- DEBUG: overall_footer.tpl starts here -->
+<div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
+
 <div align="center"><br>
 <!-- END switch_user_logged_in -->
   <hr size="1"><address style="align: right;"><small>
@@ -8,7 +10,7 @@ Generated on $datetime for $projectname by&nbsp;<a href="http://www.doxygen.org/
       </table>
     </td>
   </tr>
-  <tr> 
+  <tr>
     <td colspan="4">
       <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
