@@ -294,16 +294,16 @@ class IrcStatusBot(irc.IRCClient):
 
 	def buildStarted(self, builderName, build):
 		#builder = build.getBuilder()
-		#self.log('Builder %r in category %s started' % (builder, builder.category))
+		#self.log('Builder %r in category %s started' % (builder, builder.getCategory()))
 		return
 
 	def buildFinished(self, builderName, build, results):
 		builder = build.getBuilder()
 
 		# only notify about builders we are interested in
-		#self.log('Builder %r in category %s finished' % (builder, builder.category))
+		#self.log('Builder %r in category %s finished' % (builder, builder.getCategory()))
 
-		if (self.categories != None and builder.category not in self.categories):
+		if (self.categories != None and builder.getCategory() not in self.categories):
 			return
 
 		result = build.getResults()
