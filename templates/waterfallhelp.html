@@ -94,7 +94,7 @@ If no <tt>tag=</tt> arguments are provided, all Tags will be displayed.</p>
 the Tags you are interested in here.</p>
 
 <table>
-{% for tag in all_tag %}
+{% for tag in all_tags %}
  <tr><td><input type="checkbox" name="tag" value="{{ tag }}"
   {% if tag in show_tags %}checked="checked"{% endif %} />
  </td><td>{{tag}}</td></tr>
