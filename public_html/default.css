@@ -470,6 +470,14 @@ TD.tableborder
 	background-color: #c0c0c0;
 }
 
+.platform-icon
+{
+	width: 32px;
+	height: 32px;
+	vertical-align: middle;
+	padding: 3px;
+}
+
 /* Link Properties */
 
 a                         { text-decoration: underline; font-size: 11px; color: #a33; }  
