@@ -216,10 +216,11 @@ class IrcStatusBot(irc.IRCClient):
 
 	timer = None
 
-	def __init__(self, nickname, password, channel, status, categories, stableTimer):
+	def __init__(self, nickname, password, channel, key, status, categories, stableTimer):
 		self.nickname = nickname
-		self.channel = channel
 		self.password = password
+		self.channel = channel
+		self.key = key
 		self.status = status
 		self.categories = categories
 		self.stableTimer = stableTimer
@@ -468,7 +469,7 @@ class IrcStatusBot(irc.IRCClient):
 	def signedOn(self):
 		if self.password:
 			self.msg("Nickserv", "IDENTIFY " + self.password)
-		self.join(self.channel)
+		self.join(self.channel, self.key)
 
 	def joined(self, channel):
 		self.log("I have joined %s" % channel)
@@ -480,7 +481,7 @@ class IrcStatusBot(irc.IRCClient):
 		self.log("I have been kicked from %s by %s: %s" % (channel,
 														  kicker,
 														  message))
-		self.join(self.channel)
+		self.join(self.channel, self.key)
 
 	# we can using the following irc.IRCClient methods to send output.
 	#
@@ -508,12 +509,13 @@ class IrcStatusFactory(ThrottledClientFactory):
 	shuttingDown = False
 	p = None
 
-	def __init__(self, nickname, password, channel, categories, stableTimer):
+	def __init__(self, nickname, password, channel, key, categories, stableTimer):
 		#ThrottledClientFactory.__init__(self) # doesn't exist
 		self.status = None
 		self.nickname = nickname
 		self.password = password
 		self.channel = channel
+		self.key = key
 		self.categories = categories
 		self.stableTimer = stableTimer
 
@@ -529,7 +531,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
 	def buildProtocol(self, address):
 		p = self.protocol(self.nickname, self.password,
-						  self.channel, self.status,
+						  self.channel, self.key, self.status,
 						  self.categories, self.stableTimer)
 		p.factory = self
 		p.status = self.status
@@ -558,21 +560,22 @@ class IRC(base.StatusReceiverMultiService):
 					 "channel", "categories"]
 
 	def __init__(self, host, nick, channel, port = 6667, categories = None,
-					password = None, stableTimer = 60):
+					password = None, key = None, stableTimer = 60):
 		base.StatusReceiverMultiService.__init__(self)
 
 		# need to stash these so we can detect changes later
 		self.host = host
 		self.port = port
 		self.nick = nick
-		self.channel = channel
 		self.password = password
+		self.channel = channel
+		self.key = key
 		self.categories = categories
 		self.stableTimer = stableTimer
 
 		# need to stash the factory so we can give it the status object
 		self.f = IrcStatusFactory(self.nick, self.password, self.channel,
-									self.categories, self.stableTimer)
+									self.key, self.categories, self.stableTimer)
 
 		c = internet.TCPClient(host, port, self.f)
 		c.setServiceParent(self)
