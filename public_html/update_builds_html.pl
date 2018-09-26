@@ -32,7 +32,7 @@ sub add_platform {
 	print FILE '<tr align="center">';
 	print FILE '<td style="text-align: left; " class="row1">';
 	print FILE '<img class="platform-icon" alt=""';
-	print FILE 'src="http://www.scummvm.org/images/icons/platforms/' . $icon . '.png">' . $desc;
+	print FILE 'src="https://www.scummvm.org/images/icons/platforms/' . $icon . '.png">' . $desc;
 	print FILE '</td>';
 
 	# master daily builds
