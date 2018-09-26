@@ -209,7 +209,7 @@ class Clean(ShellCommand):
 
 # IRC stuff
 
-scumm_buildbot_root_url = "http://buildbot.scummvm.org/"
+scumm_buildbot_root_url = "https://buildbot.scummvm.org/"
 
 class IrcStatusBot(irc.IRCClient):
 	implements(Interface)
