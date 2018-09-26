@@ -26,9 +26,9 @@
     <td style="width:199px;"><img src="$relpath$images/logo.png" width="199" height="65" alt="ScummVM logo"></td>
 
     <td style="width:80%; background-image: url('$relpath$images/top_bg.png'); vertical-align: middle; text-align: left; white-space:nowrap;">
-      <a href="http://www.scummvm.org/" target="_parent">ScummVM website</a> -
+      <a href="https://www.scummvm.org/" target="_parent">ScummVM website</a> -
       <a href="http://forums.scummvm.org/" target="_parent">Forums</a> -
-      <a href="http://www.scummvm.org/contact.php" target="_parent">Contact us</a> -
+      <a href="https://www.scummvm.org/contact.php" target="_parent">Contact us</a> -
       <b><a href="http://www.gog.com/en/frontpage/?pp=22d200f8670dbdb3e253a90eee5098477c95c23d" target="_parent">Buy Supported Games</a></b>&nbsp;
     </td>
 
