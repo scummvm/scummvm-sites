@@ -37,7 +37,7 @@
   <!-- new nav table -->
 
     <a href="https://buildbot.scummvm.org" target="_parent">BuildBot</a> -
-    <a href="http://doxygen.scummvm.org" target="_parent">Doxygen</a> -
+    <a href="https://doxygen.scummvm.org" target="_parent">Doxygen</a> -
     <a href="http://planet.scummvm.org" target="_parent">Planet</a> -
     <a href="http://wiki.scummvm.org" target="_parent">Wiki</a>
 
