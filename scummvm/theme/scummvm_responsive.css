@@ -1,0 +1,44 @@
+@media (max-width: 850px) {
+	.online {
+		background-position: calc( 28% - 40px) 0;
+	}
+}
+
+@media (max-width: 700px) {
+	.headerbar {
+		background-color: #d2730a;
+		height: 58px;
+		width: 100%;
+		margin: 0;
+		padding: 0;		
+	}
+	.logo {
+		display: block;		
+		padding: 0;
+		position: relative;
+		top: 38px;
+		left: -75px;
+	}
+	.logo .background {
+		display: none;
+	}
+	.logo img.foreground {
+		width: 150px;
+		height: 44px;
+		position: absolute;
+	}
+	.wrap {
+		margin-top: 0;
+	}
+	body {
+		padding: 0;
+		margin: 0;
+	}
+	html {
+		background: url("./styles/scummvm2/theme/images/scummvm_logo.png") center top no-repeat #d2730a;    
+		background-size: 150px;
+	}
+	.online {
+		background-position: 100% 0;
+	}
+}

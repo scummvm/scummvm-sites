@@ -1,0 +1,110 @@
+/*
+--------------------------------------------------------------
+Colours and backgrounds for common.css
+-------------------------------------------------------------- */
+
+html, body {
+	color: #000000;	
+	background: linear-gradient(to bottom, rgb(209, 111, 10) 0%, rgb(231, 172, 21) 400px, rgb(239, 196, 24) 100%) fixed;
+}
+
+a { color: rgb(130, 29, 6); }
+a:hover, 
+a:active,
+a:focus { 
+	color: #f00; 	
+}
+
+/* Round cornered boxes and backgrounds
+---------------------------------------- */
+.wrap {
+	background-color: rgb(251, 241, 206);			
+	border: unset;
+}
+
+.headerbar {
+	background: #f6e08a;	
+	background-image: unset;	
+}
+
+.forabg {
+	background-color: rgb(153, 153, 153);
+	background-image: unset;
+}
+
+/*
+--------------------------------------------------------------
+Colours and backgrounds for content.css
+-------------------------------------------------------------- */
+
+ul.forums {
+	background-color: rgb(224, 224, 224);	
+	background-image: unset;
+}
+
+li.row strong {
+	color: #000000;
+}
+
+li.row {
+	border: 1px solid rgb(192, 192, 192);
+}
+
+li.row:hover {
+	background-color: #E1EBF2;
+}
+
+ul.topiclist dd {
+	border-left-color: rgb(192, 192, 192);
+}
+
+li.header {
+	background: #a82709 linear-gradient(to bottom, #d49384 0%, #a82709 80%);
+}
+
+.pagination li.active span {
+	background: rgb(130, 29, 6);
+	border-color: rgb(130, 29, 6);
+	color: #FFFFFF;
+}
+
+.pagination li a,
+.button .icon, 
+.button-secondary {
+	color: rgb(130, 29, 6);
+}
+
+.pagination li a:hover,
+.pagination li a:hover .icon {
+	background: rgb(130, 29, 6);	
+	border-color: rgb(130, 29, 6);
+}
+
+.navbar {
+	background-color: unset;
+}
+
+ul.navlinks {
+	border-top-color: transparent;
+}
+
+.bg1 {
+	background-color: #e8e7e7;
+}
+
+.bg2 {
+	background-color: #e8e7e7;
+}
+
+.bg3 {
+	background-color: #e8e7e7;
+}
+
+.tabs .activetab > a, .tabs .activetab > a:hover {
+	background-color: #e8e7e7;
+	background-image: unset;
+}
+
+.tabs .tab > a:hover {
+	background: #e8e7e7;
+}

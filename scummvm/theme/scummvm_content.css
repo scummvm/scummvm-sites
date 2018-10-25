@@ -1,0 +1,12 @@
+.postprofile {
+	float: left;
+	border-width: 0 1px 0 0;
+}
+
+.postbody {
+	float: right;
+}
+
+.online {
+	background-position: calc( 22% - 40px) 0;
+}

@@ -1,0 +1,140 @@
+/* General Markup Styles
+---------------------------------------- */
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	height: unset;
+}
+
+body {
+	font-family: verdana, tahoma, arial, helvetica, sans-serif;
+	padding: 12px 50px;
+	margin: 8px;
+}
+
+.forabg {
+	margin-bottom: unset;
+	padding: unset;
+	clear: both;
+	border-radius: unset;
+}
+
+/* Main blocks
+---------------------------------------- */
+.site_logo {
+	display: inline-block;
+	width: 199px;
+	height: 65px;
+}
+
+.wrap {
+	max-width: 1340px;		
+	padding: unset;	
+	margin: 0 auto;
+	margin-top: 79px;
+}
+
+.search-box {
+	position: absolute;
+	right: 0;
+	top: -85px;
+}
+/* Round cornered boxes and backgrounds
+---------------------------------------- */
+.headerbar {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+	height: 29px;
+	padding: 0;
+	position: relative;
+}
+
+.page-footer,
+.page-body {
+	padding: 0 20px;
+}
+
+.navbar {
+	margin: 0 20px;
+}
+
+.forumbg {
+	padding: 0;
+	border-radius: unset;
+}
+
+/*
+--------------------------------------------------------------
+Colours and backgrounds for content.css
+-------------------------------------------------------------- */
+
+li.header {
+	min-height: 24px;
+	padding: 4px;
+}
+
+/* Header */
+.scummvm {
+  font-family: Trebuchet MS, sans-serif;
+  line-height: 19px;
+  font-size: 15px;
+  white-space: nowrap;
+  margin-right: 5px;
+  margin-top: 5px;
+  text-align: justify;
+  letter-spacing: 1.5px; }
+
+.header-image {
+  bottom: -2px;
+  position: absolute;
+  right: 0; }
+
+.maniac {
+  opacity: 0.2;
+  bottom: 30px;
+  left: 12px;
+  filter: grayscale(100%); }
+
+.topper {
+  height: 29px;
+  background: #f6e08a;
+  border-radius: 8px 8px 0 0;
+  position: relative; }
+
+.col-1-2 {
+	width: 50%;
+}
+
+.col-1-1 {
+	width: 100%;
+}
+
+[class*='col-'] {
+	float: left;
+	padding-right: 8px;
+}
+
+.row:after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+
+
+*::after, *::before {
+
+	box-sizing: border-box;
+
+}
+
+.float_right {
+	float: right;
+}
+
+.row-item .topictitle:hover, .row-item .subforum:hover, .row-item .username:hover, .row-item .username-coloured:hover {
+	text-decoration: none;
+}
