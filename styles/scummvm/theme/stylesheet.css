@@ -7,21 +7,23 @@
     --------------------------------------------------------------
 */
 
-@import url("normalize.css?v=3.2");
-@import url("base.css?v=3.2");
-@import url("utilities.css?v=3.2");
-@import url("common.css?v=3.2");
-@import url("links.css?v=3.2");
-@import url("content.css?v=3.2");
-@import url("buttons.css?v=3.2");
-@import url("cp.css?v=3.2");
-@import url("forms.css?v=3.2");
-@import url("icons.css?v=3.2");
-@import url("colours.css?v=3.2");
-@import url("responsive.css?v=3.2");
+
+@import url("../../prosilver/theme/normalize.css?v=3.2");
+@import url("../../prosilver/theme/base.css?v=3.2");
+@import url("../../prosilver/theme/utilities.css?v=3.2");
+@import url("../../prosilver/theme/common.css?v=3.2");
+@import url("../../prosilver/theme/links.css?v=3.2");
+@import url("../../prosilver/theme/content.css?v=3.2");
+@import url("../../prosilver/theme/buttons.css?v=3.2");
+@import url("../../prosilver/theme/cp.css?v=3.2");
+@import url("../../prosilver/theme/forms.css?v=3.2");
+@import url("../../prosilver/theme/icons.css?v=3.2");
+@import url("../../prosilver/theme/colours.css?v=3.2");
+@import url("../../prosilver/theme/responsive.css?v=3.2");
+
 
 @import url("scummvm_common.css?v=3.2");
 @import url("scummvm_colours.css?v=3.2");
 @import url("scummvm_header.css?v=3.2");
-@import url("scummvm_responsive.css?v=3.2");
 @import url("scummvm_content.css?v=3.2");
+@import url("scummvm_responsive.css?v=3.2");
