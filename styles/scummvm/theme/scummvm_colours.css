@@ -4,27 +4,27 @@ Colours and backgrounds for common.css
 -------------------------------------------------------------- */
 
 html, body {
-	color: #000000;	
-	background: linear-gradient(to bottom, rgb(209, 111, 10) 0%, rgb(231, 172, 21) 400px, rgb(239, 196, 24) 100%) fixed;
+	color: #000000;
+	background: #cc6600;
 }
 
 a { color: rgb(130, 29, 6); }
-a:hover, 
+a:hover,
 a:active,
-a:focus { 
-	color: #f00; 	
+a:focus {
+	color: #f00;
 }
 
 /* Round cornered boxes and backgrounds
 ---------------------------------------- */
 .wrap {
-	background-color: rgb(251, 241, 206);			
+	background-color: rgb(251, 241, 206);
 	border: unset;
 }
 
 .headerbar {
-	background: #f6e08a;	
-	background-image: unset;	
+	background: #f6e08a;
+	background-image: unset;
 }
 
 .forabg {
@@ -38,7 +38,7 @@ Colours and backgrounds for content.css
 -------------------------------------------------------------- */
 
 ul.forums {
-	background-color: rgb(224, 224, 224);	
+	background-color: rgb(224, 224, 224);
 	background-image: unset;
 }
 
@@ -59,7 +59,7 @@ ul.topiclist dd {
 }
 
 li.header {
-	background: #a82709 linear-gradient(to bottom, #d49384 0%, #a82709 80%);
+	background: #a82709;
 }
 
 .pagination li.active span {
@@ -69,14 +69,14 @@ li.header {
 }
 
 .pagination li a,
-.button .icon, 
+.button .icon,
 .button-secondary {
 	color: rgb(130, 29, 6);
 }
 
 .pagination li a:hover,
 .pagination li a:hover .icon {
-	background: rgb(130, 29, 6);	
+	background: rgb(130, 29, 6);
 	border-color: rgb(130, 29, 6);
 }
 
