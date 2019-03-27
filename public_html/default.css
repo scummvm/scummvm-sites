@@ -370,7 +370,7 @@ table.Grid tr td.build {
 /* Font Properties */
 
 body {
-	background-color: #efc418;	
+	background-color: #cc6600;
 	background-repeat: repeat-x;
 }
 
@@ -380,45 +380,45 @@ body, table {
 	font-weight: normal;
 }
 
-table            
+table
 {
-font-size: 10px; 
+font-size: 10px;
 color: #000000;
 }
 
 td, th
 {
-font-size: 10px; 
+font-size: 10px;
 color: #000000;
 }
 
-.smalltext       
-{ 
-font-size : 10px; 
+.smalltext
+{
+font-size : 10px;
 color: #000000;
 }
 
-.mediumtext      
-{ 
-font-size : 11px; 
+.mediumtext
+{
+font-size : 11px;
 color: #000000;
 }
 
-.largetext       
-{ 
-font-size : 13px; 
+.largetext
+{
+font-size : 13px;
 color: #000000;
 }
 
-.catrowtext      
-{ 
+.catrowtext
+{
 	font-weight: bold;
 	font-size: 13px;
 	color: #444444;
 }
 
-.toprowtext      
-{ 
+.toprowtext
+{
 	color: #fff;
 	font-size: 12px;
 	font-weight: bold;
@@ -427,30 +427,30 @@ color: #000000;
 /* Cell Properties */
 
 TD.row1
-{ 
+{
 	background-color: #e8e7e7;
-	font-size : 13px; 
+	font-size : 13px;
 	color: #494957
-}     
-     
+}
+
 TD.row2	        /* ugly colors, to look which html uses them still - should have removed all occurences now */
-{ 
+{
 	background-color: #00FF00;
-	font-size : 12px; 
+	font-size : 12px;
 	color: #FF00FF
 }
 
 TD.row3
-{ 
+{
 	background-color: #FFFFFF;
-	font-size : 12px; 
+	font-size : 12px;
 	color: #494957
 }
 
 TD.catrow
-{ 
+{
 	/* font-family: Verdana; */
-font-size : 12px; 
+font-size : 12px;
 font-weight: bold;
 }
 
@@ -459,14 +459,12 @@ TD.toprow, TH.toprow
 	color: #fff;
 	font-weight: bold;
 	background: #a82709;
-	background-image: url('images/par-head.png');
-	background-repeat: repeat-x;
 	padding: 6px;
 	font-size: 12px;
 }
 
-TD.tableborder	  
-{ 
+TD.tableborder
+{
 	background-color: #c0c0c0;
 }
 
@@ -480,14 +478,14 @@ TD.tableborder
 
 /* Link Properties */
 
-a                         { text-decoration: underline; font-size: 11px; color: #a33; }  
+a                         { text-decoration: underline; font-size: 11px; color: #a33; }
 a:link                    { text-decoration: underline; font-size: 11px; color: #a33; }
 a:visited                 { text-decoration: underline; font-size: 11px; color: #a33; }
-a:hover                   { text-decoration: none; font-size: 11px; color: #f00; } 
+a:hover                   { text-decoration: none; font-size: 11px; color: #f00; }
 
 /* Form elements */
 
-input, textarea, select 
+input, textarea, select
 {
   color : #000000;
   font-size : 12px;

@@ -12,7 +12,7 @@ from twisted.application import internet
 
 from buildbot import interfaces, util
 from buildbot import version
-from buildbot.sourcestamp import SourceStamp
+#from buildbot.sourcestamp import SourceStamp
 from buildbot.status import base
 from buildbot.status.builder import SUCCESS, WARNINGS, FAILURE, EXCEPTION, SKIPPED
 from buildbot import scheduler
