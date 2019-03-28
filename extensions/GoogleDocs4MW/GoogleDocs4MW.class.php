@@ -5,7 +5,7 @@
  *
  * @file
  * @ingroup Extensions
- * @version 1.3
+ * @version 1.2
  * @author Jack Phoenix <jack@shoutwiki.com>
  * @copyright © 2008-2015 Jack Phoenix
  * @license http://www.gnu.org/copyleft/gpl.html GNU General Public License 2.0 or later
@@ -29,8 +29,8 @@ class GoogleDocs4MW {
 				intval( $width ) . '" height="' .
 				intval( $height ) . '" style="' .
 				htmlspecialchars( $style, ENT_QUOTES ) .
-				'" src="//docs.google.com/spreadsheets/d/' . $key .
-				'/pubhtml"></iframe>';
+				'" src="http://spreadsheets.google.com/pub?key=' . $key .
+				'&output=html&widget=true"></iframe>';
 
 		return $output;
 	}

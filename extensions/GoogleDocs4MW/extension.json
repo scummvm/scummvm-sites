@@ -4,7 +4,7 @@
 	"author": [
 		"Jack Phoenix"
 	],
-	"license-name": "GPL-2.0+",
+	"license-name": "GPL-2.0-or-later",
 	"url": "https://www.mediawiki.org/wiki/Extension:GoogleDocs4MW",
 	"descriptionmsg": "googledocs4mw-desc",
 	"type": "parserhook",
