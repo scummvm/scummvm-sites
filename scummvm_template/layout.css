@@ -1,6 +1,6 @@
 body {
-  background-image: url('./images/body-bg.png'); margin: 10px;
-  background-color: #efc418;	
+  margin: 10px;
+  background-color: #cc6600;
 	background-repeat: repeat-x;
 }
 
@@ -10,45 +10,45 @@ body, table {
 	font-weight: normal;
 }
 
-table            
+table
 {
-font-size: 10px; 
+font-size: 10px;
 color: #000000;
 }
 
 td, th
 {
-font-size: 9pt; 
+font-size: 9pt;
 color: #000000;
 }
 
-.smalltext       
-{ 
-font-size : 10px; 
+.smalltext
+{
+font-size : 10px;
 color: #000000;
 }
 
-.mediumtext      
-{ 
-font-size : 11px; 
+.mediumtext
+{
+font-size : 11px;
 color: #000000;
 }
 
-.largetext       
-{ 
-font-size : 13px; 
+.largetext
+{
+font-size : 13px;
 color: #000000;
 }
 
-.catrowtext      
-{ 
+.catrowtext
+{
 	font-weight: bold;
 	font-size: 13px;
 	color: #444444;
 }
 
-.toprowtext      
-{ 
+.toprowtext
+{
 	color: #fff;
 	font-size: 12px;
 	font-weight: bold;
@@ -57,30 +57,30 @@ color: #000000;
 /* Cell Properties */
 
 TD.row1
-{ 
+{
 	background-color: #e8e7e7;
-	font-size : 13px; 
+	font-size : 13px;
 	color: #494957
-}     
-     
+}
+
 TD.row2	        /* ugly colors, to look which html uses them still - should have removed all occurences now */
-{ 
+{
 	background-color: #00FF00;
-	font-size : 12px; 
+	font-size : 12px;
 	color: #FF00FF
 }
 
 TD.row3
-{ 
+{
 	background-color: #FFFFFF;
-	font-size : 12px; 
+	font-size : 12px;
 	color: #494957
 }
 
 TD.catrow
-{ 
+{
 	/* font-family: Verdana; */
-font-size : 12px; 
+font-size : 12px;
 font-weight: bold;
 }
 
@@ -96,17 +96,17 @@ TD.toprow, TH.toprow
 	font-size: 12px;
 }
 
-TD.tableborder	  
-{ 
+TD.tableborder
+{
 	background-color: #c0c0c0;
 }
 
 /* Link Properties */
 
-a                         { text-decoration: underline; font-size: 11px; color: #002bb8; }  
+a                         { text-decoration: underline; font-size: 11px; color: #002bb8; }
 a:link                    { text-decoration: underline; font-size: 11px; color: #002bb8; }
 a:visited                 { text-decoration: underline; font-size: 11px; color: #5a3696; }
-a:hover                   { text-decoration: none; font-size: 11px; } 
+a:hover                   { text-decoration: none; font-size: 11px; }
 
 a.new               { font-style: italic; }
 a.new:link          { font-style: italic; color: #a33 }
@@ -116,7 +116,7 @@ span.editsection a { color: #002bb8 }
 
 /* Form elements */
 
-input, textarea, select 
+input, textarea, select
 {
   color : #000000;
   font-size : 12px;
@@ -236,7 +236,7 @@ width: 100%;
 	margin: 0px;
 	overflow: hidden;
 	padding-top: 10px;
-	
+
 }
 * html .rbcontent{height:840px}
 .rbcontent .rbwrapper {
@@ -262,14 +262,14 @@ width: 100%;
 	padding: 10px;
 	position: relative;
 	text-align: center;
-} 
+}
 
 #footer a {
 	float: left;
 	width: 16%;
 } */
 
-#f-list { 
+#f-list {
 list-style:none;
 display: block;
 	position: relative;
@@ -367,18 +367,18 @@ display: block;
 	margin-right: 2em;
 }
 .prefsection legend {
-	font-weight: bold;   
+	font-weight: bold;
 }
 .prefsection table, .prefsection legend {
 	background-color: #F9F9F9;
 }
 
-/* Syntax highloighting (GeSHi) display */ 
-div.mw-geshi { 
-    padding: 0.6em; 
-    margin: 1em 0; 
-    border: 1px solid #bbbbbb; 
-    background: #fffaf0; 
+/* Syntax highloighting (GeSHi) display */
+div.mw-geshi {
+    padding: 0.6em;
+    margin: 1em 0;
+    border: 1px solid #bbbbbb;
+    background: #fffaf0;
 }
 
 /*
@@ -466,17 +466,17 @@ h1, h2, h3, h4, h5, h6 {
 	/*border-bottom: 1px solid #aaa;*/
 }
 
-h3 a:link, h3 a:visited, h3 a:hover, h4 a:link, h4 a:visited, h4 a:hover { 
+h3 a:link, h3 a:visited, h3 a:hover, h4 a:link, h4 a:visited, h4 a:hover {
 	text-decoration:none;
 	color: black;
 	background: none;
-} 
-h3 a:link, h3 a:visited, h3 a:hover { 
+}
+h3 a:link, h3 a:visited, h3 a:hover {
 	font-size: 188%;
-} 
-h4 a:link, h4 a:visited, h4 a:hover { 
+}
+h4 a:link, h4 a:visited, h4 a:hover {
 	font-size: 150%;
-} 
+}
 h1 { font-size: 150%; }
 h1 .editsection { font-size: 53%; }
 h2 { font-size: 125%; }
@@ -505,17 +505,17 @@ img { border: none; }
 
 /* thumbnails */
 
-div.thumb { 
-   margin-bottom: .5em; 
-   border-style: solid; 
-   border-color: white; 
-   width: auto; 
-} 
-div.tright { 
-   clear: right; 
-   float: right; 
-   border-width: .5em 0 .8em 1.4em; 
-} 
+div.thumb {
+   margin-bottom: .5em;
+   border-style: solid;
+   border-color: white;
+   width: auto;
+}
+div.tright {
+   clear: right;
+   float: right;
+   border-width: .5em 0 .8em 1.4em;
+}
 
 div.thumbinner {
 	border: 1px solid #ccc;
