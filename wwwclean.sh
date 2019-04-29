@@ -9,14 +9,14 @@
 KEEP_N_DAYS=14
 
 # Directory that snapshot builds are kept in.
-SNAPSHOT_DIR=/var/www/buildbot/snapshots/
+SNAPSHOT_DIR=/.0/frs/snapshots/
 
 # Iterate across snapshot directories, removing older builds..
 # BUT skipping removal if they are the only remaining build.
 for snapsubdir in `find ${SNAPSHOT_DIR} -type d`; do
 	if [ ${snapsubdir} != ${SNAPSHOT_DIR} ]; then
 		# If number of builds determined by native build name
-		# is greater than 2, remove older ones ie. Just current and symlink 
+		# is greater than 2, remove older ones ie. Just current and symlink
 		# will be left
 		NATIVE_BUILD="debian-x86-`basename ${snapsubdir}`"
 		NUM_OF_BUILDS=`find ${snapsubdir}/${NATIVE_BUILD}-* | wc -l`
