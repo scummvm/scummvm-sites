@@ -76,6 +76,7 @@ add_platform("n64", "n64", "Nintendo 64", "0", "tar.xz");
 add_platform("ds", "ds", "Nintendo DS", "0", "tar.xz");
 add_platform("gc", "gamecube", "Nintendo Gamecube", "0", "tar.xz");
 add_platform("wii", "wii", "Nintendo Wii", "0", "tar.xz");
+add_platform("switch", "switch", "Nintendo Switch", "0", "zip");
 add_platform("caanoo", "caanoo", "GamePark Caanoo", "0", "tar.bz2");
 add_platform("gcw0", "gcw0", "GCW-Zero", "0", "tar.bz2");
 add_platform("gp2x", "gp2x", "GamePark GP2X", "0", "tar.bz2");
