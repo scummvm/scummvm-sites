@@ -10,10 +10,17 @@
 		height: 58px;
 		width: 100%;
 		margin: 0;
-		padding: 0;		
-	}
+		padding: 0;
+  }
+  .site-description {
+    height: 58px;
+  }
+  .affiliate {
+    width: 100%;
+    text-align: center;
+  }
 	.logo {
-		display: block;		
+		display: block;
 		padding: 0;
 		position: relative;
 		top: 38px;
@@ -35,7 +42,7 @@
 		margin: 0;
 	}
 	html {
-		background: url("./styles/scummvm2/theme/images/scummvm_logo.png") center top no-repeat #d2730a;    
+		background: url("./styles/scummvm2/theme/images/scummvm_logo.png") center top no-repeat #d2730a;
 		background-size: 150px;
 	}
 	.online {

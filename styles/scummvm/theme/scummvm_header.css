@@ -1,38 +1,54 @@
 /* Header */
- 
-   .scummvm {
-    font-family: Trebuchet MS, sans-serif;
-    line-height: 19px;
+
+.scummvm {
+  font-family: Trebuchet MS, sans-serif;
+  line-height: 19px;
+  font-size: 15px;
+  font-size: 1.4vw;
+  white-space: nowrap;
+  margin-right: 13px;
+  margin-top: 5px;
+  text-align: justify;
+  letter-spacing: 1.5px;
+}
+.affiliate {
+  float: right;
+  padding: 8px;
+  color: rgb(76, 93, 119);
+}
+@media (max-width: 571.4285714286px) {
+  .scummvm {
+    font-size: 8px;
+  }
+}
+@media (min-width: 1071.4285714286px) {
+  .scummvm {
     font-size: 15px;
-    font-size: 1.4vw;
-    white-space: nowrap;
-    margin-right: 13px;
-    margin-top: 5px;
-    text-align: justify;
-    letter-spacing: 1.5px; }
-    @media (max-width: 571.4285714286px) {
-       .scummvm {
-        font-size: 8px; } }
-    @media (min-width: 1071.4285714286px) {
-       .scummvm {
-        font-size: 15px; } }
-   .logo {
-    position: relative;
-		z-index: 110;
-		padding-top: 15px;
-		padding-left: 0px; }
-     .logo img {
-      position: absolute;
-      max-width: 280px; }
-       .logo img.foreground {
-        filter: drop-shadow(1px 1px 2px black);
-        bottom: 0; }
-        @media (max-width: 640px) {
-           .logo img.foreground {
-            max-width: 150px;            
-            margin-left: 8px; } }
-       .logo img.background {
-        opacity: 0.2;
-        bottom: 30px;
-        left: 12px;
-        filter: grayscale(100%); }
+  }
+}
+.logo {
+  position: relative;
+  z-index: 110;
+  padding-top: 15px;
+  padding-left: 0px;
+}
+.logo img {
+  position: absolute;
+  max-width: 280px;
+}
+.logo img.foreground {
+  filter: drop-shadow(1px 1px 2px black);
+  bottom: 0;
+}
+@media (max-width: 640px) {
+  .logo img.foreground {
+    max-width: 150px;
+    margin-left: 8px;
+  }
+}
+.logo img.background {
+  opacity: 0.2;
+  bottom: 30px;
+  left: 12px;
+  filter: grayscale(100%);
+}
