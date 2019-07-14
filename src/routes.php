@@ -28,7 +28,7 @@ return function (App $app) {
             );
 
             $app->get(
-                '/token', function (Request $request, Response $response, array $args) use ($app, $dropbox) {
+                '/token', function (Request $request, Response $response, array $args) use ($app, $dropbox, $container) {
                     $code = $request->getQueryParam('code');
                     $client = new \GuzzleHttp\Client();
                     $res = $client->request(
@@ -52,9 +52,9 @@ return function (App $app) {
                     $this->random = new PragmaRX\Random\Random();
                     $shortcode = $this->random->size(6)->get();
                     $client = new Predis\Client();
-                    $client->set("cloud-{$shortcode}", $json['access_token']);
-                    $client->expire($shortcode, 600);
-                    return $response->withJson(['shortcode' => $shortcode, 'token' => $json['access_token']]);
+                    $client->set("cloud-dropbox-{$shortcode}", $json['access_token']);
+                    $client->expire("cloud-dropbox-{$shortcode}", 600);
+                    return $container->get('renderer')->render($response, 'token.phtml', ['shortcode' => $shortcode]);
                 }
             );
 
@@ -62,7 +62,7 @@ return function (App $app) {
                 '/token/{shortcode}', function (Request $request, Response $response, $args) {
                     $client = new Predis\Client();
                     $shortcode = $args['shortcode'];
-                    $token = $client->get("cloud-{$shortcode}");
+                    $token = $client->get("cloud-dropbox-{$shortcode}");
                     return $response->withJson(['shortcode' => $shortcode, 'token' => $token]);
                 }
             );

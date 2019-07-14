@@ -62,3 +62,7 @@ a.link > img {
 a.link > b {
     font-size: 16px;
 }
+
+.shortcode {
+  font-family: monospace;
+}
