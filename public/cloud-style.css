@@ -1,0 +1,64 @@
+html {
+    background: #c60;
+}
+
+.container {
+    width: 80%;
+    max-width: 600pt;
+    margin: 0 auto;
+}
+
+.header {
+    padding: 10pt;
+    margin-bottom: 0;
+}
+
+.content {
+    padding: 8pt;
+    background: #FFF;
+    font-family: 'verdana', 'tahoma', 'arial', 'helvetica', sans-serif;
+    font-size: 16pt;
+}
+
+.content p {
+    margin: 0 0 6pt 0;
+}
+
+.links-list {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+a { color: #434343; }
+
+a:hover { color: #0080FF; }
+
+a.link {
+    display: inline-block;
+    /* 50% is interesting too */
+    min-width: calc(25% - 2*10pt);
+    width: calc(25% - 2*10pt);
+    height: calc(25% - 2*10pt);
+    padding: 10pt;
+    margin: 0;
+    border: 0;
+    /*margin-left: 10px;*/
+    /*border: 2px solid #CCC;*/
+    text-decoration: none;
+    text-align: center;
+}
+
+a.link:hover {
+    background: #F3F3F3;
+}
+
+a.link > img {
+    display: block;
+    max-width: 85%;
+    margin: 0 auto 10px;
+}
+
+a.link > b {
+    font-size: 16px;
+}
