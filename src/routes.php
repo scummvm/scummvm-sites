@@ -63,7 +63,7 @@ return function (App $app) {
                     $client = new Predis\Client();
                     $shortcode = $args['shortcode'];
                     $token = $client->get("cloud-dropbox-{$shortcode}");
-                    return $response->withJson(['shortcode' => $shortcode, 'token' => $token]);
+                    return $response->withJson(['error' => false, 'access_token' => $token]);
                 }
             );
         }
