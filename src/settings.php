@@ -19,7 +19,7 @@ return [
         // Dropbox settings
         'dropbox' => [
           'client_id' => 'vgij09edeilbrtm',
-          'client_secret' => isset($_ENV['DROPBOX_SECRET']) ? $_ENV['DROPBOX_SECRET'] : '',
+          'client_secret' => getenv('DROPBOX_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/dropbox/token',
           'auth_uri' => 'https://www.dropbox.com/1/oauth2/authorize',
           'token_uri' => 'https://api.dropboxapi.com/oauth2/token',
@@ -29,7 +29,7 @@ return [
         // Box settings
         'box' => [
           'client_id' => 'ep9cz17to1wakzqbq2a5jn5u01b0omxw',
-          'client_secret' => isset($_ENV['BOX_SECRET']) ? $_ENV['BOX_SECRET'] : '',
+          'client_secret' => getenv('BOX_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/box/token',
           'auth_uri' => 'https://www.dropbox.com/1/oauth2/authorize',
           'token_uri' => 'https://api.dropboxapi.com/oauth2/token',
@@ -39,7 +39,7 @@ return [
         // Google Drive settings
         'google_drive' => [
           'client_id' => '102752616291108817673',
-          'client_secret' => isset($_ENV['GOOGLE_DRIVE_SECRET']) ? $_ENV['GOOGLE_DRIVE_SECRET'] : '',
+          'client_secret' => getenv('GOOGLE_DRIVE_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/google_drive/token',
           'auth_uri' => 'https://accounts.google.com/o/oauth2/auth',
           'token_uri' => 'https://oauth2.googleapis.com/token',
@@ -49,7 +49,7 @@ return [
         // Onedrive settings
         'onedrive' => [
           'client_id' => '12c88b6d-3037-4c0c-9076-cc4205cfb1d0',
-          'client_secret' => isset($_ENV['ONEDRIVE_SECRET']) ? $_ENV['ONEDRIVE_SECRET'] : '',
+          'client_secret' => getenv('ONEDRIVE_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/onedrive/token',
           'auth_uri' => 'https://www.dropbox.com/1/oauth2/authorize',
           'token_uri' => 'https://api.dropboxapi.com/oauth2/token',
