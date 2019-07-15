@@ -35,7 +35,7 @@ function getCloudProviderAndScope($cloudProviderName, $container)
             'accessType'        => 'offline',
             ]
         );
-        $scope = [ 'scope' => [ 'https://www.googleapis.com/auth/drive.appfolder' ] ];
+        $scope = [ 'scope' => [ 'https://www.googleapis.com/auth/drive.file' ] ];
         break;
     case 'onedrive':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Microsoft(
