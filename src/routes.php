@@ -4,7 +4,7 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-function getCloudProviderAndScope($cloudProviderName, $container)
+function getCloudProvider($cloudProviderName, $container)
 {
     $oauth = $container->get('settings')[$cloudProviderName];
     switch ($cloudProviderName) {
@@ -32,27 +32,28 @@ function getCloudProviderAndScope($cloudProviderName, $container)
             'clientId'          => $oauth['client_id'],
             'clientSecret'      => $oauth['client_secret'],
             'redirectUri'       => $oauth['redirect_uri'],
-            'accessType'   => 'offline',
+            'scope'             => [ 'https://www.googleapis.com/auth/drive.appfolder' ],
+            'accessType'        => 'offline',
             ]
         );
-        $scope = [ 'scope' => [ 'https://www.googleapis.com/auth/drive.appfolder' ] ];
+        $scope = [  ];
         break;
     case 'onedrive':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Microsoft(
             [
             'clientId'          => $oauth['client_id'],
             'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri']
+            'redirectUri'       => $oauth['redirect_uri'],
+            'scope'             => [ 'wl.basic', 'wl.signin', 'Files.ReadWrite.AppFolder', 'offline_access'],
             ]
         );
-        $scope = [ 'scope' => [ 'wl.basic', 'wl.signin', 'Files.ReadWrite.AppFolder', 'offline_access' ] ];
         break;
     default:
         return;
       break;
     }
 
-    return [ 'provider' => $provider, 'scope' => $scope ];
+    return $provider;
 }
 
 return function (App $app) {
@@ -71,16 +72,16 @@ return function (App $app) {
     $app->get(
         '/{cloud}', function (Request $request, Response $response, array $args) use ($container) {
             $cloud = $args['cloud'];
-            $providerAndScope = getCloudProviderAndScope($cloud, $container);
+            $provider = getCloudProvider($cloud, $container);
 
-            if (!isset($providerAndScope)) {
+            if (!isset($provider)) {
                 return $response->withJson(['error' => true, 'message' => 'Unknown cloud provider']);
             }
 
             if (!isset($_GET['code'])) {
                 // If we don't have an authorization code then get one
-                $authUrl = $providerAndScope['provider']->getAuthorizationUrl($providerAndScope['scope']);
-                $_SESSION['oauth2state'] = $providerAndScope['provider']->getState();
+                $authUrl = $provider->getAuthorizationUrl();
+                $_SESSION['oauth2state'] = $provider->getState();
 
                 return $response->withRedirect($authUrl);
 
@@ -93,7 +94,7 @@ return function (App $app) {
             } else {
 
                 // Try to get an access token (using the authorization code grant)
-                $token = $providerAndScope['provider']->getAccessToken(
+                $token = $provider->getAccessToken(
                     'authorization_code', [
                     'code' => $_GET['code']
                     ]
@@ -132,17 +133,17 @@ return function (App $app) {
     $app->get(
         '/{cloud}/refresh', function (Request $request, Response $response, $args) use ($container) {
 
-            $providerAndScope = getCloudProviderAndScope($args['cloud'], $container);
+            $provider = getCloudProvider($args['cloud'], $container);
 
             if (!isset($_GET['code'])) {
                 return $response->withJson(['error' => true, 'message' => 'Missing code query parameter']);
             }
 
-            if (!isset($providerAndScope)) {
+            if (!isset($provider)) {
                 return $response->withJson(['error' => true, 'message' => 'Unknown cloud provider']);
             }
 
-            $token = $providerAndScope['provider']->getAccessToken(
+            $token = $provider->getAccessToken(
                 'refresh_token', [
                 'refresh_token' => $_GET['code']
                 ]
