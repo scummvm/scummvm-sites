@@ -20,7 +20,7 @@ return [
         'dropbox' => [
           'client_id' => 'vgij09edeilbrtm',
           'client_secret' => getenv('DROPBOX_SECRET'),
-          'redirect_uri' => 'https://cloud.scummvm.org/dropbox/token',
+          'redirect_uri' => 'https://cloud.scummvm.org/dropbox',
         ],
 
         // Box settings
