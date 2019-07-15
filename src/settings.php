@@ -32,7 +32,7 @@ return [
 
         // Google Drive settings
         'gdrive' => [
-          'client_id' => 'AIzaSyBbhRYGs1Xi_RxNMRu_Jhh3tQne2Ipgzfc',
+          'client_id' => '201747806507-m6mclc7ijtp0v1fbj2qqehrdoh3uhofp.apps.googleusercontent.com',
           'client_secret' => getenv('GOOGLE_DRIVE_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/gdrive',
         ],
