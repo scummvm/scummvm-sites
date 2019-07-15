@@ -31,7 +31,8 @@ function getCloudProviderAndScope($cloudProviderName, $container)
             [
             'clientId'          => $oauth['client_id'],
             'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri']
+            'redirectUri'       => $oauth['redirect_uri'],
+            'accessType'   => 'offline',
             ]
         );
         $scope = [ 'scope' => [ 'https://www.googleapis.com/auth/drive.appfolder' ] ];
