@@ -7,6 +7,7 @@ use Slim\Http\Response;
 function getCloudProviderAndScope($cloudProviderName, $container)
 {
     $oauth = $container->get('settings')[$cloudProviderName];
+    $scope = [];
     switch ($cloudProviderName) {
     case 'dropbox':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Dropbox(
@@ -91,33 +92,32 @@ return function (App $app) {
                 return $response->withJson(['error' => true, 'message' => 'Invalid state']);
 
             } else {
+                try {
+                    // Try to get an access token (using the authorization code grant)
+                    $token = $providerAndScope['provider']->getAccessToken(
+                        'authorization_code', [
+                        'code' => $_GET['code']
+                        ]
+                    );
 
-                // Try to get an access token (using the authorization code grant)
-                $token = $providerAndScope['provider']->getAccessToken(
-                    'authorization_code', [
-                    'code' => $_GET['code']
-                    ]
-                );
+                    $this->random = new PragmaRX\Random\Random();
+                    $shortcode = $this->random->size(6)->get();
+                    $client = new Predis\Client();
+                    $client->set("cloud-{$cloud}-{$shortcode}", json_encode($token));
+                    $client->expire("cloud-{$cloud}-{$shortcode}", 600);
+                    return $container->get('renderer')->render($response, 'token.phtml', ['shortcode' => $shortcode]);
+                }
+                catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+                    return $response->withJson(['error' => true, 'message' => $e->getMessage()]);
+                }
 
-
-                // Use this to interact with an API on the users behalf
-                // echo $token->getToken();
-
-                $this->random = new PragmaRX\Random\Random();
-                $shortcode = $this->random->size(6)->get();
-                $client = new Predis\Client();
-                $client->set("cloud-{$cloud}-{$shortcode}", json_encode($token));
-                $client->expire("cloud-{$cloud}-{$shortcode}", 600);
-                return $container->get('renderer')->render($response, 'token.phtml', ['shortcode' => $shortcode]);
             }
         }
     );
 
     $app->get(
         '/{cloud}/token/{shortcode}', function (Request $request, Response $response, $args) {
-
             $cloud = $args['cloud'];
-
             $client = new Predis\Client();
             $shortcode = $args['shortcode'];
             $token = json_decode($client->get("cloud-{$cloud}-{$shortcode}"), true);
@@ -142,14 +142,19 @@ return function (App $app) {
                 return $response->withJson(['error' => true, 'message' => 'Unknown cloud provider']);
             }
 
-            $token = $providerAndScope['provider']->getAccessToken(
-                'refresh_token', [
-                'refresh_token' => $_GET['code']
-                ]
-            );
+            try {
+                $token = $providerAndScope['provider']->getAccessToken(
+                    'refresh_token', [
+                    'refresh_token' => $_GET['code']
+                    ]
+                );
 
-            // $json = json_decode(json_encode($token), true);
-            return $response->withJson(['error' => false, 'oauth' => $token]);
+                // $json = json_decode(json_encode($token), true);
+                return $response->withJson(['error' => false, 'oauth' => $token]);
+            }
+            catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+                return $response->withJson(['error' => true, 'message' => $e->getMessage()]);
+            }
         }
     );
 
