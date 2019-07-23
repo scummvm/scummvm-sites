@@ -125,6 +125,7 @@ return function (App $app) {
             if (!isset($token)) {
                 return $response->withJson(['error' => true, 'message' => 'Token not found']);
             }
+            $client->delete("cloud-{$cloud}-{$shortcode}");
             return $response->withJson(['error' => false, 'oauth' => $token]);
         }
     );
@@ -134,7 +135,7 @@ return function (App $app) {
 
             $providerAndScope = getCloudProviderAndScope($args['cloud'], $container);
 
-            if (!isset($_GET['code'])) {
+            if ($request->hasHeader('X-ScummVM-Refresh-Token')) {
                 return $response->withJson(['error' => true, 'message' => 'Missing code query parameter']);
             }
 
@@ -145,7 +146,7 @@ return function (App $app) {
             try {
                 $token = $providerAndScope['provider']->getAccessToken(
                     'refresh_token', [
-                    'refresh_token' => $_GET['code']
+                    'refresh_token' => $request->getHeaderLine('X-ScummVM-Refresh-Token')
                     ]
                 );
 

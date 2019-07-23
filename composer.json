@@ -1,14 +1,13 @@
 {
-    "name": "slim/slim-skeleton",
-    "description": "A Slim Framework skeleton application for rapid development",
-    "keywords": ["microframework", "rest", "router", "psr7"],
-    "homepage": "http://github.com/slimphp/Slim-Skeleton",
+    "name": "scummvm/cloud",
+    "description": "ScummVM Cloud Auth portal",
+    "keywords": ["scummvm"],
+    "homepage": "https://cloud.scummvm.org",
     "license": "MIT",
     "authors": [
         {
-            "name": "Josh Lockhart",
-            "email": "info@joshlockhart.com",
-            "homepage": "http://www.joshlockhart.com/"
+          "name": "Matan Bareket",
+          "email": "mataniko@scummvm.org"
         }
     ],
     "require": {
@@ -16,6 +15,7 @@
         "guzzlehttp/guzzle": "^6.3",
         "league/oauth2-google": "^3.0",
         "monolog/monolog": "^1.17",
+        "nikolaposa/rate-limit": "^1.0",
         "pragmarx/random": "^0.2.2",
         "predis/predis": "^1.1",
         "slim/php-view": "^2.0",

@@ -4,13 +4,14 @@ html {
 
 .container {
     width: 80%;
-    max-width: 600pt;
+    max-width: 500pt;
     margin: 0 auto;
 }
 
 .header {
     padding: 10pt;
     margin-bottom: 0;
+    text-align: center;
 }
 
 .content {
@@ -22,6 +23,7 @@ html {
 
 .content p {
     margin: 0 0 6pt 0;
+    text-align: center;
 }
 
 .links-list {
@@ -36,15 +38,12 @@ a:hover { color: #0080FF; }
 
 a.link {
     display: inline-block;
-    /* 50% is interesting too */
     min-width: calc(25% - 2*10pt);
     width: calc(25% - 2*10pt);
     height: calc(25% - 2*10pt);
     padding: 10pt;
     margin: 0;
     border: 0;
-    /*margin-left: 10px;*/
-    /*border: 2px solid #CCC;*/
     text-decoration: none;
     text-align: center;
 }
@@ -60,9 +59,15 @@ a.link > img {
 }
 
 a.link > b {
-    font-size: 16px;
+    font-size: 16pt;
 }
 
 .shortcode {
   font-family: monospace;
+}
+
+@media only screen and (max-width: 640px) {
+  a.link > b {
+    font-size: 10pt;
+}
 }
