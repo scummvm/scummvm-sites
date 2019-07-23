@@ -135,8 +135,8 @@ return function (App $app) {
 
             $providerAndScope = getCloudProviderAndScope($args['cloud'], $container);
 
-            if ($request->hasHeader('X-ScummVM-Refresh-Token')) {
-                return $response->withJson(['error' => true, 'message' => 'Missing code query parameter']);
+            if (!$request->hasHeader('X-ScummVM-Refresh-Token')) {
+                return $response->withJson(['error' => true, 'message' => 'Missing refresh token']);
             }
 
             if (!isset($providerAndScope)) {
