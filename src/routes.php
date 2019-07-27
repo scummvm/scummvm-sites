@@ -125,7 +125,7 @@ return function (App $app) {
             if (!isset($token)) {
                 return $response->withJson(['error' => true, 'message' => 'Token not found']);
             }
-            $client->delete("cloud-{$cloud}-{$shortcode}");
+            $client->del("cloud-{$cloud}-{$shortcode}");
             return $response->withJson(['error' => false, 'oauth' => $token]);
         }
     );
