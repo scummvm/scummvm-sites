@@ -1,0 +1,9 @@
+/cache/*.spc
+/custom/people.opml.bak
+/admin/inc/pwd.inc.php
+
+/vendor/
+/tests/_output/*
+
+/nbproject/private/
+/.idea/

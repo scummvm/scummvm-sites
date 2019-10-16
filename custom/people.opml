@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<opml version="1.1">
+<head>
+<title>ScummVM Planet</title>
+<dateCreated>2019-10-16T10:22:19-04:00</dateCreated>
+<dateModified>2019-10-16T10:22:19-04:00</dateModified>
+</head>
+<body>
+<outline text="RichieSam&#039;s Adventures in Code-ville" htmlUrl="https://richiesams.blogspot.com/" xmlUrl="https://richiesams.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="ScummVm GSoC 2019" htmlUrl="https://pantherengine.wordpress.com/" xmlUrl="https://pantherengine.wordpress.com/feed/" isDown=""/>
+<outline text="Strangerke&#039;s Sandbox" htmlUrl="https://strangerke.blogspot.com/" xmlUrl="https://strangerke.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="WinterGrascph GSoC" htmlUrl="https://wintergsoc.blogspot.com/" xmlUrl="https://wintergsoc.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Iskrich." htmlUrl="https://iskrich.wordpress.com/" xmlUrl="https://iskrich.wordpress.com/feed/" isDown=""/>
+<outline text="SummerMute" htmlUrl="https://summermute2012.blogspot.com/" xmlUrl="https://summermute2012.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Sev&#039;s ScummVM notes" htmlUrl="https://sev-notes.blogspot.com/" xmlUrl="https://sev-notes.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Lost Souls&#039; Alliance Headquarters" htmlUrl="https://lostsoulsalliance.wordpress.com/" xmlUrl="https://lostsoulsalliance.wordpress.com/feed/" isDown=""/>
+<outline text="Groovie, baby" htmlUrl="https://t7gre.blogspot.com/" xmlUrl="https://t7gre.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Google Summer of Code - Vyzigold" htmlUrl="https://vyzigold-gsoc.blogspot.com/" xmlUrl="https://vyzigold-gsoc.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="LordHoto&#039;s World" htmlUrl="https://lordhoto.blogspot.com/" xmlUrl="https://lordhoto.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Nipun Garg" htmlUrl="https://nipungarg.me/" xmlUrl="https://nipungarg.me/feed.xml" isDown=""/>
+<outline text="Dreammaster&#039;s disassembly blog" htmlUrl="https://dm-notes.blogspot.com/" xmlUrl="https://dm-notes.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="ResidualVM news" htmlUrl="https://www.residualvm.org/" xmlUrl="https://www.residualvm.org/feeds/atom/" isDown=""/>
+<outline text="sanguinehearts" htmlUrl="https://sanguinehearts.blogspot.com/" xmlUrl="https://sanguinehearts.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="ScummVM news" htmlUrl="http://www.scummvm.org/" xmlUrl="https://www.scummvm.org/feeds/atom/" isDown=""/>
+<outline text="Gobsmacked" htmlUrl="https://drmccoy.de/gobsmacked" xmlUrl="https://drmccoy.de/gobsmacked/?feed=rss2" isDown=""/>
+<outline text="Criezy&#039;s Blog" htmlUrl="https://criezy.blogspot.com/" xmlUrl="https://criezy.blogspot.com/feeds/posts/default" isDown=""/>
+<outline text="Tkachov — GSoC blog" htmlUrl="http://tkachov.ru/gsoc/" xmlUrl="http://tkachov.ru/gsoc/rss.php" isDown=""/>
+<outline text="ScummVM Music – Gaming &amp; Technology" htmlUrl="https://www.jameswoodcock.co.uk/" xmlUrl="https://www.jameswoodcock.co.uk/?feed=rss2&amp;cat=12" isDown=""/>
+</body>
+</opml>

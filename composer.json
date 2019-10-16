@@ -1,0 +1,35 @@
+{
+    "name": "mauricesvay/moonmoon",
+    "description": "Moonmoon is a simple feed aggregator.",
+    "homepage": "http://moonmoon.org/",
+    "type": "project",
+    "license": "BSD",
+    "authors": [
+        {
+            "name": "Maurice Svay",
+            "email": "maurice@svay.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^5.6 || ^7.0",
+        "mustangostang/spyc": "0.5.1",
+        "simplepie/simplepie": "^1.5",
+        "paragonie/random_compat": "^2.0"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "^6.3",
+        "phpunit/phpunit": "^5.7 || ^6.2"
+    },
+    "scripts": {
+        "test": ""
+    },
+    "autoload": {
+        "psr-0": {
+            "": "app/classes/"
+        },
+        "files": [
+            "app/helpers.php"
+        ]
+    }
+}

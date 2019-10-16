@@ -1,9 +1,0 @@
-<!--
-Description:  missing title
-Expect:       title_detail.value == ''
--->
-
-<feed xmns="http://www.w3.org/2005/Atom">
-  <entry>
-  </entry>
-</feed>

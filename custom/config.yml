@@ -1,0 +1,19 @@
+---
+url: https://planet.scummvm.org/
+name: ScummVM Planet
+locale: en
+items: 10
+shuffle: 0
+refresh: 3600
+cache: 50
+nohtml: 0
+postmaxlength: 0
+categories:
+cachedir: ./cache
+debug: false
+checkcerts: true
+
+# Offline feeds
+# <outline text="Antonio Roman (Offline)" htmlUrl="" xmlUrl="https://kyranet.home.blog/" isDown="1"/>
+# <outline text="DJWillis (Offline)" htmlUrl="" xmlUrl="http://www.distant-earth.com/wp" isDown="1"/>
+# <outline text="Max Horn (Offline)" htmlUrl="" xmlUrl="https://www.quendi.de/en/" isDown="1"/>

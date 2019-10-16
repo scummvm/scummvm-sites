@@ -1,0 +1,43 @@
+language: php
+
+php:
+- 5.5
+- 5.6
+- 7.0
+- 7.1
+- 7.2
+- nightly
+
+matrix:
+  allow_failures:
+  - php: 5.5
+  - php: nightly
+
+dist: trusty
+
+install:
+- composer install
+
+before_deploy:
+- tar czvf moonmoon-$TRAVIS_TAG.tgz --exclude ".git" *
+
+before_script:
+- if [[ "$TRAVIS_PHP_VERSION" =~ '^[0-9]' ]]; then phpenv config-rm xdebug.ini; fi
+- if [ "$TRAVIS_PHP_VERSION" != "hhvm" ]; then (php  -S 127.0.0.1:8081 >& /dev/null &); fi
+- if [ "$TRAVIS_PHP_VERSION"  = "hhvm" ]; then (hhvm -m server -p 8081 >& /dev/null &); fi
+
+script:
+  vendor/bin/phpunit
+
+cache:
+  directories:
+    - $HOME/.composer/cache/files
+
+# deploy:
+#  provider: releases
+#  skip_cleanup: true
+#  file: moonmoon-$TRAVIS_TAG.tgz
+#  api_key:
+#    secure: CHANGE-YOUR-KEY
+#  on:
+#    tags: true
