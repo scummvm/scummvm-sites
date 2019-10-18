@@ -1,4 +1,21 @@
 <?php
+// Redirect to rss and atom feeds
+$request = $_SERVER['REQUEST_URI'];
+
+switch ($request) {
+    case '/atom.xml' :
+        require __DIR__ . '/atom.php';
+        die();
+        break;
+    case '/rss20.xml' :
+    case '/rss.xml' :
+        require __DIR__ . '/rss.php';
+        die();
+        break;
+    default:
+        break;
+}
+
 include_once(__DIR__.'/app/app.php');
 include_once(__DIR__.'/app/lib/Cache.php');
 

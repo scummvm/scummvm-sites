@@ -30,7 +30,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
         <link rel="alternate" href="<?=htmlspecialchars($item->get_permalink())?>"/>
         <published><?=$item->get_date('Y-m-d\\TH:i:s+00:00')?></published>
         <updated><?=$item->get_date('Y-m-d\\TH:i:s+00:00')?></updated>
-        <author><name><?=($item->get_author() ? $item->get_author()->get_name() : 'anonymous')?></name></author>
+        <author><name><?=($item->get_author() ? strip_tags($item->get_author()->get_name()) : 'anonymous')?></name></author>
 
         <content type="html"><![CDATA[<?=$item->get_content()?>]]></content>
     </entry>
