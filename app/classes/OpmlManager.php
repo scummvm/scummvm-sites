@@ -27,6 +27,9 @@ class OpmlManager
      * @param string $file
      */
     public static function save($opml, $file){
+        // Only update the opml file if there are entries
+        if (!$opml->entries) return;
+
         $out = '<?xml version="1.0"?>'."\n";
         $out.= '<opml version="1.1">'."\n";
         $out.= '<head>'."\n";
