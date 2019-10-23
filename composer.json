@@ -1,28 +1,28 @@
 {
-    "name": "scummvm/cloud",
-    "description": "ScummVM Cloud Auth portal",
+    "name": "scummvm/multiplayer",
+    "description": "ScummVM Multiplayer server",
     "keywords": ["scummvm"],
-    "homepage": "https://cloud.scummvm.org",
+    "homepage": "https://multiplayer.scummvm.org",
     "license": "MIT",
     "authors": [
         {
           "name": "Matan Bareket",
           "email": "mataniko@scummvm.org"
+        },
+        {
+          "name": "Eugene Sandulenko",
+          "email": "sev@scummvm.org"
         }
     ],
     "require": {
         "php": ">=5.6",
         "guzzlehttp/guzzle": "^6.3",
-        "league/oauth2-google": "^3.0",
         "monolog/monolog": "^1.17",
         "nikolaposa/rate-limit": "^1.0",
         "pragmarx/random": "^0.2.2",
         "predis/predis": "^1.1",
         "slim/php-view": "^2.0",
-        "slim/slim": "^3.1",
-        "stevenmaguire/oauth2-box": "^2.0",
-        "stevenmaguire/oauth2-dropbox": "^3.0",
-        "stevenmaguire/oauth2-microsoft": "^2.2"
+        "slim/slim": "^3.1"
     },
     "require-dev": {
         "phpunit/phpunit": ">=5.0",
