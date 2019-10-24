@@ -68,7 +68,7 @@ return function (App $app) {
 			if (!$session) {
 				$sessionid = rand();
 
-				$redis->setEx("$keyprefix;sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": $parsedBody[name]}");
+				$redis->setEx("$keyprefix;sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": \"$parsedBody[name]\"}");
 			} else {
 				$par = json_decode($session);
 
@@ -124,7 +124,7 @@ return function (App $app) {
 			$redis->setEx($sessionkey, 3600, json_encode($session));
 
 			// Render index view
-			return $response->withJson(["userid" => $userid]);
+			return $response->withJson(["userid" => $playerid]);
 		}
 	);
 
