@@ -63,16 +63,22 @@ return function (App $app) {
 
 			$redis = redisConnect();
 
-			$session = $redis->get("$keyprefix;sessions;$ip;*");
+			$keys = $redis->keys("$keyprefix;sessions;$ip;*");
 
-			if (!$session) {
+			if (!sizeof($keys)) {
 				$sessionid = rand();
 
 				$redis->setEx("$keyprefix;sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": \"$parsedBody[name]\"}");
+
+				$container->get('logger')->info("Generated session $sessionid");
 			} else {
+				$session = $redis->get($keys[0]);
+
 				$par = json_decode($session);
 
 				$sessionid = $par->sessionid;
+
+				$container->get('logger')->info("Retrieved session $sessionid");
 			}
 
 			// Render index view
