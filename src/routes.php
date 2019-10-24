@@ -4,6 +4,35 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
+$keyprefix = "moonbase";
+
+function redisConnect(array $redisOptions = []) {
+	$redisOptions = array_merge([
+		'host' => '127.0.0.1',
+		'port' => 6379,
+		'timeout' => 0.0,
+	], $redisOptions);
+
+	$redis = new Redis();
+
+	$redis->connect($redisOptions['host'], $redisOptions['port'], $redisOptions['timeout']);
+
+	return $redis;
+}
+
+function getUserIpAddr() {
+	if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
+		//ip from share internet
+		$ip = $_SERVER['HTTP_CLIENT_IP'];
+	} elseif (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+		//ip pass from proxy
+		$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	} else {
+		$ip = $_SERVER['REMOTE_ADDR'];
+	}
+	return $ip;
+}
+
 return function (App $app) {
 	$container = $app->getContainer();
 
@@ -17,10 +46,44 @@ return function (App $app) {
 		}
 	);
 
+	$app->post(
+		'/moonbase/createsession', function (Request $request, Response $response, array $args) use ($container) {
+			global $keyprefix;
+
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/createsession' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (array_key_exists('name', $parsedBody)) {
+				$container->get('logger')->info("Got $parsedBody[name]");
+			}
+
+			$ip = getUserIpAddr();
+
+			$redis = redisConnect();
+
+			$session = $redis->get("$keyprefix;sessions;$ip;*");
+
+			if (!$session) {
+				$sessionid = rand();
+
+				$redis->setEx("$keyprefix;sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": $parsedBody[name]}");
+			} else {
+				$par = json_decode($session);
+
+				$sessionid = $par->sessionid;
+			}
+
+			// Render index view
+			return $response->withJson(["sessionid" => $sessionid]);
+		}
+	);
+
 	$app->get(
 		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
-			$container->get('logger')->info("Slim-Skeleton '/lobbies' route");
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/lobbies' route");
 
 			// Render index view
 			return $response->withJson(['test' => 123, 'test2' => 124]);
