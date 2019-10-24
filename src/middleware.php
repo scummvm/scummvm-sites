@@ -4,7 +4,6 @@ use Slim\App;
 
 return function (App $app) {
     // e.g: $app->add(new \Slim\Csrf\Guard);
-/*
     $app->add(
         \RateLimit\Middleware\RateLimitMiddleware::createDefault(
             \RateLimit\RateLimiterFactory::createRedisBackedRateLimiter(
@@ -24,5 +23,4 @@ return function (App $app) {
             ]
         )
     );
-	*/
 };
