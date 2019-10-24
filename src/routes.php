@@ -80,6 +80,54 @@ return function (App $app) {
 		}
 	);
 
+	$app->post(
+		'/moonbase/adduser', function (Request $request, Response $response, array $args) use ($container) {
+			global $keyprefix;
+
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/adduser' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
+
+			$sessionid = $parsedBody['sessionid'];
+
+			$redis = redisConnect();
+
+			$keys = $redis->keys("$keyprefix;sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
+			if (array_key_exists('players', $session)) {
+				if (sizeof($session->players) > 3) {
+					return $response->withJson(["error" => "Too many players in $sessionid"]);
+				}
+			} else {
+				$session->players = [];
+			}
+
+			$playerid = rand();
+
+			array_push($session->players, [ "shortname" => $parsedBody['shortname'],
+											 "longname"  => $parsedBody['longname'],
+											 "id" => $playerid]);
+
+			$redis->setEx($sessionkey, 3600, json_encode($session));
+
+			// Render index view
+			return $response->withJson(["userid" => $userid]);
+		}
+	);
+
 	$app->get(
 		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
