@@ -81,7 +81,6 @@ return function (App $app) {
 				$container->get('logger')->info("Retrieved session $sessionid");
 			}
 
-			// Render index view
 			return $response->withJson(["sessionid" => $sessionid]);
 		}
 	);
@@ -124,23 +123,38 @@ return function (App $app) {
 			$playerid = rand();
 
 			array_push($session->players, [ "shortname" => $parsedBody['shortname'],
-											 "longname"  => $parsedBody['longname'],
-											 "id" => $playerid]);
+											"longname"  => $parsedBody['longname'],
+											"id"        => $playerid]);
 
 			$redis->setEx($sessionkey, 3600, json_encode($session));
 
-			// Render index view
 			return $response->withJson(["userid" => $playerid]);
 		}
 	);
 
 	$app->get(
 		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
-			// Sample log message
+			global $keyprefix;
+
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/lobbies' route");
 
-			// Render index view
-			return $response->withJson(['test' => 123, 'test2' => 124]);
+			$redis = redisConnect();
+
+			$keys = $redis->keys("$keyprefix;sessions;*");
+
+			if (!sizeof($keys)) {
+				return $response->withJson([]);
+			}
+
+			$res = [];
+
+			foreach ($keys as $key) {
+				$session = json_decode($redis->get($key));
+
+				array_push($res, [ "name" => $session->name, "sessionid" => $session->sessionid]);
+			}
+
+			return $response->withJson($res);
 		}
 	);
 
