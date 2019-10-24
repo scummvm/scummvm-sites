@@ -5,26 +5,26 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 return function (App $app) {
-    $container = $app->getContainer();
-
-    $app->get(
-        '/', function (Request $request, Response $response, array $args) use ($container) {
-            // Sample log message
-            $container->get('logger')->info("Slim-Skeleton '/' route");
-
-            // Render index view
-            return $container->get('renderer')->render($response, 'index.phtml', $args);
-        }
-    );
+	$container = $app->getContainer();
 
 	$app->get(
-        '/lobbies', function (Request $request, Response $response, array $args) use ($container) {
-            // Sample log message
-            $container->get('logger')->info("Slim-Skeleton '/lobbies' route");
+		'/', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/' route");
 
-            // Render index view
-            return $response->withJson(['test' => 123, 'test2' => 124]);
-        }
-    );
+			// Render index view
+			return $container->get('renderer')->render($response, 'index.phtml', $args);
+		}
+	);
+
+	$app->get(
+		'/lobbies', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/lobbies' route");
+
+			// Render index view
+			return $response->withJson(['test' => 123, 'test2' => 124]);
+		}
+	);
 
 };
