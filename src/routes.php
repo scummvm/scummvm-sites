@@ -18,7 +18,7 @@ return function (App $app) {
 	);
 
 	$app->get(
-		'/lobbies', function (Request $request, Response $response, array $args) use ($container) {
+		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
 			$container->get('logger')->info("Slim-Skeleton '/lobbies' route");
 
