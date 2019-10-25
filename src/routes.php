@@ -154,4 +154,24 @@ return function (App $app) {
 		}
 	);
 
+	$app->post(
+		'/moonbase/packet', function (Request $request, Response $response, array $args) use ($container) {
+			global $keyprefix;
+
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/packet' route");
+
+			$body = $request->getBody();
+
+			$headerData = $body->read(24);
+
+			$header = unpack("VVVVVV", $headerData);
+
+			//$payload = $body->read($header[4]);
+
+			$container->get('logger')->info("/moonbase/packet: sess: $header[0], user: $header[1], type: $header[2], param: $header[3], size: $header[4], stamp: $header[5]");
+
+			return $response->withJson([]);
+		}
+	);
+
 };
