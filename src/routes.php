@@ -142,10 +142,6 @@ return function (App $app) {
 
 			$keys = $redis->keys("$keyprefix;sessions;*");
 
-			if (!sizeof($keys)) {
-				return $response->withJson([]);
-			}
-
 			$res = [];
 
 			foreach ($keys as $key) {
