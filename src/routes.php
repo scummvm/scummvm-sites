@@ -147,7 +147,7 @@ return function (App $app) {
 			foreach ($keys as $key) {
 				$session = json_decode($redis->get($key));
 
-				array_push($res, [ "name" => $session->name, "sessionid" => $session->sessionid]);
+				array_push($res, $session);
 			}
 
 			return $response->withJson($res);
