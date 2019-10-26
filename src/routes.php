@@ -162,11 +162,18 @@ return function (App $app) {
 
 			$body = $request->getBody();
 
-			$headerData = $body->read(24);
+			$header = unpack("V*", $body->read(24));
 
-			$header = unpack("VVVVVV", $headerData);
+			$sessionid = $header[1];
+			$user      = $header[2];
+			$type      = $header[3];
+			$typeParam = $header[4];
+			$size      = $header[5];
+			$stamp     = $header[6];
 
-			//$payload = $body->read($header[4]);
+			$payload = $body->read($size);
+
+			$container->get('logger')->info("/moonbase/packet: sess: $sessionid, user: $user, type: $type, param: $typeParam, size: $size, stamp: $stamp");
 
 			$container->get('logger')->info("/moonbase/packet: sess: $header[0], user: $header[1], type: $header[2], param: $header[3], size: $header[4], stamp: $header[5]");
 
