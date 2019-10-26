@@ -112,15 +112,16 @@ return function (App $app) {
 
 			$session = json_decode($redis->get($sessionkey));
 
+			$playerid = rand();
+
 			if (array_key_exists('players', $session)) {
 				if (sizeof($session->players) > 3) {
 					return $response->withJson(["error" => "Too many players in $sessionid"]);
 				}
 			} else {
 				$session->players = [];
+				$session->host = $playerid;
 			}
-
-			$playerid = rand();
 
 			array_push($session->players, [ "shortname" => $parsedBody['shortname'],
 											"longname"  => $parsedBody['longname'],
