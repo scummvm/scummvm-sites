@@ -4,7 +4,7 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-$keyprefix = "moonbase";
+define("KEYPREFIX", "moonbase");
 
 function redisConnect(array $redisOptions = []) {
 	$redisOptions = array_merge([
@@ -48,8 +48,6 @@ return function (App $app) {
 
 	$app->post(
 		'/moonbase/createsession', function (Request $request, Response $response, array $args) use ($container) {
-			global $keyprefix;
-
 			// Sample log message
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/createsession' route");
 
@@ -63,12 +61,12 @@ return function (App $app) {
 
 			$redis = redisConnect();
 
-			$keys = $redis->keys("$keyprefix;sessions;$ip;*");
+			$keys = $redis->keys(KEYPREFIX.";sessions;$ip;*");
 
 			if (!sizeof($keys)) {
 				$sessionid = rand();
 
-				$redis->setEx("$keyprefix;sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": \"$parsedBody[name]\"}");
+				$redis->setEx(KEYPREFIX.";sessions;$ip;$sessionid", 3600, "{\"sessionid\": $sessionid, \"name\": \"$parsedBody[name]\"}");
 
 				$container->get('logger')->info("Generated session $sessionid");
 			} else {
@@ -87,8 +85,6 @@ return function (App $app) {
 
 	$app->post(
 		'/moonbase/adduser', function (Request $request, Response $response, array $args) use ($container) {
-			global $keyprefix;
-
 			// Sample log message
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/adduser' route");
 
@@ -102,7 +98,7 @@ return function (App $app) {
 
 			$redis = redisConnect();
 
-			$keys = $redis->keys("$keyprefix;sessions;*;$sessionid");
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
 
 			if (!sizeof($keys)) {
 				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
@@ -134,13 +130,11 @@ return function (App $app) {
 
 	$app->get(
 		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
-			global $keyprefix;
-
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/lobbies' route");
 
 			$redis = redisConnect();
 
-			$keys = $redis->keys("$keyprefix;sessions;*");
+			$keys = $redis->keys(KEYPREFIX.";sessions;*");
 
 			$res = [];
 
@@ -156,8 +150,6 @@ return function (App $app) {
 
 	$app->post(
 		'/moonbase/packet', function (Request $request, Response $response, array $args) use ($container) {
-			global $keyprefix;
-
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/packet' route");
 
 			$body = $request->getBody();
