@@ -157,20 +157,13 @@ return function (App $app) {
 		'/moonbase/packet', function (Request $request, Response $response, array $args) use ($container) {
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/packet' route");
 
-			$body = $request->getBody();
+			$body = $request->getContents();
 
-			$header = unpack("V*", $body->read(24));
+			$header = unpack("V", $body);
 
 			$sessionid = $header[1];
-			$user      = $header[2];
-			$type      = $header[3];
-			$typeParam = $header[4];
-			$size      = $header[5];
-			$stamp     = $header[6];
 
-			$payload = $body->read($size);
-
-			$container->get('logger')->info("/moonbase/packet: sess: $sessionid, user: $user, type: $type, param: $typeParam, size: $size, stamp: $stamp");
+			$container->get('logger')->info("/moonbase/packet: sess: $sessionid");
 
 			// Get session
 			$redis = redisConnect();
@@ -181,23 +174,71 @@ return function (App $app) {
 				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
 			}
 
-			$sessionkey = $keys[0];
+			$count = $redis->incr(KEYPREFIX.";packets;$sessionid");
 
-			$session = json_decode($redis->get($sessionkey));
+			$redis->setEx(KEYPREFIX.";packets;$sessionid;$count", 3600, $body);
 
+			return $response->withJson([]);
+		}
+	);
+
+	$app->post(
+		'/moonbase/getpacket', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/getpacket' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
+
+			$sessionid = $parsedBody['sessionid'];
+
+			if (!array_key_exists('playerid', $parsedBody)) {
+				return $response->withJson(["error" => "No playerid specified"]);
+			}
+
+			$playerid = $parsedBody['playerid'];
+
+
+			$redis = redisConnect();
+
+			$sessioncount = $redis->get(KEYPREFIX.";packets;$sessionid");
+			$playercount  = $redis->get(KEYPREFIX.";players;$sessionid;$playerid");
+
+			if ($sessioncount == $playercount)	// No new packets
+				return $response->withJson([size => 0]]);
+
+			$packetnum = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
+
+			$packet = $redis->get(KEYPREFIX.";packets;$sessionid;$packetnum");
+
+			$to = -1;
 			switch ($type) {
 			case NET_SEND_TYPE_INDIVIDUAL:
+				$to = $typeParam;
 				break;
+
 			case NET_SEND_TYPE_GROUP:
+				$to = -1;
 				break;
+
 			case NET_SEND_TYPE_HOST:
+				$to = $session->host;
 				break;
+
 			case NET_SEND_TYPE_ALL:
 			default:
+				$to = -1;
 				break;
 			}
 
-			return $response->withJson([]);
+			if ($to == -1 || $to == $playerid) { // Send to all or to me
+				$response->withJson([data => $packet, size => $packet->size()]]);
+			}
+
+			return $response->withJson([size => 0]]);
 		}
 	);
 
