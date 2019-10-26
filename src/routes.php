@@ -5,6 +5,10 @@ use Slim\Http\Request;
 use Slim\Http\Response;
 
 define("KEYPREFIX", "moonbase");
+define("NET_SEND_TYPE_INDIVIDUAL", 1);
+define("NET_SEND_TYPE_GROUP", 2);
+define("NET_SEND_TYPE_HOST", 3);
+define("NET_SEND_TYPE_ALL", 4);
 
 function redisConnect(array $redisOptions = []) {
 	$redisOptions = array_merge([
@@ -167,7 +171,30 @@ return function (App $app) {
 
 			$container->get('logger')->info("/moonbase/packet: sess: $sessionid, user: $user, type: $type, param: $typeParam, size: $size, stamp: $stamp");
 
-			$container->get('logger')->info("/moonbase/packet: sess: $header[0], user: $header[1], type: $header[2], param: $header[3], size: $header[4], stamp: $header[5]");
+			// Get session
+			$redis = redisConnect();
+
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
+			switch ($type) {
+			case NET_SEND_TYPE_INDIVIDUAL:
+				break;
+			case NET_SEND_TYPE_GROUP:
+				break;
+			case NET_SEND_TYPE_HOST:
+				break;
+			case NET_SEND_TYPE_ALL:
+			default:
+				break;
+			}
 
 			return $response->withJson([]);
 		}
