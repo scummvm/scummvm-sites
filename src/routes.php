@@ -207,38 +207,40 @@ return function (App $app) {
 			$sessioncount = $redis->get(KEYPREFIX.";packets;$sessionid");
 			$playercount  = $redis->get(KEYPREFIX.";players;$sessionid;$playerid");
 
-			if ($sessioncount == $playercount)	// No new packets
-				return $response->withJson([size => 0]]);
+			for (;;) {
+				if ($playercount >= $sessioncount)	// No more packets
+					return $response->withJson([size => 0]);
 
-			$packetnum = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
+				$playercount = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
 
-			$packet = $redis->get(KEYPREFIX.";packets;$sessionid;$packetnum");
+				$packet = $redis->get(KEYPREFIX.";packets;$sessionid;$playercount");
 
-			$to = -1;
-			switch ($type) {
-			case NET_SEND_TYPE_INDIVIDUAL:
-				$to = $typeParam;
-				break;
-
-			case NET_SEND_TYPE_GROUP:
 				$to = -1;
-				break;
+				switch ($type) {
+				case NET_SEND_TYPE_INDIVIDUAL:
+					$to = $typeParam;
+					break;
 
-			case NET_SEND_TYPE_HOST:
-				$to = $session->host;
-				break;
+				case NET_SEND_TYPE_GROUP:
+					$to = -1;
+					break;
 
-			case NET_SEND_TYPE_ALL:
-			default:
-				$to = -1;
-				break;
+				case NET_SEND_TYPE_HOST:
+					$to = $session->host;
+					break;
+
+				case NET_SEND_TYPE_ALL:
+				default:
+					$to = -1;
+					break;
+				}
+
+				if ($to == -1 || $to == $playerid) { // Send to all or to me
+					$response->withJson([data => $packet, size => $packet->size()]);
+				}
+
+				# It is not pur packet, loop over to next one
 			}
-
-			if ($to == -1 || $to == $playerid) { // Send to all or to me
-				$response->withJson([data => $packet, size => $packet->size()]]);
-			}
-
-			return $response->withJson([size => 0]]);
 		}
 	);
 
