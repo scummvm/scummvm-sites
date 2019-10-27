@@ -215,6 +215,11 @@ return function (App $app) {
 
 				$packet = $redis->get(KEYPREFIX.";packets;$sessionid;$playercount");
 
+				$header = unpack("VVVVV", $body);
+
+				$from = $header[1];
+				$type = $header[5];
+
 				$to = -1;
 				switch ($type) {
 				case NET_SEND_TYPE_INDIVIDUAL:
@@ -235,7 +240,7 @@ return function (App $app) {
 					break;
 				}
 
-				if ($to == -1 || $to == $playerid) { // Send to all or to me
+				if (($to == -1 && $from != $playerid) || $to == $playerid) { // Send to all or to me
 					$response->withJson([data => $packet, size => $packet->size()]);
 				}
 
