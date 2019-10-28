@@ -157,11 +157,13 @@ return function (App $app) {
 		'/moonbase/packet', function (Request $request, Response $response, array $args) use ($container) {
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/packet' route");
 
-			$body = $request->getContents();
+			$parsedBody = $request->getParsedBody();
 
-			$header = unpack("V", $body);
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
 
-			$sessionid = $header[1];
+			$sessionid = $parsedBody['sessionid'];
 
 			$container->get('logger')->info("/moonbase/packet: sess: $sessionid");
 
@@ -176,7 +178,7 @@ return function (App $app) {
 
 			$count = $redis->incr(KEYPREFIX.";packets;$sessionid");
 
-			$redis->setEx(KEYPREFIX.";packets;$sessionid;$count", 3600, $body);
+			$redis->setEx(KEYPREFIX.";packets;$sessionid;$count", 3600, $request->getBody());
 
 			return $response->withJson([]);
 		}
@@ -213,12 +215,10 @@ return function (App $app) {
 
 				$playercount = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
 
-				$packet = $redis->get(KEYPREFIX.";packets;$sessionid;$playercount");
+				$packet = json_decode($redis->get(KEYPREFIX.";packets;$sessionid;$playercount"));
 
-				$header = unpack("VVVVV", $body);
-
-				$from = $header[1];
-				$type = $header[5];
+				$from = $packet['from'];
+				$type = $packet['type'];
 
 				$to = -1;
 				switch ($type) {
@@ -241,7 +241,7 @@ return function (App $app) {
 				}
 
 				if (($to == -1 && $from != $playerid) || $to == $playerid) { // Send to all or to me
-					$response->withJson([data => $packet, size => $packet->size()]);
+					$response->withJson($packet);
 				}
 
 				# It is not pur packet, loop over to next one
