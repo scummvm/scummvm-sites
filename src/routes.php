@@ -211,9 +211,13 @@ return function (App $app) {
 
 			for (;;) {
 				if ($playercount >= $sessioncount)	// No more packets
-					return $response->withJson([size => 0]);
+					return $response->withJson(["size" => 0]);
 
 				$playercount = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
+
+				if (!$redis->exists(KEYPREFIX.";packets;$sessionid;$playercount")) {
+					return $response->withJson(["error" => "Too big playercount: $playercount > $sessioncount"]);
+				}
 
 				$packet = json_decode($redis->get(KEYPREFIX.";packets;$sessionid;$playercount"));
 
