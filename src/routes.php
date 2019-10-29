@@ -215,6 +215,8 @@ return function (App $app) {
 
 				$playercount = $redis->incr(KEYPREFIX.";players;$sessionid;$playerid");
 
+				$container->get('logger')->info("'/moonbase/getpacket' reading packet $playercount");
+
 				if (!$redis->exists(KEYPREFIX.";packets;$sessionid;$playercount")) {
 					return $response->withJson(["error" => "Too big playercount: $playercount > $sessioncount"]);
 				}
