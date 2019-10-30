@@ -157,6 +157,8 @@ return function (App $app) {
 		'/moonbase/packet', function (Request $request, Response $response, array $args) use ($container) {
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/packet' route");
 
+			$container->get('logger')->info("got " .$request->getBody());
+
 			$parsedBody = $request->getParsedBody();
 
 			if (!array_key_exists('sessionid', $parsedBody)) {
@@ -178,7 +180,7 @@ return function (App $app) {
 
 			$count = $redis->incr(KEYPREFIX.";packets;$sessionid");
 
-			$redis->setEx(KEYPREFIX.";packets;$sessionid;$count", 3600, $request->getBody());
+			$redis->setEx(KEYPREFIX.";packets;$sessionid;$count", 3600, json_encode($parsedBody));
 
 			return $response->withJson([]);
 		}
@@ -187,7 +189,7 @@ return function (App $app) {
 	$app->post(
 		'/moonbase/getpacket', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
-			$container->get('logger')->info("Slim-Skeleton '/moonbase/getpacket' route");
+			//$container->get('logger')->info("Slim-Skeleton '/moonbase/getpacket' route");
 
 			$parsedBody = $request->getParsedBody();
 
@@ -223,8 +225,8 @@ return function (App $app) {
 
 				$packet = json_decode($redis->get(KEYPREFIX.";packets;$sessionid;$playercount"));
 
-				$from = $packet['from'];
-				$type = $packet['type'];
+				$from = $packet->from;
+				$type = $packet->type;
 
 				$to = -1;
 				switch ($type) {
@@ -246,8 +248,10 @@ return function (App $app) {
 					break;
 				}
 
+				$container->get('logger')->info("'/moonbase/getpacket' from: $from, to: $to, playerid: $playerid, size: " . $packet->size);
+
 				if (($to == -1 && $from != $playerid) || $to == $playerid) { // Send to all or to me
-					$response->withJson($packet);
+					return $response->withJson($packet);
 				}
 
 				# It is not pur packet, loop over to next one
