@@ -211,6 +211,16 @@ return function (App $app) {
 			$sessioncount = $redis->get(KEYPREFIX.";packets;$sessionid");
 			$playercount  = $redis->get(KEYPREFIX.";players;$sessionid;$playerid");
 
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
 			for (;;) {
 				if ($playercount >= $sessioncount)	// No more packets
 					return $response->withJson(["size" => 0]);
@@ -230,28 +240,30 @@ return function (App $app) {
 
 				$to = -1;
 				switch ($type) {
-				case NET_SEND_TYPE_INDIVIDUAL:
-					$to = $typeParam;
+				case NET_SEND_TYPE_INDIVIDUAL: // 1
+					$to = $packet->toparam;
 					break;
 
-				case NET_SEND_TYPE_GROUP:
+				case NET_SEND_TYPE_GROUP: // 2
 					$to = -1;
 					break;
 
-				case NET_SEND_TYPE_HOST:
+				case NET_SEND_TYPE_HOST: // 3
 					$to = $session->host;
 					break;
 
-				case NET_SEND_TYPE_ALL:
+				case NET_SEND_TYPE_ALL: // 4
 				default:
 					$to = -1;
 					break;
 				}
 
-				$container->get('logger')->info("'/moonbase/getpacket' from: $from, to: $to, playerid: $playerid, size: " . $packet->size);
+				$container->get('logger')->info("'/moonbase/getpacket' type: $type from: $from, to: $to, playerid: $playerid, size: " . $packet->size);
 
 				if (($to == -1 && $from != $playerid) || $to == $playerid) { // Send to all or to me
 					return $response->withJson($packet);
+				} else {
+					$container->get('logger')->info("'/moonbase/getpacket' not ours: to $to");
 				}
 
 				# It is not pur packet, loop over to next one
