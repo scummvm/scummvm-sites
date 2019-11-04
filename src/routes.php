@@ -88,6 +88,39 @@ return function (App $app) {
 	);
 
 	$app->post(
+		'/moonbase/disablesession', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/disablesession' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
+
+			$sessionid = $parsedBody['sessionid'];
+
+			$redis = redisConnect();
+
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
+			$session->disabled = 1;
+
+			$redis->setEx($sessionkey, 3600, json_encode($session));
+
+			return $response->withJson([]);
+		}
+	);
+
+	$app->post(
 		'/moonbase/endsession', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/endsession' route");
@@ -173,7 +206,8 @@ return function (App $app) {
 			foreach ($keys as $key) {
 				$session = json_decode($redis->get($key));
 
-				array_push($res, $session);
+				if (!array_key_exists('disabled', $session))
+					array_push($res, $session);
 			}
 
 			return $response->withJson($res);
