@@ -74,6 +74,7 @@ add_platform("debian", "debian-x86_64", "Debian 64bit", "1", "tar.xz");
 add_platform("dingux", "dingux", "Dingux", "0", "tar.xz");
 add_platform("n64", "n64", "Nintendo 64", "0", "tar.xz");
 add_platform("ds", "ds", "Nintendo DS", "0", "tar.xz");
+add_platform("3ds", "3ds", "Nintendo 3DS", "0", "zip");
 add_platform("gc", "gamecube", "Nintendo Gamecube", "0", "tar.xz");
 add_platform("wii", "wii", "Nintendo Wii", "0", "tar.xz");
 add_platform("switch", "switch", "Nintendo Switch", "0", "zip");
