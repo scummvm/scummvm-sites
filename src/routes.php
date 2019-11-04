@@ -88,6 +88,33 @@ return function (App $app) {
 	);
 
 	$app->post(
+		'/moonbase/endsession', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/endsession' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
+
+			$sessionid = $parsedBody['sessionid'];
+
+			$redis = redisConnect();
+
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$redis->unlink($keys);
+
+			return $response->withJson([]);
+		}
+	);
+
+	$app->post(
 		'/moonbase/adduser', function (Request $request, Response $response, array $args) use ($container) {
 			// Sample log message
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/adduser' route");
