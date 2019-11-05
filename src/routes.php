@@ -132,6 +132,7 @@ return function (App $app) {
 			}
 
 			$sessionid = $parsedBody['sessionid'];
+			$userid = $parsedBody['userid'] ?? 0;
 
 			$redis = redisConnect();
 
@@ -139,6 +140,14 @@ return function (App $app) {
 
 			if (!sizeof($keys)) {
 				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
+			if ($session->host != $userid) {
+				return $response->withJson(["error" => "Unauthorized user $userid"]);
 			}
 
 			$redis->unlink($keys);
