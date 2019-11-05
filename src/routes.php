@@ -193,6 +193,50 @@ return function (App $app) {
 		}
 	);
 
+	$app->post(
+		'/moonbase/removeuser', function (Request $request, Response $response, array $args) use ($container) {
+			// Sample log message
+			$container->get('logger')->info("Slim-Skeleton '/moonbase/removeuser' route");
+
+			$parsedBody = $request->getParsedBody();
+
+			if (!array_key_exists('sessionid', $parsedBody)) {
+				return $response->withJson(["error" => "No sessionid specified"]);
+			}
+
+			$sessionid = $parsedBody['sessionid'];
+
+			if (!array_key_exists('userid', $parsedBody)) {
+				return $response->withJson(["error" => "No userid specified"]);
+			}
+
+			$userid = $parsedBody['userid'];
+
+			$redis = redisConnect();
+
+			$keys = $redis->keys(KEYPREFIX.";sessions;*;$sessionid");
+
+			if (!sizeof($keys)) {
+				return $response->withJson(["error" => "Unknown sessionid $sessionid"]);
+			}
+
+			$sessionkey = $keys[0];
+
+			$session = json_decode($redis->get($sessionkey));
+
+			for ($i = 0; $i < count($session->players); $i++) {
+				if ($session->players[$i]->id == $userid) {
+					unset($session->players[$i]);
+					$redis->setEx($sessionkey, 3600, json_encode($session));
+
+					return $response->withJson([]);
+				}
+			}
+
+			return $response->withJson(["error" => "Unknown userid $userid in session $sessionid"]);
+		}
+	);
+
 	$app->get(
 		'/moonbase/lobbies', function (Request $request, Response $response, array $args) use ($container) {
 			$container->get('logger')->info("Slim-Skeleton '/moonbase/lobbies' route");
