@@ -182,6 +182,7 @@ return function (App $app) {
 			$session = json_decode($redis->get($sessionkey));
 
 			$playerid = rand();
+			$plyerkey = rand();
 
 			if (array_key_exists('players', $session)) {
 				if (sizeof($session->players) > 3) {
@@ -194,9 +195,20 @@ return function (App $app) {
 
 			array_push($session->players, [ "shortname" => $parsedBody['shortname'],
 											"longname"  => $parsedBody['longname'],
-											"id"        => $playerid]);
+											"id"        => $playerid,
+										    "playerkey" => $playerkey]);
 
 			$redis->setEx($sessionkey, 3600, json_encode($session));
+
+			if (sizeof($session->players) > 1) {
+				$players = json_decode($redis->get(KEYPREFIX.";players;$sessionid"));
+			} else {
+				$players = [];
+			}
+
+			array_push($players, ["id" => $playerid, "playerkey" => $playerkey]);
+
+			$redis->setEx(KEYPREFIX.";players;$sessionid", 3600, json_encode($players));
 
 			return $response->withJson(["userid" => $playerid]);
 		}
