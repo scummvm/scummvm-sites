@@ -80,7 +80,7 @@ add_platform("wii", "wii", "Nintendo Wii", "0", "tar.xz");
 add_platform("switch", "switch", "Nintendo Switch", "0", "zip");
 add_platform("caanoo", "caanoo", "GamePark Caanoo", "0", "tar.bz2");
 add_platform("gcw0", "gcw0", "GCW-Zero", "0", "tar.bz2");
-add_platform("gp2x", "gp2x", "GamePark GP2X", "0", "tar.bz2");
+#add_platform("gp2x", "gp2x", "GamePark GP2X", "0", "tar.bz2");
 add_platform("gp2xwiz", "gp2xwiz", "GamePark GP2XWiz", "0", "tar.bz2");
 add_platform("iphone", "ios", "iOS (All Devices, iOS 3.1+)", "0", "tar.bz2");
 add_platform("iphone", "ios7", "iOS (Modern Devices, iOS 7.1+)", "0", "tar.bz2");
