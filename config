@@ -1185,6 +1185,7 @@ PREDEFINED             = USE_A52 \
                          USE_MAD \
                          USE_MPEG2 \
                          USE_MT32EMU \
+                         USE_NULL_DRIVER \
                          USE_OPENGL \
                          USE_OGG \
                          USE_PNG \
@@ -1206,7 +1207,10 @@ PREDEFINED             = USE_A52 \
                          USE_UPDATES \
                          USE_VORBIS \
                          USE_ZLIB \
+                         MACOSX \
+                         POSIX \
                          UNIX \
+                         WIN32 \
                          SDL_BACKEND \
                          ENABLE_EVENTRECORDER \
                          ENABLE_CSTIME \
