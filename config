@@ -1169,7 +1169,8 @@ INCLUDE_FILE_PATTERNS  =
 # undefined via #undef or recursively expanded use the := operator
 # instead of the = operator.
 
-PREDEFINED             = USE_ALSA \
+PREDEFINED             = USE_A52 \
+                         USE_ALSA \
                          USE_BINK \
                          USE_CLOUD \
                          USE_FAAD \
@@ -1192,10 +1193,16 @@ PREDEFINED             = USE_ALSA \
                          USE_SCALERS \
                          USE_SDL2 \
                          USE_SDL_NET \
+                         USE_SEQ_MIDI \
+                         USE_SNDIO \
                          USE_SPARKLE \
+                         USE_SYSDIALOGS \
                          USE_TASKBAR \
                          USE_THEORADEC \
+                         USE_TIMIDITY \
                          USE_TRANSLATION \
+                         USE_TTS \
+                         USE_UNITY \
                          USE_UPDATES \
                          USE_VORBIS \
                          USE_ZLIB \
@@ -1212,7 +1219,10 @@ PREDEFINED             = USE_ALSA \
                          ENABLE_SAGA2 \
                          ENABLE_SCUMM_7_8 \
                          ENABLE_SCI32 \
+                         ENABLE_VKEYBD \
                          DYNAMIC_MODULES
+
+
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then
 # this tag can be used to specify a list of macro names that should be expanded.
