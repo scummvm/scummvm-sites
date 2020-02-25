@@ -767,7 +767,7 @@ HTML_FILE_EXTENSION    = .html
 # the style sheet file to the HTML output directory, so don't put your own
 # stylesheet in the HTML output directory as well, or it will be erased!
 
-HTML_STYLESHEET        = scummvm.css
+#HTML_STYLESHEET        = scummvm.css
 
 # If the HTML_ALIGN_MEMBERS tag is set to YES, the members of classes,
 # files or namespaces will be aligned in HTML using tables. If set to
@@ -813,7 +813,7 @@ DOCSET_BUNDLE_ID       = org.doxygen.Project
 # JavaScript and DHTML is required (for instance Mozilla 1.0+, Firefox
 # Netscape 6.0+, Internet explorer 5.0+, Konqueror, or Safari).
 
-HTML_DYNAMIC_SECTIONS  = NO
+HTML_DYNAMIC_SECTIONS  = YES
 
 # If the GENERATE_HTMLHELP tag is set to YES, the CHM_FILE tag can
 # be used to specify the file name of the resulting .chm file. You
@@ -884,7 +884,7 @@ GENERATE_TREEVIEW      = YES
 # used to set the initial width (in pixels) of the frame in which the tree
 # is shown.
 
-TREEVIEW_WIDTH         = 250
+TREEVIEW_WIDTH         = 300
 
 # Use this tag to change the font size of Latex formulas included
 # as images in the HTML documentation. The default is 10. Note that
@@ -1461,7 +1461,7 @@ DOT_TRANSPARENT        = NO
 # makes dot run faster, but since only newer versions of dot (>1.8.10)
 # support this, this feature is disabled by default.
 
-DOT_MULTI_TARGETS      = NO
+DOT_MULTI_TARGETS      = YES
 
 # If the GENERATE_LEGEND tag is set to YES (the default) Doxygen will
 # generate a legend page explaining the meaning of the various boxes and
@@ -1482,4 +1482,4 @@ DOT_CLEANUP            = YES
 # The SEARCHENGINE tag specifies whether or not a search engine should be
 # used. If set to NO the values of all tags below this one will be ignored.
 
-SEARCHENGINE           = NO
+SEARCHENGINE           = YES

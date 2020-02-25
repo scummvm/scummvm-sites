@@ -25,7 +25,8 @@ nice git pull
 
 echo Updating doxygen docs
 cd ${BASEPATH}
-nice doxygen config
+#nice doxygen config
+doxygen config
 
 # Fix the index.html file <title> if necessary
 perl -pi -e 's,<title>ScummVM</title>,<title>ScummVM :: Doxygen</title>,g' /var/www/doxygen/html/index.html
