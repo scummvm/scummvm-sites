@@ -1,0 +1,13 @@
+twistd.log
+twistd.log.1
+twistd.log.2
+twistd.log.3
+twistd.pid
+state.sqlite
+buildbot.tac
+http.log
+http.log.1
+__pycache__
+.env
+scummvm-binary
+gitpoller-workdir/
