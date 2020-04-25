@@ -1,1 +1,1 @@
-web: poetry run buildbot start --nodaemon .
+web: buildbot start --nodaemon .
