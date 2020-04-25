@@ -24,6 +24,7 @@ get_secret = dotenv_values().get
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
     DATABASE_URL = get_secret("DATABASE_URL")
+BUILDBOT_URL = os.environ.get("BUILDBOT_URL", "http://localhost:5000/")
 
 ####### WORKERS
 
@@ -233,7 +234,7 @@ c["titleURL"] = "https://github.com/scummvm/scummvm/"
 # the 'www' entry below, but with an externally-visible host name which the
 # buildbot cannot figure out without some help.
 
-c["buildbotURL"] = "http://localhost:5000/"
+c["buildbotURL"] = BUILDBOT_URL
 
 # minimalistic config to activate new web UI
 c["www"] = dict(
