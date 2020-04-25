@@ -60,7 +60,7 @@ path_to_d4_movies = get_secret("path_to_d4_movies")
 # case, just kick off a 'runtests' build
 
 
-build_schedular = schedulers.SingleBranchScheduler(
+build_scheduler = schedulers.SingleBranchScheduler(
     name="all",
     change_filter=util.ChangeFilter(branch="master"),
     treeStableTimer=None,
@@ -68,12 +68,12 @@ build_schedular = schedulers.SingleBranchScheduler(
 )
 
 if path_to_d4_movies:
-    test_schedular = schedulers.Dependent(
-        name="D4 tests", upstream=build_schedular, builderNames=["D4tests"]
+    test_scheduler = schedulers.Dependent(
+        name="D4 tests", upstream=build_scheduler, builderNames=["D4tests"]
     )
 
-lingo_schedular = schedulers.Dependent(
-    name="scummvm Lingo tests", upstream=build_schedular, builderNames=["lingotests"]
+lingo_scheduler = schedulers.Dependent(
+    name="scummvm Lingo tests", upstream=build_scheduler, builderNames=["lingotests"]
 )
 
 c["schedulers"] = []
