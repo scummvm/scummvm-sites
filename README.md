@@ -11,6 +11,7 @@ relay_host=
 to_addr=
 from_addr=
 smtp_password=
+path_to_d4_movies= # can be empty, and won't be tested in that case.
 
 ## Goal:
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
