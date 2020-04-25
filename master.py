@@ -162,7 +162,6 @@ lingo_factory.addStep(
         haltOnFailure=True,
         directory="./engines/director/lingo/tests/",
         target="directortest",
-        env={"SDL_AUDIODRIVER": "dummy"},
         **default_step_kwargs
     )
 )
