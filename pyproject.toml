@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "buildbot-director"
+version = "0.1.0"
+description = "Buildbot for scummvms director tests"
+authors = ["Roland van Laar <roland@rolandvanlaar.nl>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+python-dotenv = "^0.13.0"
+buildbot = {extras = ["bundle"], version = "^2.7.0"}
+buildbot_slack = "^0.2.3"
+service_identity = "^18.1.0"
+pyopenssl = "^19.1.0"
+wheel = "^0.34.2"
+
+[tool.poetry.dev-dependencies]
+pylint = "^2.4.4"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
