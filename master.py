@@ -21,6 +21,9 @@ c = BuildmasterConfig = {}
 # the reporters.
 
 get_secret = dotenv_values().get
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if not DATABASE_URL:
+    DATABASE_URL = get_secret("DATABASE_URL")
 
 ####### WORKERS
 
@@ -244,5 +247,5 @@ c["db"] = {
     # It's easy to start with sqlite, but it's recommended to switch to a dedicated
     # database, such as PostgreSQL or MySQL, for use in production environments.
     # http://docs.buildbot.net/current/manual/configuration/global.html#database-specification
-    "db_url": get_secret("db_url"),
+    "db_url": DATABASE_URL,
 }

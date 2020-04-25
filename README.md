@@ -5,7 +5,7 @@ Install the python packages in a venv with pip install -r requirements.txt
 Start a worker as done in the tutorial with a worker_password that's in the .env file.
 
 To use the reporters the following variables, all strings, need to be placed in a .env file. AKA as DotEnv.
-db_url=sqlite:///state.sqlite
+DATABASE_URL=sqlite:///state.sqlite
 worker_password=
 discord_webhook=
 relay_host=
