@@ -81,11 +81,13 @@ force_builder_names = ["build", "lingotests"]
 if D4_TEST_DIR:
     c["schedulers"].append(test_scheduler)
     force_builder_names.append("D4tests")
-c["schedulers"].append(
-    schedulers.ForceScheduler(
-        name="force", builderNames=force_builder_names
+
+if env["ENABLE_FORCE_SCHEDULER"]:
+    c["schedulers"].append(
+        schedulers.ForceScheduler(
+            name="force", builderNames=force_builder_names
+        )
     )
-)
 
 ####### BUILDERS
 

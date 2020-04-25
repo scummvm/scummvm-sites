@@ -9,6 +9,7 @@ dotenv = dotenv_values()
 env = {}
 
 vars = {
+    "ENABLE_FORCE_SCHEDULER": False,
     "DATABASE_URL": "sqlite:///state.sqlite",
     "BUILDBOT_URL": "http://localhost:5000/",
     "DISCORD_WEBHOOK": False,
