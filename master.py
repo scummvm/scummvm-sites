@@ -143,7 +143,8 @@ if D4_TEST_DIR:
                     env["D4_TEST_DIR"],
                     f"--start-movie={test}"
                 ],
-                env={"SDL_VIDEODRIVER": "dummy"},
+                env={"SDL_VIDEODRIVER": "dummy",
+                     "SDL_AUDIODRIVER": "dummy"},
                 timeout=5,
                 maxTime=10,
                 **default_step_kwargs
@@ -161,6 +162,7 @@ lingo_factory.addStep(
         haltOnFailure=True,
         directory="./engines/director/lingo/tests/",
         target="directortest",
+        env={"SDL_AUDIODRIVER": "dummy"},
         **default_step_kwargs
     )
 )
