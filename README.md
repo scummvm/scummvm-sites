@@ -43,7 +43,7 @@ To run this online as a CI server and to give feedback about what regressions in
 
 It runs on dokku: http://dokku.viewdocs.io/dokku/
 installed at digital ocean.
-Plugins required: postgres
+Plugins required: postgres, letsencrypt dokku-apt
 
 Buildpack installation:
 dokku buildpacks:add buildbot https://github.com/moneymeets/python-poetry-buildpack.git
