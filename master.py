@@ -3,11 +3,10 @@
 
 import os.path
 
-from dotenv import dotenv_values
-
 from buildbot.plugins import *
 from steps import GenerateStartMovieCommands
 
+from env import env, get_env
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -20,18 +19,12 @@ c = BuildmasterConfig = {}
 # We don't use a secretsProvider. It wouldn't work together with
 # the reporters.
 
-get_secret = dotenv_values().get
-DATABASE_URL = os.environ.get("DATABASE_URL")
-if not DATABASE_URL:
-    DATABASE_URL = get_secret("DATABASE_URL")
-BUILDBOT_URL = os.environ.get("BUILDBOT_URL", "http://localhost:5000/")
-
 ####### WORKERS
 
 # The 'workers' list defines the set of recognized workers. Each element is
 # a Worker object, specifying a unique worker name and password.  The same
 # worker name and password must be configured on the worker.
-c["workers"] = [worker.Worker("director-worker", get_secret("worker_password"), max_builds=1)]
+c["workers"] = [worker.Worker("director-worker", get_env("worker_password"), max_builds=1)]
 
 # 'protocols' contains information about protocols which master will use for
 # communicating with workers. You must define at least 'port' option that workers
@@ -56,7 +49,7 @@ c["change_source"].append(
 )
 
 # check if D4 tests can be run:
-path_to_d4_movies = get_secret("path_to_d4_movies")
+D4_TEST_DIR = env["D4_TEST_DIR"]
 
 ####### SCHEDULERS
 
@@ -71,7 +64,7 @@ build_scheduler = schedulers.SingleBranchScheduler(
     builderNames=["build"],
 )
 
-if path_to_d4_movies:
+if D4_TEST_DIR:
     test_scheduler = schedulers.Dependent(
         name="D4 tests", upstream=build_scheduler, builderNames=["D4tests"]
     )
@@ -85,7 +78,7 @@ c["schedulers"].append(build_scheduler)
 c["schedulers"].append(lingo_scheduler)
 
 force_builder_names = ["build", "lingotests"]
-if path_to_d4_movies:
+if D4_TEST_DIR:
     c["schedulers"].append(test_scheduler)
     force_builder_names.append("D4tests")
 c["schedulers"].append(
@@ -128,7 +121,7 @@ download_step = steps.FileDownload(
     mastersrc=master_file, workerdest=worker_file, mode=755,
 )
 
-if path_to_d4_movies:
+if D4_TEST_DIR:
     test_factory = util.BuildFactory()
     test_factory.addSteps([download_step])
 
@@ -145,7 +138,7 @@ if path_to_d4_movies:
                     "--debugflags=fewframesonly,fast",
                     "--auto-detect",
                     "-p",
-                    get_secret("path_to_d4_movies"),
+                    env["D4_TEST_DIR"],
                     f"--start-movie={test}"
                 ],
                 env={"SDL_VIDEODRIVER": "dummy"},
@@ -173,7 +166,7 @@ lingo_factory.addStep(
 
 c["builders"] = []
 
-if path_to_d4_movies:
+if D4_TEST_DIR:
     c["builders"].append(
         util.BuilderConfig(
             name="D4tests", workernames=["director-worker"], factory=test_factory
@@ -200,25 +193,24 @@ c["builders"].append(
 
 c["services"] = []
 
-if get_secret("relay_host"):
+if get_env("relay_host"):
     mn = reporters.MailNotifier(
-        fromaddr=get_secret("from_addr"),
+        fromaddr=get_env("from_addr"),
         sendToInterestedUsers=False,
-        extraRecipients=[get_secret("to_addr")],
-        relayhost=get_secret("relay_host"),
+        extraRecipients=[get_env("to_addr")],
+        relayhost=get_env("relay_host"),
         smtpPort=587,
-        smtpUser=get_secret("from_addr"),
-        smtpPassword=get_secret("smtp_password"),
+        smtpUser=get_env("from_addr"),
+        smtpPassword=get_env("smtp_password"),
         useTls=True,
     )
     c["services"].append(mn)
 
 # Use Discord's slack compatibility
-if get_secret("discord_webhook"):
+if get_env("DISCORD_WEBHOOK"):
     discord_webhook = reporters.SlackStatusPush(
-        endpoint=get_secret("discord_webhook")
+        endpoint=get_env("DISCORD_WEBHOOK")
     )
-
     c["services"].append(discord_webhook)
 
 ####### PROJECT IDENTITY
@@ -234,7 +226,7 @@ c["titleURL"] = "https://github.com/scummvm/scummvm/"
 # the 'www' entry below, but with an externally-visible host name which the
 # buildbot cannot figure out without some help.
 
-c["buildbotURL"] = BUILDBOT_URL
+c["buildbotURL"] = env["BUILDBOT_URL"]
 
 # minimalistic config to activate new web UI
 c["www"] = dict(
@@ -248,5 +240,5 @@ c["db"] = {
     # It's easy to start with sqlite, but it's recommended to switch to a dedicated
     # database, such as PostgreSQL or MySQL, for use in production environments.
     # http://docs.buildbot.net/current/manual/configuration/global.html#database-specification
-    "db_url": DATABASE_URL,
+    "db_url": env["DATABASE_URL"],
 }
