@@ -233,11 +233,11 @@ c["titleURL"] = "https://github.com/scummvm/scummvm/"
 # the 'www' entry below, but with an externally-visible host name which the
 # buildbot cannot figure out without some help.
 
-c["buildbotURL"] = "http://localhost:8010/"
+c["buildbotURL"] = "http://localhost:5000/"
 
 # minimalistic config to activate new web UI
 c["www"] = dict(
-    port=8010, plugins=dict(waterfall_view={}, console_view={}, grid_view={})
+    port=5000, plugins=dict(waterfall_view={}, console_view={}, grid_view={})
 )
 
 ####### DB URL
