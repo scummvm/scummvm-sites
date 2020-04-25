@@ -5,6 +5,7 @@ Install the python packages in a venv with pip install -r requirements.txt
 Start a worker as done in the tutorial with a worker_password that's in the .env file.
 
 To use the reporters the following variables, all strings, need to be placed in a .env file. AKA as DotEnv.
+db_url=sqlite:///state.sqlite
 worker_password=
 discord_webhook=
 relay_host=
@@ -37,3 +38,13 @@ To run this online as a CI server and to give feedback about what regressions in
 - It doesn't link to the github commits
 - failures have a long list of responsible committers.
 - Lingo tests ran on a newer checkout: specify the checkout hash of the source checkout in the lingo build.
+
+## Production:
+
+It runs on dokku: http://dokku.viewdocs.io/dokku/
+installed at digital ocean.
+Plugins required: postgres
+
+Buildpack installation:
+dokku buildpacks:add buildbot https://github.com/moneymeets/python-poetry-buildpack.git
+buildbot-dokku buildpacks:add buildbot heroku/python
