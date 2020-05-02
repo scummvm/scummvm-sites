@@ -14,6 +14,10 @@ from_addr=
 smtp_password=
 D4_TEST_DIR= # can be empty, and won't be tested in that case.
 
+## Github Oauth
+There's an oauth application:
+https://github.com/settings/applications/1281774
+
 ## Goal:
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
 

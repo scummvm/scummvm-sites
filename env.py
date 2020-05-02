@@ -14,7 +14,10 @@ vars = {
     "BUILDBOT_URL": "http://localhost:5000/",
     "DISCORD_WEBHOOK": False,
     "D4_TEST_DIR": False,
+    "GITHUB_CLIENT_ID": "",
+    "GITHUB_CLIENT_SECRET": "",
 }
+
 
 def get_env(key, default=""):
     """
@@ -24,5 +27,6 @@ def get_env(key, default=""):
     with a fallback to the specified default.
     """
     return os.environ.get(key, dotenv.get(key, default))
+
 
 env = {key: get_env(key, default) for key, default in vars.items()}

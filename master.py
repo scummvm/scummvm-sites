@@ -233,6 +233,13 @@ c["www"] = dict(
     port=5000, plugins=dict(waterfall_view={}, console_view={}, grid_view={})
 )
 
+c["www"]["auth"] = util.GitHubAuth(
+    env["GITHUB_CLIENT_ID"],
+    env["GITHUB_CLIENT_SECRET"],
+    apiVersion=4,
+    getTeamsMembership=True,
+)
+
 ####### DB URL
 
 c["db"] = {
