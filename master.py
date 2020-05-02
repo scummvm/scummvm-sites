@@ -3,10 +3,11 @@
 
 import os.path
 
-from buildbot.plugins import *
-from steps import GenerateStartMovieCommands
+from buildbot.plugins import (changes, reporters, schedulers, steps, util,
+                              worker)
 
 from env import env, get_env
+from steps import GenerateStartMovieCommands
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -239,6 +240,12 @@ c["www"]["auth"] = util.GitHubAuth(
     apiVersion=4,
     getTeamsMembership=True,
 )
+
+c["www"]["authz"] = util.Authz(
+    allowRules=[util.AnyControlEndpointMatcher(role="developers"),],
+    roleMatchers=[util.RolesFromGroups(groupPrefix="scummvm/")],
+)
+
 
 ####### DB URL
 
