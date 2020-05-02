@@ -84,9 +84,7 @@ if D4_TEST_DIR:
 
 if env["ENABLE_FORCE_SCHEDULER"]:
     c["schedulers"].append(
-        schedulers.ForceScheduler(
-            name="force", builderNames=force_builder_names
-        )
+        schedulers.ForceScheduler(name="force", builderNames=force_builder_names)
     )
 
 ####### BUILDERS
@@ -100,14 +98,16 @@ default_step_kwargs = {"logEnviron": False}
 build_factory = util.BuildFactory()
 # check out the source
 checkout_step = steps.GitHub(
-    repourl="git://github.com/scummvm/scummvm.git", mode="incremental",
-    **default_step_kwargs
+    repourl="git://github.com/scummvm/scummvm.git",
+    mode="incremental",
+    **default_step_kwargs,
 )
 build_factory.addStep(checkout_step)
 # run the tests (note that this will require that 'trial' is installed)
 build_factory.addStep(
     steps.Configure(
-        command=["./configure", "--disable-all-engines", "--enable-engine=director",], **default_step_kwargs
+        command=["./configure", "--disable-all-engines", "--enable-engine=director",],
+        **default_step_kwargs,
     )
 )
 build_factory.addStep(steps.Compile(command=["make"], **default_step_kwargs))
@@ -141,13 +141,12 @@ if D4_TEST_DIR:
                     "--auto-detect",
                     "-p",
                     env["D4_TEST_DIR"],
-                    f"--start-movie={test}"
+                    f"--start-movie={test}",
                 ],
-                env={"SDL_VIDEODRIVER": "dummy",
-                     "SDL_AUDIODRIVER": "dummy"},
+                env={"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy"},
                 timeout=5,
                 maxTime=10,
-                **default_step_kwargs
+                **default_step_kwargs,
             )
         )
 
@@ -162,7 +161,7 @@ lingo_factory.addStep(
         haltOnFailure=True,
         directory="./engines/director/lingo/tests/",
         target="directortest",
-        **default_step_kwargs
+        **default_step_kwargs,
     )
 )
 
@@ -211,9 +210,7 @@ if get_env("relay_host"):
 
 # Use Discord's slack compatibility
 if get_env("DISCORD_WEBHOOK"):
-    discord_webhook = reporters.SlackStatusPush(
-        endpoint=get_env("DISCORD_WEBHOOK")
-    )
+    discord_webhook = reporters.SlackStatusPush(endpoint=get_env("DISCORD_WEBHOOK"))
     c["services"].append(discord_webhook)
 
 ####### PROJECT IDENTITY
