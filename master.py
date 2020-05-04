@@ -3,8 +3,7 @@
 
 import os.path
 
-from buildbot.plugins import (changes, reporters, schedulers, steps, util,
-                              worker)
+from buildbot.plugins import changes, reporters, schedulers, steps, util, worker
 
 from env import env, get_env
 from steps import GenerateStartMovieCommands
@@ -65,13 +64,12 @@ build_scheduler = schedulers.SingleBranchScheduler(
     builderNames=["build"],
 )
 
+builder_names = ["lingotests"]
 if D4_TEST_DIR:
-    test_scheduler = schedulers.Dependent(
-        name="D4 tests", upstream=build_scheduler, builderNames=["D4tests"]
-    )
+    builder_names.append("D4tests")
 
-lingo_scheduler = schedulers.Dependent(
-    name="scummvm Lingo tests", upstream=build_scheduler, builderNames=["lingotests"]
+lingo_scheduler = schedulers.Triggerable(
+    name="Director Tests", builderNames=builder_names
 )
 
 c["schedulers"] = []
@@ -80,7 +78,6 @@ c["schedulers"].append(lingo_scheduler)
 
 force_builder_names = ["build", "lingotests"]
 if D4_TEST_DIR:
-    c["schedulers"].append(test_scheduler)
     force_builder_names.append("D4tests")
 
 if env["ENABLE_FORCE_SCHEDULER"]:
@@ -113,12 +110,15 @@ build_factory.addStep(
 )
 build_factory.addStep(steps.Compile(command=["make"], **default_step_kwargs))
 
-master_dir = os.path.dirname(__file__)
 
-worker_file = "scummvm"
+master_dir = os.path.dirname(__file__)
 master_file = os.path.join(master_dir, "scummvm-binary")
+worker_file = "scummvm"
 
 build_factory.addStep(steps.FileUpload(workersrc=worker_file, masterdest=master_file))
+build_factory.addStep(
+    steps.Trigger(schedulerNames=["Director Tests"], waitForFinish=True)
+)
 
 download_step = steps.FileDownload(
     mastersrc=master_file, workerdest=worker_file, mode=755,
