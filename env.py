@@ -16,6 +16,7 @@ vars = {
     "D4_TEST_DIR": False,
     "GITHUB_CLIENT_ID": "",
     "GITHUB_CLIENT_SECRET": "",
+    "GITHUB_WEBHOOK_SECRET": "",
 }
 
 

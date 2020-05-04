@@ -38,15 +38,9 @@ c["protocols"] = {"pb": {"port": 9989}}
 # the 'change_source' setting tells the buildmaster how it should find out
 # about source code changes.  Here we point to the buildbot version of a python hello-world project.
 
+# leave empty, the github hook should take care of it.
 c["change_source"] = []
-c["change_source"].append(
-    changes.GitPoller(
-        "git://github.com/scummvm/scummvm/",
-        workdir="gitpoller-workdir",
-        branch="master",
-        pollInterval=300,
-    )
-)
+
 
 build_lock = util.MasterLock("Build")
 
@@ -61,7 +55,7 @@ D4_TEST_DIR = env["D4_TEST_DIR"]
 
 build_scheduler = schedulers.SingleBranchScheduler(
     name="all",
-    change_filter=util.ChangeFilter(branch="master"),
+    change_filter=util.ChangeFilter(repository="https://github.com/scummvm/scummvm"),
     treeStableTimer=None,
     builderNames=["build"],
 )
@@ -243,6 +237,7 @@ c["www"] = dict(
         grid_view={},
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
+    change_hook_dialects={'github': {'secret': env['GITHUB_WEBHOOK_SECRET']}},
 )
 
 c["www"]["auth"] = util.GitHubAuth(
