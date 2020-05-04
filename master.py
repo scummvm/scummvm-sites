@@ -231,7 +231,13 @@ c["buildbotURL"] = env["BUILDBOT_URL"]
 
 # minimalistic config to activate new web UI
 c["www"] = dict(
-    port=5000, plugins=dict(waterfall_view={}, console_view={}, grid_view={})
+    port=5000,
+    plugins=dict(
+        waterfall_view={},
+        console_view={},
+        grid_view={},
+        badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
+    ),
 )
 
 c["www"]["auth"] = util.GitHubAuth(
