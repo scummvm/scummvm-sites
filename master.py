@@ -24,7 +24,7 @@ c = BuildmasterConfig = {}
 # The 'workers' list defines the set of recognized workers. Each element is
 # a Worker object, specifying a unique worker name and password.  The same
 # worker name and password must be configured on the worker.
-c["workers"] = [worker.LocalWorker("director-worker", max_builds=1)]
+c["workers"] = [worker.LocalWorker("director-worker", max_builds=3)]
 
 # 'protocols' contains information about protocols which master will use for
 # communicating with workers. You must define at least 'port' option that workers
@@ -47,6 +47,8 @@ c["change_source"].append(
         pollInterval=300,
     )
 )
+
+build_lock = util.MasterLock("Build")
 
 # check if D4 tests can be run:
 D4_TEST_DIR = env["D4_TEST_DIR"]
@@ -178,7 +180,10 @@ if D4_TEST_DIR:
 
 c["builders"].append(
     util.BuilderConfig(
-        name="build", workernames=["director-worker"], factory=build_factory
+        name="build",
+        workernames=["director-worker"],
+        factory=build_factory,
+        locks=[build_lock.access("exclusive")],
     )
 )
 
@@ -254,7 +259,6 @@ c["www"]["authz"] = util.Authz(
 
 
 ####### DB URL
-
 c["db"] = {
     # This specifies what database buildbot uses to store its state.
     # It's easy to start with sqlite, but it's recommended to switch to a dedicated
