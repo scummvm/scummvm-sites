@@ -101,7 +101,9 @@ build_factory.addStep(checkout_step)
 build_factory.addStep(
     steps.Configure(
         command=["./configure", "--disable-all-engines", "--enable-engine=director",],
+        env={"CXX": "ccache g++"},
         **default_step_kwargs,
+
     )
 )
 build_factory.addStep(steps.Compile(command=["make"], **default_step_kwargs))
