@@ -50,7 +50,7 @@ D4_TEST_DIR = env["D4_TEST_DIR"]
 CHOP_SUEY_DIR = env["CHOP_SUEY_DIR"]
 
 # Declare builder names
-D4_builder = "D4Tests"
+D4_builder = "D4tests"
 CS_builder = "Chop Suey Tests"
 Lingo_builder = "lingotests"
 
