@@ -8,15 +8,18 @@ dotenv = dotenv_values()
 
 env = {}
 
-vars = {
+default_vars = {
     "ENABLE_FORCE_SCHEDULER": False,
     "DATABASE_URL": "sqlite:///state.sqlite",
     "BUILDBOT_URL": "http://localhost:5000/",
     "DISCORD_WEBHOOK": False,
-    "D4_TEST_DIR": False,
+    # Github
     "GITHUB_CLIENT_ID": "",
     "GITHUB_CLIENT_SECRET": "",
     "GITHUB_WEBHOOK_SECRET": "",
+    # Test files
+    "D4_TEST_DIR": False,
+    "CHOP_SUEY_DIR": False,
 }
 
 
@@ -30,4 +33,4 @@ def get_env(key, default=""):
     return os.environ.get(key, dotenv.get(key, default))
 
 
-env = {key: get_env(key, default) for key, default in vars.items()}
+env = {key: get_env(key, default) for key, default in default_vars.items()}

@@ -3,10 +3,11 @@
 
 import os.path
 
-from buildbot.plugins import changes, reporters, schedulers, steps, util, worker
+from buildbot.plugins import reporters, schedulers, util, worker
 
+from build_factory import build_factory, checkout_step, default_step_kwargs
 from env import env, get_env
-from steps import GenerateStartMovieCommands
+from steps import GenerateStartMovieCommands, download_step
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -44,8 +45,14 @@ c["change_source"] = []
 
 build_lock = util.MasterLock("Build")
 
-# check if D4 tests can be run:
+# check if test files are available:
 D4_TEST_DIR = env["D4_TEST_DIR"]
+CHOP_SUEY_DIR = env["CHOP_SUEY_DIR"]
+
+# Declare builder names
+D4_builder = "D4Tests"
+CS_builder = "Chop Suey Tests"
+Lingo_builder = "lingotests"
 
 ####### SCHEDULERS
 
@@ -60,9 +67,11 @@ build_scheduler = schedulers.SingleBranchScheduler(
     builderNames=["build"],
 )
 
-builder_names = ["lingotests"]
+builder_names = [Lingo_builder]
 if D4_TEST_DIR:
-    builder_names.append("D4tests")
+    builder_names.append(D4_builder)
+if CHOP_SUEY_DIR:
+    builder_names.append(CS_builder)
 
 lingo_scheduler = schedulers.Triggerable(
     name="Director Tests", builderNames=builder_names
@@ -72,9 +81,11 @@ c["schedulers"] = []
 c["schedulers"].append(build_scheduler)
 c["schedulers"].append(lingo_scheduler)
 
-force_builder_names = ["build", "lingotests"]
+force_builder_names = ["build", Lingo_builder]
 if D4_TEST_DIR:
-    force_builder_names.append("D4tests")
+    force_builder_names.append(D4_builder)
+if CHOP_SUEY_DIR:
+    force_builder_names.append(CS_builder)
 
 if env["ENABLE_FORCE_SCHEDULER"]:
     c["schedulers"].append(
@@ -87,67 +98,58 @@ if env["ENABLE_FORCE_SCHEDULER"]:
 # what steps, and which workers can execute them.  Note that any particular build will
 # only take place on one worker.
 
-default_step_kwargs = {"logEnviron": False}
 
-build_factory = util.BuildFactory()
-# check out the source
-checkout_step = steps.GitHub(
-    repourl="git://github.com/scummvm/scummvm.git",
-    mode="incremental",
-    **default_step_kwargs,
-)
-build_factory.addStep(checkout_step)
-# run the tests (note that this will require that 'trial' is installed)
-build_factory.addStep(
-    steps.Configure(
-        command=["./configure", "--disable-all-engines", "--enable-engine=director",],
-        env={"CXX": "ccache g++"},
-        **default_step_kwargs,
+c["builders"] = []
 
-    )
-)
-build_factory.addStep(steps.Compile(command=["make"], **default_step_kwargs))
-
-
-master_dir = os.path.dirname(__file__)
-master_file = os.path.join(master_dir, "scummvm-binary")
-worker_file = "scummvm"
-
-build_factory.addStep(steps.FileUpload(workersrc=worker_file, masterdest=master_file))
-build_factory.addStep(
-    steps.Trigger(schedulerNames=["Director Tests"], waitForFinish=True)
-)
-
-download_step = steps.FileDownload(
-    mastersrc=master_file, workerdest=worker_file, mode=755,
-)
 
 if D4_TEST_DIR:
     test_factory = util.BuildFactory()
-    test_factory.addSteps([download_step])
-
-    f = open("test_scripts.txt", "r")
-    test_scripts = f.read().split("\n")
-    for test in test_scripts:
-        test_factory.addStep(
-            steps.Test(
-                name=test,
-                description=test,
-                descriptionDone=test,
-                command=[
-                    "./scummvm",
-                    "--debugflags=fewframesonly,fast",
-                    "--auto-detect",
-                    "-p",
-                    env["D4_TEST_DIR"],
-                    f"--start-movie={test}",
-                ],
-                env={"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy"},
-                timeout=5,
-                maxTime=10,
-                **default_step_kwargs,
-            )
+    test_factory.addStep(download_step)
+    test_factory.addStep(
+        GenerateStartMovieCommands(
+            name="Generate D4 test commands",
+            command=["cat", os.path.join(D4_TEST_DIR, "test_scripts.txt")],
+            haltOnFailure=True,
+            directory=D4_TEST_DIR,
+            target="--auto-detect",
+            debugflags="fewframesonly,fast",
+            **default_step_kwargs,
         )
+    )
+    c["builders"].append(
+        util.BuilderConfig(
+            name=D4_builder, workernames=["director-worker"], factory=test_factory
+        )
+    )
+
+if CHOP_SUEY_DIR:
+    test_factory = util.BuildFactory()
+    test_factory.addStep(download_step)
+    test_factory.addStep(
+        GenerateStartMovieCommands(
+            name="Generate Chop Suey test commands",
+            command=["find", CHOP_SUEY_DIR, "-name", "*.dir"],
+            haltOnFailure=True,
+            directory=CHOP_SUEY_DIR,
+            target="--auto-detect",
+            debugflags="fewframesonly,fast",
+            **default_step_kwargs,
+        )
+    )
+    c["builders"].append(
+        util.BuilderConfig(
+            name=CS_builder, workernames=["director-worker"], factory=test_factory
+        )
+    )
+
+c["builders"].append(
+    util.BuilderConfig(
+        name="build",
+        workernames=["director-worker"],
+        factory=build_factory,
+        locks=[build_lock.access("exclusive")],
+    )
+)
 
 lingo_factory = util.BuildFactory()
 lingo_factory.addStep(checkout_step)
@@ -164,28 +166,9 @@ lingo_factory.addStep(
     )
 )
 
-
-c["builders"] = []
-
-if D4_TEST_DIR:
-    c["builders"].append(
-        util.BuilderConfig(
-            name="D4tests", workernames=["director-worker"], factory=test_factory
-        )
-    )
-
 c["builders"].append(
     util.BuilderConfig(
-        name="build",
-        workernames=["director-worker"],
-        factory=build_factory,
-        locks=[build_lock.access("exclusive")],
-    )
-)
-
-c["builders"].append(
-    util.BuilderConfig(
-        name="lingotests", workernames=["director-worker"], factory=lingo_factory
+        name=Lingo_builder, workernames=["director-worker"], factory=lingo_factory
     )
 )
 
@@ -239,7 +222,7 @@ c["www"] = dict(
         grid_view={},
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
-    change_hook_dialects={'github': {'secret': env['GITHUB_WEBHOOK_SECRET']}},
+    change_hook_dialects={"github": {"secret": env["GITHUB_WEBHOOK_SECRET"]}},
 )
 
 c["www"]["auth"] = util.GitHubAuth(
