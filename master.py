@@ -8,6 +8,7 @@ from buildbot.plugins import reporters, schedulers, util, worker
 from build_factory import build_factory, checkout_step, default_step_kwargs
 from env import env, get_env
 from steps import GenerateStartMovieCommands, download_step
+from scummvm_reporter import ScummVMDirectorReporter
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -195,7 +196,7 @@ if get_env("relay_host"):
 
 # Use Discord's slack compatibility
 if get_env("DISCORD_WEBHOOK"):
-    discord_webhook = reporters.SlackStatusPush(endpoint=get_env("DISCORD_WEBHOOK"))
+    discord_webhook = ScummVMDirectorReporter(endpoint=get_env("DISCORD_WEBHOOK"))
     c["services"].append(discord_webhook)
 
 ####### PROJECT IDENTITY
