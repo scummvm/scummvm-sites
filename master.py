@@ -2,19 +2,23 @@
 # ex: set filetype=python:
 
 import os.path
+from typing import Any
 
+from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
 
 from build_factory import build_factory, checkout_step, default_step_kwargs
 from env import env, get_env
-from steps import GenerateStartMovieCommands, download_step
 from scummvm_reporter import ScummVMDirectorReporter
+from steps import GenerateStartMovieCommands, download_step
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
 
 # This is the dictionary that the buildmaster pays attention to. We also use
 # a shorter alias to save typing.
+c: Any
+BuildmasterConfig: Any
 c = BuildmasterConfig = {}
 
 ####### SECRETS
@@ -55,16 +59,28 @@ D4_builder = "D4tests"
 CS_builder = "Chop Suey Tests"
 Lingo_builder = "lingotests"
 
+
+def file_is_director_related(change: Change) -> bool:
+    """True when the changed file is director related."""
+    checks = ["engines/director", "graphics/macgui"]
+    for name in change.files:
+        for check in checks:
+            if check in name:
+                return True
+    return False
+
+
 ####### SCHEDULERS
 
 # Configure the Schedulers, which decide how to react to incoming changes.  In this
 # case, just kick off a 'runtests' build
 
 
-build_scheduler = schedulers.SingleBranchScheduler(
+build_scheduler = schedulers.AnyBranchScheduler(
     name="all",
     change_filter=util.ChangeFilter(repository="https://github.com/scummvm/scummvm"),
     treeStableTimer=None,
+    fileIsImportant=file_is_director_related,
     builderNames=["build"],
 )
 
