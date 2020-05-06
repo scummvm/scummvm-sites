@@ -132,7 +132,7 @@ if CHOP_SUEY_DIR:
             haltOnFailure=True,
             directory=CHOP_SUEY_DIR,
             target="--auto-detect",
-            debugflags="fewframesonly,fast",
+            debugflags="fewframesonly,fast,bytecode",
             **default_step_kwargs,
         )
     )
