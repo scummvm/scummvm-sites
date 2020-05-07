@@ -79,7 +79,7 @@ def file_is_director_related(change: Change) -> bool:
 build_scheduler = schedulers.SingleBranchScheduler(
     name="all",
     change_filter=util.ChangeFilter(repository="https://github.com/scummvm/scummvm"),
-    treeStableTimer=None,
+    treeStableTimer=5,
     fileIsImportant=file_is_director_related,
     builderNames=["build"],
 )
