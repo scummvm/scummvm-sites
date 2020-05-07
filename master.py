@@ -76,7 +76,7 @@ def file_is_director_related(change: Change) -> bool:
 # case, just kick off a 'runtests' build
 
 
-build_scheduler = schedulers.AnyBranchScheduler(
+build_scheduler = schedulers.SingleBranchScheduler(
     name="all",
     change_filter=util.ChangeFilter(repository="https://github.com/scummvm/scummvm"),
     treeStableTimer=None,
