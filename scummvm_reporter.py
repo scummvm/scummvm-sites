@@ -18,16 +18,12 @@ class ScummVMDirectorReporter(SlackStatusPush):
         """
         Filter the builds to reduce spam.
 
-        For build starts:
-            Show it's not a triggered build, i.e. a subbuild
         For build finishes:
             With success: don't show the subbuild.
             On failure: only show the failed subbuild.
         """
 
         is_subbuild = bool(build["buildset"]["parent_buildid"])
-        if event_name == "buildStarted":
-            return not is_subbuild
         if event_name == "buildFinished":
             failure = build["results"] != SUCCESS
             return is_subbuild == failure
