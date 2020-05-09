@@ -19,6 +19,7 @@ buildbot-badges = "^2.7.0"
 pylint = "^2.4.4"
 black = "^19.10b0"
 mypy = "^0.770"
+ipdb = "^0.13.2"
 
 [build-system]
 requires = ["poetry>=0.12"]

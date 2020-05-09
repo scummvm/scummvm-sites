@@ -12,6 +12,7 @@ class ScummVMDirectorReporter(SlackStatusPush):
     - Only send messages for subbuilders when they fail
     """
 
+    neededDetails = dict(wantProperties=True, wantSteps=True, wantPreviousBuild=True)
     name = "ScummVMDirectorReporter"
 
     def filterBuilds(self, build: dict, event_name: str) -> bool:

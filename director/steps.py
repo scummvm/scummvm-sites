@@ -1,8 +1,11 @@
+from typing import List, Optional
+
+from buildbot import config
 from buildbot.plugins import steps, util
 from buildbot.process import buildstep, logobserver
 from twisted.internet import defer
 
-from build_factory import master_file, worker_file
+from .build_factory import master_file, worker_file
 
 download_step = steps.FileDownload(
     mastersrc=master_file, workerdest=worker_file, mode=755,
@@ -12,11 +15,15 @@ download_step = steps.FileDownload(
 class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
     """Generate the steps to build all lingo files."""
 
-    def __init__(self, directory=None, target=None, debugflags=None, **kwargs):
-        if directory is None or target is None:
-            raise Exception  # ?? how should a raise be done in Buildbot?
+    def __init__(
+        self, directory: str, game_id: str, debugflags: Optional[str] = None, **kwargs,
+    ):
+        if not directory:
+            config.error("directory must be a string")
+        if not game_id:
+            config.error("game_id must be a string")
         self.directory = directory
-        self.target = target
+        self.game_id = game_id
         self.debugflags = ""
         if debugflags:
             self.debugflags = f"--debugflags={debugflags}"
@@ -26,16 +33,16 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         self.observer = logobserver.BufferLogObserver()
         self.addLogObserver("stdio", self.observer)
 
-    def generate_command(self, name):
+    def generate_command(self, name: str) -> List[str]:
         command = [
             "./scummvm",
             "-p",
-            f"{self.directory}",
+            self.directory,
             f"--start-movie={name}",
-            f"{self.target}",
         ]
         if self.debugflags:
-            command.append(f"{self.debugflags}")
+            command.append(self.debugflags)
+        command.append(self.game_id)
         return command
 
     @defer.inlineCallbacks
@@ -46,9 +53,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         result = cmd.results()
         if result == util.SUCCESS:
             stdout = self.observer.getStdout()
-            scripts = [
-                line.split("/")[-1] for line in stdout.split("\n") if line.strip()
-            ]
+            scripts = [line for line in stdout.split("\n") if line.strip()]
             self.build.addStepsAfterCurrentStep(
                 [
                     steps.Test(
