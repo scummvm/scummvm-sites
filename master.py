@@ -9,9 +9,10 @@ from buildbot.plugins import reporters, schedulers, util, worker
 
 from director.build_factory import build_factory, checkout_step, default_step_kwargs
 from director.env import env, get_env
-from director.scummvm_reporter import ScummVMDirectorReporter
+from director.scummvm_reporter import WebHookReporter, JSONMessageFormatter
 from director.steps import GenerateStartMovieCommands, download_step
 from director.targets import test_targets, generate_builder
+from buildbot.reporters.message import MessageFormatter
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -143,10 +144,16 @@ c["builders"].append(
 
 c["services"] = []
 
-# Use Discord's slack compatibility
-if get_env("DISCORD_WEBHOOK"):
-    discord_webhook = ScummVMDirectorReporter(endpoint=get_env("DISCORD_WEBHOOK"))
-    c["services"].append(discord_webhook)
+if env["DISCORD_WEBHOOK"]:
+    scummvm_reporter = WebHookReporter(env["DISCORD_WEBHOOK"], mode=("change",), messageFormatter=JSONMessageFormatter())
+    c["services"].append(scummvm_reporter)
+
+# RTS: Roland Test Server
+if get_env("RTS_DISCORD_WEBHOOK"):
+    slack_webhook = reporters.SlackStatusPush(
+        endpoint=get_env("RTS_DISCORD_WEBHOOK")
+    )
+    c["services"].append(slack_webhook)
 
 ####### PROJECT IDENTITY
 
