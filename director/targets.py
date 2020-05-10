@@ -1,5 +1,6 @@
 import os.path
 from dataclasses import dataclass
+from enum import Enum
 from typing import List, Union
 
 from buildbot.config import BuilderConfig
@@ -10,17 +11,24 @@ from .env import env
 from .steps import GenerateStartMovieCommands, download_step
 
 
+class Platform(Enum):
+    WIN: str = "win"
+    MAC: str = "mac"
+
+WIN = Platform.WIN
+MAC = Platform.MAC
+
 @dataclass(frozen=True)
 class TestTarget:
     name: str
     directory_var: str
     game_id: str
-    platform: str  # mac/win
+    platform: Platform
     debugflags: str = "fewframesonly,fast"
 
     @property
     def builder_name(self) -> str:
-        return f"{self.name}:{self.platform}"
+        return f"{self.name}:{self.platform.value}"
 
     @property
     def enabled(self) -> bool:
@@ -32,17 +40,17 @@ class TestTarget:
 
 
 available_test_targets: List[TestTarget] = [
-    TestTarget("D4dictionary", "D4_TEST_DIR_WIN", "director", "win"),
-    TestTarget("D4dictionary", "D4_TEST_DIR_MAC", "director", "mac"),
+    TestTarget("D4dictionary", "D4_TEST_DIR_WIN", "director", WIN),
+    TestTarget("D4dictionary", "D4_TEST_DIR_MAC", "director", MAC),
     TestTarget(
         "Chop Suey",
         "CHOP_SUEY_DIR_WIN",
         "chopsuey",
-        "win",
+        WIN,
         "fewframesonly,fast,bytecode",
     ),
-    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", "win"),
-    TestTarget("Journeyman Project", "JOURNEYMAN_PROJECT_DIR_WIN", "jman", "win"),
+    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", WIN),
+    TestTarget("Journeyman Project", "JOURNEYMAN_PROJECT_DIR_WIN", "jman", WIN),
 ]
 
 test_targets: List[TestTarget] = [
@@ -58,7 +66,7 @@ def generate_builder(target: TestTarget) -> BuilderConfig:
             directory=target.directory,
             game_id=target.game_id,
             debugflags=target.debugflags,
-            name=f"Generate commands: {target.name}:{target.platform}",
+            name=f"Generate commands: {target.builder_name}",
             command=["cat", os.path.join(target.directory, "test_scripts.txt")],
             haltOnFailure=True,
             **default_step_kwargs,
