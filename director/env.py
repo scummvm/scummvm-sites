@@ -24,6 +24,9 @@ default_vars = {
     "CHOP_SUEY_DIR_WIN": "",
     "SPACESHIP_WARLOCK_DIR_WIN": "",
     "JOURNEYMAN_PROJECT_DIR_WIN": "",
+    "D2_APARTMENT_DIR_MAC": "",
+    "D3_APARTMENT_DIR_MAC": "",
+    "D4_APARTMENT_DIR_MAC": "",
 }
 
 

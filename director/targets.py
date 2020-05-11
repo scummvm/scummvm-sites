@@ -41,6 +41,9 @@ class TestTarget:
 
 available_test_targets: List[TestTarget] = [
     # Name, var name with path to the test directory, scummvm game_id, platform, debugflags
+    TestTarget("D2apartment", "D2_APARTMENT_DIR_MAC", "theapartment", MAC),
+    TestTarget("D3apartment", "D3_APARTMENT_DIR_MAC", "theapartment", MAC),
+    TestTarget("D4apartment", "D4_APARTMENT_DIR_MAC", "theapartment", MAC),
     TestTarget("D4dictionary", "D4_TEST_DIR_WIN", "director", WIN),
     TestTarget("D4dictionary", "D4_TEST_DIR_MAC", "director", MAC),
     TestTarget(
