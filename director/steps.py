@@ -3,6 +3,7 @@ from typing import List, Optional
 from buildbot import config
 from buildbot.plugins import steps, util
 from buildbot.process import buildstep, logobserver
+from buildbot.process.results import FAILURE, worst_status
 from twisted.internet import defer
 
 from .build_factory import master_file, worker_file
@@ -10,6 +11,21 @@ from .build_factory import master_file, worker_file
 download_step = steps.FileDownload(
     mastersrc=master_file, workerdest=worker_file, mode=755,
 )
+
+
+class ScummVMTest(steps.Test):
+    """Test steps that treats a specific warning as errors"""
+
+    treat_as_error: str = "######################  LINGO: syntax error"
+
+    def has_error(self, line):
+        return self.treat_as_error in line
+
+    def evaluateCommand(self, cmd):
+        result = super().evaluateCommand(cmd)
+        if any(self.has_error(line) for line in self.loggedWarnings):
+            return worst_status(FAILURE, result)
+        return result
 
 
 class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
@@ -56,7 +72,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
             scripts = [line for line in stdout.split("\n") if line.strip()]
             self.build.addStepsAfterCurrentStep(
                 [
-                    steps.Test(
+                    ScummVMTest(
                         name=name,
                         description=name,
                         descriptionDone=name,
