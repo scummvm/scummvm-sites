@@ -27,6 +27,7 @@ default_vars = {
     "D2_APARTMENT_DIR_MAC": "",
     "D3_APARTMENT_DIR_MAC": "",
     "D4_APARTMENT_DIR_MAC": "",
+    "MEDIABAND_DIR_WIN": "",
 }
 
 
