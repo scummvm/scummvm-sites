@@ -105,18 +105,7 @@ class JSONMessageFormatter:
     ctx = {"type": "JSON"}
 
     def renderMessage(self, ctx: dict) -> dict:
-
-        json = {
-            "embeds": [
-                {
-                    "url": ctx["build_url"],
-                    "title": "New Failure/New success",
-                    "fields": [{"name": "New failures", "value": "BLALBL, BLA BLA"}],
-                }
-            ]
-        }
         if ctx["build"]["results"] == SUCCESS:
-
             color = 0x36A64F
             json = {
                 "embeds": [
@@ -133,7 +122,7 @@ class JSONMessageFormatter:
                 "embeds": [
                     {
                         "url": ctx["build_url"],
-                        "title": "Failure",
+                        "title": f"Failure {ctx['buildername']}",
                         "color": color,
                         "fields": [
                             {
