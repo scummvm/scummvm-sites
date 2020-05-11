@@ -15,8 +15,10 @@ class Platform(Enum):
     WIN: str = "win"
     MAC: str = "mac"
 
+
 WIN = Platform.WIN
 MAC = Platform.MAC
+
 
 @dataclass(frozen=True)
 class TestTarget:
@@ -46,7 +48,13 @@ available_test_targets: List[TestTarget] = [
     TestTarget("D4apartment", "D4_APARTMENT_DIR_MAC", "theapartment", MAC),
     TestTarget("D4dictionary", "D4_TEST_DIR_WIN", "director", WIN),
     TestTarget("D4dictionary", "D4_TEST_DIR_MAC", "director", MAC),
-    TestTarget("Mediaband", "MEDIABAND_DIR_WIN", "mediaband", WIN, "fewframesonly,fast,bytecode"),
+    TestTarget(
+        "Mediaband",
+        "MEDIABAND_DIR_WIN",
+        "mediaband",
+        WIN,
+        "fewframesonly,fast,bytecode",
+    ),
     TestTarget(
         "Chop Suey",
         "CHOP_SUEY_DIR_WIN",
