@@ -25,7 +25,7 @@ build_factory.addStep(
 build_factory.addStep(steps.Compile(command=["make"], **default_step_kwargs))
 
 
-master_dir = os.path.dirname(__file__)
+master_dir = os.path.dirname(os.path.dirname(__file__))
 master_file = os.path.join(master_dir, "scummvm-binary")
 worker_file = "scummvm"
 
