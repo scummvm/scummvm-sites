@@ -1,49 +1,60 @@
 # Buildbot for testing the SCUMMVM director engine
 
-To run it, follow the tutorial from buildbot.net.
-Install the python packages in a venv with pip install -r requirements.txt
-Start a worker as done in the tutorial with a worker_password that's in the .env file.
+This buildbot runs scummvm on a multitude of Director 2, 3 and 4 files.
+Failures and warnings help spot problem areas and regressions.
 
-To use the reporters the following variables, all strings, need to be placed in a .env file. AKA as DotEnv.
-DATABASE_URL=sqlite:///state.sqlite
-worker_password=
-discord_webhook=
-relay_host=
-to_addr=
-from_addr=
-smtp_password=
-D4_TEST_DIR= # can be empty, and won't be tested in that case.
+It's located at: https://buildbot.projecttycho.nl
 
-## Github Oauth
-There's an oauth application:
-https://github.com/settings/applications/1281774
+## Installation:
+install python poetry: https://python-poetry.org/
+$ poetry install
+
+Check the director.env file for a list of enviroment variables that are used.
+These variables can be in a .env file that must be placed in the root of the project directory.
 
 ## Goal:
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
 
+This has been achieved. It reports changes on our discord channel.
+A stretch goal is to show changes in buildsteps, instead of a full build.
+
+## How to add a new test target:
+
+Adding new test targets is easy:
+- Create a directory with all the files to be tested,
+- put a `test_scripts.txt` file in the root of that directory,
+    - with all files that need to be tested,
+    - one line per file and
+    - with the path to that file: e.g. a/FILE.MMM
+- add a TestTarget in `director.targets:available_test_targets`
+- add the variable that contains the path to the directory of test files in `director.env:default_vars`.
+
+## Deploy
+
+It runs on dokku. To add the remote:
+    git remote add dokku dokku@buildbot.projecttycho.nl:buildbot
+
+To deploy::
+    git push dokku
+
 ## Ideas
-- only run when files director uses are changes. Can be done with the file attribute for 'Change' or fileIsImportant on schedular.
-- make it easy to add extra scripts to the test buildr
-- Dynamically figure out which D4 tests there are, in the same way as is done with lingo tests.
-- D4 test files could be put on S3 storage.
+- Put game test files on S3 storage
+- Add remote builders
 - look at buildbot.process.factory.Trial: it has per test ouput, including reporting on changes between runs.
 - make it easy to see how one can run the test themselves.
-- Use github devs group authentication, or add a 'director/admin' group
-- output the stderr to our google spreadsheet
-- Move to poetry or pipenv for building it.
-- Check out surpressionFile option for shell command, to use it for surpression of non Warnings.
-- Show only failed in web overview.
-- Check scummvm IRC reporter, it reports rather nicely.
-- ask online: A testrun is done before a build.
-- look into triggers instead of dependent: https://github.com/scummvm/scummvm-sites/blob/buildbot/config/master.cfg#L1698-L1700
+- Implement the `try` scheduler so that devs can test their changes
+- Extend githubPoller with files in the Change
+- Add more builders
+- Have test targets be dynamically generated, maybe in a test_scripts.json file in the test target.
+- Run the tests for one target in parallel, or split out over multiple (virtual) test targets that get combined later
+- Add screenshot generation with automatic diffs: inspired by: https://fifo.ci/
+- Add a flag to only enable github auth in production
+- Refactor lingo builder into targets, maybe upload/download the lingo directory so the checkout step isn't needed
 
 ## Bugs:
-- discord /slack build number is not correct, Build #45 points to build 1 of a new builder type.
-- It doesn't link to the github commits
-- failures have a long list of responsible committers.
-- Lingo tests ran on a newer checkout: specify the checkout hash of the source checkout in the lingo build.
+- doesn't run on PullRequests: We only build on changed director and macgui file, and the github poller doesn't include changed files for PRs.
 
-## Production:
+## To install it yourself on a server
 
 It runs on dokku: http://dokku.viewdocs.io/dokku/
 installed at digital ocean.
@@ -52,3 +63,17 @@ Plugins required: postgres, letsencrypt dokku-apt
 Buildpack installation:
 dokku buildpacks:add buildbot https://github.com/moneymeets/python-poetry-buildpack.git
 buildbot-dokku buildpacks:add buildbot heroku/python
+
+## Wishlist of GAMES to add
+- warlock mac
+- warlock demo mac
+- warlock demo win
+- mediaband
+- majestic mac
+- Appartment D2
+- Appartment D3
+- Appartment D4
+
+## Wait for: All D5 targets
+- Director 5 and higher
+- Director dictionary 5-win: Crashes too much
