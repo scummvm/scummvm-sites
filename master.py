@@ -6,13 +6,15 @@ from typing import Any
 
 from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
-
-from director.build_factory import build_factory, checkout_step, default_step_kwargs
-from director.env import env, get_env
-from director.scummvm_reporter import WebHookReporter, JSONMessageFormatter
-from director.steps import GenerateStartMovieCommands, download_step
-from director.targets import test_targets, generate_builder
 from buildbot.reporters.message import MessageFormatter
+
+from director.build_factory import (build_factory, checkout_step,
+                                    default_step_kwargs)
+from director.env import env, get_env
+from director.github_hook import PRGithubEventHandler
+from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
+from director.steps import GenerateStartMovieCommands, download_step
+from director.targets import generate_builder, test_targets
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -145,14 +147,16 @@ c["builders"].append(
 c["services"] = []
 
 if env["DISCORD_WEBHOOK"]:
-    scummvm_reporter = WebHookReporter(env["DISCORD_WEBHOOK"], mode=("change",), messageFormatter=JSONMessageFormatter())
+    scummvm_reporter = WebHookReporter(
+        env["DISCORD_WEBHOOK"],
+        mode=("change",),
+        messageFormatter=JSONMessageFormatter(),
+    )
     c["services"].append(scummvm_reporter)
 
 # RTS: Roland Test Server
 if get_env("RTS_DISCORD_WEBHOOK"):
-    slack_webhook = reporters.SlackStatusPush(
-        endpoint=get_env("RTS_DISCORD_WEBHOOK")
-    )
+    slack_webhook = reporters.SlackStatusPush(endpoint=get_env("RTS_DISCORD_WEBHOOK"))
     c["services"].append(slack_webhook)
 
 ####### PROJECT IDENTITY
@@ -178,8 +182,14 @@ c["www"] = dict(
         grid_view={},
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
-    change_hook_dialects={"github": {"secret": env["GITHUB_WEBHOOK_SECRET"]}},
-    allowed_origins=['*'],
+    change_hook_dialects={
+        "github": {
+            "secret": env["GITHUB_WEBHOOK_SECRET"],
+            "strict": True,
+            "class": PRGithubEventHandler,
+        }
+    },
+    allowed_origins=["*"],
 )
 
 c["www"]["auth"] = util.GitHubAuth(
