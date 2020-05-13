@@ -43,6 +43,7 @@ class TestTarget:
 
 available_test_targets: List[TestTarget] = [
     # Name, var name with path to the test directory, scummvm game_id, platform, debugflags
+    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", WIN),
     TestTarget("D2apartment", "D2_APARTMENT_DIR_MAC", "theapartment", MAC),
     TestTarget("D3apartment", "D3_APARTMENT_DIR_MAC", "theapartment", MAC),
     TestTarget("D4apartment", "D4_APARTMENT_DIR_MAC", "theapartment", MAC),
@@ -62,7 +63,6 @@ available_test_targets: List[TestTarget] = [
         WIN,
         "fewframesonly,fast,bytecode",
     ),
-    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", WIN),
     TestTarget("Journeyman Project", "JOURNEYMAN_PROJECT_DIR_WIN", "jman", WIN),
 ]
 
