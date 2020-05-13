@@ -179,6 +179,7 @@ c["www"] = dict(
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
     change_hook_dialects={"github": {"secret": env["GITHUB_WEBHOOK_SECRET"]}},
+    allowed_origins=['*'],
 )
 
 c["www"]["auth"] = util.GitHubAuth(
