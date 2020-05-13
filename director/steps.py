@@ -69,7 +69,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         result = cmd.results()
         if result == util.SUCCESS:
             stdout = self.observer.getStdout()
-            scripts = [line for line in stdout.split("\n") if line.strip()]
+            scripts = sorted(line for line in stdout.split("\n") if line.strip())
             self.build.addStepsAfterCurrentStep(
                 [
                     ScummVMTest(
