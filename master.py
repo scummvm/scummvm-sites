@@ -174,7 +174,6 @@ c["buildbotURL"] = env["BUILDBOT_URL"]
 c["www"] = dict(
     port=5000,
     plugins=dict(
-        waterfall_view={},
         console_view={},
         grid_view={},
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
