@@ -8,8 +8,7 @@ from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
 from buildbot.reporters.message import MessageFormatter
 
-from director.build_factory import (build_factory, checkout_step,
-                                    default_step_kwargs)
+from director.build_factory import build_factory, checkout_step, default_step_kwargs
 from director.env import env, get_env
 from director.github_hook import PRGithubEventHandler
 from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
@@ -174,6 +173,17 @@ c["titleURL"] = "https://github.com/scummvm/scummvm/"
 
 c["buildbotURL"] = env["BUILDBOT_URL"]
 
+github_hook = {
+    "secret": env["GITHUB_WEBHOOK_SECRET"],
+    "strict": True,
+    "class": PRGithubEventHandler,
+}
+
+
+github_token = get_env("GITHUB_TOKEN")
+if github_token:
+    github_hook["token"] = github_token
+
 # minimalistic config to activate new web UI
 c["www"] = dict(
     port=5000,
@@ -182,13 +192,7 @@ c["www"] = dict(
         grid_view={},
         badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
-    change_hook_dialects={
-        "github": {
-            "secret": env["GITHUB_WEBHOOK_SECRET"],
-            "strict": True,
-            "class": PRGithubEventHandler,
-        }
-    },
+    change_hook_dialects={"github": github_hook},
     allowed_origins=["*"],
 )
 
