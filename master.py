@@ -149,7 +149,7 @@ c["services"] = []
 if env["DISCORD_WEBHOOK"]:
     scummvm_reporter = WebHookReporter(
         env["DISCORD_WEBHOOK"],
-        mode=("change",),
+        mode="changesteps",
         messageFormatter=JSONMessageFormatter(),
     )
     c["services"].append(scummvm_reporter)
