@@ -75,9 +75,7 @@ class PRGithubEventHandler(GitHubEventHandler):
             "category": "pull",
             # TODO: Get author name based on login id using txgithub module
             "author": payload["sender"]["login"],
-            "comments": "GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}".format(
-                number, commits, "s" if commits != 1 else "", title, comments
-            ),
+            'comments': '{0} (PR #{1})\n{2}\n'.format(title, number, comments),
             "properties": properties,
             "files": files,
         }
