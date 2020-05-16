@@ -1,10 +1,12 @@
 """Build Factory to configure, compile and build the scummvm binary."""
 
+from typing import Dict, Any
+
 import os.path
 
 from buildbot.plugins import steps, util
 
-default_step_kwargs = {"logEnviron": False}
+default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 
 build_factory = util.BuildFactory()
 # check out the source

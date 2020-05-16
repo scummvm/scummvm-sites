@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any, Dict
 
 from buildbot import config
 from buildbot.plugins import steps, util
@@ -32,7 +32,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
     """Generate the steps to build all lingo files."""
 
     def __init__(
-        self, directory: str, game_id: str, debugflags: Optional[str] = None, **kwargs,
+        self, directory: str, game_id: str, debugflags: Optional[str] = None, **kwargs: Any
     ):
         if not directory:
             config.error("directory must be a string")
