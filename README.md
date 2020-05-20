@@ -16,7 +16,6 @@ These variables can be in a .env file that must be placed in the root of the pro
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
 
 This has been achieved. It reports changes on our discord channel.
-A stretch goal is to show changes in buildsteps, instead of a full build.
 
 ## How to add a new test target:
 
@@ -35,11 +34,14 @@ It runs on dokku. To add the remote:
     git remote add dokku dokku@buildbot.projecttycho.nl:buildbot
 
 To deploy::
-    git push dokku
+    git push dokku director-buildbot:master
+
+Configure /etc/nginx.conf by replacing the old ip in stream block by
+the new ip of the docker container.
+That ip can be gotten via a cat /home/dokku/buildbot/nginx.conf
 
 ## Ideas
 - Put game test files on S3 storage
-- Add remote builders
 - look at buildbot.process.factory.Trial: it has per test ouput, including reporting on changes between runs.
 - make it easy to see how one can run the test themselves.
 - Implement the `try` scheduler so that devs can test their changes
@@ -68,11 +70,7 @@ buildbot-dokku buildpacks:add buildbot heroku/python
 - warlock mac
 - warlock demo mac
 - warlock demo win
-- mediaband
 - majestic mac
-- Appartment D2
-- Appartment D3
-- Appartment D4
 
 ## Wait for: All D5 targets
 - Director 5 and higher
