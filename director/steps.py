@@ -52,6 +52,8 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
     def generate_command(self, name: str) -> List[str]:
         command = [
             "./scummvm",
+            "-c",
+            "scummvm.conf",
             "-p",
             self.directory,
             f"--start-movie={name}",
