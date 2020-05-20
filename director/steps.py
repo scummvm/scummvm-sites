@@ -32,7 +32,11 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
     """Generate the steps to build all lingo files."""
 
     def __init__(
-        self, directory: str, game_id: str, debugflags: Optional[str] = None, **kwargs: Any
+        self,
+        directory: str,
+        game_id: str,
+        debugflags: Optional[str] = None,
+        **kwargs: Any,
     ):
         if not directory:
             config.error("directory must be a string")
