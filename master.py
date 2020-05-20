@@ -33,9 +33,12 @@ c = BuildmasterConfig = {}
 # The 'workers' list defines the set of recognized workers. Each element is
 # a Worker object, specifying a unique worker name and password.  The same
 # worker name and password must be configured on the worker.
-c["workers"] = [
-    worker.LocalWorker("director-worker", max_builds=int(env["MAX_BUILDS"]))
-]
+c["workers"] = []
+scummvm_builbot_password = get_env("SCUMMVM_BUILDBOT_PASSWORD")
+if scummvm_builbot_password:
+    c["workers"].append(worker.Worker("buildbot2.scummvm.org", scummvm_builbot_password), max_builds=12)
+else:
+    c["workers"]. worker.LocalWorker("director-worker", max_builds=int(env["MAX_BUILDS"]))
 
 # 'protocols' contains information about protocols which master will use for
 # communicating with workers. You must define at least 'port' option that workers
