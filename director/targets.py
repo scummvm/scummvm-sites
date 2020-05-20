@@ -16,8 +16,18 @@ class Platform(Enum):
     MAC: str = "mac"
 
 
+class DirectorVersion(Enum):
+    D2: str = "D2"
+    D3: str = "D3"
+    D4: str = "D4"
+
+
 WIN = Platform.WIN
 MAC = Platform.MAC
+
+D2 = DirectorVersion.D2
+D3 = DirectorVersion.D3
+D4 = DirectorVersion.D4
 
 
 @dataclass(frozen=True)
@@ -26,11 +36,12 @@ class TestTarget:
     directory_var: str
     game_id: str
     platform: Platform
+    version: DirectorVersion
     debugflags: str = "fewframesonly,fast"
 
     @property
     def builder_name(self) -> str:
-        return f"{self.name}:{self.platform.value}"
+        return f"{self.name}:{self.platform.value} ({self.version.value})"
 
     @property
     def enabled(self) -> bool:
@@ -43,17 +54,18 @@ class TestTarget:
 
 available_test_targets: List[TestTarget] = [
     # Name, var name with path to the test directory, scummvm game_id, platform, debugflags
-    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", WIN),
-    TestTarget("D2apartment", "D2_APARTMENT_DIR_MAC", "theapartment", MAC),
-    TestTarget("D3apartment", "D3_APARTMENT_DIR_MAC", "theapartment", MAC),
-    TestTarget("D4apartment", "D4_APARTMENT_DIR_MAC", "theapartment", MAC),
-    TestTarget("D4dictionary", "D4_TEST_DIR_WIN", "director", WIN),
-    TestTarget("D4dictionary", "D4_TEST_DIR_MAC", "director", MAC),
+    TestTarget("Spaceship Warlock", "SPACESHIP_WARLOCK_DIR_WIN", "warlock", WIN, D2),
+    TestTarget("apartment", "D2_APARTMENT_DIR_MAC", "theapartment", MAC, D2),
+    TestTarget("apartment", "D3_APARTMENT_DIR_MAC", "theapartment", MAC, D3),
+    TestTarget("apartment", "D4_APARTMENT_DIR_MAC", "theapartment", MAC, D4),
+    TestTarget("dictionary", "D4_TEST_DIR_WIN", "director", WIN, D4),
+    TestTarget("dictionary", "D4_TEST_DIR_MAC", "director", MAC, D4),
     TestTarget(
         "Mediaband",
         "MEDIABAND_DIR_WIN",
         "mediaband",
         WIN,
+        D4,
         "fewframesonly,fast,bytecode",
     ),
     TestTarget(
@@ -61,9 +73,10 @@ available_test_targets: List[TestTarget] = [
         "CHOP_SUEY_DIR_WIN",
         "chopsuey",
         WIN,
+        D4,
         "fewframesonly,fast,bytecode",
     ),
-    TestTarget("Journeyman Project", "JOURNEYMAN_PROJECT_DIR_WIN", "jman", WIN),
+    TestTarget("Journeyman Project", "JOURNEYMAN_PROJECT_DIR_WIN", "jman", WIN, D3),
 ]
 
 test_targets: List[TestTarget] = [

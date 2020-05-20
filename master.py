@@ -64,7 +64,7 @@ def file_is_director_related(change: Change) -> bool:
 
 
 ####### BUILDER NAMES
-lingo_builder = "lingotests"
+lingo_builder = "lingotests (D4)"
 builder_names = [lingo_builder]
 builder_names.extend(target.builder_name for target in test_targets)
 
