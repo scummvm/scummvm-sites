@@ -36,9 +36,15 @@ c = BuildmasterConfig = {}
 c["workers"] = []
 scummvm_builbot_password = get_env("SCUMMVM_BUILDBOT_PASSWORD")
 if scummvm_builbot_password:
-    c["workers"].append(worker.Worker("buildbot2.scummvm.org", scummvm_builbot_password), max_builds=12)
+    worker_name = "buildbot2-scummvm-org"
+    c["workers"].append(
+        worker.Worker(worker_name, scummvm_builbot_password, max_builds=12)
+    )
 else:
-    c["workers"]. worker.LocalWorker("director-worker", max_builds=int(env["MAX_BUILDS"]))
+    worker_name = "director-worker"
+    c["workers"].append(
+        worker.LocalWorker(worker_name, max_builds=int(env["MAX_BUILDS"]))
+    )
 
 # 'protocols' contains information about protocols which master will use for
 # communicating with workers. You must define at least 'port' option that workers
@@ -108,11 +114,11 @@ build_lock = util.MasterLock("Build")
 
 
 c["builders"] = []
-c["builders"].extend(generate_builder(target) for target in test_targets)
+c["builders"].extend(generate_builder(target, [worker_name]) for target in test_targets)
 c["builders"].append(
     util.BuilderConfig(
         name="build",
-        workernames=["director-worker"],
+        workernames=[worker_name],
         factory=build_factory,
         locks=[build_lock.access("exclusive")],
     )
@@ -136,7 +142,7 @@ lingo_factory.addStep(
 
 c["builders"].append(
     util.BuilderConfig(
-        name=lingo_builder, workernames=["director-worker"], factory=lingo_factory
+        name=lingo_builder, workernames=[worker_name], factory=lingo_factory
     )
 )
 

@@ -84,7 +84,7 @@ test_targets: List[TestTarget] = [
 ]
 
 
-def generate_builder(target: TestTarget) -> BuilderConfig:
+def generate_builder(target: TestTarget, workernames: List[str]) -> BuilderConfig:
     factory = util.BuildFactory()
     factory.addStep(download_step)
     factory.addStep(
@@ -99,5 +99,5 @@ def generate_builder(target: TestTarget) -> BuilderConfig:
         )
     )
     return BuilderConfig(
-        name=target.builder_name, workernames=["director-worker"], factory=factory
+        name=target.builder_name, workernames=workernames, factory=factory
     )
