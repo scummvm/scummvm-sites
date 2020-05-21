@@ -36,7 +36,7 @@ c = BuildmasterConfig = {}
 c["workers"] = []
 scummvm_builbot_password = get_env("SCUMMVM_BUILDBOT_PASSWORD")
 if scummvm_builbot_password:
-    worker_name = "buildbot2-scummvm-org"
+    worker_name = "john-scummvm-net"
     c["workers"].append(
         worker.Worker(worker_name, scummvm_builbot_password, max_builds=12)
     )
