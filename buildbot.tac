@@ -23,5 +23,3 @@ application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 
 m = BuildMaster(basedir, configfile, umask)
 m.setServiceParent(application)
-m.log_rotation.rotateLength = rotateLength
-m.log_rotation.maxRotatedFiles = maxRotatedFiles
