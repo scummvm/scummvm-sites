@@ -7,8 +7,10 @@ from typing import Any
 from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
 from buildbot.reporters.message import MessageFormatter
+from twisted.python import log
 
-from director.build_factory import build_factory, checkout_step, default_step_kwargs
+from director.build_factory import (build_factory, checkout_step,
+                                    default_step_kwargs)
 from director.env import env, get_env
 from director.github_hook import PRGithubEventHandler
 from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
@@ -65,6 +67,9 @@ c["change_source"] = []
 def file_is_director_related(change: Change) -> bool:
     """True when the changed file is director related."""
     checks = ["engines/director", "graphics/macgui"]
+
+    log.msg("###################### CHANGE")
+    log.msg(f"{change}")
     for name in change.files:
         for check in checks:
             if check in name:
