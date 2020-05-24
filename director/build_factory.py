@@ -11,7 +11,7 @@ default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 
 @util.renderer
 def makeCommand(props):
-    cpus = int(props.getProperty("CPUs")) + 1
+    cpus = int(props.getProperty("nproc")) + 1
     if not cpus:
         cpus = 2
     return ["make", "-j", str(cpus)]
