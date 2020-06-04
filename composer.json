@@ -12,14 +12,13 @@
     ],
     "minimum-stability": "stable",
     "require": {
-        "php": "^5.6 || ^7.0",
-        "mustangostang/spyc": "0.5.1",
-        "simplepie/simplepie": "^1.5",
-        "paragonie/random_compat": "^2.0"
+        "php": "^7.0",
+        "mustangostang/spyc": "^0.6.3",
+        "simplepie/simplepie": "^1.5.5"
     },
     "require-dev": {
-        "guzzlehttp/guzzle": "^6.3",
-        "phpunit/phpunit": "^5.7 || ^6.2"
+        "guzzlehttp/guzzle": "^6.5",
+        "phpunit/phpunit": "^9.0"
     },
     "scripts": {
         "test": ""
