@@ -191,6 +191,7 @@ github_hook = {
     "secret": env["GITHUB_WEBHOOK_SECRET"],
     "strict": True,
     "class": PRGithubEventHandler,
+    "pullrequest_ref": "head"
 }
 
 
