@@ -42,7 +42,9 @@ header('Content-type: text/html; charset=UTF-8');
                               <a href="<?php echo $item->get_permalink(); ?>" title="Go to original place"><?php echo $item->get_title(); ?></a>
                           </h2>
                           <p class="article-info">
-                              <?php echo strip_tags(($item->get_author()? $item->get_author()->get_name() : 'Anonymous')); ?>,
+                              <?php
+                                echo strip_tags(($item->get_author_name()));
+                              ?>,
                               <?php
                               $ago = time() - $item->get_date('U');
                               //echo '<span title="'.Duration::toString($ago).' ago" class="date">'.date('d/m/Y', $item->get_date('U')).'</span>';

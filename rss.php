@@ -26,7 +26,7 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
       <link><?=htmlspecialchars($item->get_permalink())?>/</link>
       <description><![CDATA[<?=$item->get_content()?>]]></description>
 			<pubDate><?=$item->get_date(DATE_RSS)?></pubDate>
-			<author>nospam@scummvm.org (<?=($item->get_author() ? strip_tags($item->get_author()->get_name()) : 'anonymous')?>)</author>
+			<author>nospam@scummvm.org (<?=($item->get_author_name())?>)</author>
 		</item>
 		<?php if (++$count == $limit) break; ?>
     <?php endforeach; ?>
