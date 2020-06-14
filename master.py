@@ -205,7 +205,6 @@ c["www"] = dict(
     plugins=dict(
         console_view={},
         grid_view={},
-        badges={"left_pad": 0, "right_pad": 0, "border_radius": 3, "style": "badgeio"},
     ),
     change_hook_dialects={"github": github_hook},
     allowed_origins=["*"],

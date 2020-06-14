@@ -13,7 +13,6 @@ service_identity = "^18.1.0"
 pyopenssl = "^19.1.0"
 wheel = "^0.34.2"
 psycopg2 = "^2.8.5"
-buildbot-badges = "^2.7.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.4.4"
