@@ -45,7 +45,8 @@ class TestTarget:
 
     @property
     def enabled(self) -> bool:
-        return bool(self.directory_var)
+        """Target is enabled when the directory is not an empty string."""
+        return bool(self.directory)
 
     @property
     def directory(self) -> str:
