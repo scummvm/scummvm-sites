@@ -1,7 +1,6 @@
 from typing import Dict
 
-from buildbot.process.results import (CANCELLED, EXCEPTION, FAILURE, SUCCESS,
-                                      WARNINGS)
+from buildbot.process.results import CANCELLED, EXCEPTION, FAILURE, SUCCESS, WARNINGS
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
@@ -106,7 +105,10 @@ class WebHookReporter(NotifierBase):
 
         if "changesteps" in self.mode:
             prev = build["prev_build"]
-            if isMessageNeeededSteps(build, prev):
+            if isMessageNeeededSteps(build, prev) and results not in (
+                EXCEPTION,
+                CANCELLED,
+            ):
                 return True
         if "change" in self.mode:
             prev = build["prev_build"]
@@ -237,13 +239,9 @@ class JSONMessageFormatter:
 
         fields = []
         if new_failures:
-            fields.append(
-                {"name": "broken steps", "value": ", ".join(new_failures)}
-            )
+            fields.append({"name": "broken steps", "value": ", ".join(new_failures)})
         if new_successes:
-            fields.append(
-                {"name": "fixed steps", "value": ", ".join(new_successes)}
-            )
+            fields.append({"name": "fixed steps", "value": ", ".join(new_successes)})
 
         json = {
             "embeds": [{"url": url, "title": title, "color": color, "fields": fields}]
