@@ -33,7 +33,7 @@ DO_IP=`tail -1 $LOGFILE`
 
 # create POST body for Transip via jq.
 # In bash it's not possible to use $VARs in single quoted strings
-POST_JSON=`jq -n --arg host "$HOST"--arg ip "$DO_IP" \
+POST_JSON=`jq -n --arg host "$HOST" --arg ip "$DO_IP" \
 '{
   "dnsEntry": {
     "name": $host,
