@@ -9,12 +9,11 @@ from buildbot.plugins import reporters, schedulers, util, worker
 from buildbot.reporters.message import MessageFormatter
 from twisted.python import log
 
-from director.build_factory import (build_factory, checkout_step,
-                                    default_step_kwargs)
+from director.build_factory import build_factory
 from director.env import env, get_env
 from director.github_hook import PRGithubEventHandler
+from director.lingo_factory import lingo_factory
 from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
-from director.steps import GenerateStartMovieCommands, download_step
 from director.targets import generate_builder, test_targets
 
 # This is a sample buildmaster config file. It must be installed as
@@ -129,22 +128,6 @@ c["builders"].append(
     )
 )
 
-lingo_factory = util.BuildFactory()
-lingo_factory.addStep(checkout_step)
-lingo_factory.addStep(download_step)
-
-lingo_directory = "./engines/director/lingo/tests/"
-lingo_factory.addStep(
-    GenerateStartMovieCommands(
-        directory=lingo_directory,
-        game_id="directortest",
-        name="Generate lingo test commands",
-        command=["find", lingo_directory, "-name", "*.lingo", "-printf", "%P\n"],
-        haltOnFailure=True,
-        **default_step_kwargs,
-    )
-)
-
 c["builders"].append(
     util.BuilderConfig(
         name=lingo_builder, workernames=[worker_name], factory=lingo_factory
@@ -191,7 +174,7 @@ github_hook = {
     "secret": env["GITHUB_WEBHOOK_SECRET"],
     "strict": True,
     "class": PRGithubEventHandler,
-    "pullrequest_ref": "head"
+    "pullrequest_ref": "head",
 }
 
 
@@ -202,10 +185,7 @@ if github_token:
 # minimalistic config to activate new web UI
 c["www"] = dict(
     port=5000,
-    plugins=dict(
-        console_view={},
-        grid_view={},
-    ),
+    plugins=dict(console_view={}, grid_view={},),
     change_hook_dialects={"github": github_hook},
     allowed_origins=["*"],
 )
