@@ -5,6 +5,7 @@ from typing import Dict, Any
 import os.path
 
 from buildbot.plugins import steps, util
+from .env import env
 
 default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 
@@ -24,7 +25,7 @@ def configure_has_not_been_run(step):
 build_factory = util.BuildFactory()
 # check out the source
 checkout_step = steps.GitHub(
-    repourl="git://github.com/scummvm/scummvm.git",
+    repourl=env["REPOSITORY"],
     mode="incremental",
     **default_step_kwargs,
 )

@@ -161,7 +161,7 @@ if get_env("RTS_DISCORD_WEBHOOK"):
 # home pages (linked to the 'titleURL').
 
 c["title"] = "Director builds"
-c["titleURL"] = "https://github.com/scummvm/scummvm/"
+c["titleURL"] = env["REPOSITORY"]
 
 # the 'buildbotURL' string should point to the location where the buildbot's
 # internal web server is visible. This typically uses the port number set in
