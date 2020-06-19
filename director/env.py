@@ -18,6 +18,7 @@ default_vars = {
     "GITHUB_CLIENT_ID": "",
     "GITHUB_CLIENT_SECRET": "",
     "GITHUB_WEBHOOK_SECRET": "",
+    "REPOSITORY": "https://github.com/scummvm/scummvm",
     # Test files
     "D4_TEST_DIR_WIN": "",
     "D4_TEST_DIR_MAC": "",

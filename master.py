@@ -89,7 +89,7 @@ force_builder_names = ["build", *builder_names]
 # case, just kick off a 'runtests' build
 build_scheduler = schedulers.SingleBranchScheduler(
     name="all",
-    change_filter=util.ChangeFilter(repository="https://github.com/scummvm/scummvm"),
+    change_filter=util.ChangeFilter(repository=env["REPOSITORY"]),
     treeStableTimer=5,
     fileIsImportant=file_is_director_related,
     builderNames=["build"],
