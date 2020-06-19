@@ -116,7 +116,7 @@ description = "The Continuous Integration Framework"
 name = "buildbot"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies]
 Jinja2 = ">=2.1"
@@ -133,26 +133,26 @@ txaio = ">=2.2.2"
 
 [package.dependencies.buildbot-console-view]
 optional = true
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies.buildbot-grid-view]
 optional = true
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies.buildbot-waterfall-view]
 optional = true
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies.buildbot-worker]
 optional = true
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies.buildbot-www]
 optional = true
-version = "2.8.1"
+version = "2.8.2"
 
 [package.extras]
-bundle = ["buildbot-www (2.8.1)", "buildbot-worker (2.8.1)", "buildbot-waterfall-view (2.8.1)", "buildbot-console-view (2.8.1)", "buildbot-grid-view (2.8.1)"]
+bundle = ["buildbot-www (2.8.2)", "buildbot-worker (2.8.2)", "buildbot-waterfall-view (2.8.2)", "buildbot-console-view (2.8.2)", "buildbot-grid-view (2.8.2)"]
 docs = ["docutils (<0.13.0)", "sphinx (>1.4.0,<2.1.0)", "sphinxcontrib-blockdiag", "sphinxcontrib-spelling", "pyenchant", "docutils (>=0.8)", "sphinx-jinja", "towncrier"]
 test = ["setuptools-trial", "isort", "pylint (<1.7.0)", "pyenchant", "flake8 (>=2.6.0,<2.7.0)", "treq", "txrequests", "pyjade", "boto3", "moto", "mock (>=2.0.0)", "parameterized", "lz4"]
 tls = ["Twisted (>=17.9.0)", "pyopenssl (>=16.0.0)", "service-identity", "idna (>=0.6)"]
@@ -163,7 +163,7 @@ description = "Buildbot Console View plugin"
 name = "buildbot-console-view"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [[package]]
 category = "main"
@@ -171,7 +171,7 @@ description = "Buildbot Grid View plugin"
 name = "buildbot-grid-view"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [[package]]
 category = "main"
@@ -191,7 +191,7 @@ description = "Buildbot Waterfall View plugin"
 name = "buildbot-waterfall-view"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [[package]]
 category = "main"
@@ -199,7 +199,7 @@ description = "Buildbot Worker Daemon"
 name = "buildbot-worker"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies]
 future = "*"
@@ -214,7 +214,7 @@ description = "Buildbot UI"
 name = "buildbot-www"
 optional = false
 python-versions = "*"
-version = "2.8.1"
+version = "2.8.2"
 
 [package.dependencies]
 buildbot = "*"
@@ -695,7 +695,7 @@ description = "Python HTTP for Humans."
 name = "requests"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "2.23.0"
+version = "2.24.0"
 
 [package.dependencies]
 certifi = ">=2017.4.17"
@@ -988,31 +988,31 @@ black = [
     {file = "black-19.10b0.tar.gz", hash = "sha256:c2edb73a08e9e0e6f65a0e6af18b059b8b1cdd5bef997d7a0b181df93dc81539"},
 ]
 buildbot = [
-    {file = "buildbot-2.8.1-py3-none-any.whl", hash = "sha256:617dabf3c6a5efb33929961ff7d7710a9899b11809600658d0768531b9001edb"},
-    {file = "buildbot-2.8.1.tar.gz", hash = "sha256:3a26b3eeffb5005972404f93d1b2350af0b8958cc9d6ae802cd4142614b22bdb"},
+    {file = "buildbot-2.8.2-py3-none-any.whl", hash = "sha256:d4df731291150194092c389abaf0ebe8429843d8c5798da9e83e2aa209478fd9"},
+    {file = "buildbot-2.8.2.tar.gz", hash = "sha256:65b72b00620446a8731c82a344be46c1e0ef56ed81d0b26672aa9b36bff8b965"},
 ]
 buildbot-console-view = [
-    {file = "buildbot-console-view-2.8.1.tar.gz", hash = "sha256:b161b5b8956587f62bbb8b1fc3b5275fc277de4fa327b0d65ede302143081c32"},
-    {file = "buildbot_console_view-2.8.1-py3-none-any.whl", hash = "sha256:992d540c740947b6ff5193ba3ba58d86ddc330b7f8730f11c9fc4e1ae374cc99"},
+    {file = "buildbot-console-view-2.8.2.tar.gz", hash = "sha256:fc25d54095fb0d9a82d47f14bf294430ba596f1105cd337544538c1656e5d0f1"},
+    {file = "buildbot_console_view-2.8.2-py3-none-any.whl", hash = "sha256:3aa149c0554c2e8de4509508d3db8d98b0a8011ce31c0c1fed05f8edc1dfc962"},
 ]
 buildbot-grid-view = [
-    {file = "buildbot-grid-view-2.8.1.tar.gz", hash = "sha256:6a1c5782558937a3ef112c252b3bd1b6ae51bf9fae858a774459b8334455090f"},
-    {file = "buildbot_grid_view-2.8.1-py3-none-any.whl", hash = "sha256:6f367758a7a4253b7243e8b7e8e5beb24aa646180240a4bceeb74ba38f544469"},
+    {file = "buildbot-grid-view-2.8.2.tar.gz", hash = "sha256:c75589a08e8bbde4507b6421c6972b2aeac854f35ad3e69e318cb107d9459836"},
+    {file = "buildbot_grid_view-2.8.2-py3-none-any.whl", hash = "sha256:befd43248674851759bfdd1490a4271c4b158eda8dcce3a917da21147fa751d9"},
 ]
 buildbot-slack = [
     {file = "buildbot_slack-0.2.3-py3-none-any.whl", hash = "sha256:f817b2795d4350a9130b820db421eb01be8e7fd1a6ae7e94ce5a789813737e87"},
 ]
 buildbot-waterfall-view = [
-    {file = "buildbot-waterfall-view-2.8.1.tar.gz", hash = "sha256:efb45afbc5c32d383c3a5f47bb0b37180cb5deddc1e48cbb8cf531568ca46293"},
-    {file = "buildbot_waterfall_view-2.8.1-py3-none-any.whl", hash = "sha256:4c03995b62e5a0ed19d5ab65856d356b124d9af4e3441551691abeccb3847377"},
+    {file = "buildbot-waterfall-view-2.8.2.tar.gz", hash = "sha256:6aaa5d5e32d93f45cb997fa48a2c98c581e795b191c9bd655d698daf2ad8c23c"},
+    {file = "buildbot_waterfall_view-2.8.2-py3-none-any.whl", hash = "sha256:4ecf19367f14bddd7eedb038fd9ff03d5317f031b930aa8a050d40a7ae2c5baf"},
 ]
 buildbot-worker = [
-    {file = "buildbot-worker-2.8.1.tar.gz", hash = "sha256:92570bea7a71b0f41c61b4f474fca25d6edbf3da049fae661cdcbd51eb0f6ab1"},
-    {file = "buildbot_worker-2.8.1-py2.py3-none-any.whl", hash = "sha256:147ac5de0c091a07c2cd283c626f3609e0f6e7a2b087e5640ee2baefe2977756"},
+    {file = "buildbot-worker-2.8.2.tar.gz", hash = "sha256:624614ed06c0da243bfeb5a847872ebdd3380291f9163a9951b79b4ba3323c5c"},
+    {file = "buildbot_worker-2.8.2-py2.py3-none-any.whl", hash = "sha256:be7daf8a44112bf0ae31afa92fa22563275bb4abcfcc5fc5ac38690790efb009"},
 ]
 buildbot-www = [
-    {file = "buildbot-www-2.8.1.tar.gz", hash = "sha256:dbb36e47a36d03a474152b3a09278aabcd1dd4b05c8095071912e006ce273e14"},
-    {file = "buildbot_www-2.8.1-py3-none-any.whl", hash = "sha256:311d56419cd9fedecf1ff83f4f02d82d8c2588bbf27a71b6011c75a946e4e885"},
+    {file = "buildbot-www-2.8.2.tar.gz", hash = "sha256:058dac5d27640daf76a35a2166493f5e34cf98fc064b9751b77f2b6c20c81ca7"},
+    {file = "buildbot_www-2.8.2-py3-none-any.whl", hash = "sha256:fe1bbb7981d19eb0c07e822e4486f57a0d051a16f575b0028eee8f5dc82988eb"},
 ]
 certifi = [
     {file = "certifi-2020.4.5.2-py2.py3-none-any.whl", hash = "sha256:9cd41137dc19af6a5e03b630eefe7d1f458d964d406342dd3edf625839b944cc"},
@@ -1351,8 +1351,8 @@ regex = [
     {file = "regex-2020.6.8.tar.gz", hash = "sha256:e9b64e609d37438f7d6e68c2546d2cb8062f3adb27e6336bc129b51be20773ac"},
 ]
 requests = [
-    {file = "requests-2.23.0-py2.py3-none-any.whl", hash = "sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee"},
-    {file = "requests-2.23.0.tar.gz", hash = "sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6"},
+    {file = "requests-2.24.0-py2.py3-none-any.whl", hash = "sha256:fe75cc94a9443b9246fc7049224f75604b113c36acb93f87b80ed42c44cbb898"},
+    {file = "requests-2.24.0.tar.gz", hash = "sha256:b3559a131db72c33ee969480840fff4bb6dd111de7dd27c8ee1f820f4f00231b"},
 ]
 service-identity = [
     {file = "service_identity-18.1.0-py2.py3-none-any.whl", hash = "sha256:001c0707759cb3de7e49c078a7c0c9cd12594161d3bf06b9c254fdcb1a60dc36"},
