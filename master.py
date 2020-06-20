@@ -11,7 +11,6 @@ from twisted.python import log
 
 from director.build_factory import build_factory
 from director.env import env, get_env
-from director.github_hook import PRGithubEventHandler
 from director.lingo_factory import lingo_factory
 from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
 from director.targets import generate_builder, test_targets
@@ -173,7 +172,6 @@ c["buildbotURL"] = env["BUILDBOT_URL"]
 github_hook = {
     "secret": env["GITHUB_WEBHOOK_SECRET"],
     "strict": True,
-    "class": PRGithubEventHandler,
     "pullrequest_ref": "head",
 }
 
