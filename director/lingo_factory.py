@@ -2,7 +2,12 @@ from typing import List
 
 from buildbot.plugins import util
 
-from .build_factory import build_factory, checkout_step, default_step_kwargs
+from .build_factory import (
+    build_factory,
+    checkout_step,
+    default_step_kwargs,
+    default_env,
+)
 from .steps import GenerateStartMovieCommands, ScummVMTest, download_step
 
 lingo_directory = "./engines/director/lingo/tests/"
@@ -36,7 +41,7 @@ lingo_factory.addStep(
             lingo_directory,
             "directortest",
         ],
-        env={"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy"},
+        env=default_env,
         timeout=5,
         maxTime=10,
         logEnviron=False,

@@ -9,6 +9,12 @@ from .env import env
 
 default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 
+default_env: Dict[str, str] = {
+    "SDL_VIDEODRIVER": "dummy",
+    "SDL_AUDIODRIVER": "dummy",
+    "ASAN_OPTIONS": "detect_leaks=0",
+}
+
 
 @util.renderer
 def makeCommand(props):
@@ -25,9 +31,7 @@ def configure_has_not_been_run(step):
 build_factory = util.BuildFactory()
 # check out the source
 checkout_step = steps.GitHub(
-    repourl=env["REPOSITORY"],
-    mode="incremental",
-    **default_step_kwargs,
+    repourl=env["REPOSITORY"], mode="incremental", **default_step_kwargs,
 )
 build_factory.addStep(checkout_step)
 
@@ -37,7 +41,7 @@ build_factory.addStep(
         description="Finding the number of CPUs",
         command="nproc",
         property="nproc",
-        **default_step_kwargs
+        **default_step_kwargs,
     )
 )
 
@@ -48,13 +52,18 @@ build_factory.addStep(
         description="Find if configure has run before",
         command="[ -f config.mk ] && ls -1 config.mk || exit 0",
         property="configure_has_ran",
-        **default_step_kwargs
+        **default_step_kwargs,
     )
 )
 
 build_factory.addStep(
     steps.Configure(
-        command=["./configure", "--disable-all-engines", "--enable-engine=director"],
+        command=[
+            "./configure",
+            "--disable-all-engines",
+            "--enable-engine=director",
+            "--enable-asan",
+        ],
         env={"CXX": "ccache g++"},
         doStepIf=configure_has_not_been_run,
         **default_step_kwargs,

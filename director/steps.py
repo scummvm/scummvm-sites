@@ -6,7 +6,7 @@ from buildbot.process import buildstep, logobserver
 from buildbot.process.results import FAILURE, worst_status
 from twisted.internet import defer
 
-from .build_factory import master_file, worker_file
+from .build_factory import master_file, worker_file, default_env
 
 download_step = steps.FileDownload(
     mastersrc=master_file, workerdest=worker_file, mode=755,
@@ -83,7 +83,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
                         description=name,
                         descriptionDone=name,
                         command=self.generate_command(name),
-                        env={"SDL_VIDEODRIVER": "dummy", "SDL_AUDIODRIVER": "dummy"},
+                        env=default_env,
                         timeout=5,
                         maxTime=10,
                         logEnviron=False,
