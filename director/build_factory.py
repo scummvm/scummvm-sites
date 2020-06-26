@@ -12,7 +12,6 @@ default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 default_env: Dict[str, str] = {
     "SDL_VIDEODRIVER": "dummy",
     "SDL_AUDIODRIVER": "dummy",
-    "ASAN_OPTIONS": "detect_leaks=0",
 }
 
 
@@ -58,12 +57,7 @@ build_factory.addStep(
 
 build_factory.addStep(
     steps.Configure(
-        command=[
-            "./configure",
-            "--disable-all-engines",
-            "--enable-engine=director",
-            "--enable-asan",
-        ],
+        command=["./configure", "--disable-all-engines", "--enable-engine=director",],
         env={"CXX": "ccache g++"},
         doStepIf=configure_has_not_been_run,
         **default_step_kwargs,
