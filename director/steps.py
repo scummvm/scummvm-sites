@@ -9,7 +9,7 @@ from twisted.internet import defer
 from .build_factory import master_file, worker_file, default_env
 
 download_step = steps.FileDownload(
-    mastersrc=master_file, workerdest=worker_file, mode=755,
+    mastersrc=master_file, workerdest=worker_file, mode=0o0755,
 )
 
 
