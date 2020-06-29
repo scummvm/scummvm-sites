@@ -42,8 +42,8 @@ lingo_factory.addStep(
             "directortest",
         ],
         env=default_env,
-        timeout=5,
-        maxTime=10,
+        timeout=20,
+        maxTime=30,
         logEnviron=False,
     )
 )
