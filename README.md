@@ -9,24 +9,31 @@ It's located at: https://buildbot.projecttycho.nl
 install python poetry: https://python-poetry.org/
 $ poetry install
 
-Check the director.env file for a list of enviroment variables that are used.
+Check the director.env.py file for a list of enviroment variables that are used.
 These variables can be in a .env file that must be placed in the root of the project directory.
 
 ## Goal:
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
-
 This has been achieved. It reports changes on our discord channel.
 
 ## How to add a new test target:
 
-Adding new test targets is done via these steps:
+The test files and their configuration are stored on S3.
 - Create a directory with all the files to be tested,
-- put a `test_scripts.txt` file in the root of that directory,
-    - with all files that need to be tested,
-    - one line per file and
-    - with the path to that file: e.g. a/FILE.MMM
-- add a TestTarget in `director.targets:available_test_targets`
-- add the variable that contains the path to the directory of test files in `director.env:default_vars`.
+- include a scummvm.conf with the game_id:
+    cd /path/to/game && /path/to/scummvm -c scummvm.conf -p . --add
+- in scummvm.conf: change the pathline to: path=.
+- add an entry in targets.json
+ {
+        "name": "Spaceship Warlock",
+        "directory": "warlock-win",
+        "game_id": "warlock-win",
+        "platform": "win",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": ["moviename", ....]
+ }
+
 
 ## Deploy
 
@@ -50,7 +57,7 @@ Install python-poetry and run:
 $ poetry install
 
 To run buildbot:
-$ buildbot start . 
+$ buildbot start .
 
 Open a browser: http://localhost:5000
 
@@ -79,32 +86,15 @@ git remote add dokku hostname:buildbot
 - Director dictionary 5-win: Crashes too much
 
 ## Spin up a test server
-The scripts in the test-deploy directory can be leveraged to 
+The scripts in the test-deploy directory can be leveraged to
 spin up a buildbot test instance.
-
 
 ## Improvements ideas
 
 The most important improvement ideas are tracked in trello:
 https://trello.com/b/iQxOkBvI/director
 
-This serves as a placeholder for ideas that aren't ready 
-
-### remove friction for adding new targets
-- Put all files on external storage
-- put target configuration into json
-- just require a reconfig for buildbot to reload the json
-- sync files from external storage for builders
-
-1) Move to JSON configuration 
-  {  
-    name: str 
-    game_id: str # could be in mandatory scummvm.conf   
-    platform: str = OneOf("win", "mac")
-    version: str = OneOf("D2", "D3", "D4")
-    debugflags: str = "fewframesonly,fast" # at least "fewframesonly,fast" # for >= D4 include bytecode
-    files: [str] = ["file1", "file2", "etc..."]
-  }
+This serves as a placeholder for ideas that aren't ready
 
 ### enable developers to run the tests locally
 - script that downloads the files
@@ -112,7 +102,6 @@ This serves as a placeholder for ideas that aren't ready
 - With and without dummy drivers
 
 ### other Ideas
-- Put game test files on S3 storage
 - look at buildbot.process.factory.Trial: it has per test ouput, including reporting on changes between runs.
 - make it easy to see how one can run the test themselves.
 - Implement the `try` scheduler so that devs can test their changes
@@ -130,4 +119,4 @@ This serves as a placeholder for ideas that aren't ready
     - report them on the PR page
     - only compare between master
     - don't compare new master run with the run with the PR
-- Make buildbot output cachable
+- Make buildbot API calls cachable

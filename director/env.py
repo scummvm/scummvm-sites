@@ -19,16 +19,8 @@ default_vars = {
     "GITHUB_CLIENT_SECRET": "",
     "GITHUB_WEBHOOK_SECRET": "",
     "REPOSITORY": "https://github.com/scummvm/scummvm",
-    # Test files
-    "D4_TEST_DIR_WIN": "",
-    "D4_TEST_DIR_MAC": "",
-    "CHOP_SUEY_DIR_WIN": "",
-    "SPACESHIP_WARLOCK_DIR_WIN": "",
-    "JOURNEYMAN_PROJECT_DIR_WIN": "",
-    "D2_APARTMENT_DIR_MAC": "",
-    "D3_APARTMENT_DIR_MAC": "",
-    "D4_APARTMENT_DIR_MAC": "",
-    "MEDIABAND_DIR_WIN": "",
+    # base directory which contains all the targets
+    "TARGETS_BASEDIR": "~/wb1/",
 }
 
 
