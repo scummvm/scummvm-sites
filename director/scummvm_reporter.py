@@ -233,9 +233,13 @@ class JSONMessageFormatter:
             title = f"Success {ctx['buildername']}"
         elif ctx["build"]["results"] == FAILURE:
             color = 0xFC0303  # red
-            if new_successes and not new_failures:
-                color = 0xE8D44F  # yellow
             title = f"Failure {ctx['buildername']}"
+            if new_successes and not new_failures:
+                color = 0x36A64F  # green
+                title = f"Improvement {ctx['buildername']}"
+            elif new_successes and new_failures:
+                color = 0xE8D44F  # yellow
+                title = f"Change {ctx['buildername']}"
 
         fields = []
         if new_failures:
