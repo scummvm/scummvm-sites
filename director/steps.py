@@ -16,10 +16,13 @@ download_step = steps.FileDownload(
 class ScummVMTest(steps.Test):
     """Test steps that treats a specific warning as errors"""
 
-    treat_as_error: str = "######################  LINGO: syntax error"
+    treat_as_error: List[str] = [
+        "######################  LINGO: syntax error",
+        "BUILDBOT:"
+    ]
 
     def has_error(self, line):
-        return self.treat_as_error in line
+        return any(tae in line for tae in self.treat_as_error)
 
     def evaluateCommand(self, cmd):
         result = super().evaluateCommand(cmd)
