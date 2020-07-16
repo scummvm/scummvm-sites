@@ -89,6 +89,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
                         env=default_env,
                         timeout=20,
                         maxTime=30,
+                        interruptSignal="QUIT",
                         logEnviron=False,
                     )
                     for name in scripts

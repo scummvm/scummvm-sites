@@ -44,6 +44,7 @@ lingo_factory.addStep(
         env=default_env,
         timeout=20,
         maxTime=30,
+        interruptSignal="QUIT",
         logEnviron=False,
     )
 )

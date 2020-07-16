@@ -98,6 +98,7 @@ def generate_builder(target: TestTarget, workernames: List[str]) -> BuilderConfi
                 workdir=os.path.join("build", target.directory),
                 timeout=20,
                 maxTime=30,
+                interruptSignal="QUIT",
                 logEnviron=False,
             )
         )
