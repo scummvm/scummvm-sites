@@ -1,6 +1,6 @@
 [
     {
-        "name": "Spaceship Warlock",
+        "name": "Spaceship Warlock p1/2",
         "directory": "warlock-win",
         "game_id": "warlock-win",
         "platform": "win",
@@ -362,6 +362,16 @@
             "NAV/REACTOR2.MMM",
             "NAV/SHARDCST.MMM",
             "NAV/TITLSCRN.MMM",
+        ]
+    },
+    {
+        "name": "Spaceship Warlock p2/2",
+        "directory": "warlock-win",
+        "game_id": "warlock-win",
+        "platform": "win",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "POGO/ABOUT.MMM",
             "POGO/CABPNTRR.MMM",
             "POGO/CABSTAND.MMM",
