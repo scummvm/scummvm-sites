@@ -85,6 +85,7 @@ def generate_builder(target: TestTarget, workernames: List[str]) -> BuilderConfi
                 os.path.join(base_dir, to_directory),
                 target.directory,
             ],
+            logEnviron=False,
         )
     )
     for moviename in target.movienames:
