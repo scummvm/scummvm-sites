@@ -8,7 +8,7 @@ from buildbot.plugins import steps, util
 
 from .build_factory import default_env, default_step_kwargs
 from .env import env
-from .steps import GenerateStartMovieCommands, ScummVMTest, download_step
+from .steps import ScummVMTest, download_step
 
 
 @dataclass(frozen=True)
