@@ -243,9 +243,19 @@ class JSONMessageFormatter:
 
         fields = []
         if new_failures:
-            fields.append({"name": "broken steps", "value": ", ".join(new_failures)})
+            fields.append(
+                {
+                    "name": "broken steps",
+                    "value": "```diff -" + ", ".join(new_failures) + "```",
+                }
+            )
         if new_successes:
-            fields.append({"name": "fixed steps", "value": ", ".join(new_successes)})
+            fields.append(
+                {
+                    "name": "fixed steps",
+                    "value": "```diff +" + ", ".join(new_successes) + "```",
+                }
+            )
 
         json = {
             "embeds": [{"url": url, "title": title, "color": color, "fields": fields}]
