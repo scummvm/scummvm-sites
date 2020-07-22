@@ -246,14 +246,14 @@ class JSONMessageFormatter:
             fields.append(
                 {
                     "name": "broken steps",
-                    "value": "```diff\n -" + ", ".join(new_failures) + "```",
+                    "value": "```diff\n- " + ", ".join(new_failures) + "```",
                 }
             )
         if new_successes:
             fields.append(
                 {
                     "name": "fixed steps",
-                    "value": "```diff\n +" + ", ".join(new_successes) + "```",
+                    "value": "```diff\n+ " + ", ".join(new_successes) + "```",
                 }
             )
 
