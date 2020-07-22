@@ -1,6 +1,6 @@
 [
     {
-        "name": "Spaceship Warlock p1/2",
+        "name": "Spaceship Warlock p1/3",
         "directory": "warlock-win",
         "game_id": "warlock-win",
         "platform": "win",
@@ -259,7 +259,17 @@
             "ENG/SOUTHD1.MMM",
             "ENG/WESTD6.MMM",
             "ENG/WESTI6.MMM",
-            "ENG/WESTK2.MMM",
+            "ENG/WESTK2.MMM"
+        ]
+    },
+    {
+        "name": "Spaceship Warlock p2/3",
+        "directory": "warlock-win",
+        "game_id": "warlock-win",
+        "platform": "win",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "GPATROL/ABOUT.MMM",
             "GPATROL/BBALC.MMM",
             "GPATROL/BBALCVIW.MMM",
@@ -361,17 +371,7 @@
             "NAV/PROLOGUE.MMM",
             "NAV/REACTOR2.MMM",
             "NAV/SHARDCST.MMM",
-            "NAV/TITLSCRN.MMM"
-        ]
-    },
-    {
-        "name": "Spaceship Warlock p2/2",
-        "directory": "warlock-win",
-        "game_id": "warlock-win",
-        "platform": "win",
-        "version": "D3",
-        "debugflags": "fewframesonly,fast",
-        "movienames": [
+            "NAV/TITLSCRN.MMM",
             "POGO/ABOUT.MMM",
             "POGO/CABPNTRR.MMM",
             "POGO/CABSTAND.MMM",
@@ -497,7 +497,17 @@
             "STAMBUL/TAXIBARB.MMM",
             "STAMBUL/TAXIPORT.MMM",
             "STAMBUL/TAXIPRTB.MMM",
-            "STAMBUL/WESTCOPS.MMM",
+            "STAMBUL/WESTCOPS.MMM"
+        ]
+    },
+    {
+        "name": "Spaceship Warlock p3/3",
+        "directory": "warlock-win",
+        "game_id": "warlock-win",
+        "platform": "win",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "STARBIRD/ABOUT.MMM",
             "STARBIRD/AGE.MMM",
             "STARBIRD/APOLOGY.MMM",
