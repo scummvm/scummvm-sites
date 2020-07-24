@@ -1,13 +1,15 @@
 from typing import Dict
 
-from buildbot.process.results import CANCELLED, EXCEPTION, FAILURE, SUCCESS, WARNINGS
-from buildbot.reporters import utils
+from buildbot.process.results import (CANCELLED, EXCEPTION, FAILURE, SUCCESS,
+                                      WARNINGS)
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import httpclientservice
 from buildbot_slack.reporter import SlackStatusPush
 from twisted.internet import defer
 from twisted.python import log
+
+from .vendor import reporter_utils as utils
 
 
 def steps_info(build: dict) -> Dict[str, int]:
