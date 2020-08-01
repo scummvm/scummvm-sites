@@ -92,7 +92,7 @@ add_platform("macos", "osx_x64", "Mac OS X (x64)", "1", "tar.xz");
 #add_platform("linuxmoto", "motomagx", "Motorola (MotoMAGX)", "0", "tar.xz");
 add_platform("openpandora", "openpandora", "OpenPandora", "0", "tar.bz2");
 add_platform("ouya", "ouya", "OUYA", "0", "zip");
-add_platform("ps2", "ps2", "Playstation 2", "0", "tar.xz");
+#add_platform("ps2", "ps2", "Playstation 2", "0", "tar.xz");
 add_platform("ps3", "ps3", "Playstation 3", "0", "tar.xz");
 add_platform("psp", "psp", "Playstation Portable", "0", "tar.xz");
 add_platform("psp2", "psp2", "Playstation Vita", "0", "zip");
