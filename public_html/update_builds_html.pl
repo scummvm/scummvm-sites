@@ -96,7 +96,7 @@ add_platform("ps2", "ps2", "Playstation 2", "0", "tar.xz");
 add_platform("ps3", "ps3", "Playstation 3", "0", "tar.xz");
 add_platform("psp", "psp", "Playstation Portable", "0", "tar.xz");
 add_platform("psp2", "psp2", "Playstation Vita", "0", "zip");
-add_platform("webos", "webos", "HP webOS", "0", "tar.xz");
+#add_platform("webos", "webos", "HP webOS", "0", "tar.xz");
 add_platform("windows", "mingw-w32", "Windows (32bit)", "1", "zip");
 add_platform("windows", "mingw-w64", "Windows (64bit)", "1", "zip");
 #add_platform("wince", "wince", "Windows CE (ARM)", "0", "zip");
