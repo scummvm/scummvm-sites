@@ -58,8 +58,8 @@ build_factory.addStep(
 
 build_factory.addStep(
     steps.Configure(
-        command=["./configure", "--disable-all-engines", "--enable-engine=director", "--enable-tsan"],
-        env={"CXX": "ccache g++", "CXXFLAGS": "-DDIRECTORBUILDBOT"},
+        command=["./configure", "--disable-all-engines", "--enable-engine=director", "--enable-asan"],
+        env={"CXX": "ccache g++"},
         doStepIf=configure_has_not_been_run,
         **default_step_kwargs,
     )
