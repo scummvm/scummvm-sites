@@ -37,6 +37,7 @@ lingo_factory.addStep(
             "./scummvm",
             "-c",
             "scummvm.conf",
+            "--debugflags=fewframesonly,fast",
             "-p",
             lingo_directory,
             "directortest",
