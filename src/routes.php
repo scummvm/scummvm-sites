@@ -18,6 +18,9 @@ function getCloudProviderAndScope($cloudProviderName, $container)
             ]
         );
         $scope = [ 'scope' => 'files.content.write files.content.read'];
+        if (isset($_GET['refresh_token']) && $_GET['refresh_token'] === 'true') {
+            $scope[ 'token_access_type'] = 'offline';
+        }
         break;
     case 'box':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Box(

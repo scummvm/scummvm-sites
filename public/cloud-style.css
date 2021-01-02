@@ -2,6 +2,10 @@ html {
     background: #c60;
 }
 
+body {
+    font-family: 'verdana', 'tahoma', 'arial', 'helvetica', sans-serif;
+}
+
 .container {
     width: 80%;
     max-width: 500pt;
@@ -17,8 +21,11 @@ html {
 .content {
     padding: 8pt;
     background: #FFF;
-    font-family: 'verdana', 'tahoma', 'arial', 'helvetica', sans-serif;
     font-size: 16pt;
+}
+
+.small {
+    font-size: 8pt;
 }
 
 .content p {
@@ -38,9 +45,9 @@ a:hover { color: #0080FF; }
 
 a.link {
     display: inline-block;
-    min-width: calc(25% - 2*10pt);
-    width: calc(25% - 2*10pt);
-    height: calc(25% - 2*10pt);
+    min-width: calc(20% - 2*10pt);
+    width: calc(20% - 2*10pt);
+    height: calc(20% - 2*10pt);
     padding: 10pt;
     margin: 0;
     border: 0;
