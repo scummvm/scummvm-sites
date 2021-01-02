@@ -17,6 +17,7 @@ function getCloudProviderAndScope($cloudProviderName, $container)
             'redirectUri'       => $oauth['redirect_uri']
             ]
         );
+        $scope = [ 'scope' => 'files.content.write files.content.read'];
         break;
     case 'box':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Box(
