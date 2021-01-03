@@ -4,20 +4,21 @@ use Slim\App;
 use Slim\Http\Request;
 use Slim\Http\Response;
 
-function getCloudProviderAndScope($cloudProviderName, $container)
+function getCloudProviderAndScope($settings)
 {
-    $oauth = $container->get('settings')[$cloudProviderName];
     $scope = [];
-    switch ($cloudProviderName) {
+    switch ($settings['provider']) {
     case 'dropbox':
-        $provider = new Stevenmaguire\OAuth2\Client\Provider\Dropbox(
-            [
-            'clientId'          => $oauth['client_id'],
-            'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri']
-            ]
-        );
-        $scope = [ 'scope' => 'files.content.write files.content.read'];
+        $options = [
+            'clientId'          => $settings['client_id'],
+            'clientSecret'      => $settings['client_secret'],
+            'redirectUri'       => $settings['redirect_uri']
+        ];
+        if ($settings['grant_type'] === 'refresh_token') {
+            unset($options['redirectUri']);
+        };
+        $provider = new Stevenmaguire\OAuth2\Client\Provider\Dropbox($options);
+        $scope = [ 'scope' => 'account_info.read files.metadata.read files.content.write files.content.read'];
         if (isset($_GET['refresh_token']) && $_GET['refresh_token'] === 'true') {
             $scope[ 'token_access_type'] = 'offline';
         }
@@ -25,18 +26,18 @@ function getCloudProviderAndScope($cloudProviderName, $container)
     case 'box':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Box(
             [
-            'clientId'          => $oauth['client_id'],
-            'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri']
+            'clientId'          => $settings['client_id'],
+            'clientSecret'      => $settings['client_secret'],
+            'redirectUri'       => $settings['redirect_uri']
             ]
         );
         break;
     case 'gdrive':
         $provider = new League\OAuth2\Client\Provider\Google(
             [
-            'clientId'          => $oauth['client_id'],
-            'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri'],
+            'clientId'          => $settings['client_id'],
+            'clientSecret'      => $settings['client_secret'],
+            'redirectUri'       => $settings['redirect_uri'],
             'accessType'        => 'offline',
             ]
         );
@@ -45,9 +46,9 @@ function getCloudProviderAndScope($cloudProviderName, $container)
     case 'onedrive':
         $provider = new Stevenmaguire\OAuth2\Client\Provider\Microsoft(
             [
-            'clientId'          => $oauth['client_id'],
-            'clientSecret'      => $oauth['client_secret'],
-            'redirectUri'       => $oauth['redirect_uri']
+            'clientId'          => $settings['client_id'],
+            'clientSecret'      => $settings['client_secret'],
+            'redirectUri'       => $settings['redirect_uri']
             ]
         );
         $scope = [ 'scope' => [ 'Files.ReadWrite.AppFolder', 'offline_access' ] ];
@@ -76,7 +77,8 @@ return function (App $app) {
     $app->get(
         '/{cloud}', function (Request $request, Response $response, array $args) use ($container) {
             $cloud = $args['cloud'];
-            $providerAndScope = getCloudProviderAndScope($cloud, $container);
+            $settings = $container->get('settings')[$cloud];
+            $providerAndScope = getCloudProviderAndScope($settings);
 
             if (!isset($providerAndScope)) {
                 return $response->withJson(['error' => true, 'message' => 'Unknown cloud provider']);
@@ -136,8 +138,10 @@ return function (App $app) {
 
     $app->get(
         '/{cloud}/refresh', function (Request $request, Response $response, $args) use ($container) {
-
-            $providerAndScope = getCloudProviderAndScope($args['cloud'], $container);
+            $cloud = $args['cloud'];
+            $settings = $container->get('settings')[$cloud];
+            $settings['grant_type'] = 'refresh_token';
+            $providerAndScope = getCloudProviderAndScope($settings);
 
             if (!$request->hasHeader('X-ScummVM-Refresh-Token')) {
                 return $response->withJson(['error' => true, 'message' => 'Missing refresh token']);
