@@ -213,7 +213,7 @@ c["db"] = {
 
 c['configurators'] = [util.JanitorConfigurator(
     logHorizon=timedelta(weeks=5),
-    hour=23,
+    hour=21,
     dayOfWeek=0
 )]
 ### disable sending usage data to buildbot. Their usage data receiver is down.
