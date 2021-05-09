@@ -3,6 +3,7 @@
 
 import os.path
 from typing import Any
+from datetime import timedelta
 
 from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
@@ -209,3 +210,9 @@ c["db"] = {
     # http://docs.buildbot.net/current/manual/configuration/global.html#database-specification
     "db_url": env["DATABASE_URL"],
 }
+
+c['configurators'] = [util.JanitorConfigurator(
+    logHorizon=timedelta(weeks=5),
+    hour=23,
+    dayOfWeek=0
+)]
