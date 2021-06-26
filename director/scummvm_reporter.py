@@ -24,6 +24,7 @@ def isMessageNeeededSteps(build: dict, prev_build: dict) -> bool:
         - added steps
         - removed steps
     """
+
     build_s = steps_info(build).items()
     prev_s = steps_info(prev_build)
     for name, results in build_s:
@@ -207,7 +208,7 @@ class JSONMessageFormatter:
     Otherwise the sending of the build message just wont trigger.
     """
 
-    wantProperties = False
+    wantProperties = True
     wantSteps = True
     wantLogs = False
     ctx = {"type": "JSON"}
@@ -242,6 +243,13 @@ class JSONMessageFormatter:
             elif new_successes and new_failures:
                 color = 0xE8D44F  # yellow
                 title = f"Change {ctx['buildername']}"
+
+        branch = ctx["build"]["properties"].get("branch", [None])[0]
+        if branch.startswith("refs/pull"):
+            # A PullRequest branch looks like: refs/pull/3062/head
+            PR_number = branch.split('/')[2]
+            title = f"PR {PR_number}: {title}"
+
 
         fields = []
         if new_failures:
