@@ -183,7 +183,7 @@ if github_token:
 
 # minimalistic config to activate new web UI
 c["www"] = dict(
-    port=5000,
+    port="tcp:5000:interface=127.0.0.1",
     plugins=dict(console_view={}, grid_view={},),
     change_hook_dialects={"github": github_hook},
     allowed_origins=["*"],
@@ -216,3 +216,5 @@ c['configurators'] = [util.JanitorConfigurator(
     hour=23,
     dayOfWeek=0
 )]
+### disable sending usage data to buildbot. Their usage data receiver is down.
+c['buildbotNetUsageData'] = None
