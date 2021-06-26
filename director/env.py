@@ -21,6 +21,7 @@ default_vars = {
     "REPOSITORY": "https://github.com/scummvm/scummvm",
     # base directory which contains all the targets
     "TARGETS_BASEDIR": "~/wb1/",
+    "PRODUCTION": False
 }
 
 

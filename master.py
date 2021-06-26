@@ -25,6 +25,8 @@ c: Any
 BuildmasterConfig: Any
 c = BuildmasterConfig = {}
 
+PRODUCTION = get_env("PRODUCTION")
+
 ####### SECRETS
 # We don't use a secretsProvider. It wouldn't work together with
 # the reporters.
@@ -79,7 +81,8 @@ def file_is_director_related(change: Change) -> bool:
 ####### BUILDER NAMES
 lingo_builder = "lingotests (D4)"
 builder_names = [lingo_builder]
-builder_names.extend(target.builder_name for target in test_targets)
+if PRODUCTION:
+    builder_names.extend(target.builder_name for target in test_targets)
 
 force_builder_names = ["build", *builder_names]
 
@@ -118,7 +121,8 @@ build_lock = util.MasterLock("Build")
 
 
 c["builders"] = []
-c["builders"].extend(generate_builder(target, [worker_name]) for target in test_targets)
+if PRODUCTION:
+    c["builders"].extend(generate_builder(target, [worker_name]) for target in test_targets)
 c["builders"].append(
     util.BuilderConfig(
         name="build",
@@ -189,17 +193,18 @@ c["www"] = dict(
     allowed_origins=["*"],
 )
 
-c["www"]["auth"] = util.GitHubAuth(
-    env["GITHUB_CLIENT_ID"],
-    env["GITHUB_CLIENT_SECRET"],
-    apiVersion=4,
-    getTeamsMembership=True,
-)
+if PRODUCTION:
+    c["www"]["auth"] = util.GitHubAuth(
+        env["GITHUB_CLIENT_ID"],
+        env["GITHUB_CLIENT_SECRET"],
+        apiVersion=4,
+        getTeamsMembership=True,
+    )
 
-c["www"]["authz"] = util.Authz(
-    allowRules=[util.AnyControlEndpointMatcher(role="developers"),],
-    roleMatchers=[util.RolesFromGroups(groupPrefix="scummvm/")],
-)
+    c["www"]["authz"] = util.Authz(
+        allowRules=[util.AnyControlEndpointMatcher(role="developers"),],
+        roleMatchers=[util.RolesFromGroups(groupPrefix="scummvm/")],
+    )
 
 
 ####### DB URL
