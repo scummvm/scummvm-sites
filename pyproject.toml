@@ -14,6 +14,7 @@ pyopenssl = "^20.0.1"
 wheel = "^0.34.2"
 psycopg2 = "^2.8.5"
 sqlalchemy = "==1.3.24" # 1.4 breaks due to a missing strategy engine
+crossbar = "^21.3.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "^2.4.4"
