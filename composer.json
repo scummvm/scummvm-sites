@@ -21,7 +21,7 @@
         "slim/php-view": "^2.0",
         "slim/slim": "^3.1",
         "stevenmaguire/oauth2-box": "^2.0",
-        "stevenmaguire/oauth2-dropbox": "^3.0",
+        "stevenmaguire/oauth2-dropbox": "^3.1",
         "stevenmaguire/oauth2-microsoft": "^2.2"
     },
     "require-dev": {
