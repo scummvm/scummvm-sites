@@ -184,6 +184,7 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
         $headers = "From: " . EMAIL_FROM . " (" . EMAIL_FROM_NAME . ")\r\n";
     }
 
+    $headers .= "Reply-To: $pusher_name <$pusher_email>\r\n";
     $headers .= "X-Git-Pusher: $pusher_name <$pusher_email>\r\n";
 
     if(SEND_HTML_EMAIL)
