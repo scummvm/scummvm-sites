@@ -178,8 +178,8 @@ function mail_github_post_receive($to, $subj_header, $github_json) {
     // build the mail headers
 
     if(USE_PUSHER_AS_SENDER && $pusher_name && $pusher_email) {
-        $headers = "From: $pusher_name <$pusher_email>\r\n";
-//        $headers = "From: " . EMAIL_FROM . " (" . $pusher_name . ")\r\n";
+//        $headers = "From: $pusher_name <$pusher_email>\r\n";
+        $headers = "From: " . EMAIL_FROM . " (" . $pusher_name . ")\r\n";
     } else {
         $headers = "From: " . EMAIL_FROM . " (" . EMAIL_FROM_NAME . ")\r\n";
     }
