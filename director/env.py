@@ -2,14 +2,13 @@
 
 import os
 
-from dotenv import dotenv_values
+from environs import Env
 
-dotenv = dotenv_values()
+env = Env()
+env.read_env()
 
-env = {}
-
+ENABLE_FORCE_SCHEDULER =  False
 default_vars = {
-    "ENABLE_FORCE_SCHEDULER": False,
     "DATABASE_URL": "sqlite:///state.sqlite",
     "BUILDBOT_URL": "http://localhost:5000/",
     "DISCORD_WEBHOOK": False,
@@ -21,7 +20,7 @@ default_vars = {
     "REPOSITORY": "https://github.com/scummvm/scummvm",
     # base directory which contains all the targets
     "TARGETS_BASEDIR": "~/wb1/",
-    "PRODUCTION": False
+    "UI": False
 }
 
 

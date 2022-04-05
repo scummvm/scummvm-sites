@@ -231,6 +231,8 @@ class JSONMessageFormatter:
 
         url = ctx["build_url"]
 
+        # TODO: Convert title from interger to it's name
+        title = ctx["build"]["results"]
         if ctx["build"]["results"] == SUCCESS:
             color = 0x36A64F  # green
             title = f"Success {ctx['buildername']}"

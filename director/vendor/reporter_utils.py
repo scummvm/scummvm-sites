@@ -85,7 +85,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
-            [getPreviousBuild(master, build) for build in builds])
+            [getPreviousBuild(master, build) for build in builds if build is not None])
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 

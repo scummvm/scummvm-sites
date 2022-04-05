@@ -1,13 +1,12 @@
 import json
 import os.path
 from dataclasses import dataclass, fields
-from typing import List, Union
+from typing import List
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import steps, util
 
-from .build_factory import default_env, default_step_kwargs
-from .env import env
+from .build_factory import default_env
 from .steps import ScummVMTest, download_step
 
 
@@ -46,7 +45,7 @@ target_fields = [f.name for f in fields(TestTarget)]
 """
 
 test_targets = []
-with open(os.path.join(env["TARGETS_BASEDIR"], "targets.json"), "r") as data:
+with open(os.path.join("/storage", "targets.json"), "r") as data:
     targets = json.loads(data.read())
     for target in targets:
         test_targets.append(
@@ -54,7 +53,7 @@ with open(os.path.join(env["TARGETS_BASEDIR"], "targets.json"), "r") as data:
         )
 
 
-def generate_command(target: TestTarget, moviename: str):
+def generate_command(target: TestTarget, moviename: str) -> List[str]:
     command = [
         "../scummvm",
         "-c",
@@ -70,7 +69,7 @@ def generate_command(target: TestTarget, moviename: str):
 def generate_builder(target: TestTarget, workernames: List[str]) -> BuilderConfig:
     factory = util.BuildFactory()
     factory.addStep(download_step)
-    base_dir = env["TARGETS_BASEDIR"]
+    base_dir = "/storage/"
     to_directory = target.directory
     if not to_directory.endswith("/"):
         to_directory += "/"
