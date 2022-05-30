@@ -2,8 +2,8 @@
 <opml version="1.1">
 <head>
 <title>ScummVM Planet</title>
-<dateCreated>2021-06-13T20:27:12+00:00</dateCreated>
-<dateModified>2021-06-13T20:27:12+00:00</dateModified>
+<dateCreated>2022-05-30T16:39:02+00:00</dateCreated>
+<dateModified>2022-05-30T16:39:02+00:00</dateModified>
 </head>
 <body>
 <outline text="RichieSam&#039;s Adventures in Code-ville" htmlUrl="https://richiesams.blogspot.com/" xmlUrl="https://richiesams.blogspot.com/feeds/posts/default" isDown=""/>
@@ -19,24 +19,22 @@
 <outline text="LordHoto&#039;s World" htmlUrl="https://lordhoto.blogspot.com/" xmlUrl="https://lordhoto.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="Nipun Garg" htmlUrl="https://nipungarg.me/" xmlUrl="https://nipungarg.me/feed.xml" isDown=""/>
 <outline text="Dreammaster&#039;s disassembly blog" htmlUrl="https://dm-notes.blogspot.com/" xmlUrl="https://dm-notes.blogspot.com/feeds/posts/default" isDown=""/>
-<outline text="ResidualVM news" htmlUrl="https://www.residualvm.org/" xmlUrl="https://www.residualvm.org/feeds/atom/" isDown=""/>
+<outline text="ResidualVM news" htmlUrl="https://www.residualvm.org/" xmlUrl="https://www.residualvm.org/feeds/atom/" isDown="1"/>
 <outline text="sanguinehearts" htmlUrl="https://sanguinehearts.blogspot.com/" xmlUrl="https://sanguinehearts.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="ScummVM news" htmlUrl="http://www.scummvm.org/" xmlUrl="https://www.scummvm.org/feeds/atom/" isDown=""/>
 <outline text="Gobsmacked" htmlUrl="https://drmccoy.de/gobsmacked" xmlUrl="https://drmccoy.de/gobsmacked/?feed=rss2" isDown=""/>
 <outline text="Criezy&#039;s Blog" htmlUrl="https://criezy.blogspot.com/" xmlUrl="https://criezy.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="Tkachov — GSoC blog" htmlUrl="http://tkachov.ru/gsoc/" xmlUrl="http://tkachov.ru/gsoc/rss.php" isDown=""/>
 <outline text="ScummVM Music – Gaming &amp; Technology" htmlUrl="https://www.jameswoodcock.co.uk/" xmlUrl="https://www.jameswoodcock.co.uk/?feed=rss2&amp;cat=12" isDown=""/>
-<outline text="rootfather&#039;s Adventures" htmlUrl="https://www.serra.me/en/" xmlUrl="https://www.serra.me/en/category/scummvm-en/feed" isDown=""/>
+<outline text="rootfather&#039;s Adventures" htmlUrl="https://www.serra.me/en/" xmlUrl="https://www.serra.me/en/category/scummvm-en/feed" isDown="1"/>
 <outline text="Google Summer of Code with ScummVM" htmlUrl="https://gsoc-ar28.blogspot.com/" xmlUrl="https://gsoc-ar28.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="GSoC 2020 ResidualVM" htmlUrl="https://gunnar.syzygia.de/" xmlUrl="https://gunnar.syzygia.de/index.php/feed/" isDown=""/>
 <outline text="ScummVM on Nathanael Gentry" htmlUrl="https://npjg.github.io/scummvm/" xmlUrl="https://npjg.github.io/scummvm/index.xml" isDown=""/>
 <outline text="Dylan Servilla - ScummVM Blog" htmlUrl="https://djsrv.github.io/scummvm/" xmlUrl="https://djsrv.github.io/scummvm/index.xml" isDown=""/>
 <outline text="GSoD 2020 b-gent" htmlUrl="https://gsod2020-bgent.blogspot.com/" xmlUrl="https://gsod2020-bgent.blogspot.com/feeds/posts/default?alt=rss" isDown=""/>
-<outline text="GSoC 2021 - djsrv" htmlUrl="https://blogs.scummvm.org/djsrv" xmlUrl="https://blogs.scummvm.org/djsrv/feed/" isDown=""/>
-<outline text="GSoC 2021 - hikigaya" htmlUrl="https://blogs.scummvm.org/hikigaya" xmlUrl="https://blogs.scummvm.org/hikigaya/feed/" isDown=""/>
-<outline text="GSoC 2021 - av_dx" htmlUrl="https://blogs.scummvm.org/av-dx" xmlUrl="https://blogs.scummvm.org/av-dx/feed/" isDown=""/>
-<outline text="GSoC 2021 - sheep" htmlUrl="https://blogs.scummvm.org/sheep" xmlUrl="https://blogs.scummvm.org/sheep/feed/" isDown=""/>
-<outline text="GSoC 2021 - a-yyg" htmlUrl="https://blogs.scummvm.org/ayyg" xmlUrl="https://blogs.scummvm.org/ayyg/feed/" isDown=""/>
-<outline text="GSoC 2021 - Twan" htmlUrl="https://blogs.scummvm.org/twan" xmlUrl="https://blogs.scummvm.org/twan/feed/" isDown=""/>
+<outline text="raikou&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/raikou" xmlUrl="https://blogs.scummvm.org/raikou/feed/" isDown=""/>
+<outline text="stablesteady&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/stablesteady" xmlUrl="https://blogs.scummvm.org/stablesteady/feed/" isDown=""/>
+<outline text="grisenti&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/grisenti" xmlUrl="https://blogs.scummvm.org/grisenti/feed/" isDown=""/>
+<outline text="quote58&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/quote58" xmlUrl="https://blogs.scummvm.org/quote58/feed/" isDown=""/>
 </body>
 </opml>

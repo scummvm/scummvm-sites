@@ -5,7 +5,7 @@ locale: en
 items: 10
 shuffle: 0
 refresh: 3600
-cache: 50
+cache: 3600
 nohtml: 0
 postmaxlength: 0
 categories:
