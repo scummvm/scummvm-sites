@@ -166,8 +166,7 @@ c["change_source"] = []
 c["services"] = []
 
 c["buildbotURL"] = env("BUILDBOT_URL")
-WEB_UI = env.bool("WEB_UI", True)
-if WEB_UI:
+if env.bool("WEB_REPORTER", False):
     DISCORD_WEBHOOK = env("DISCORD_WEBHOOK")
     scummvm_reporter = WebHookReporter(
         DISCORD_WEBHOOK,
@@ -175,12 +174,14 @@ if WEB_UI:
         messageFormatter=JSONMessageFormatter(),
     )
     c["services"].append(scummvm_reporter)
-
     # RTS: Roland Test Server
     RTS_DISCORD_WEBHOOK = env("RTS_DISCORD_WEBHOOK", "")
     if RTS_DISCORD_WEBHOOK:
         slack_webhook = reporters.SlackStatusPush(endpoint=RTS_DISCORD_WEBHOOK)
         c["services"].append(slack_webhook)
+
+WEB_UI = env.bool("WEB_UI", True)
+if WEB_UI:
 
     github_hook = {
         "secret": env("GITHUB_WEBHOOK_SECRET"),
@@ -231,7 +232,7 @@ if WEB_UI:
         'Grid.buildFetchLimit': 200,
     }
     c["configurators"] = [
-        util.JanitorConfigurator(logHorizon=timedelta(weeks=5), hour=23, dayOfWeek=0)
+        util.JanitorConfigurator(logHorizon=timedelta(weeks=1), hour=23, dayOfWeek=0)
     ]
 
 if env.bool("WAMP", False):
@@ -271,3 +272,5 @@ c['caches'] = {             # defaults
     'usdicts' : 10,         # 1
 }
 
+### Keeps only the latest 5000 changeids, i.e. git commits
+c["changeHorizon"] = 1000
