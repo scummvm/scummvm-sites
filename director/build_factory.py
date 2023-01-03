@@ -61,6 +61,7 @@ build_factory.addStep(
             "--disable-all-engines",
             "--enable-engine=director",
             "--enable-asan",
+            "--enable-lld",
         ],
         env={"CXX": "ccache g++"},
         doStepIf=configure_has_not_been_run,
