@@ -10,7 +10,7 @@ default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
 default_env: Dict[str, str] = {
     "SDL_VIDEODRIVER": "dummy",
     "SDL_AUDIODRIVER": "dummy",
-    "ASAN_OPTIONS": "detect_leaks=0:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1",
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1",
 }
 
 
