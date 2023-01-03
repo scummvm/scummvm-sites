@@ -29,7 +29,9 @@ def configure_has_not_been_run(step):
 build_factory = util.BuildFactory()
 # check out the source
 checkout_step = steps.GitHub(
-    repourl="https://github.com/scummvm/scummvm", mode="incremental", **default_step_kwargs,
+    repourl="https://github.com/scummvm/scummvm",
+    mode="incremental",
+    **default_step_kwargs,
 )
 build_factory.addStep(checkout_step)
 

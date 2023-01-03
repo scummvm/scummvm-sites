@@ -7,7 +7,7 @@ from environs import Env
 env = Env()
 env.read_env()
 
-ENABLE_FORCE_SCHEDULER =  False
+ENABLE_FORCE_SCHEDULER = False
 default_vars = {
     "DATABASE_URL": "sqlite:///state.sqlite",
     "BUILDBOT_URL": "http://localhost:5000/",
@@ -20,7 +20,7 @@ default_vars = {
     "REPOSITORY": "https://github.com/scummvm/scummvm",
     # base directory which contains all the targets
     "TARGETS_BASEDIR": "~/wb1/",
-    "UI": False
+    "UI": False,
 }
 
 
@@ -32,5 +32,6 @@ def get_env(key, default=""):
     with a fallback to the specified default.
     """
     return os.environ.get(key, dotenv.get(key, default))
+
 
 env = {key: get_env(key, default) for key, default in default_vars.items()}

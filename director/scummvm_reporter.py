@@ -1,7 +1,6 @@
 from typing import Dict
 
-from buildbot.process.results import (CANCELLED, EXCEPTION, FAILURE, SUCCESS,
-                                      WARNINGS)
+from buildbot.process.results import CANCELLED, EXCEPTION, FAILURE, SUCCESS, WARNINGS
 from buildbot.reporters.message import MessageFormatter
 from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import httpclientservice
@@ -249,9 +248,8 @@ class JSONMessageFormatter:
         branch = ctx["build"]["properties"].get("branch", [None])[0]
         if branch.startswith("refs/pull"):
             # A PullRequest branch looks like: refs/pull/3062/head
-            PR_number = branch.split('/')[2]
+            PR_number = branch.split("/")[2]
             title = f"PR {PR_number}: {title}"
-
 
         fields = []
         if new_failures:

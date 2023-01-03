@@ -1,13 +1,13 @@
 # -*- python -*-
 # ex: set filetype=python:
 
-from typing import Any
 from datetime import timedelta
+from typing import Any
 
 from buildbot.changes.changes import Change
 from buildbot.plugins import reporters, schedulers, util, worker
-from twisted.python import log
 from environs import Env
+from twisted.python import log
 
 from director.build_factory import build_factory
 from director.lingo_factory import lingo_factory
@@ -49,7 +49,9 @@ if HAS_WORKER:
     for worker_name in WORKER_NAMES:
         c["workers"].append(
             worker.Worker(
-                worker_name, scummvm_builbot_password, max_builds=env.int("MAX_BUILDS", 12)
+                worker_name,
+                scummvm_builbot_password,
+                max_builds=env.int("MAX_BUILDS", 12),
             )
         )
 elif IS_LOCAL_WORKER:
@@ -84,6 +86,7 @@ def file_is_director_related(change: Change) -> bool:
             if check in name:
                 return True
     return False
+
 
 REPOSITORY = env("REPOSITORY", "https://github.com/scummvm/scummvm")
 ####### BUILDER NAMES
@@ -142,9 +145,7 @@ if HAS_WORKER or IS_LOCAL_WORKER:
         )
     )
 
-    if env.bool(
-        "FULL_BUILD", True
-    ):
+    if env.bool("FULL_BUILD", True):
         c["builders"].extend(
             generate_builder(target, WORKER_NAMES) for target in test_targets
         )
@@ -189,7 +190,6 @@ if WEB_UI:
         "pullrequest_ref": "head",
     }
 
-
     github_token = env("GITHUB_TOKEN")
     if github_token:
         github_hook["token"] = github_token
@@ -207,12 +207,15 @@ if WEB_UI:
     # the 'www' entry below, but with an externally-visible host name which the
     # buildbot cannot figure out without some help.
 
-    #c["buildbotURL"] = "https://john-test.scummvm.org/"
+    # c["buildbotURL"] = "https://john-test.scummvm.org/"
 
     # minimalistic config to activate new web UI
     c["www"] = dict(
         port=env("WEB_UI_CONNECTION", "tcp:5000:interface=127.0.0.1"),
-        plugins=dict(console_view={}, grid_view={},),
+        plugins=dict(
+            console_view={},
+            grid_view={},
+        ),
         change_hook_dialects={"github": github_hook},
         allowed_origins=["*"],
     )
@@ -225,25 +228,27 @@ if WEB_UI:
     )
 
     c["www"]["authz"] = util.Authz(
-        allowRules=[util.AnyControlEndpointMatcher(role="developers"),],
+        allowRules=[
+            util.AnyControlEndpointMatcher(role="developers"),
+        ],
         roleMatchers=[util.RolesFromGroups(groupPrefix="scummvm/")],
     )
-    c['www']['ui_default_config'] = { 
-        'Grid.buildFetchLimit': 200,
+    c["www"]["ui_default_config"] = {
+        "Grid.buildFetchLimit": 200,
     }
     c["configurators"] = [
         util.JanitorConfigurator(logHorizon=timedelta(weeks=1), hour=23, dayOfWeek=0)
     ]
 
 if env.bool("WAMP", False):
-    c['mq'] = {
-        'type' : 'wamp',
-        'router_url': env("WAMP_URL", 'ws://localhost:8080/ws'),
-        'realm': 'realm1',
+    c["mq"] = {
+        "type": "wamp",
+        "router_url": env("WAMP_URL", "ws://localhost:8080/ws"),
+        "realm": "realm1",
         # valid are: none, critical, error, warn, info, debug, trace
         #'wamp_debug_level' : 'error'
-        'wamp_debug_level' : 'warn'
-}
+        "wamp_debug_level": "warn",
+    }
 
 
 ####### DB URL
@@ -261,15 +266,15 @@ c["buildbotNetUsageData"] = None
 ### Use internal caching
 # https://docs.buildbot.net/2.8.4/manual/configuration/global.html#horizons
 
-c['caches'] = {             # defaults
-    'Changes' : 30000,       # 10 Have seen up to 17K changes be requested in one request.
-    'Builds' : 5000,         # 15    
-    'chdicts' : 30000,       # 1
-    'BuildRequests' : 20,   # 1
-    'SourceStamps' : 20,    # 1
-    'ssdicts' : 20,         # 20
-    'objectids' : 100,       # 1
-    'usdicts' : 10,         # 1
+c["caches"] = {  # defaults
+    "Changes": 30000,  # 10 Have seen up to 17K changes be requested in one request.
+    "Builds": 5000,  # 15
+    "chdicts": 30000,  # 1
+    "BuildRequests": 20,  # 1
+    "SourceStamps": 20,  # 1
+    "ssdicts": 20,  # 20
+    "objectids": 100,  # 1
+    "usdicts": 10,  # 1
 }
 
 ### Keeps only the latest 5000 changeids, i.e. git commits
