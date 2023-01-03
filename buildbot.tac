@@ -24,7 +24,6 @@ if basedir == '.':
 # note: this line is matched against to check that this is a buildmaster
 # directory; do not edit it.
 application = service.Application('buildmaster')
-from twisted.python.logfile import LogFile
 from twisted.python.log import ILogObserver, FileLogObserver
 application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 
