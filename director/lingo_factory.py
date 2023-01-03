@@ -1,4 +1,6 @@
 from buildbot.plugins import util
+
+from .build_factory import (
     build_factory,
     checkout_step,
     default_step_kwargs
