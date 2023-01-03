@@ -10,8 +10,8 @@ from director.vendor.buildmaster import BuildMaster
 master_name = os.environ["MASTER_NAME"]
 
 basedir = '.'
-rotateLength = 10000000
-maxRotatedFiles = 10
+#rotateLength = 10000000
+#maxRotatedFiles = 10
 configfile = 'master.py'
 
 # Default umask for server
@@ -24,11 +24,11 @@ if basedir == '.':
 # note: this line is matched against to check that this is a buildmaster
 # directory; do not edit it.
 application = service.Application('buildmaster')
+from twisted.python.logfile import LogFile
 from twisted.python.log import ILogObserver, FileLogObserver
 application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 
 #m = BuildMaster(basedir, configfile, umask)
 m = BuildMaster(basedir, configfile, umask, master_name=master_name)
+
 m.setServiceParent(application)
-m.log_rotation.rotateLength = rotateLength
-m.log_rotation.maxRotatedFiles = maxRotatedFiles

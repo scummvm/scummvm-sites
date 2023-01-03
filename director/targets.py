@@ -1,12 +1,12 @@
 import json
 import os.path
 from dataclasses import dataclass, fields
-from typing import List
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import steps, util
 
 from .build_factory import default_env
+from .env import settings
 from .steps import ScummVMTest, download_step
 
 
@@ -17,7 +17,7 @@ class TestTarget:
     game_id: str
     platform: str
     version: str
-    movienames: List[str]
+    movienames: list[str]
     debugflags: str = "fewframesonly,fast"
 
     @property
@@ -45,7 +45,8 @@ target_fields = [f.name for f in fields(TestTarget)]
 """
 
 test_targets = []
-with open(os.path.join("/storage", "targets.json"), "r") as data:
+cwd = settings["TARGETS_BASEDIR"]
+with open(os.path.join(cwd, "targets.json"), "r") as data:
     targets = json.loads(data.read())
     for target in targets:
         test_targets.append(
@@ -53,7 +54,7 @@ with open(os.path.join("/storage", "targets.json"), "r") as data:
         )
 
 
-def generate_command(target: TestTarget, moviename: str) -> List[str]:
+def generate_command(target: TestTarget, moviename: str) -> list[str]:
     command = [
         "../scummvm",
         "-c",
@@ -66,10 +67,10 @@ def generate_command(target: TestTarget, moviename: str) -> List[str]:
     return command
 
 
-def generate_builder(target: TestTarget, workernames: List[str]) -> BuilderConfig:
+def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfig:
     factory = util.BuildFactory()
     factory.addStep(download_step)
-    base_dir = "/storage/"
+    base_dir = settings["TARGETS_BASEDIR"]
     to_directory = target.directory
     if not to_directory.endswith("/"):
         to_directory += "/"

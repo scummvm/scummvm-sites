@@ -1,13 +1,15 @@
 """Build Factory to configure, compile and build the scummvm binary."""
 
 import os.path
-from typing import Any, Dict
+from typing import Any
 
 from buildbot.plugins import steps, util
 
-default_step_kwargs: Dict[str, Any] = {"logEnviron": False}
+from .env import settings
 
-default_env: Dict[str, str] = {
+default_step_kwargs: dict[str, Any] = {"logEnviron": False}
+
+default_env: dict[str, str] = {
     "SDL_VIDEODRIVER": "dummy",
     "SDL_AUDIODRIVER": "dummy",
     "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1",
@@ -28,8 +30,9 @@ def configure_has_not_been_run(step):
 
 build_factory = util.BuildFactory()
 # check out the source
+# TODO: replace with env variable
 checkout_step = steps.GitHub(
-    repourl="https://github.com/scummvm/scummvm",
+    repourl=settings["REPOSITORY"],
     mode="incremental",
     **default_step_kwargs,
 )
@@ -60,6 +63,7 @@ build_factory.addStep(
     steps.Configure(
         command=[
             "./configure",
+            "--disable-detection-full",
             "--disable-all-engines",
             "--enable-engine=director",
             "--enable-asan",

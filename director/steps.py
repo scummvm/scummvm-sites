@@ -1,5 +1,5 @@
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from buildbot import config
 from buildbot.plugins import steps, util
@@ -125,7 +125,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         self.observer = logobserver.BufferLogObserver()
         self.addLogObserver("stdio", self.observer)
 
-    def generate_command(self, name: str) -> List[str]:
+    def generate_command(self, name: str) -> list[str]:
         command = [
             "./scummvm",
             "-c",

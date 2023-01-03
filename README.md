@@ -35,20 +35,7 @@ The test files and their configuration are stored on S3.
  }
 
 
-## Deploy
-
-It runs on dokku. To add the remote:
-    git remote add dokku dokku@buildbot.projecttycho.nl:buildbot
-
-To deploy::
-    git push dokku director-buildbot:master
-
-## Work on:
-- diff highlighting
-- compare to latest master
-
 ## wishlist:
-- Use 'diff' syntax highlighting when reporting
 - Add screenshot generation with automatic diffs: inspired by: https://fifo.ci/
 
 ## Run it yourself
@@ -59,19 +46,7 @@ $ poetry install
 To run buildbot:
 $ buildbot start .
 
-Open a browser: http://localhost:5000
-
-## To install it yourself on a server
-
-It runs on dokku: http://dokku.viewdocs.io/dokku/
-installed at digital ocean.
-Plugins required: postgres, letsencrypt, dokku-apt, dokku-nginx-stream
-
-Buildpack installation:
-dokku buildpacks:add buildbot https://github.com/moneymeets/python-poetry-buildpack.git
-dokku buildpacks:add buildbot heroku/python
-
-git remote add dokku hostname:buildbot
+Open a browser: http://localhost:8010
 
 ## Wishlist of GAMES to add
 - D4 guided tours
@@ -79,15 +54,10 @@ git remote add dokku hostname:buildbot
 - warlock demo mac
 - warlock demo win
 - JMAN mac (implement recursive hcopy tool)
-- majestic mac
 
 ## Wait for: All D5 targets
 - Director 5 and higher
 - Director dictionary 5-win: Crashes too much
-
-## Spin up a test server
-The scripts in the test-deploy directory can be leveraged to
-spin up a buildbot test instance.
 
 ## Improvements ideas
 

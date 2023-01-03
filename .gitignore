@@ -10,3 +10,5 @@ __pycache__
 .env
 scummvm-binary
 gitpoller-workdir/
+workers/
+.venv/

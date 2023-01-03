@@ -1,6 +1,6 @@
 from buildbot.plugins import util
 
-from .build_factory import build_factory, checkout_step, default_step_kwargs
+from .build_factory import checkout_step, default_step_kwargs
 from .steps import GenerateStartMovieCommands, download_step
 
 lingo_directory = "./engines/director/lingo/tests/"

@@ -5,11 +5,8 @@ getPreviousBuild function is altered to look for the latest
 master build. It's used by scummvm reporter.
 """
 
-from collections import UserList
-
 from buildbot.process.results import RETRY
-from buildbot.reporters.utils import getURLForBuild
-from buildbot.util import flatten
+from buildbot.reporters.utils import get_url_for_log
 from twisted.internet import defer
 
 
@@ -49,42 +46,16 @@ def getPreviousBuild(master, build):
 
 
 @defer.inlineCallbacks
-def getDetailsForBuild(
-    master,
-    build,
-    wantProperties=False,
-    wantSteps=False,
-    wantPreviousBuild=False,
-    wantLogs=False,
-):
-    """Copied verbatim from buildbot.reporters.utils"""
-
-    buildrequest = yield master.data.get(("buildrequests", build["buildrequestid"]))
-    buildset = yield master.data.get(("buildsets", buildrequest["buildsetid"]))
-    build["buildrequest"], build["buildset"] = buildrequest, buildset
-    ret = yield getDetailsForBuilds(
-        master,
-        buildset,
-        [build],
-        wantProperties=wantProperties,
-        wantSteps=wantSteps,
-        wantPreviousBuild=wantPreviousBuild,
-        wantLogs=wantLogs,
-    )
-    return ret
-
-
-@defer.inlineCallbacks
 def getDetailsForBuilds(
     master,
     buildset,
     builds,
-    wantProperties=False,
-    wantSteps=False,
-    wantPreviousBuild=False,
-    wantLogs=False,
+    want_properties=False,
+    want_steps=False,
+    want_previous_build=False,
+    want_logs=False,
+    want_logs_content=False,
 ):
-    """Copied verbatim from buildbot.reporters.utils"""
 
     builderids = {build["builderid"] for build in builds}
 
@@ -94,7 +65,7 @@ def getDetailsForBuilds(
 
     buildersbyid = {builder["builderid"]: builder for builder in builders}
 
-    if wantProperties:
+    if want_properties:
         buildproperties = yield defer.gatherResults(
             [
                 master.data.get(("builds", build["buildid"], "properties"))
@@ -104,25 +75,39 @@ def getDetailsForBuilds(
     else:  # we still need a list for the big zip
         buildproperties = list(range(len(builds)))
 
-    if wantPreviousBuild:
+    if want_previous_build:
         prev_builds = yield defer.gatherResults(
-            [getPreviousBuild(master, build) for build in builds if build is not None]
+            [getPreviousBuild(master, build) for build in builds]
         )
     else:  # we still need a list for the big zip
         prev_builds = list(range(len(builds)))
 
-    if wantSteps:
+    if want_logs_content:
+        want_logs = True
+    if want_logs:
+        want_steps = True
+
+    if want_steps:  # pylint: disable=too-many-nested-blocks
         buildsteps = yield defer.gatherResults(
             [master.data.get(("builds", build["buildid"], "steps")) for build in builds]
         )
-        if wantLogs:
-            for s in flatten(buildsteps, types=(list, UserList)):
-                logs = yield master.data.get(("steps", s["stepid"], "logs"))
-                s["logs"] = list(logs)
-                for l in s["logs"]:
-                    l["content"] = yield master.data.get(
-                        ("logs", l["logid"], "contents")
-                    )
+        if want_logs:
+            for build, build_steps in zip(builds, buildsteps):
+                for s in build_steps:
+                    logs = yield master.data.get(("steps", s["stepid"], "logs"))
+                    s["logs"] = list(logs)
+                    for l in s["logs"]:
+                        l["url"] = get_url_for_log(
+                            master,
+                            build["builderid"],
+                            build["number"],
+                            s["number"],
+                            l["slug"],
+                        )
+                        if want_logs_content:
+                            l["content"] = yield master.data.get(
+                                ("logs", l["logid"], "contents")
+                            )
 
     else:  # we still need a list for the big zip
         buildsteps = list(range(len(builds)))
@@ -135,11 +120,16 @@ def getDetailsForBuilds(
         build["buildset"] = buildset
         build["url"] = getURLForBuild(master, build["builderid"], build["number"])
 
-        if wantProperties:
+        if want_properties:
             build["properties"] = properties
 
-        if wantSteps:
+        if want_steps:
             build["steps"] = list(steps)
 
-        if wantPreviousBuild:
+        if want_previous_build:
             build["prev_build"] = prev
+
+
+def getURLForBuild(master, builderid, build_number):
+    prefix = master.config.buildbotURL
+    return prefix + f"#/builders/{builderid}/builds/{build_number}"

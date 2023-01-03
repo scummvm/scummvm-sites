@@ -31,7 +31,7 @@ def get_env(key, default=""):
         - the .env file
     with a fallback to the specified default.
     """
-    return os.environ.get(key, dotenv.get(key, default))
+    return os.environ.get(key, env(key, default))
 
 
-env = {key: get_env(key, default) for key, default in default_vars.items()}
+settings = {key: get_env(key, default) for key, default in default_vars.items()}

@@ -5,13 +5,13 @@ from datetime import timedelta
 from typing import Any
 
 from buildbot.changes.changes import Change
-from buildbot.plugins import reporters, schedulers, util, worker
+from buildbot.plugins import schedulers, util, worker
 from environs import Env
 from twisted.python import log
 
 from director.build_factory import build_factory
+from director.discord import DiscordStatusPush
 from director.lingo_factory import lingo_factory
-from director.scummvm_reporter import JSONMessageFormatter, WebHookReporter
 from director.targets import generate_builder, test_targets
 
 # This is a sample buildmaster config file. It must be installed as
@@ -169,21 +169,13 @@ c["services"] = []
 c["buildbotURL"] = env("BUILDBOT_URL")
 if env.bool("WEB_REPORTER", False):
     DISCORD_WEBHOOK = env("DISCORD_WEBHOOK")
-    scummvm_reporter = WebHookReporter(
+    discord_reporter = DiscordStatusPush(
         DISCORD_WEBHOOK,
-        mode="changesteps",
-        messageFormatter=JSONMessageFormatter(),
     )
-    c["services"].append(scummvm_reporter)
-    # RTS: Roland Test Server
-    RTS_DISCORD_WEBHOOK = env("RTS_DISCORD_WEBHOOK", "")
-    if RTS_DISCORD_WEBHOOK:
-        slack_webhook = reporters.SlackStatusPush(endpoint=RTS_DISCORD_WEBHOOK)
-        c["services"].append(slack_webhook)
+    c["services"].append(discord_reporter)
 
 WEB_UI = env.bool("WEB_UI", True)
 if WEB_UI:
-
     github_hook = {
         "secret": env("GITHUB_WEBHOOK_SECRET"),
         "strict": True,
@@ -212,10 +204,7 @@ if WEB_UI:
     # minimalistic config to activate new web UI
     c["www"] = dict(
         port=env("WEB_UI_CONNECTION", "tcp:5000:interface=127.0.0.1"),
-        plugins=dict(
-            console_view={},
-            grid_view={},
-        ),
+        plugins=dict(grid_view={}),
         change_hook_dialects={"github": github_hook},
         allowed_origins=["*"],
     )
@@ -236,6 +225,7 @@ if WEB_UI:
     c["www"]["ui_default_config"] = {
         "Grid.buildFetchLimit": 200,
     }
+
     c["configurators"] = [
         util.JanitorConfigurator(logHorizon=timedelta(weeks=1), hour=23, dayOfWeek=0)
     ]
