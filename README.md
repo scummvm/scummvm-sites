@@ -11,6 +11,8 @@ $ poetry install
 
 Check the director.env.py file for a list of enviroment variables that are used.
 These variables can be in a .env file that must be placed in the root of the project directory.
+Note:
+    The `director.env.py` file is currently out of date and not used in `master.py`.
 
 ## Goal:
 To run this online as a CI server and to give feedback about what regressions in our discord channel.
