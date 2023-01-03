@@ -5,23 +5,24 @@ description = "Buildbot for scummvms director tests"
 authors = ["Roland van Laar <roland@rolandvanlaar.nl>"]
 
 [tool.poetry.dependencies]
+setuptools = "^57"
 python = "^3.8.4"
 buildbot = {extras = ["bundle"], version = "==2.8.4"}
 buildbot_slack = "^0.2.3"
 service_identity = "^18.1.0"
 pyopenssl = "^20.0.1"
 wheel = "^0.34.2"
-psycopg2 = "^2.8.5"
+psycopg2cffi = "^2.8.5"
 sqlalchemy = "==1.3.24" # 1.4 breaks due to a missing strategy engine
 crossbar = "^21.3.1"
-environs = "^9.3.2"
+environs = "^9.3.4"
 buildbot-worker = "2.8.4"
 
 [tool.poetry.dev-dependencies]
-pylint = "^2.4.4"
-black = "^19.10b0"
-mypy = "^0.770"
-ipdb = "^0.13.2"
+pylint = "*"
+black = "*"
+mypy = "*"
+ipdb = "*"
 
 [build-system]
 requires = ["poetry>=0.12"]
