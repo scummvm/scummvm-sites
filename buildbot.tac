@@ -1,8 +1,5 @@
 import os, sys
 
-from psycopg2cffi import compat
-compat.register()
-
 from twisted.application import service
 from director.vendor.buildmaster import BuildMaster
 #from buildbot.master import BuildMaster
