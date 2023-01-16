@@ -82,9 +82,13 @@ def file_is_director_related(change: Change) -> bool:
     log.msg("###################### CHANGE")
     log.msg(f"{change}")
     for name in change.files:
+        log.msg(f"Checking file: {name}")
         for check in checks:
+            log.msg(f"Checking check: {check}")
             if check in name:
+                log.msg(f"Change is director related with file: {name} for check: {check}")
                 return True
+    log.msg("Changes are not director related")
     return False
 
 
