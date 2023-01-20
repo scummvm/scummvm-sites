@@ -1,18 +1,16 @@
-version: '2'
-
-volumes:
-    logs:
-        driver: local
-
+version: "3.9"
 services:
-    slim:
-        image: php:7-alpine
-        working_dir: /var/www
-        command: php -S 0.0.0.0:8080 -t public
-        environment:
-            docker: "true"
-        ports:
-            - 8080:8080
-        volumes:
-            - .:/var/www
-            - logs:/var/www/logs
+  server:
+    build: .
+    environment:
+      - REDIS_HOST=redis
+    ports:
+      - "9120:9120/udp"
+  web:
+    build: ./web/
+    environment:
+      - "REDIS_URL=redis://redis:6379"
+    ports:
+      - "80:80"
+  redis:
+    image: "redis:latest"

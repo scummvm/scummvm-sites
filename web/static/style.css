@@ -1,0 +1,96 @@
+html {
+    background: #c60;
+}
+
+body {
+    font-family: 'verdana', 'tahoma', 'arial', 'helvetica', sans-serif;
+}
+
+.container {
+    width: 80%;
+    max-width: 500pt;
+    margin: 0 auto;
+}
+
+.header {
+    padding: 10pt;
+    margin-bottom: 0;
+    text-align: center;
+}
+
+.content {
+    padding: 8pt;
+    background: #fff2cd;
+    font-size: 16pt;
+}
+
+.small {
+    font-size: 8pt;
+}
+
+.content p {
+    margin: 0 0 6pt 0;
+    text-align: center;
+}
+
+.links-list {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+a { color: #000000; }
+
+a.link {
+    display: inline-block;
+    min-width: calc(20% - 2*10pt);
+    width: calc(20% - 2*10pt);
+    height: calc(20% - 2*10pt);
+    padding: 10pt;
+    margin: 0;
+    border: 0;
+    text-decoration: none;
+    text-align: center;
+}
+
+a.link:hover {
+    background: #00ce31;
+}
+
+a.link > img {
+    display: block;
+    max-width: 85%;
+    margin: 0 auto 10px;
+}
+
+a.link > b {
+    font-size: 14pt;
+}
+
+.shortcode {
+  font-family: monospace;
+}
+
+/* Style the button that is used to open and close the collapsible content */
+.collapsible {
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    padding: 18px;
+    width: 100%;
+    border: none;
+    text-align: left;
+    outline: none;
+    font-size: 15px;
+  }
+  
+  /* Add a background color to the button if it is clicked on (add the .active class with JS), and when you move the mouse over it (hover) */
+  .active, .collapsible:hover {
+    background-color: #cccccc;
+  }
+
+@media only screen and (max-width: 640px) {
+  a.link > b {
+    font-size: 10pt;
+  }
+}

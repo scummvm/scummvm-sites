@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ScummVM Multiplayer</title>
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', path='style.css')}}"/>
+        <link rel="icon" type="image/x-icon" href="https://scummvm.org/favicon.ico">
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <img src="https://scummvm.org/images/scummvm_logo.png"/>
+            </div>
+            <div class="content">
+            {% if error -%}
+                <p>{{error}}</p>
+            {% else -%}
+                {% if not sessions -%}
+                <p>There are no {{name}} games currently.</p>
+                {% else -%}
+                <dl>
+                {% for session in sessions -%}
+                    <dt>{{session["name"]}}</li>
+                    <dd>- Players: {{session["players"]}}/4</dd>
+                    <dd>- Version: {{session["version"]}}</dd>
+                {% endfor -%}
+                </dl>
+                {% endif -%}
+            {% endif -%}
+            </div>
+        </div>
+    </body>
+</html>
