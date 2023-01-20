@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>ScummVM Multiplayer</title>
+        <link rel="stylesheet" type="text/css" href="{{url_for('static', path='style.css')}}"/>
+        <link rel="icon" type="image/x-icon" href="https://scummvm.org/favicon.ico">
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <img src="https://scummvm.org/images/scummvm_logo.png"/>
+            </div>
+            <div class="content">
+                <p>Multiplayer Lobbies</p>
+                <div class="links-list">
+                {% for game in games -%}
+                <a href="/{{game}}" class="link">
+                    <img src="{{url_for('static', path='icons/{}.png'.format(game))}}" />
+                    <b>{{names[game]}}</b>
+                </a>
+                {% endfor -%}
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
