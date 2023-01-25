@@ -104,7 +104,7 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
             name = name[-49:]
         factory.addStep(
             ScummVMTest(
-                name=moviename,
+                name=name,
                 description=moviename,
                 descriptionDone=moviename,
                 command=generate_command(target, moviename),
