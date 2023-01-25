@@ -7362,7 +7362,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon",
+        "name": "Valmaison au fil des saisons / Pepperon / fr",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-mac-fr",
@@ -7568,7 +7568,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon",
+        "name": "Valmaison au fil des saisons / Pepperon / ja",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-mac-ja",
@@ -7778,7 +7778,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon",
+        "name": "Valmaison au fil des saisons / Pepperon / fr",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-fr",
@@ -8112,7 +8112,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon",
+        "name": "Valmaison au fil des saisons / Pepperon / ja",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-ja",
@@ -8447,7 +8447,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon",
+        "name": "Valmaison au fil des saisons / Pepperon / nl",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-nl",
