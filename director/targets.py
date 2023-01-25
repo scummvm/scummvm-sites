@@ -96,6 +96,12 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
         )
     )
     for moviename in target.movienames:
+        name = moviename
+        if len(name) > 49:
+            # Buildbot can only handle names with a maximum of 50 chars.
+            # take the last 49 of the moviename as the step name
+            # 49 to be on the safe side.
+            name = name[-49:]
         factory.addStep(
             ScummVMTest(
                 name=moviename,
