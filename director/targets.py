@@ -52,7 +52,7 @@ with open(os.path.join(cwd, "targets.json"), "r") as data:
     targets = json.loads(data.read())
     for target in targets:
         test_targets.append(
-            TestTarget(**{name: target[name] for name in target_fields})
+            TestTarget(**{name: target[name] for name in target_fields if name in target})
         )
 
 
