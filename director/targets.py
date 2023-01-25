@@ -18,6 +18,7 @@ class TestTarget:
     platform: str
     version: str
     movienames: list[str]
+    autodetect: bool = False
     debugflags: str = "fewframesonly,fast"
 
     @property
@@ -37,6 +38,7 @@ target_fields = [f.name for f in fields(TestTarget)]
         "game_id": "warlock-win",
         "platform": "win",
         "version": "D3",
+        "autodetect": false,
         "debugflags": "fewframesonly,fast",
         "movienames": [
             "ASTERODS/ABOUT.MMM", .....]
@@ -63,7 +65,12 @@ def generate_command(target: TestTarget, moviename: str) -> list[str]:
     ]
     if target.debugflags:
         command.append(f"--debugflags={target.debugflags}")
-    command.append(target.game_id)
+    if target.autodetect:
+        command.extend(
+            ["--initial-cfg=/storage/scummvm-default.ini", "-p", ".", "--auto-detect"]
+        )
+    else:
+        command.append(target.game_id)
     return command
 
 

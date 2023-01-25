@@ -4444,7 +4444,7 @@
     {
         "name": "Henachoco #1",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco01-win-ja",
         "platform": "win",
         "version": "D3",
@@ -4456,7 +4456,7 @@
     {
         "name": "Henachoco #2",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco02-win-ja",
         "platform": "win",
         "version": "D3",
@@ -4468,7 +4468,7 @@
     {
         "name": "Henachoco #3",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco03-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -4480,7 +4480,7 @@
     {
         "name": "Henachoco #3",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco03-win-ja",
         "platform": "win",
         "version": "D3",
@@ -4492,7 +4492,7 @@
     {
         "name": "Henachoco #4",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco04-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -4504,7 +4504,7 @@
     {
         "name": "Henachoco #4",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco04-win-ja",
         "platform": "win",
         "version": "D3",
@@ -4516,7 +4516,7 @@
     {
         "name": "Henachoco #5",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco05-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -4528,7 +4528,7 @@
     {
         "name": "Henachoco #5",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "henachoco05-win-ja",
         "platform": "win",
         "version": "D3",
@@ -4540,7 +4540,7 @@
     {
         "name": "The Better Dead Ratification",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "betterd-mac-en",
         "platform": "mac",
         "version": "D4",
@@ -4601,7 +4601,7 @@
     {
         "name": "The Better Dead Ratification",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "betterd-win-ja",
         "platform": "win",
         "version": "D4",
@@ -4763,7 +4763,7 @@
     {
         "name": "Chop Suey",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "chopsuey-mac-en",
         "platform": "mac",
         "version": "D3",
@@ -4820,7 +4820,7 @@
     {
         "name": "Eastern Mind (U)",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "easternmind-mac-en",
         "platform": "mac",
         "version": "D4",
@@ -4953,7 +4953,7 @@
     {
         "name": "Eastern Mind (U)",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "easternmind-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -5053,7 +5053,7 @@
     {
         "name": "Eastern Mind (U)",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "easternmind-win-en",
         "platform": "win",
         "version": "D4",
@@ -5185,7 +5185,7 @@
     {
         "name": "Fukuoka Go-Round",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "fukuokagoround-mac-ja",
         "platform": "mac",
         "version": "D4",
@@ -5356,7 +5356,7 @@
     {
         "name": "Fukuoka Go-Round",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "fukuokagoround-win-ja",
         "platform": "win",
         "version": "D4",
@@ -5526,7 +5526,7 @@
     {
         "name": "Ganbare! Inuchan: Rock'n Roll Edition",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "ganbareinuchan-mac-ja",
         "platform": "mac",
         "version": "D4",
@@ -6412,7 +6412,7 @@
     {
         "name": "Ganbare! Inuchan: Rock'n Roll Edition",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "ganbareinuchan-win-ja",
         "platform": "win",
         "version": "D4",
@@ -6571,7 +6571,7 @@
     {
         "name": "Ganbare! Inuchan: Trip Around the World",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "ganbareinuchan2-mac-ja",
         "platform": "mac",
         "version": "D4",
@@ -7045,7 +7045,7 @@
     {
         "name": "Japan Art Today 07: Takashi Murakami - A Romantic Evening",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "japanart07-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -7089,7 +7089,7 @@
     {
         "name": "Small Tales for Sleepless Nights",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "nemurenu-pippin-ja",
         "platform": "pippin",
         "version": "D4",
@@ -7199,7 +7199,7 @@
     {
         "name": "Over-Ring-Under",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "overringunder-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -7364,7 +7364,7 @@
     {
         "name": "Valmaison au fil des saisons / Pepperon",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "pepperon-mac-fr",
         "platform": "mac",
         "version": "D4",
@@ -7570,7 +7570,7 @@
     {
         "name": "Valmaison au fil des saisons / Pepperon",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "pepperon-mac-ja",
         "platform": "mac",
         "version": "D4",
@@ -7780,7 +7780,7 @@
     {
         "name": "Valmaison au fil des saisons / Pepperon",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "pepperon-win-fr",
         "platform": "win",
         "version": "D4",
@@ -8114,7 +8114,7 @@
     {
         "name": "Valmaison au fil des saisons / Pepperon",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "pepperon-win-ja",
         "platform": "win",
         "version": "D4",
@@ -8449,7 +8449,7 @@
     {
         "name": "Valmaison au fil des saisons / Pepperon",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "pepperon-win-nl",
         "platform": "win",
         "version": "D4",
@@ -8787,7 +8787,7 @@
     {
         "name": "The Seven Colors: Legend of PSY・S City",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "the7colors-mac-ja",
         "platform": "mac",
         "version": "D3",
@@ -11076,7 +11076,7 @@
     {
         "name": "Time Gal (J)",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "timegal-mac-ja",
         "platform": "mac",
         "version": "D4",
@@ -11710,7 +11710,7 @@
     {
         "name": "Time Gal (J)",
         "game_id": "director",
-        "autodetect" : "1",
+        "autodetect": true,
         "directory": "timegal-win-ko",
         "platform": "win",
         "version": "D4",
