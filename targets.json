@@ -5524,7 +5524,7 @@
         ]
     },
     {
-        "name": "Ganbare! Inuchan: Rock'n Roll Edition",
+        "name": "Ganbare! Inuchan: Rock'n Roll Edition (1/4)",
         "game_id": "director",
         "autodetect": true,
         "directory": "ganbareinuchan-mac-ja",
@@ -5751,7 +5751,18 @@
             "inu/Ei33.bin",
             "inu/Ei34.bin",
             "inu/Ei35.bin",
-            "inu/Ei36.bin",
+            "inu/Ei36.bin"
+        ]
+    },
+    {
+        "name": "Ganbare! Inuchan: Rock'n Roll Edition (2/4)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "ganbareinuchan-mac-ja",
+        "platform": "mac",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "inu/Ei37.bin",
             "inu/Ei38.bin",
             "inu/Ei39.bin",
@@ -5970,7 +5981,18 @@
             "inu/S03i29.bin",
             "inu/S03i30.bin",
             "inu/S03i31.bin",
-            "inu/S03i32.bin",
+            "inu/S03i32.bin"
+        ]
+    },
+    {
+        "name": "Ganbare! Inuchan: Rock'n Roll Edition (3/4)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "ganbareinuchan-mac-ja",
+        "platform": "mac",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "inu/S03i33.bin",
             "inu/S03i34.bin",
             "inu/S03i35.bin",
@@ -6189,7 +6211,18 @@
             "inu/S08SE01.bin",
             "inu/S08SE02.bin",
             "inu/S08SE03.bin",
-            "inu/S08SE04.bin",
+            "inu/S08SE04.bin"
+        ]
+    },
+    {
+        "name": "Ganbare! Inuchan: Rock'n Roll Edition (4/4)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "ganbareinuchan-mac-ja",
+        "platform": "mac",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "inu/S08SE05.bin",
             "inu/S08y1.bin",
             "inu/S08y2.bin",
