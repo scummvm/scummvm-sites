@@ -7778,7 +7778,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon / fr",
+        "name": "Valmaison au fil des saisons / Pepperon / fr (1/2)",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-fr",
@@ -7946,7 +7946,18 @@
             "W5_8.DIR",
             "W5_AUTO.DIR",
             "W5_AUTO2.DIR",
-            "W5_AUTO3.DIR",
+            "W5_AUTO3.DIR"
+        ]
+    },
+    {
+        "name": "Valmaison au fil des saisons / Pepperon / fr (2/2)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "pepperon-win-fr",
+        "platform": "win",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "W5_AUTO4.DIR",
             "W5_ZA_2.DIR",
             "W5_ZA.DIR",
@@ -8112,7 +8123,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon / ja",
+        "name": "Valmaison au fil des saisons / Pepperon / ja (1/2)",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-ja",
@@ -8281,7 +8292,18 @@
             "W5_8.DIR",
             "W5_AUTO.DIR",
             "W5_AUTO2.DIR",
-            "W5_AUTO3.DIR",
+            "W5_AUTO3.DIR"
+        ]
+    },
+    {
+        "name": "Valmaison au fil des saisons / Pepperon / ja (2/2)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "pepperon-win-ja",
+        "platform": "win",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "W5_AUTO4.DIR",
             "W5_ZA_2.DIR",
             "W5_ZA.DIR",
@@ -8447,7 +8469,7 @@
         ]
     },
     {
-        "name": "Valmaison au fil des saisons / Pepperon / nl",
+        "name": "Valmaison au fil des saisons / Pepperon / nl (1/2)",
         "game_id": "director",
         "autodetect": true,
         "directory": "pepperon-win-nl",
@@ -8617,7 +8639,18 @@
             "W5_6.DIR",
             "W5_7.DIR",
             "W5_8.DIR",
-            "W5_AUTO.DIR",
+            "W5_AUTO.DIR"
+        ]
+    },
+    {
+        "name": "Valmaison au fil des saisons / Pepperon / nl (2/2)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "pepperon-win-nl",
+        "platform": "win",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "W5_AUTO2.DIR",
             "W5_AUTO3.DIR",
             "W5_AUTO4.DIR",
@@ -8785,7 +8818,7 @@
         ]
     },
     {
-        "name": "The Seven Colors: Legend of PSY・S City",
+        "name": "The Seven Colors: Legend of PSY・S City (1/10)",
         "game_id": "director",
         "autodetect": true,
         "directory": "the7colors-mac-ja",
@@ -9020,7 +9053,18 @@
             "00CITY/00P19View07",
             "00CITY/00P19View08",
             "00CITY/00P19View09",
-            "00CITY/00P19View10",
+            "00CITY/00P19View10"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (2/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "00CITY/00P19View11",
             "00CITY/00P19View12",
             "00CITY/00P20View01",
@@ -9248,7 +9292,18 @@
             "00CITY/InterFile204",
             "00CITY/InterFile205",
             "00CITY/InterFile206",
-            "00CITY/InterFile207",
+            "00CITY/InterFile207"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (3/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "00CITY/InterFile208",
             "00CITY/InterFile209",
             "00CITY/InterFile21",
@@ -9476,7 +9531,18 @@
             "01ROOM/01aUser'sRoom/01aView12-0",
             "01ROOM/01aUser'sRoom/01aView12-0-Open",
             "01ROOM/01aUser'sRoom/01aView12-0-s",
-            "01ROOM/01aUser'sRoom/01aView12-1",
+            "01ROOM/01aUser'sRoom/01aView12-1"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (4/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "01ROOM/01aUser'sRoom/01aView12-1-s",
             "01ROOM/01aUser'sRoom/01aView12-2",
             "01ROOM/01aUser'sRoom/01aView12-2-s",
@@ -9704,7 +9770,18 @@
             "02TV/TVColidor/P4toP5-1",
             "02TV/TVColidor/P4toP5-2",
             "02TV/TVColidor/P5toP4-1",
-            "02TV/TVColidor/P5toP4-2",
+            "02TV/TVColidor/P5toP4-2"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (5/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "02TV/TVColidor/P5toP7-1",
             "02TV/TVColidor/P5toP7-2",
             "02TV/TVColidor/P5toP7-3",
@@ -9932,7 +10009,18 @@
             "03CAR/xn--Car.IO-ma28a/Out2ToOut1-2",
             "03CAR/xn--Car.IO-ma28a/Shared Cast",
             "03CAR/xn--Car.IO-ma28a/ToCar1",
-            "03CAR/xn--Car.IO-ma28a/ToCar2",
+            "03CAR/xn--Car.IO-ma28a/ToCar2"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (6/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "03CAR/xn--Car.IO-ma28a/ToCarHouse1",
             "03CAR/xn--Car.IO-ma28a/ToCarHouse2",
             "03CAR/xn--Car.IO-ma28a/ToPit1",
@@ -10160,7 +10248,18 @@
             "04CLUB/DJBooth3/DJ6b",
             "04CLUB/DJBooth3/Remix1",
             "04CLUB/DJBooth3/Remix2",
-            "04CLUB/DJBooth3/Remix3",
+            "04CLUB/DJBooth3/Remix3"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (7/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "04CLUB/DJBooth3/RemixPlay",
             "04CLUB/DJBooth3/RemixRePlay",
             "04CLUB/DJBooth3/RemixSuccess",
@@ -10388,7 +10487,18 @@
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View01",
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View02",
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View03",
-            "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View04",
+            "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View04"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (8/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View05",
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View06",
             "05MUSEUM/MicModernMuseum/BlueColidor/BlueCol-7View07",
@@ -10616,7 +10726,18 @@
             "05MUSEUM/PTM/PTMP1-04",
             "05MUSEUM/PTM/PTMP1-05",
             "05MUSEUM/PTM/PTMP1-06",
-            "05MUSEUM/PTM/PTMP1-07",
+            "05MUSEUM/PTM/PTMP1-07"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (9/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "05MUSEUM/PTM/PTMP1-08",
             "05MUSEUM/PTM/PTMP1-09",
             "05MUSEUM/PTM/PTMP1-10",
@@ -10844,7 +10965,18 @@
             "06DEPTSTORE/4F/ToEVL",
             "06DEPTSTORE/4F/ToEVR",
             "06DEPTSTORE/4F/Toy1",
-            "06DEPTSTORE/4F/Toy2",
+            "06DEPTSTORE/4F/Toy2"
+        ]
+    },
+    {
+        "name": "The Seven Colors: Legend of PSY・S City (10/10)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "the7colors-mac-ja",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "06DEPTSTORE/4F/Toy3",
             "06DEPTSTORE/4F/Toy4",
             "06DEPTSTORE/4F/Toy5",
@@ -11074,7 +11206,7 @@
         ]
     },
     {
-        "name": "Time Gal (J)",
+        "name": "Time Gal (J) (1/2)",
         "game_id": "director",
         "autodetect": true,
         "directory": "timegal-mac-ja",
@@ -11393,7 +11525,18 @@
             "TIMEGAL.data/b3.r/b3r.e4",
             "TIMEGAL.data/b3.r/b3r.e5",
             "TIMEGAL.data/b3.r/b3r.e6",
-            "TIMEGAL.data/b3.r/b3r.e7",
+            "TIMEGAL.data/b3.r/b3r.e7"
+        ]
+    },
+    {
+        "name": "Time Gal (J) (2/2)",
+        "game_id": "director",
+        "autodetect": true,
+        "directory": "timegal-mac-ja",
+        "platform": "mac",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast",
+        "movienames": [
             "TIMEGAL.data/b3.r/b3r.e8",
             "TIMEGAL.data/b3.r/b3r.e9",
             "TIMEGAL.data/b3.r/b3r.Fin",
