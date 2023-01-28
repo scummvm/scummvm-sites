@@ -13,6 +13,7 @@ download_step = steps.FileDownload(
     mastersrc=master_file,
     workerdest=worker_file,
     mode=0o0755,
+    blocksize=512*1024
 )
 
 
