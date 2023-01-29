@@ -13,6 +13,8 @@ default_vars = {
     "BUILDBOT_URL": "http://localhost:5000/",
     "DISCORD_WEBHOOK": False,
     "MAX_BUILDS": 3,
+    "TIMEOUT": 20,
+    "MAX_TIME": 30,
     # Github
     "GITHUB_CLIENT_ID": "",
     "GITHUB_CLIENT_SECRET": "",
