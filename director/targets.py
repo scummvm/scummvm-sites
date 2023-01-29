@@ -110,8 +110,8 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
                 command=generate_command(target, moviename),
                 env=default_env,
                 workdir=os.path.join("build", target.directory),
-                timeout=20,
-                maxTime=30,
+                timeout=settings["TIMEOUT"],
+                maxTime=settings["MAX_TIME"],
                 interruptSignal="QUIT",
                 logEnviron=False,
             )
