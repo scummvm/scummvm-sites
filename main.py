@@ -9,7 +9,10 @@ from net_defines import *
 
 # Games to accept:
 GAMES = [
-	"moonbase" # Moonbase Commander (v1.0/v1.1/Demo)
+	"football", # Backyard Football (1999)
+	"baseball2001", # Backyard Baseball 2001
+	"football2002", # Backyard Football 2002 
+	"moonbase", # Moonbase Commander (v1.0/v1.1/Demo)
 ]
 
 # Version variants to accept for a specific game.
