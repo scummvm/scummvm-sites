@@ -158,8 +158,8 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
                         descriptionDone=name,
                         command=self.generate_command(name),
                         env=default_env,
-                        timeout=settings["TIMEOUT"],
-                        maxTime=settings["MAX_TIME"],
+                        timeout=int(settings["TIMEOUT"]),
+                        maxTime=int(settings["MAX_TIME"]),
                         interruptSignal="QUIT",
                         logEnviron=False,
                     )
