@@ -55,7 +55,7 @@ print("Listening for messages in port 9120", flush=True)
 
 def send(peer, data: dict):
 	logging.debug(f"{peer.address}: OUT: {data}")
-	data = json.dumps(data).encode()
+	data = json.dumps(data, separators=(',', ':')).encode()
 	peer.send(0, enet.Packet(data, enet.PACKET_FLAG_RELIABLE))
 
 def get_peer_by_address(address: str):
