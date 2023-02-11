@@ -6,6 +6,12 @@ services:
       - REDIS_HOST=redis
     ports:
       - "9120:9120/udp"
+  lobby:
+    build: ./lobby/
+    environment:
+      - REDIS_HOST=redis
+    ports:
+      - "9130:9130"
   web:
     build: ./web/
     environment:
