@@ -1,0 +1,11 @@
+# Process cores to fork the network processes
+cores: 1
+
+network:
+  host: 0.0.0.0
+  port: 9130
+
+  # TLS certificate.  Set the path to accept
+  # TLS connections, this MUST be set in production.
+  # key: /path/to/private_key.pem
+  # cert: /path/to/certificate.crt

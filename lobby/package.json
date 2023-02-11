@@ -1,0 +1,29 @@
+{
+  "name": "scummvm-multiplayer-lobby",
+  "version": "1.0.0",
+  "description": "Lobby server code for ScummVM Multiplayer",
+  "main": "run.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scummvm/scummvm-sites.git"
+  },
+  "author": "ScummVM (Backyard Sports Online)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/scummvm/scummvm-sites/issues"
+  },
+  "homepage": "https://github.com/scummvm/scummvm-sites#readme",
+  "dependencies": {
+    "bent": "^7.3.12",
+    "ioredis": "^4.27.7",
+    "js-yaml": "^4.1.0",
+    "logging": "^3.3.0"
+  },
+  "optionalDependencies": {
+    "discord.js": "^13.1.0",
+    "table": "^6.8.0"
+  }
+}
