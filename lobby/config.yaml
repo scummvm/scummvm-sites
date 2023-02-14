@@ -9,3 +9,7 @@ network:
   # TLS connections, this MUST be set in production.
   # key: /path/to/private_key.pem
   # cert: /path/to/certificate.crt
+
+  # This sets the session server that the game will connect to
+  # to host and join their sessions.
+  session_server: "127.0.0.1:9120"

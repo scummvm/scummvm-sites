@@ -54,8 +54,10 @@ server.handleMessage("login", async (client, args) => {
     // to prevent ourselves from getting kicked out after logging in.
     setTimeout(() => {
         client.userId = user.id;
+        console.log(server.sessionServer);
         client.send("login_resp", {error_code: 0,
                                    id: user.id,
+                                   sessionServer: server.sessionServer,
                                    response: "All ok"});
 
     }, 50);

@@ -24,6 +24,9 @@ class NetworkListener {
             }
         };
 
+        // Store session server address
+        this.sessionServer = this.config['session_server'] || '127.0.0.1:9120';
+
         const host = this.config['host'];
         const port = Number(this.config['port']);
         const keyPath = this.config['key'];
