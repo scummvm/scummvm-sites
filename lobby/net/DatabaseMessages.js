@@ -39,6 +39,7 @@ server.handleMessage("login", async (client, args) => {
     if (user.error) {
         client.send("login_resp", {error_code: user.error,
                                    id: 0,
+                                   sessionServer: "",
                                    response: user.message});
         return;
     }
@@ -54,7 +55,6 @@ server.handleMessage("login", async (client, args) => {
     // to prevent ourselves from getting kicked out after logging in.
     setTimeout(() => {
         client.userId = user.id;
-        console.log(server.sessionServer);
         client.send("login_resp", {error_code: 0,
                                    id: user.id,
                                    sessionServer: server.sessionServer,

@@ -14,11 +14,10 @@ class WebAPI {
     }
 
     async getUser(username, password, game) {
-        // TODO: Replace with /login
-        const user = await this.post('/new_login', {token: this.token,
-                                                    user: username,
-                                                    pass: password,
-                                                    game: game});
+        const user = await this.post('/login', {token: this.token,
+                                                user: username,
+                                                pass: password,
+                                                game: game});
         if (user.error) {
             return user;
         }
