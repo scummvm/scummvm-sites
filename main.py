@@ -45,7 +45,8 @@ for game in get_full_game_names():
 		# Clear out the sessions
 		logging.info(f"Clearing out {game} sessions")
 		for session_id in range(redis.llen(f"{game}:sessions")):
-			redis.delete(f"{game}.session:{session_id}")
+			redis.delete(f"{game}:session:{session_id}")
+			redis.delete(f"{game}:relay:{session_id}")
 		redis.delete(f"{game}:sessions")
 		redis.delete(f"{game}:sessionByAddress")
 
@@ -90,23 +91,33 @@ def relay_data(data, sent_peer):
 	type_of_send = data.get("to")
 	send_type_param = data.get("toparam")
 
-	session_id = relays.get(sent_peer)
+	session_id = int(redis.hget(f"relays:{str(sent_peer.address)}", "session"))
 	if not session_id:
 		return
 	
-	peers_by_user_id = session_to_relay_user_ids.get(session_id)
-	if not peers_by_user_id:
-		logging.warning(f"relay_data: Missing peers on session_to_relay_user_ids[{session_id}]!")
+	game = redis.hget(f"relays:{str(sent_peer.address)}", "game")
+	relay_users = redis.hgetall(f"{game}:relay:{session_id}")
+	if not relay_users:
+		logging.warning(f"relay_data: Missing users on {game}:relay:{session_id}!")
 		return
 
+	logging.debug(f"relay_data: Players of \"{game}\" session {session_id}:")
+	for user_id, address in relay_users.items():
+		logging.debug(f"relay_data:  - {user_id}: {address}")
+	
+	peers_by_user_id = {}
+	for user_id, address in relay_users.items():
+		peer = get_peer_by_address(address)
+		if not peer:
+			logging.warning(f"relay_data: Peer for {address} does not exist!")
+			continue
+		peers_by_user_id[int(user_id)] = peer
+	
 	user_id_by_peers = {v: k for k, v in peers_by_user_id.items()}
 	
-	logging.debug(f"relay_data: Players of session {session_id}:")
-	for user_id, peer in peers_by_user_id.items():
-		logging.debug(f"relay_data:  - {user_id}: {str(peer.address)}")
-	
 	if user_id_by_peers.get(sent_peer) != 1:
-		# To make things easier, just send all non-host data to the host.
+		# To make things easier, just send all non-host data to the host, so it can
+		# transfer data to peers that are connected directly to the host.
 		# It'll send it back to us if it actually needs to be relayed somewhere.
 		host_peer = peers_by_user_id.get(1)
 		if not host_peer:
@@ -151,25 +162,30 @@ def relay_data(data, sent_peer):
 		send(peer, data)
 	
 def remove_user_from_relay(peer):
-	session_id = relays.get(peer)
+	session_id = redis.hget(f"relays:{str(peer.address)}", "session")
 	if not session_id:
 		return
 	
-	del relays[peer]
+	game = redis.hget(f"relays:{str(peer.address)}", "game")
+	redis.delete(f"relays:{str(peer.address)}")
 	
-	peers_by_user_id = session_to_relay_user_ids.get(session_id)
-	if not peers_by_user_id:
+	address_by_user_id = redis.hgetall(f"{game}:relay:{session_id}")
+	if not address_by_user_id:
 		return
 
-	user_id_by_peers = {v: k for k, v in peers_by_user_id.items()}
-	user_id = user_id_by_peers.get(peer)
+	user_id_by_address = {v: k for k, v in address_by_user_id.items()}
+	user_id = user_id_by_address.get(str(peer.address))
 	if not user_id:
 		return
 	
-	del session_to_relay_user_ids[session_id][user_id]
+	redis.hdel(f"{game}:relay:{session_id}", user_id)
 
 	# Send the remove_user request to the host.
-	host_peer = peers_by_user_id.get(1)
+	host_address = address_by_user_id.get(1)
+	if not host_address:
+		return
+
+	host_peer = get_peer_by_address(host_address)
 	if not host_peer:
 		return
 
@@ -184,9 +200,6 @@ def exit(*args):
 signal.signal(signal.SIGTERM, exit)
 # SIGINT: Ctrl+C KeyboardInterrupt
 signal.signal(signal.SIGINT, exit)
-
-relays = {} # peer: sessionId
-session_to_relay_user_ids = {} # sessionId: {userId: peer}
 
 while do_loop:
 	# Main event loop
@@ -204,8 +217,6 @@ while do_loop:
 				redis.hdel(f"{game}:sessionByAddress", str(event.peer.address))
 
 			# Cleanup Relays (if any):
-				if session_id in session_to_relay_user_ids:
-					del session_to_relay_user_ids[session_id]
 			remove_user_from_relay(event.peer)
 
 
@@ -279,11 +290,11 @@ while do_loop:
 		elif command == "join_session":
 			session_id = data.get("id")
 
-			if not (redis.exists(f"{game}:session:{id}")):
+			if not (redis.exists(f"{game}:session:{session_id}")):
 				logging.warning(f"Session {game}:{session_id} not found")
 				continue
 
-			address = redis.hget(f"{game}:session:{id}", "address")
+			address = redis.hget(f"{game}:session:{session_id}", "address")
 			peer = get_peer_by_address(address)
 			if not peer:
 				continue
@@ -293,20 +304,24 @@ while do_loop:
 		elif command == "start_relay":
 			session_id = data.get("session")
 			
-			if not (redis.exists(f"{game}:session:{id}")):
+			if not redis.exists(f"{game}:session:{session_id}"):
 				logging.warning(f"Session {game}:{session_id} not found")
 				continue
 
-			address = redis.hget(f"{game}:session:{id}", "address")
+			# Get peer of the session host
+			address = redis.hget(f"{game}:session:{session_id}", "address")
 			peer = get_peer_by_address(address)
 			if not peer:
 				continue
+			
+			if redis.exists(f"{game}:relay:{session_id}"):
+				logging.warning(f"Relay for {game}:{session_id} already exists!")
+				continue
 
-			if session_id not in session_to_relay_user_ids:
-				# The host peer is usually always has the userId of 1:
-				session_to_relay_user_ids[session_id] = {1: peer}
-			if peer not in relays:
-				relays[peer] = session_id
+			# Store new relay with the host (which usually always has the
+			# userId of 1).
+			redis.hset(f"{game}:relay:{session_id}", 1, str(peer.address))
+			redis.hset(f"relays:{str(peer.address)}", mapping={"game": game, "session": session_id})
 			
 			# Send the add_user request to the host (with joiner's address for context):
 			send(peer, {"cmd": "add_user_for_relay", "address": str(event.peer.address)})
@@ -318,18 +333,25 @@ while do_loop:
 			if not session_id:
 				logging.warning(f"Could not find session for address {str(event.peer.address)}!")
 				continue
-			if session_id not in session_to_relay_user_ids:
-				logging.warning(f"Session ID {session_id} not found in session2RelayUserIds!")
+
+			if not redis.exists(f"{game}:relay:{session_id}"):
+				logging.warning(f"{game}:relay:{session_id} does not exist!")
 				continue
-			if user_id in session_to_relay_user_ids[session_id]:
-				logging.warning(f"Duplicate user ID {user_id} in session2RelayUserIds[{session_id}]!")
+			
+			if redis.hexists(f"{game}:relay:{session_id}", user_id):
+				logging.warning(f"Duplicate User ID {user_id} in {game}:relay:{session_id}!")
 				continue
+
 			peer = get_peer_by_address(address)
 			if not peer:
 				logging.warning(f"Could not find peer for address: {address}!")
 				continue
+			
+			if redis.exists(f"relays:{str(peer.address)}"):
+				logging.warning(f"Peer {str(peer.address)} is already in a relay!")
+				continue
 
-			session_to_relay_user_ids[session_id][user_id] = peer
-			relays[peer] = session_id
+			redis.hset(f"{game}:relay:{session_id}", user_id, str(peer.address))
+			redis.hset(f"relays:{str(peer.address)}", mapping={"game": game, "session": session_id})
 			# Send the response back to the peer:
 			send(peer, {"cmd": "add_user_resp", "id": user_id})
