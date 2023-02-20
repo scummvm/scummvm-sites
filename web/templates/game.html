@@ -20,8 +20,10 @@
                 <dl>
                 {% for session in sessions -%}
                     <dt>{{session["name"]}}</li>
-                    <dd>- Players: {{session["players"]}}/4</dd>
-                    <dd>- Version: {{session["version"]}}</dd>
+                    <dd>- Players: {{session["players"]}}/{{session["maxplayers"]}}</dd>
+                    {% if session["version"] -%}
+                        <dd>- Version: {{session["version"]}}</dd>
+                    {% endif -%}
                 {% endfor -%}
                 </dl>
                 {% endif -%}
