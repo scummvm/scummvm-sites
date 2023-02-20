@@ -38,7 +38,8 @@ async def get_sessions(game: str, version: str = None):
 	for id in session_ids:
 		session = await redis.hgetall(f"{key}:session:{id}")
 		sessions.append({"id": int(id), "version": version, "name": session["name"],
-						"players": int(session["players"]), "address": str(session["address"])})
+						"players": int(session["players"]), "maxplayers": int(session["maxplayers"]),
+						"address": str(session["address"])})
 	return sessions
 
 @app.get('/{game}')

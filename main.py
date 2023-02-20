@@ -71,12 +71,13 @@ def get_session_by_address(game: str, address: str):
 		return redis.hgetall(f"{game}:session:{session_id}")
 	return None
 
-def create_session(name: str, address: str):
+def create_session(name: str, maxplayers:int, address: str):
 	# Get our new session ID
 	session_id = redis.incr(f"{game}:counter")
 	# Create and store our new session
 	redis.hset(f"{game}:session:{session_id}", 
-		mapping={"name": name, "players": 0, "address": str(event.peer.address)})
+		mapping={"name": name, "players": 0, "maxplayers": maxplayers,
+				"address": str(event.peer.address)})
 	# Add session to sessions list
 	redis.rpush(f"{game}:sessions", session_id)
 
@@ -264,8 +265,9 @@ while do_loop:
 		
 		if command == "host_session":
 			name = data.get("name")
+			maxplayers = data.get("maxplayers")
 
-			session_id = create_session(name, event.peer.address)
+			session_id = create_session(name, maxplayers, event.peer.address)
 			send(event.peer, {"cmd": "host_session_resp", "id": session_id})
 		
 		elif command == "update_players":
