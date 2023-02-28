@@ -17,7 +17,7 @@
 <outline text="Groovie, baby" htmlUrl="https://t7gre.blogspot.com/" xmlUrl="https://t7gre.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="Google Summer of Code - Vyzigold" htmlUrl="https://vyzigold-gsoc.blogspot.com/" xmlUrl="https://vyzigold-gsoc.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="LordHoto&#039;s World" htmlUrl="https://lordhoto.blogspot.com/" xmlUrl="https://lordhoto.blogspot.com/feeds/posts/default" isDown=""/>
-<outline text="Nipun Garg" htmlUrl="https://nipungarg.me/" xmlUrl="https://nipungarg.me/feed.xml" isDown="1"/>
+<outline text="Nipun Garg" htmlUrl="https://nipungarg.me/" xmlUrl="https://nipungarg.me/feed.xml" isDown=""/>
 <outline text="Dreammaster&#039;s disassembly blog" htmlUrl="https://dm-notes.blogspot.com/" xmlUrl="https://dm-notes.blogspot.com/feeds/posts/default" isDown=""/>
 <outline text="ResidualVM news" htmlUrl="https://www.residualvm.org/" xmlUrl="https://www.residualvm.org/feeds/atom/" isDown="1"/>
 <outline text="sanguinehearts" htmlUrl="https://sanguinehearts.blogspot.com/" xmlUrl="https://sanguinehearts.blogspot.com/feeds/posts/default" isDown=""/>
@@ -36,5 +36,11 @@
 <outline text="stablesteady&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/stablesteady" xmlUrl="https://blogs.scummvm.org/stablesteady/feed/" isDown=""/>
 <outline text="grisenti&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/grisenti" xmlUrl="https://blogs.scummvm.org/grisenti/feed/" isDown=""/>
 <outline text="quote58&#039;s GSoC blog" htmlUrl="https://blogs.scummvm.org/quote58" xmlUrl="https://blogs.scummvm.org/quote58/feed/" isDown=""/>
+<outline text="GSoC 2021 - djsrv" htmlUrl="https://blogs.scummvm.org/djsrv" xmlUrl="https://blogs.scummvm.org/djsrv/feed/" isDown=""/>
+<outline text="GSoC 2021 - hikigaya" htmlUrl="https://blogs.scummvm.org/hikigaya" xmlUrl="https://blogs.scummvm.org/hikigaya/feed/" isDown=""/>
+<outline text="GSoC 2021 - av_dx" htmlUrl="https://blogs.scummvm.org/av-dx" xmlUrl="https://blogs.scummvm.org/av-dx/feed/" isDown=""/>
+<outline text="GSoC 2021 - sheep" htmlUrl="https://blogs.scummvm.org/sheep" xmlUrl="https://blogs.scummvm.org/sheep/feed/" isDown=""/>
+<outline text="GSoC 2021 - a-yyg" htmlUrl="https://blogs.scummvm.org/ayyg" xmlUrl="https://blogs.scummvm.org/ayyg/feed/" isDown=""/>
+<outline text="GSoC 2021 - Twan" htmlUrl="https://blogs.scummvm.org/twan" xmlUrl="https://blogs.scummvm.org/twan/feed/" isDown=""/>
 </body>
 </opml>
