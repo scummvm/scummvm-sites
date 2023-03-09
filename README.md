@@ -8,7 +8,7 @@ Both the session and web servers requires Redis to be installed.  This is needed
 
 Clone this repo and checkout to the multiplayer branch:
 ```
-git clone https://github.com/LittleToonCat/scummvm-sites.git
+git clone https://github.com/scummvm/scummvm-sites.git
 
 git checkout multiplayer
 ```
