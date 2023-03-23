@@ -6,6 +6,8 @@ services:
       - REDIS_HOST=redis
     ports:
       - "9120:9120/udp"
+    depends_on:
+      - redis
   lobby:
     build: ./lobby/
     environment:
