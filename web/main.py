@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.requests import Request
 from fastapi.routing import Mount
 
-import aioredis
+from redis import asyncio as aioredis
 
 from config import *
 
