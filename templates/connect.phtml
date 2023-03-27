@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+    <head>
+        <title>ScummVM</title>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="/cloud-style.css"/>
+        <link rel="stylesheet" type="text/css" href="/connect-style.css"/>
+        <script>
+            var token_json = {};
+            try {
+                token_json = JSON.parse(atob("<?= $response_base64 ?>"));
+            } catch (e) { console.error(e); };
+        </script>
+        <script src="/connect.js"></script>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <img src="https://scummvm.org/images/scummvm_logo.png"/>
+            </div>
+            <div class="content" id="state_connecting">
+                <p>Connecting <?= $provider_name ?>...</p>
+                <p>Please don't close this page yet.</p>
+            </div>
+            <div class="content hidden" id="state_connected">
+                <p>Connected!</p>
+                <p>Now you can close this page and return to ScummVM app.</p>
+            </div>
+            <div class="content hidden" id="state_request_failed">
+                <p>Something went wrong.</p>
+                <p>We couldn't reach your ScummVM app.</p>
+
+                <hr/>
+
+                <p><b>Troubleshooting:</b></p>
+                <p><b>1. Run Local Webserver or specify correct address</b></p>
+                <p>Make sure Local Webserver is running.<br/>If you're using custom port, enter your server's address.<br/>Press "Connect" to try reaching ScummVM again.</p>
+                <input id="host" type="text" placeholder="http://localhost:12345/" value="http://localhost:12345/" />
+                <button onclick="connect_cloud();">Connect</button>
+
+                <br/><br/>
+                <p><b>2. Use Manual mode</b></p>
+                <p>In ScummVM, go back and use Manual mode in connection wizard.<br/>Copy this code in there:</p>
+                <textarea id="json" readonly></textarea>
+            </div>
+            <div class="content hidden" id="state_connect_failed">
+                <p>Something went wrong.</p>
+                <p>We've reached your ScummVM app, but storage wasn't connected.</p>
+
+                <hr/>
+
+                <p><b>Troubleshooting:</b></p>
+                <p><b>1. Update ScummVM</b></p>
+                <p>Make sure to use ScummVM 2.7.1 or newer.<br/><a href="https://www.scummvm.org/downloads/">Go to Downloads</a></p>
+
+                <p style="margin-top: 20pt;"><b>2. Try again</b></p>
+                <p>Try connecting your storage one more time.<br/><a href="https://cloud.scummvm.org/">Go to cloud.scummvm.org</a></p>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,108 @@
+.hidden {
+    display: none;
+}
+
+.content {
+    overflow-x: hidden;
+}
+
+.content::before {
+    content: ' ';
+    display: block;
+    opacity: 0;
+    width: 48pt;
+    height: 3pt;
+    background: #0AF;
+    margin-left: -8pt;
+    margin-top: -8pt;
+    margin-bottom: 8pt;    
+    animation: 2s ease-in-out 0s infinite loading;    
+}
+
+#state_connecting.content::before {
+    opacity: 100;
+}
+
+@keyframes loading {
+    from {
+        transform: translateX(-100pt);
+    }
+    to {
+        transform: translateX(calc(500pt + 100pt));
+    }
+}
+
+.content > p {
+    margin-top: 10pt;
+    font-size: 12pt;
+    text-align: left;
+}
+
+.content > p:first-child {
+    margin-top: 6pt;
+    font-size: 18pt;
+    text-align: center;
+}
+
+.content > p:nth-child(2) {
+    margin-top: 10pt;
+    font-size: 12pt;
+    text-align: center;
+}
+
+.content > hr {
+    height: 1px;
+    margin: 18pt 0;
+    border: 0;
+    background: #CCC;
+}
+
+.content > input {
+    font-size: 14pt;
+    border: 1px solid #CCC;
+    padding: 5pt;
+    width: 50%;
+}
+
+.content > button {
+    font-size: 14pt;
+    padding: calc(5pt + 1px);
+    border: 0;
+    background: #821D06;
+    color: #FFF;
+    border-radius: 5px;
+    min-width: 20%;
+}
+
+.content > button:hover {
+    cursor: pointer;
+    background: #B42709;
+}
+
+.content > input,
+.content > button {
+    margin-top: 8pt;
+}
+
+.content > textarea {
+    width: calc(100% - 2*5pt - 2*1px);
+    border: 1px solid #CCC;
+    padding: 5pt;
+    margin-top: 4pt;
+    margin-bottom: 8pt;
+    resize: none;
+}
+
+.content > input:hover,
+.content > textarea:hover {
+    border: 1px solid #AAA;
+}
+
+.content > p > a {
+    color: #821D06;
+}
+
+.content > p > a:hover {
+    color: #E4330B;
+    text-decoration: none;
+}
