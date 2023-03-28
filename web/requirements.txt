@@ -1,4 +1,5 @@
 fastapi==0.89.1
 redis==4.5.3
-uvicorn==0.20.0
+gunicorn==20.1.0
+uvicorn[standard]==0.21.1
 Jinja2==3.1.2
