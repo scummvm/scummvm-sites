@@ -119,9 +119,48 @@ if __name__ == "__main__":
         from_user = data.get("from")
         type_of_send = data.get("to")
         send_type_param = data.get("toparam")
+        packet_type = data.get("type")
+        packet_data = data.get("data")
+
+        if None in (from_user, type_of_send, send_type_param, packet_type, packet_data):
+            logging.warning(
+                f"relay_data: Got malformed game data from {str(sent_peer.address)}: {data}"
+            )
+            return
+
+        # Check the packet received to see if it contains the proper data.
+        if packet_type in (
+            PACKETTYPE_REMOTESTARTSCRIPT,
+            PACKETTYPE_REMOTESTARTSCRIPTRETURN,
+            PACKETTYPE_REMOTESTARTSCRIPTRESULT,
+        ):
+            params = packet_data.get("params")
+            if not params or not isinstance(params, list):
+                logging.warning(
+                    f"relay_data: Missing params in a remote start script packet from {str(sent_peer.address)}: {data}"
+                )
+                return
+        elif packet_type == PACKETTYPE_REMOTESENDSCUMMARRAY:
+            dim1start = packet_data.get("dim1start")
+            dim1end = packet_data.get("dim1end")
+            dim2start = packet_data.get("dim2start")
+            dim2end = packet_data.get("dim2end")
+            atype = packet_data.get("type")
+
+            if not all(
+                isinstance(i, int)
+                for i in (dim1start, dim1end, dim2start, dim2end, atype)
+            ):
+                logging.warning(
+                    f"relay_data: Malformed SCUMM array data from {str(sent_peer.address)}: {data}"
+                )
+                return
 
         session_id = int(redis.hget(f"relays:{str(sent_peer.address)}", "session"))
         if not session_id:
+            logging.warning(
+                f"relay_data: Could not find session id for peer: {str(sent_peer.address)}"
+            )
             return
 
         game = redis.hget(f"relays:{str(sent_peer.address)}", "game")
