@@ -88,6 +88,7 @@ return function (App $app) {
                 // If we don't have an authorization code then get one
                 $authUrl = $providerAndScope['provider']->getAuthorizationUrl($providerAndScope['scope']);
                 $_SESSION['oauth2state'] = $providerAndScope['provider']->getState();
+                $_SESSION['newFlow'] = "270";
 
                 return $response->withRedirect($authUrl);
 
