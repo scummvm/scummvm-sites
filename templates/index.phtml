@@ -13,25 +13,49 @@
             <div class="content">
                 <p>Which cloud do you want to connect?</p>
                 <div class="links-list">
-                    <a href="/dropbox?refresh_token=true" class="link">
+                    <a id="db_link" href="/dropbox?refresh_token=true" class="link">
                         <img src="/images/dropbox.png" />
                         <b>Dropbox</b>
                     </a>
-                    <a href="/onedrive" class="link">
+                    <a id="od_link" href="/onedrive" class="link">
                         <img src="/images/onedrive.png" />
                         <b>OneDrive</b>
                     </a>
-                    <a href="/gdrive" class="link">
+                    <a id="gd_link" href="/gdrive" class="link">
                         <img src="/images/google_drive.png" />
                         <b>Google Drive</b>
                     </a>
-                    <a href="/box" class="link">
+                    <a id="bx_link" href="/box" class="link">
                         <img src="/images/box.png" />
                         <b>Box</b>
                     </a>
                 </div>
+                <p><label for="271_cb"><input type="checkbox" value="off" id="271_cb" onclick="refresh_links();" onchange="refresh_links();" /> ScummVM version 2.7.1 or newer</label></p>
             </div>
             <p>Please note: Clicking on the cloud icons will redirect you to the chosen cloud provider. Please review their privacy policies beforehand.</p>
         </div>
+        <script>
+function refresh_links() {
+    var e = document.getElementById("271_cb");
+    var use271 = (e.checked || e.value == "on");
+    var hrefs = {
+        "db_link": ["/dropbox?refresh_token=true", "/dropbox/271?refresh_token=true"],
+        "od_link": ["/onedrive", "/onedrive/271"],
+        "gd_link": ["/gdrive", "/gdrive/271"],
+        "bx_link": ["/box", "/box/271"],
+    };
+
+    var links = document.querySelectorAll("a.link");
+    for (var link of links) {
+        if (link.id in hrefs) {
+            link.href = hrefs[link.id][use271 ? 1 : 0];
+        }
+    }
+}
+
+window.onload = function () {
+    refresh_links();
+};
+        </script>
     </body>
 </html>
