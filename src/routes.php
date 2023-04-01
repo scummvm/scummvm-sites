@@ -98,26 +98,77 @@ return function (App $app) {
                 return $response->withJson(['error' => true, 'message' => 'Invalid state']);
 
             } else {
-                try {
-                    // Try to get an access token (using the authorization code grant)
-                    $token = $providerAndScope['provider']->getAccessToken(
-                        'authorization_code', [
-                        'code' => $_GET['code']
-                        ]
-                    );
-
-                    $this->random = new PragmaRX\Random\Random();
-                    $shortcode = $this->random->size(6)->get();
-                    $client = new Predis\Client();
-                    $client->set("cloud-{$cloud}-{$shortcode}", json_encode($token));
-                    $client->expire("cloud-{$cloud}-{$shortcode}", 600);
-                    return $container->get('renderer')->render($response, 'token.phtml', ['shortcode' => $shortcode]);
-                }
-                catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
-                    return $response->withJson(['error' => true, 'message' => $e->getMessage()]);
+                $flow = "";
+                if (!empty($_SESSION['newFlow'])) {
+                    $flow = $_SESSION['newFlow'];
                 }
 
+                if ($flow === "271") {
+
+                    try {
+                        // Try to get an access token (using the authorization code grant)
+                        $token = $providerAndScope['provider']->getAccessToken(
+                            'authorization_code', [
+                            'code' => $_GET['code']
+                            ]
+                        );
+
+                        $providerName = "";
+                        switch ($settings['provider']) {
+                        case 'dropbox': $providerName = "Dropbox"; break;
+                        case 'box': $providerName = "Box"; break;
+                        case 'gdrive': $providerName = "Google Drive"; break;
+                        case 'onedrive': $providerName = "OneDrive"; break;
+                        }
+
+                        $response_json = ['error' => false, 'storage' => $settings['provider'], 'oauth' => $token];
+                        return $container->get('renderer')->render($response, 'connect.phtml', ['response_base64' => base64_encode(json_encode($response_json)), 'provider_name' => $providerName]);
+                    }
+                    catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+                        return $response->withJson(['error' => true, 'message' => $e->getMessage()]);
+                    }
+
+                } else {
+
+                    try {
+                        // Try to get an access token (using the authorization code grant)
+                        $token = $providerAndScope['provider']->getAccessToken(
+                            'authorization_code', [
+                            'code' => $_GET['code']
+                            ]
+                        );
+
+                        $this->random = new PragmaRX\Random\Random();
+                        $shortcode = $this->random->size(6)->get();
+                        $client = new Predis\Client();
+                        $client->set("cloud-{$cloud}-{$shortcode}", json_encode($token));
+                        $client->expire("cloud-{$cloud}-{$shortcode}", 600);
+                        return $container->get('renderer')->render($response, 'token.phtml', ['shortcode' => $shortcode]);
+                    }
+                    catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
+                        return $response->withJson(['error' => true, 'message' => $e->getMessage()]);
+                    }
+
+                }
             }
+        }
+    );
+
+    $app->get(
+        '/{cloud}/271', function (Request $request, Response $response, array $args) use ($container) {
+            $cloud = $args['cloud'];
+            $settings = $container->get('settings')[$cloud];
+            $providerAndScope = getCloudProviderAndScope($settings);
+
+            if (!isset($providerAndScope)) {
+                return $response->withJson(['error' => true, 'message' => 'Unknown cloud provider']);
+            }
+
+            $authUrl = $providerAndScope['provider']->getAuthorizationUrl($providerAndScope['scope']);
+            $_SESSION['oauth2state'] = $providerAndScope['provider']->getState();
+            $_SESSION['newFlow'] = "271";
+
+            return $response->withRedirect($authUrl);
         }
     );
 
@@ -158,7 +209,6 @@ return function (App $app) {
                     ]
                 );
 
-                // $json = json_decode(json_encode($token), true);
                 return $response->withJson(['error' => false, 'oauth' => $token]);
             }
             catch(League\OAuth2\Client\Provider\Exception\IdentityProviderException $e) {
