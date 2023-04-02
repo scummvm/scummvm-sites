@@ -793,7 +793,7 @@
         "directory": "apartment2-M",
         "platform": "mac",
         "version": "D2",
-        "debugflags": "fewframesonly,fast",
+        "debugflags": "fewframesonly,fast,screenshot",
         "movienames": [
             "BasicUserEvents",
             "Buttons",
@@ -841,7 +841,7 @@
         "directory": "apartment3-M",
         "platform": "mac",
         "version": "D3",
-        "debugflags": "fewframesonly,fast",
+        "debugflags": "fewframesonly,fast,screenshot",
         "movienames": [
             "BasicUserEvents",
             "Buttons",
