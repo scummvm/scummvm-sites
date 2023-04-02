@@ -13,6 +13,7 @@ default_env: dict[str, str] = {
     "SDL_VIDEODRIVER": "dummy",
     "SDL_AUDIODRIVER": "dummy",
     "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1",
+    "BUILD_NUMBER": str(builds.buildnumber),
 }
 
 
