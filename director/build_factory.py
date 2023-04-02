@@ -3,7 +3,7 @@
 import os.path
 from typing import Any
 
-from buildbot.plugins import steps, util
+from buildbot.plugins import steps, builds, util
 
 from .env import settings
 
