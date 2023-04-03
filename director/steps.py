@@ -4,6 +4,7 @@ from typing import Any, Optional
 from buildbot import config
 from buildbot.plugins import steps, util
 from buildbot.process import buildstep, logobserver
+from buildbot.process.properties import Property
 from buildbot.process.results import FAILURE, worst_status
 from twisted.internet import defer
 
@@ -150,6 +151,8 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         if result == util.SUCCESS:
             stdout = self.observer.getStdout()
             scripts = sorted(line for line in stdout.split("\n") if line.strip())
+            default_env["BUILD_NUMBER"] = str(Property("buildnumber"))
+
             self.build.addStepsAfterCurrentStep(
                 [
                     ScummVMTest(
