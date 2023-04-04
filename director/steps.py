@@ -151,8 +151,6 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         if result == util.SUCCESS:
             stdout = self.observer.getStdout()
             scripts = sorted(line for line in stdout.split("\n") if line.strip())
-            env = default_env.copy()
-            env["BUILD_NUMBER"] = util.Interpolate("%(prop:buildnumber)s")
 
             self.build.addStepsAfterCurrentStep(
                 [
@@ -161,7 +159,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
                         description=name,
                         descriptionDone=name,
                         command=self.generate_command(name),
-                        env=env,
+                        env=default_env,
                         timeout=int(settings["TIMEOUT"]),
                         maxTime=int(settings["MAX_TIME"]),
                         interruptSignal="QUIT",

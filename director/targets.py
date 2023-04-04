@@ -97,6 +97,9 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
     )
     for moviename in target.movienames:
         name = moviename
+        env = default_env.copy()
+        env["BUILD_NUMBER"] = util.Interpolate("%(prop:buildnumber)s")
+
         if len(name) > 49:
             # Buildbot can only handle names with a maximum of 50 chars.
             # take the last 49 of the moviename as the step name
@@ -108,7 +111,7 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
                 description=moviename,
                 descriptionDone=moviename,
                 command=generate_command(target, moviename),
-                env=default_env,
+                env=env,
                 workdir=os.path.join("build", target.directory),
                 timeout=int(settings["TIMEOUT"]),
                 maxTime=int(settings["MAX_TIME"]),
