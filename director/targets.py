@@ -61,14 +61,14 @@ def generate_command(target: TestTarget, moviename: str) -> list[str]:
         "../scummvm",
         "-c",
         "scummvm.conf",
-        "--initial-cfg=/storage/scummvm-default.ini",
+        "--screenshotpath=/home/director-buildbot/screenshots",
         f"--start-movie={moviename}",
     ]
     if target.debugflags:
         command.append(f"--debugflags={target.debugflags}")
     if target.autodetect:
         command.extend(
-            ["-p", ".", "--auto-detect"]
+            ["--initial-cfg=/storage/scummvm-default.ini", "-p", ".", "--auto-detect"]
         )
     else:
         command.append(target.game_id)
