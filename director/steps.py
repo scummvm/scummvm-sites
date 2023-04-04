@@ -151,7 +151,7 @@ class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):
         if result == util.SUCCESS:
             stdout = self.observer.getStdout()
             scripts = sorted(line for line in stdout.split("\n") if line.strip())
-            default_env["BUILD_NUMBER"] = str(Property("buildnumber"))
+            default_env["BUILD_NUMBER"] = Property("buildnumber")
 
             self.build.addStepsAfterCurrentStep(
                 [
