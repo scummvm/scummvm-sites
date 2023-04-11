@@ -32,6 +32,7 @@ server.handleMessage("login", async (client, args) => {
     const password = args.pass;
     const game = args.game;
     const version = args.version;
+    const competitive_mods = args.competitive_mods;
 
     if (username === undefined) {
         client.kick("Missing username parameter!");
@@ -56,7 +57,7 @@ server.handleMessage("login", async (client, args) => {
     client.version = version;
 
     const user = await database.getUser(username, password, game);
-    logEvent('login', client, args.version, {'user': user.id, 'username': user.user, 'game': game});
+    logEvent('login', client, args.version, {'user': user.id, 'username': user.user, 'game': game, 'competitive_mods': competitive_mods});
     if (user.error) {
         client.send("login_resp", {error_code: user.error,
                                    id: 0,
