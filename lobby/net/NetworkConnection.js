@@ -32,6 +32,7 @@ class NetworkConnection {
         this.userId = 0;
         this.game = '';
         this.version = '';
+        this.competitiveMods = false;
 
         this.areaId = 0;
 

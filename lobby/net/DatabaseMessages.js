@@ -55,6 +55,7 @@ server.handleMessage("login", async (client, args) => {
     }
     client.game = game;
     client.version = version;
+    client.competitiveMods = competitive_mods || false;
 
     const user = await database.getUser(username, password, game);
     logEvent('login', client, args.version, {'user': user.id, 'username': user.user, 'game': game, 'competitive_mods': competitive_mods});
@@ -97,6 +98,20 @@ server.handleMessage('get_profile', async (client, args) => {
 
     const profile = [user.icon].concat(user.stats);
     client.send("profile_info", {profile: profile});
+});
+
+server.handleMessage('download_file', async (client, args) => {
+    const filename = args.filename;
+    logEvent('download_file', client, args.version, {'filename': filename});
+
+    let data = "";
+    if (filename == "news.ini") {
+        const news = await database.getNews();
+        if (!news.error)
+            data = news.news;
+    }
+
+    client.send("file_data", {filename: filename, data: data});
 });
 
 server.handleMessage('set_icon', async (client, args) => {

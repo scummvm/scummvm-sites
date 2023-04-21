@@ -28,6 +28,46 @@ const logEvent = require('../global/EventLogger.js').logEvent;
 // Hack for baseball
 const busyTimeouts = {};
 
+server.handleMessage("ping_player", async (client, args) => {
+    const user = args.user;
+    logEvent('ping_player', client, args.version, {'user': user});
+
+    // We're substituting the ping system to check if both users
+    // has competitive mods enabled:
+    if (client.competitiveMods) {
+        process.send({cmd: "ping_player", user: user,
+                                          pinger: client.userId});
+
+    }
+});
+
+process.on('ping_player', async (args) => {
+    const userId = args.user;
+    const pinger = args.pinger;
+
+    for (const client of server.connections) {
+        if (client.userId == userId) {
+            if (client.competitiveMods) {
+                process.send({cmd: "ping_result", user: pinger,
+                                                  result: 10});
+            }
+            return;
+        }
+    }
+});
+
+process.on('ping_result', async (args) => {
+    const userId = args.user;
+    const result = args.result;
+
+    for (const client of server.connections) {
+        if (client.userId == userId) {
+            client.send("ping_result", {result: result});
+            return;
+        }
+    }
+});
+
 server.handleMessage('set_phone_status', async (client, args) => {
     const status = args.status;
     if (status === undefined) {

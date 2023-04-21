@@ -49,6 +49,11 @@ class WebAPI {
         return user;
     }
 
+    async getNews() {
+        const news = await this.post('/get_news', {token: this.token});
+        return news;
+    }
+
     async setIcon(userId, icon) {
         const response = await this.post('/set_icon', {token: this.token,
                                                       userId: userId,

@@ -133,6 +133,10 @@ class Redis {
         return {error: 1, message: "Redis does not support token logins."};
     }
 
+    async getNews() {
+        return {error: 0, news: ""};
+    }
+
     async removeUser(userId, game) {
         // We don't want to remove users from a dev database.
         if (database != this) {
