@@ -1,6 +1,6 @@
 <?php
-header('Content-Type: image/png');
-function pixelDiff(GDImage &$res, int $pixel1, int $pixel2) {
+
+function pixel_diff(GDImage &$res, int $pixel1, int $pixel2) {
   $r1 = ($pixel1 >> 16) & 0xFF;
   $g1 = ($pixel1 >> 8) & 0xFF;
   $b1 = $pixel1 & 0xFF;
@@ -16,7 +16,7 @@ function pixelDiff(GDImage &$res, int $pixel1, int $pixel2) {
   return imagecolorallocate($res, $r, $g, $b);
 }
 
-function imageDiff($path1, $path2) {
+function image_diff($path1, $path2) {
   $img1 = imagecreatefrompng($path1);
   $img2 = imagecreatefrompng($path2);
   $width = imagesx($img1);
@@ -28,24 +28,20 @@ function imageDiff($path1, $path2) {
 
   for ($i = 0; $i < $width; $i++) {
     for ($j = 0; $j < $height; $j++) {
-      imagesetpixel($res, $i, $j, pixelDiff(
+      imagesetpixel($res, $i, $j, pixel_diff(
         $res,
         imagecolorat($img1, $i, $j),
         imagecolorat($img2, $i, $j)
       ));
     }
   }
+
   ob_start();
-
   imagepng($res);
-  //   $image_data = ob_get_contents();
-  imagedestroy($res);
 
-  //   ob_end_clean();
-
-  //   return base64_encode($image_data);
+  return base64_encode(ob_get_clean());
 }
 
-imageDiff("../assets/1.png", "../assets/2.png");
+
 ?>
 
