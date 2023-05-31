@@ -96,7 +96,7 @@ $table = "CREATE TABLE IF NOT EXISTS filechecksum (
   id INT AUTO_INCREMENT PRIMARY KEY,
   file INT NOT NULL,
   checksize INT NOT NULL,
-  checktype INT NOT NULL,
+  checktype VARCHAR(10) NOT NULL,
   checksum VARCHAR(64) NOT NULL,
   FOREIGN KEY (file) REFERENCES file(id)
 )";
