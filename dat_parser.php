@@ -10,6 +10,23 @@ if (!$content) {
 }
 
 /**
+ * Convert string of checksum data from rom into associated array
+ * Returns array instead of updating one like map_key_values
+ */
+function map_checksum_data($content_string) {
+  $arr = array();
+  $temp = preg_split("/\s/", $content_string);
+
+  for ($i = 1; $i < count($temp); $i += 2) {
+    if ($temp[$i] == ')')
+      continue;
+    $arr[$temp[$i]] = $temp[$i + 1];
+  }
+
+  return $arr;
+}
+
+/**
  * Convert string as received by regex parsing to associated array
  */
 function map_key_values($content_string, &$arr) {
@@ -29,11 +46,11 @@ function map_key_values($content_string, &$arr) {
 
     // Handle duplicate keys (if the key is rom) and add values to a arary instead
     if ($pair[0] == "rom") {
-      if ($arr[$pair[0]]) {
-        array_push($arr[$pair[0]], $pair[1]);
+      if (array_key_exists($pair[0], $arr)) {
+        array_push($arr[$pair[0]], map_checksum_data($pair[1]));
       }
       else {
-        $arr[$pair[0]] = array($pair[1]);
+        $arr[$pair[0]] = array(map_checksum_data($pair[1]));
       }
     }
     else {
@@ -47,8 +64,8 @@ $game_data = array();
 $resources = array();
 
 $matches = array();
-$header_exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
-if (preg_match_all($header_exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
+$exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
+if (preg_match_all($exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
   foreach ($matches[0] as $data_segment) {
     if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false) {
       map_key_values($data_segment[0], $header);
@@ -64,6 +81,15 @@ if (preg_match_all($header_exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
   }
 
 }
+
+// Print statements for debugging
+// Uncomment to see parsed data
+
+// echo "<pre>";
+// print_r($header);
+// print_r($game_data);
+// print_r($resources);
+// echo "</pre>";
 
 fclose($dat_file);
 ?>
