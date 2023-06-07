@@ -1,7 +1,6 @@
 <?php
 
-// $dat_filepath = "ngi.dat";
-
+ini_set('memory_limit', '512M');
 
 /**
  * Convert string of checksum data from rom into associated array
@@ -102,7 +101,82 @@ function parse_dat($dat_filepath) {
   return array($header, $game_data, $resources);
 }
 
-parse_dat("ngi.dat");
+/**
+ * Routine for inserting a file into the database, intserting into all
+ * required tables
+ * $file is an associated array (the contents of 'rom')
+ * If checksum of the given checktype doesn't exists, silently fails
+ */
+function insert_file($file, $key, $conn, $checktype = "md5", $checksize = 0) {
+  if (!array_key_exists($checktype, $file))
+    return;
+
+  $query = sprintf("INSERT INTO file (name, size, checksum)
+  VALUES ('%s', '%s', '%s')", mysqli_real_escape_string($conn, $file["name"]),
+    $file["size"], $file[$checktype]);
+  $conn->query($query);
+  $conn->query("SET @file_last = LAST_INSERT_ID()");
+
+  $query = sprintf("INSERT INTO filechecksum (file, checksize, checktype, checksum)
+  VALUES (@file_last, '%s', '%s', '%s')", $checksize, $checktype, $file[$checktype]);
+  $conn->query($query);
+  $conn->query("SET @filechecksum_last = LAST_INSERT_ID()");
+
+  $query = sprintf("INSERT INTO fileset (game, file, status, `key`)
+  VALUES (NULL, @file_last, 0, '%s')", $key);
+  $conn->query($query);
+  $conn->query("SET @fileset_last = LAST_INSERT_ID()");
+
+  $query = "INSERT INTO fileset_detection (fileset, checksum)
+  VALUES (@fileset_last, @filechecksum_last)";
+  $conn->query($query);
+}
+
+/**
+ * Insert values from the associated array into the DB
+ * They will be inserted under gameid NULL as the game itself is unconfirmed
+ */
+function db_insert($data_arr) {
+  $header = $data_arr[0];
+  $game_data = $data_arr[1];
+  $resources = $data_arr[2];
+
+  $servername = "localhost";
+  $username = "username";
+  $password = "password";
+  $dbname = "integrity";
+
+  // Create connection
+  $conn = new mysqli($servername, $username, $password);
+
+  // Check connection
+  if ($conn->connect_errno) {
+    die("Connect failed: " . $conn->connect_error);
+  }
+
+  $conn->query("USE " . $dbname);
+
+  // Remove "ScummVM" from engine name
+  $engine_name = preg_split("/\s/", $header["name"]);
+  array_shift($engine_name);
+  $engine_name = implode(" ", $engine_name);
+
+  $query = sprintf("INSERT INTO engine (name, engineid)
+  VALUES ('%s', '1')", $engine_name);
+  $conn->query($query);
+  $conn->query("SET @engine_last = LAST_INSERT_ID()");
+
+  foreach ($game_data as $fileset) {
+    foreach ($fileset["rom"] as $file) {
+      $key = NULL;
+      insert_file($file, $key, $conn);
+      insert_file($file, $key, $conn, "crc");
+      insert_file($file, $key, $conn, "sha1");
+    }
+  }
+}
+
+// db_insert(parse_dat("ngi.dat"));
 
 ?>
 

@@ -76,7 +76,7 @@ else {
 // Create fileset table
 $table = "CREATE TABLE IF NOT EXISTS fileset (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  game INT NOT NULL,
+  game INT,
   file INT NOT NULL,
   status INT,
   `key` VARCHAR(64),
