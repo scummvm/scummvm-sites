@@ -1,13 +1,7 @@
 <?php
 
-$dat_filepath = "ngi.dat";
+// $dat_filepath = "ngi.dat";
 
-$dat_file = fopen($dat_filepath, "r") or die("Unable to open file!");
-$content = fread($dat_file, filesize($dat_filepath));
-
-if (!$content) {
-  error_log("File not readable");
-}
 
 /**
  * Convert string of checksum data from rom into associated array
@@ -59,38 +53,56 @@ function map_key_values($content_string, &$arr) {
   }
 }
 
-$header = array();
-$game_data = array();
-$resources = array();
+/**
+ * Take DAT filepath as input and return parsed data in the form of
+ * associated arrays
+ */
+function parse_dat($dat_filepath) {
+  $dat_file = fopen($dat_filepath, "r") or die("Unable to open file!");
+  $content = fread($dat_file, filesize($dat_filepath));
 
-$matches = array();
-$exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
-if (preg_match_all($exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
-  foreach ($matches[0] as $data_segment) {
-    if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false) {
-      map_key_values($data_segment[0], $header);
-    }
-    elseif (strpos(substr($content, $data_segment[1] - 5, $data_segment[1]), "game") !== false) {
-      $temp = array();
-      map_key_values($data_segment[0], $temp);
-      array_push($game_data, $temp);
-    }
-    elseif (strpos(substr($content, $data_segment[1] - 9, $data_segment[1]), "resource") !== false) {
-      map_key_values($data_segment[0], $resources);
-    }
+  if (!$content) {
+    error_log("File not readable");
   }
 
+  $header = array();
+  $game_data = array();
+  $resources = array();
+
+  $matches = array();
+  $exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
+  if (preg_match_all($exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
+    foreach ($matches[0] as $data_segment) {
+      if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false) {
+        map_key_values($data_segment[0], $header);
+      }
+      elseif (strpos(substr($content, $data_segment[1] - 5, $data_segment[1]), "game") !== false) {
+        $temp = array();
+        map_key_values($data_segment[0], $temp);
+        array_push($game_data, $temp);
+      }
+      elseif (strpos(substr($content, $data_segment[1] - 9, $data_segment[1]), "resource") !== false) {
+        map_key_values($data_segment[0], $resources);
+      }
+    }
+
+  }
+
+  // Print statements for debugging
+  // Uncomment to see parsed data
+
+  // echo "<pre>";
+  // print_r($header);
+  // print_r($game_data);
+  // print_r($resources);
+  // echo "</pre>";
+
+  fclose($dat_file);
+
+  return array($header, $game_data, $resources);
 }
 
-// Print statements for debugging
-// Uncomment to see parsed data
+parse_dat("ngi.dat");
 
-// echo "<pre>";
-// print_r($header);
-// print_r($game_data);
-// print_r($resources);
-// echo "</pre>";
-
-fclose($dat_file);
 ?>
 
