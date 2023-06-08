@@ -59,6 +59,7 @@ function map_key_values($content_string, &$arr) {
 function parse_dat($dat_filepath) {
   $dat_file = fopen($dat_filepath, "r") or die("Unable to open file!");
   $content = fread($dat_file, filesize($dat_filepath));
+  fclose($dat_file);
 
   if (!$content) {
     error_log("File not readable");
@@ -95,8 +96,6 @@ function parse_dat($dat_filepath) {
   // print_r($game_data);
   // print_r($resources);
   // echo "</pre>";
-
-  fclose($dat_file);
 
   return array($header, $game_data, $resources);
 }
@@ -147,7 +146,10 @@ function db_insert($data_arr) {
   $dbname = "integrity";
 
   // Create connection
+  mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
   $conn = new mysqli($servername, $username, $password);
+  $conn->set_charset('utf8mb4');
+  $conn->autocommit(FALSE);
 
   // Check connection
   if ($conn->connect_errno) {
@@ -174,6 +176,8 @@ function db_insert($data_arr) {
       insert_file($file, $key, $conn, "sha1");
     }
   }
+  if (!$conn->commit())
+    echo "Inserting failed<br/>";
 }
 
 // db_insert(parse_dat("ngi.dat"));
