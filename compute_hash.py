@@ -1,5 +1,6 @@
 import hashlib
 import os
+import argparse
 
 
 def filesize(filepath):
@@ -53,7 +54,7 @@ def checksum(filepath, alg, size):
         else:
             hashes[4] = None
 
-        return [hash.hexdigest() for hash in hashes if hash]
+        return [h.hexdigest() for h in hashes if h]
 
 
 def compute_hash_of_dir(directory, alg="md5", size=0):
@@ -69,5 +70,18 @@ def compute_hash_of_dir(directory, alg="md5", size=0):
     return res
 
 
-path = os.path.expanduser("~/Downloads/drascula-1.0")
+parser = argparse.ArgumentParser()
+parser.add_argument("directory",
+                    help="Path of directory with game files")
+parser.add_argument("engine",
+                    help="Name of the engine the game is built on")
+parser.add_argument("--size",
+                    help="Use first n bytes of file to calculate checksum")
+args = parser.parse_args()
+path = os.path.abspath(args.directory)
+engine_name = args.engine
+checksum_size = args.size
+
+
+# path = os.path.expanduser("~/Downloads/drascula-1.0")
 print(compute_hash_of_dir(path, size=4000))
