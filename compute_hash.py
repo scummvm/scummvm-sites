@@ -70,6 +70,24 @@ def compute_hash_of_dir(directory, alg="md5", size=0):
     return res
 
 
+def create_dat_file(hash_of_dir, engine, path):
+    with open(f"{engine}.dat", "w") as file:
+        # Header
+        file.writelines([
+            "clrmamepro (\n",
+            f"\tname \"ScummVM {engine}\"\n",
+            ")\n\n"
+        ])
+
+        # Game files
+        file.write("game (\n")
+        for filename, hashes in hash_of_dir.items():
+            # Only works for MD5s, ignores optional extra size
+            data = f"name {filename} size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000t {hashes[3]}"
+            file.write(f"\trom ( {data} )\n")
+        file.write(")\n\n")
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("directory",
                     help="Path of directory with game files")
@@ -83,5 +101,5 @@ engine_name = args.engine
 checksum_size = args.size
 
 
-# path = os.path.expanduser("~/Downloads/drascula-1.0")
-print(compute_hash_of_dir(path, size=4000))
+path = os.path.expanduser("~/Downloads/drascula-1.0")
+create_dat_file(compute_hash_of_dir(path, size=4000), engine_name, path)
