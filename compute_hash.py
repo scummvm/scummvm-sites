@@ -74,7 +74,7 @@ def create_dat_file(hash_of_dir, engine, path):
     with open(f"{engine}.dat", "w") as file:
         # Header
         file.writelines([
-            "clrmamepro (\n",
+            "scummvm (\n",
             f"\tname \"ScummVM {engine}\"\n",
             ")\n\n"
         ])

@@ -73,7 +73,8 @@ function parse_dat($dat_filepath) {
   $exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
   if (preg_match_all($exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
     foreach ($matches[0] as $data_segment) {
-      if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false) {
+      if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false ||
+        strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "scummvm") !== false) {
         map_key_values($data_segment[0], $header);
       }
       elseif (strpos(substr($content, $data_segment[1] - 5, $data_segment[1]), "game") !== false) {
