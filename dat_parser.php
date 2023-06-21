@@ -8,11 +8,14 @@ ini_set('memory_limit', '512M');
  */
 function map_checksum_data($content_string) {
   $arr = array();
-  $temp = preg_split("/\s/", $content_string);
+  $temp = preg_split('/("[^"]*")|\h+/', $content_string, -1, PREG_SPLIT_NO_EMPTY | PREG_SPLIT_DELIM_CAPTURE);
 
   for ($i = 1; $i < count($temp); $i += 2) {
     if ($temp[$i] == ')')
       continue;
+    if ($temp[$i + 1][0] == '"') {
+      $temp[$i + 1] = substr($temp[$i + 1], 1, -1);
+    }
     $arr[$temp[$i]] = $temp[$i + 1];
   }
 
@@ -53,6 +56,41 @@ function map_key_values($content_string, &$arr) {
 }
 
 /**
+ * Parse DAT file and separate the contents each segment into an array
+ * Segments are of the form `scummvm ( )`, `game ( )` etc.
+ */
+function match_outermost_brackets($input) {
+  $matches = array();
+  $depth = 0;
+  $inside_quotes = false;
+  $cur_index = 0;
+
+  for ($i = 0; $i < strlen($input); $i++) {
+    $char = $input[$i];
+
+    if ($char == '(' && !$inside_quotes) {
+      if ($depth === 0) {
+        $cur_index = $i;
+      }
+      $depth++;
+    }
+    elseif ($char == ')' && !$inside_quotes) {
+      $depth--;
+      if ($depth === 0) {
+        $match = substr($input, $cur_index, $i - $cur_index + 1);
+        array_push($matches, array($match, $cur_index));
+      }
+    }
+    elseif ($char == '"') {
+      $inside_quotes = !$inside_quotes;
+    }
+  }
+
+  return $matches;
+}
+
+
+/**
  * Take DAT filepath as input and return parsed data in the form of
  * associated arrays
  */
@@ -69,12 +107,11 @@ function parse_dat($dat_filepath) {
   $game_data = array();
   $resources = array();
 
-  $matches = array();
-  $exp = '/\((?:[^)(]+|(?R))*+\)/u'; // Get content inside outermost brackets
-  if (preg_match_all($exp, $content, $matches, PREG_OFFSET_CAPTURE)) {
-    foreach ($matches[0] as $data_segment) {
-      if (strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "clrmamepro") !== false ||
-        strpos(substr($content, $data_segment[1] - 11, $data_segment[1]), "scummvm") !== false) {
+  $matches = match_outermost_brackets($content);
+  if ($matches) {
+    foreach ($matches as $data_segment) {
+      if (strpos(substr($content, $data_segment[1] - 11, 11), "clrmamepro") !== false ||
+        strpos(substr($content, $data_segment[1] - 8, 8), "scummvm") !== false) {
         map_key_values($data_segment[0], $header);
       }
       elseif (strpos(substr($content, $data_segment[1] - 5, $data_segment[1]), "game") !== false) {
