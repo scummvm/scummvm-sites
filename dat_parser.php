@@ -16,7 +16,7 @@ function map_checksum_data($content_string) {
     if ($temp[$i + 1][0] == '"') {
       $temp[$i + 1] = substr($temp[$i + 1], 1, -1);
     }
-    $arr[$temp[$i]] = $temp[$i + 1];
+    $arr[$temp[$i]] = stripslashes($temp[$i + 1]);
   }
 
   return $arr;
@@ -50,7 +50,7 @@ function map_key_values($content_string, &$arr) {
       }
     }
     else {
-      $arr[$pair[0]] = $pair[1];
+      $arr[$pair[0]] = stripslashes($pair[1]);
     }
   }
 }
@@ -81,14 +81,13 @@ function match_outermost_brackets($input) {
         array_push($matches, array($match, $cur_index));
       }
     }
-    elseif ($char == '"') {
+    elseif ($char == '"' && $input[$i - 1] != '\\') {
       $inside_quotes = !$inside_quotes;
     }
   }
 
   return $matches;
 }
-
 
 /**
  * Take DAT filepath as input and return parsed data in the form of
@@ -139,33 +138,96 @@ function parse_dat($dat_filepath) {
 }
 
 /**
- * Routine for inserting a file into the database, intserting into all
+ * Routine for inserting a game into the database, inserting into engine and
+ * game tables
+ */
+function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn) {
+  // Set @engine_last if engine already present in table
+  $exists = false;
+  if ($res = $conn->query(sprintf("SELECT id FROM engine WHERE engineid = '%s'", $engineid))) {
+    if ($res->num_rows > 0) {
+      $exists = true;
+      $conn->query(sprintf("SET @engine_last = '%d'", $res->fetch_array()[0]));
+    }
+  }
+
+  // Insert into table if not present
+  if (!$exists) {
+    $query = sprintf("INSERT INTO engine (name, engineid)
+  VALUES (NULL, '%s')", $engineid);
+    $conn->query($query);
+    $conn->query("SET @engine_last = LAST_INSERT_ID()");
+  }
+
+  // Insert into game
+  $query = sprintf("INSERT INTO game (name, engine, gameid, extra, platform, language)
+  VALUES ('%s', @engine_last, '%s', '%s', '%s', '%s')", mysqli_real_escape_string($conn, $title),
+    $gameid, mysqli_real_escape_string($conn, $extra), $platform, $lang);
+  $conn->query($query);
+  $conn->query("SET @game_last = LAST_INSERT_ID()");
+}
+
+/**
+ * Inserting new fileset
+ * Called for both detection entries and other forms of DATs
+ */
+function insert_fileset($src, $key, $detection, $conn) {
+  // $status can be: {detection, unconfirmed, confirmed (unused here)}
+  $status = "unconfirmed";
+  $game = "NULL";
+
+  if ($detection) {
+    $status = "detection";
+    $game = "@game_last";
+  }
+
+  // $game should not be parsed as a mysql string, hence no quotes
+  $query = sprintf("INSERT INTO fileset (game, status, src, `key`)
+  VALUES (%s, '%s', '%s', '%s')", $game, $status, $src, $key);
+  $conn->query($query);
+  $conn->query("SET @fileset_last = LAST_INSERT_ID()");
+}
+
+/**
+ * Routine for inserting a file into the database, inserting into all
  * required tables
  * $file is an associated array (the contents of 'rom')
  * If checksum of the given checktype doesn't exists, silently fails
  */
-function insert_file($file, $key, $conn, $checktype = "md5", $checksize = 0) {
+function insert_file($file, $detection, $conn, $checktype = "md5") {
+  // Find first checksum value
+
+  $checksum = "";
+  foreach ($file as $key => $value) {
+    if ($key != "name" && $key != "size")
+      $checksum = $value;
+  }
+
+  $query = sprintf("INSERT INTO file (name, size, checksum, fileset, detection)
+  VALUES ('%s', '%s', '%s', @fileset_last, %d)", mysqli_real_escape_string($conn, $file["name"]),
+    $file["size"], $checksum, $detection);
+  $conn->query($query);
+  $conn->query("SET @file_last = LAST_INSERT_ID()");
+}
+
+function insert_filechecksum($file, $checktype, $conn) {
   if (!array_key_exists($checktype, $file))
     return;
 
-  $query = sprintf("INSERT INTO file (name, size, checksum)
-  VALUES ('%s', '%s', '%s')", mysqli_real_escape_string($conn, $file["name"]),
-    $file["size"], $file[$checktype]);
-  $conn->query($query);
-  $conn->query("SET @file_last = LAST_INSERT_ID()");
+  $checksize = 0;
+  $checksum = $file[$checktype];
+  if (strpos($checktype, '-') !== false) {
+    $checksize = explode('-', $checktype)[1];
+    $checktype = explode('-', $checktype)[0];
+  }
+
+  if (strpos($checksum, ':') !== false) {
+    $checktype .= "-" . explode(':', $checksum)[0];
+    $checksum = explode(':', $checksum)[1];
+  }
 
   $query = sprintf("INSERT INTO filechecksum (file, checksize, checktype, checksum)
-  VALUES (@file_last, '%s', '%s', '%s')", $checksize, $checktype, $file[$checktype]);
-  $conn->query($query);
-  $conn->query("SET @filechecksum_last = LAST_INSERT_ID()");
-
-  $query = sprintf("INSERT INTO fileset (game, file, status, `key`)
-  VALUES (NULL, @file_last, 0, '%s')", $key);
-  $conn->query($query);
-  $conn->query("SET @fileset_last = LAST_INSERT_ID()");
-
-  $query = "INSERT INTO fileset_detection (fileset, checksum)
-  VALUES (@fileset_last, @filechecksum_last)";
+  VALUES (@file_last, '%s', '%s', '%s')", $checksize, $checktype, $checksum);
   $conn->query($query);
 }
 
@@ -196,22 +258,48 @@ function db_insert($data_arr) {
 
   $conn->query("USE " . $dbname);
 
-  // Remove "ScummVM" from engine name
-  $engine_name = preg_split("/\s/", $header["name"]);
-  array_shift($engine_name);
-  $engine_name = implode(" ", $engine_name);
+  /**
+   * Author can be:
+   *  scummvm -> Detection Entries
+   *  scanner -> CLI tool
+   *  _anything else_ -> DAT file
+   */
+  $author = $header["author"];
 
-  $query = sprintf("INSERT INTO engine (name, engineid)
-  VALUES ('%s', '1')", $engine_name);
-  $conn->query($query);
-  $conn->query("SET @engine_last = LAST_INSERT_ID()");
+  /**
+   * src can be:
+   *  detection -> Detection entries (source of truth)
+   *  user -> Submitted by users via ScummVM, unmatched (Not used in the parser)
+   *  scan -> Submitted by scanner, unmatched
+   *  dat -> Submitted by DAT, unmatched
+   *  partialmatch -> Submitted by DAT, matched
+   *  fullmatch -> Submitted by scanner, matched
+   */
+  $src = "";
+  if ($author == "scanner")
+    $src = "scan";
+  elseif ($author == "scummvm")
+    $src = "detection";
+  else
+    $src = "dat";
 
   foreach ($game_data as $fileset) {
+    if ($src == "detection") {
+      $engineid = $fileset["sourcefile"];
+      $gameid = $fileset["name"];
+      $title = $fileset["title"];
+      $extra = $fileset["extra"];
+      $platform = $fileset["platform"];
+      $lang = $fileset["language"];
+
+      insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn);
+    }
+
+    $key = NULL;
+    insert_fileset($src, $key, ($src == "detection"), $conn);
     foreach ($fileset["rom"] as $file) {
-      $key = NULL;
-      insert_file($file, $key, $conn);
-      insert_file($file, $key, $conn, "crc");
-      insert_file($file, $key, $conn, "sha1");
+      insert_file($file, ($src == "detection"), $conn, "md5-5000");
+      insert_filechecksum($file, "md5-5000", $conn);
     }
   }
   if (!$conn->commit())
