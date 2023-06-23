@@ -48,6 +48,7 @@ $table = "CREATE TABLE IF NOT EXISTS game (
   name VARCHAR(200),
   engine INT NOT NULL,
   gameid VARCHAR(100) NOT NULL,
+  extra VARCHAR(200),
   platform VARCHAR(30),
   language VARCHAR(10),
   FOREIGN KEY (engine) REFERENCES engine(id)
