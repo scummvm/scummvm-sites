@@ -82,7 +82,7 @@ else {
 $table = "CREATE TABLE IF NOT EXISTS file (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(200) NOT NULL,
-  size INT NOT NULL,
+  size BIGINT NOT NULL,
   checksum VARCHAR(64) NOT NULL,
   fileset INT NOT NULL,
   detection BOOLEAN NOT NULL,
