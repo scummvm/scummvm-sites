@@ -132,6 +132,25 @@ else {
   echo "Error creating 'queue' table: " . $conn->error;
 }
 
+// Create indices for fast data retrieval
+// PK and FK are automatically indexed in InnoDB, so they are not included
+$index = "CREATE INDEX detection ON file (detection)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'file.detection'<br/>";
+}
+else {
+  echo "Error creating index for 'file.detection': " . $conn->error;
+}
+
+$index = "CREATE INDEX checksum ON filechecksum (checksum)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'filechecksum.checksum'<br/>";
+}
+else {
+  echo "Error creating index for 'filechecksum.checksum': " . $conn->error;
+}
 
 $conn->close();
 ?>
