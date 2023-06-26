@@ -54,10 +54,12 @@ def checksum(filepath, alg, size):
         else:
             hashes[4] = None
 
-        return [h.hexdigest() for h in hashes if h]
+        hashes = [h.hexdigest() for h in hashes if h]
+        hashes[3] = 't:' + hashes[3]  # Add tail prefix
+        return hashes
 
 
-def compute_hash_of_dir(directory, alg="md5", size=0):
+def compute_hash_of_dir(directory, depth, alg="md5", size=0):
     """ Return dictionary containing checksums of all files in directory """
     res = dict()
     # Getting contents of directory and filtering only the files
@@ -70,12 +72,12 @@ def compute_hash_of_dir(directory, alg="md5", size=0):
     return res
 
 
-def create_dat_file(hash_of_dir, engine, path):
-    with open(f"{engine}.dat", "w") as file:
+def create_dat_file(hash_of_dir, path):
+    with open(f"{os.path.basename(path)}.dat", "w") as file:
         # Header
         file.writelines([
             "scummvm (\n",
-            f"\tname \"ScummVM {engine}\"\n",
+            f"\tauthor cli\n",
             ")\n\n"
         ])
 
@@ -83,23 +85,23 @@ def create_dat_file(hash_of_dir, engine, path):
         file.write("game (\n")
         for filename, hashes in hash_of_dir.items():
             # Only works for MD5s, ignores optional extra size
-            data = f"name {filename} size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000t {hashes[3]}"
+            data = f"name \"{filename}\" size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
             file.write(f"\trom ( {data} )\n")
         file.write(")\n\n")
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("directory",
+parser.add_argument("--directory",
                     help="Path of directory with game files")
-parser.add_argument("engine",
-                    help="Name of the engine the game is built on")
+parser.add_argument("--depth",
+                    help="Depth from root to game directories")
 parser.add_argument("--size",
                     help="Use first n bytes of file to calculate checksum")
 args = parser.parse_args()
-path = os.path.abspath(args.directory)
-engine_name = args.engine
+path = os.path.abspath(args.directory) if args.directory else os.getcwd()
+depth = args.depth
 checksum_size = args.size
 
 
 path = os.path.expanduser("~/Downloads/drascula-1.0")
-create_dat_file(compute_hash_of_dir(path, size=4000), engine_name, path)
+create_dat_file(compute_hash_of_dir(path, depth, size=4000), path)
