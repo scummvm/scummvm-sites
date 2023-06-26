@@ -138,6 +138,91 @@ function parse_dat($dat_filepath) {
 }
 
 /**
+ * Retrieves the checksum and checktype of a given type + checksum
+ * eg: md5-5000 t:12345... -> 5000, md5-t, 12345...
+ */
+function get_checksum_props($checktype, $checksum) {
+  $checksize = 0;
+  if (strpos($checktype, '-') !== false) {
+    $checksize = explode('-', $checktype)[1];
+    $checktype = explode('-', $checktype)[0];
+  }
+
+  if (strpos($checksum, ':') !== false) {
+    $prefix = explode(':', $checksum)[0];
+
+    if (strpos($prefix, 't') !== false)
+      $checktype .= "-" . 't';
+    $checksum = explode(':', $checksum)[1];
+  }
+
+  return array($checksize, $checktype, $checksum);
+}
+
+/**
+ * Detects games based on the file descriptions in $dat_arr
+ * Compares the files with those in the detection entries table
+ * $game_files consists of both the game ( ) and resources ( ) parts
+ */
+function find_matching_game($game_files) {
+  $matching_games = array(); // All matching games
+  $matching_filesets = array(); // All filesets containing one file from $game_files
+  $matches_count = 0; // Number of files with a matching detection entry
+
+  $conn = db_connect();
+
+  foreach ($game_files["rom"] as $file) {
+    foreach ($file as $key => $value) {
+      if (strpos($key, "md5") === false)
+        continue;
+
+      list($checksize, $checktype, $checksum) = get_checksum_props($key, $value);
+
+      $records = $conn->query(sprintf("SELECT file.fileset
+      FROM filechecksum
+      JOIN file ON filechecksum.file = file.id
+      WHERE filechecksum.checksum = '%s' AND file.detection = TRUE", $checksum));
+      $records = $records->fetch_all();
+
+      // If file is not part of detection entries, skip it
+      if (count($records) == 0)
+        continue;
+
+      $matches_count++;
+      foreach ($records as $record) {
+        array_push($matching_filesets, $record[0]);
+      }
+    }
+  }
+
+  // Check if there is a fileset_id that is present in all results
+  foreach (array_count_values($matching_filesets) as $key => $value) {
+    $count_files_in_fileset = $conn->query(sprintf("SELECT COUNT(file.id) FROM file
+    JOIN fileset ON file.fileset = fileset.id
+    WHERE fileset.id = '%s'", $key));
+    $count_files_in_fileset = $count_files_in_fileset->fetch_array()[0];
+
+    // We use < instead of != since one file may have more than one entry in the fileset
+    // We see this in Drascula English version, where one entry is duplicated
+    if ($value < $matches_count || $value < $count_files_in_fileset)
+      continue;
+
+    $records = $conn->query(sprintf("SELECT game.id
+    FROM game
+    JOIN fileset ON fileset.game = game.id
+    WHERE fileset.id = '%s'", $key));
+
+    array_push($matching_games, $records->fetch_all());
+  }
+
+  // If we got a unique match, return the id of the game
+  if (count($matching_games) == 1)
+    return $matching_games[0][0][0];
+
+  return $matching_games;
+}
+
+/**
  * Routine for inserting a game into the database, inserting into engine and
  * game tables
  */
@@ -214,17 +299,8 @@ function insert_filechecksum($file, $checktype, $conn) {
   if (!array_key_exists($checktype, $file))
     return;
 
-  $checksize = 0;
   $checksum = $file[$checktype];
-  if (strpos($checktype, '-') !== false) {
-    $checksize = explode('-', $checktype)[1];
-    $checktype = explode('-', $checktype)[0];
-  }
-
-  if (strpos($checksum, ':') !== false) {
-    $checktype .= "-" . explode(':', $checksum)[0];
-    $checksum = explode(':', $checksum)[1];
-  }
+  list($checksize, $checktype, $checksum) = get_checksum_props($checktype, $checksum);
 
   $query = sprintf("INSERT INTO filechecksum (file, checksize, checktype, checksum)
   VALUES (@file_last, '%s', '%s', '%s')", $checksize, $checktype, $checksum);
@@ -232,14 +308,9 @@ function insert_filechecksum($file, $checktype, $conn) {
 }
 
 /**
- * Insert values from the associated array into the DB
- * They will be inserted under gameid NULL as the game itself is unconfirmed
+ * Create and return a mysqli connection
  */
-function db_insert($data_arr) {
-  $header = $data_arr[0];
-  $game_data = $data_arr[1];
-  $resources = $data_arr[2];
-
+function db_connect() {
   $servername = "localhost";
   $username = "username";
   $password = "password";
@@ -257,6 +328,20 @@ function db_insert($data_arr) {
   }
 
   $conn->query("USE " . $dbname);
+
+  return $conn;
+}
+
+/**
+ * Insert values from the associated array into the DB
+ * They will be inserted under gameid NULL as the game itself is unconfirmed
+ */
+function db_insert($data_arr) {
+  $header = $data_arr[0];
+  $game_data = $data_arr[1];
+  $resources = $data_arr[2];
+
+  $conn = db_connect();
 
   /**
    * Author can be:
@@ -276,8 +361,8 @@ function db_insert($data_arr) {
    *  fullmatch -> Submitted by scanner, matched
    */
   $src = "";
-  if ($author == "scanner")
-    $src = "scan";
+  if ($author == "cli")
+    $src = "cli";
   elseif ($author == "scummvm")
     $src = "detection";
   else
@@ -306,7 +391,9 @@ function db_insert($data_arr) {
     echo "Inserting failed<br/>";
 }
 
-// db_insert(parse_dat("ngi.dat"));
-
+echo "<pre>";
+// print_r(parse_dat("drascula-1.0.dat")[1]);
+print_r(find_matching_game(parse_dat("drascula-1.0.dat")[1][0]));
+echo "</pre>";
 ?>
 
