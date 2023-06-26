@@ -119,7 +119,9 @@ function parse_dat($dat_filepath) {
         array_push($game_data, $temp);
       }
       elseif (strpos(substr($content, $data_segment[1] - 9, $data_segment[1]), "resource") !== false) {
-        map_key_values($data_segment[0], $resources);
+        $temp = array();
+        map_key_values($data_segment[0], $temp);
+        $resources[$temp["name"]] = $temp;
       }
     }
 
@@ -215,10 +217,6 @@ function find_matching_game($game_files) {
     array_push($matching_games, $records->fetch_all());
   }
 
-  // If we got a unique match, return the id of the game
-  if (count($matching_games) == 1)
-    return $matching_games[0][0][0];
-
   return $matching_games;
 }
 
@@ -256,10 +254,9 @@ function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn
  * Inserting new fileset
  * Called for both detection entries and other forms of DATs
  */
-function insert_fileset($src, $key, $detection, $conn) {
+function insert_fileset($src, $key, $detection, $conn, $game = "NULL") {
   // $status can be: {detection, unconfirmed, confirmed (unused here)}
   $status = "unconfirmed";
-  $game = "NULL";
 
   if ($detection) {
     $status = "detection";
@@ -279,9 +276,8 @@ function insert_fileset($src, $key, $detection, $conn) {
  * $file is an associated array (the contents of 'rom')
  * If checksum of the given checktype doesn't exists, silently fails
  */
-function insert_file($file, $detection, $conn, $checktype = "md5") {
+function insert_file($file, $detection, $conn) {
   // Find first checksum value
-
   $checksum = "";
   foreach ($file as $key => $value) {
     if ($key != "name" && $key != "size")
@@ -355,10 +351,10 @@ function db_insert($data_arr) {
    * src can be:
    *  detection -> Detection entries (source of truth)
    *  user -> Submitted by users via ScummVM, unmatched (Not used in the parser)
-   *  scan -> Submitted by scanner, unmatched
+   *  cli -> Submitted by cli/scanner, unmatched
    *  dat -> Submitted by DAT, unmatched
    *  partialmatch -> Submitted by DAT, matched
-   *  fullmatch -> Submitted by scanner, matched
+   *  fullmatch -> Submitted by cli/scanner, matched
    */
   $src = "";
   if ($author == "cli")
@@ -368,8 +364,10 @@ function db_insert($data_arr) {
   else
     $src = "dat";
 
+  $detection = ($src == "detection");
+
   foreach ($game_data as $fileset) {
-    if ($src == "detection") {
+    if ($detection) {
       $engineid = $fileset["sourcefile"];
       $gameid = $fileset["name"];
       $title = $fileset["title"];
@@ -378,12 +376,26 @@ function db_insert($data_arr) {
       $lang = $fileset["language"];
 
       insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn);
+      insert_fileset($src, NULL, true, $conn);
+    }
+    elseif ($src == "dat")
+      if (isset($resources[$fileset["romof"]]))
+        $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
+
+    if (!$detection) {
+      $matching_games = find_matching_game($fileset);
+
+      // If a unique match is found, assign the fileset a gameid
+      if (count($matching_games) == 1) {
+        $key = NULL;
+        insert_fileset($src, $key, $detection, $conn, $matching_games[0][0][0]);
+      }
+      else
+        insert_fileset($src, NULL, $detection, $conn);
     }
 
-    $key = NULL;
-    insert_fileset($src, $key, ($src == "detection"), $conn);
     foreach ($fileset["rom"] as $file) {
-      insert_file($file, ($src == "detection"), $conn, "md5-5000");
+      insert_file($file, $detection, $conn);
       insert_filechecksum($file, "md5-5000", $conn);
     }
   }
@@ -391,9 +403,8 @@ function db_insert($data_arr) {
     echo "Inserting failed<br/>";
 }
 
-echo "<pre>";
-// print_r(parse_dat("drascula-1.0.dat")[1]);
-print_r(find_matching_game(parse_dat("drascula-1.0.dat")[1][0]));
-echo "</pre>";
+// echo "<pre>";
+// db_insert(parse_dat("scummvm_detection_entries.dat"));
+// echo "</pre>";
 ?>
 
