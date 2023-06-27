@@ -173,28 +173,22 @@ function find_matching_game($game_files) {
 
   $conn = db_connect();
 
-  foreach ($game_files["rom"] as $file) {
-    foreach ($file as $key => $value) {
-      if (strpos($key, "md5") === false)
-        continue;
+  foreach ($game_files as $file) {
+    $checksum = $file[1];
 
-      list($checksize, $checktype, $checksum) = get_checksum_props($key, $value);
+    $records = $conn->query(sprintf("SELECT file.fileset
+    FROM filechecksum
+    JOIN file ON filechecksum.file = file.id
+    WHERE filechecksum.checksum = '%s' AND file.detection = TRUE", $checksum));
+    $records = $records->fetch_all();
 
-      $records = $conn->query(sprintf("SELECT file.fileset
-      FROM filechecksum
-      JOIN file ON filechecksum.file = file.id
-      WHERE filechecksum.checksum = '%s' AND file.detection = TRUE", $checksum));
-      $records = $records->fetch_all();
+    // If file is not part of detection entries, skip it
+    if (count($records) == 0)
+      continue;
 
-      // If file is not part of detection entries, skip it
-      if (count($records) == 0)
-        continue;
-
-      $matches_count++;
-      foreach ($records as $record) {
-        array_push($matching_filesets, $record[0]);
-      }
-    }
+    $matches_count++;
+    foreach ($records as $record)
+      array_push($matching_filesets, $record[0]);
   }
 
   // Check if there is a fileset_id that is present in all results
@@ -217,7 +211,16 @@ function find_matching_game($game_files) {
     array_push($matching_games, $records->fetch_all());
   }
 
-  return $matching_games;
+  // Flattening the array
+  $res = array();
+  foreach ($matching_games as $query) {
+    foreach ($query as $selection) {
+      $game_id = $selection[0];
+      array_push($res, $game_id);
+    }
+  }
+
+  return $res;
 }
 
 /**
@@ -254,9 +257,10 @@ function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn
  * Inserting new fileset
  * Called for both detection entries and other forms of DATs
  */
-function insert_fileset($src, $key, $detection, $conn, $game = "NULL") {
+function insert_fileset($src, $detection, $conn) {
   // $status can be: {detection, unconfirmed, confirmed (unused here)}
   $status = "unconfirmed";
+  $game = "NULL";
 
   if ($detection) {
     $status = "detection";
@@ -265,7 +269,7 @@ function insert_fileset($src, $key, $detection, $conn, $game = "NULL") {
 
   // $game should not be parsed as a mysql string, hence no quotes
   $query = sprintf("INSERT INTO fileset (game, status, src, `key`)
-  VALUES (%s, '%s', '%s', '%s')", $game, $status, $src, $key);
+  VALUES (%s, '%s', '%s', NULL)", $game, $status, $src);
   $conn->query($query);
   $conn->query("SET @fileset_last = LAST_INSERT_ID()");
 }
@@ -280,8 +284,10 @@ function insert_file($file, $detection, $conn) {
   // Find first checksum value
   $checksum = "";
   foreach ($file as $key => $value) {
-    if ($key != "name" && $key != "size")
-      $checksum = $value;
+    if (strpos($key, "md5") !== false) {
+      list($tmp1, $tmp2, $checksum) = get_checksum_props($key, $value);
+      break;
+    }
   }
 
   $query = sprintf("INSERT INTO file (name, size, checksum, fileset, detection)
@@ -376,24 +382,12 @@ function db_insert($data_arr) {
       $lang = $fileset["language"];
 
       insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn);
-      insert_fileset($src, NULL, true, $conn);
     }
     elseif ($src == "dat")
       if (isset($resources[$fileset["romof"]]))
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
-    if (!$detection) {
-      $matching_games = find_matching_game($fileset);
-
-      // If a unique match is found, assign the fileset a gameid
-      if (count($matching_games) == 1) {
-        $key = NULL;
-        insert_fileset($src, $key, $detection, $conn, $matching_games[0][0][0]);
-      }
-      else
-        insert_fileset($src, NULL, $detection, $conn);
-    }
-
+    insert_fileset($src, $detection, $conn);
     foreach ($fileset["rom"] as $file) {
       insert_file($file, $detection, $conn);
       insert_filechecksum($file, "md5-5000", $conn);
@@ -403,8 +397,47 @@ function db_insert($data_arr) {
     echo "Inserting failed<br/>";
 }
 
-// echo "<pre>";
+function populate_matching_games($conn) {
+  // Getting unmatched filesets
+  $unmatched_filesets = array();
+
+  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, file.checksum from fileset
+  JOIN file ON file.fileset = fileset.id
+  WHERE fileset.game IS NULL"));
+  $unmatched_files = $unmatched_files->fetch_all();
+
+  // Splitting them into different filesets
+  for ($i = 0; $i < count($unmatched_files); $i++) {
+    $cur_fileset = $unmatched_files[$i][0];
+    $temp = array();
+    while ($i < count($unmatched_files) - 1 && $cur_fileset == $unmatched_files[$i][0]) {
+      array_push($temp, $unmatched_files[$i]);
+      $i++;
+    }
+    array_push($unmatched_filesets, $temp);
+  }
+
+  // return;
+  foreach ($unmatched_filesets as $fileset) {
+    $matching_games = find_matching_game($fileset);
+    if (count($matching_games) != 1) // If there is no match/non-unique match
+      continue;
+
+    // Updating the fileset.game value to be $matching_games[0]
+    $query = sprintf("UPDATE fileset
+    SET game = %d
+    WHERE id = %d", $matching_games[0], $fileset[0]);
+    $conn->query($query);
+
+    if (!$conn->commit())
+      echo "Updating matched games failed<br/>";
+  }
+}
+
+echo "<pre>";
 // db_insert(parse_dat("scummvm_detection_entries.dat"));
-// echo "</pre>";
+// db_insert(parse_dat("drascula-2.0.dat"));
+populate_matching_games(db_connect());
+echo "</pre>";
 ?>
 
