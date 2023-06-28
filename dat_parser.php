@@ -195,32 +195,23 @@ function find_matching_game($game_files) {
   foreach (array_count_values($matching_filesets) as $key => $value) {
     $count_files_in_fileset = $conn->query(sprintf("SELECT COUNT(file.id) FROM file
     JOIN fileset ON file.fileset = fileset.id
-    WHERE fileset.id = '%s'", $key));
-    $count_files_in_fileset = $count_files_in_fileset->fetch_array()[0];
+    WHERE fileset.id = '%s'", $key))->fetch_column();
 
     // We use < instead of != since one file may have more than one entry in the fileset
     // We see this in Drascula English version, where one entry is duplicated
     if ($value < $matches_count || $value < $count_files_in_fileset)
       continue;
 
-    $records = $conn->query(sprintf("SELECT game.id
+    $records = $conn->query(sprintf("SELECT engineid, game.id, gameid, platform, language, `key`, src
     FROM game
     JOIN fileset ON fileset.game = game.id
+    JOIN engine ON engine.id = game.engine
     WHERE fileset.id = '%s'", $key));
 
-    array_push($matching_games, $records->fetch_all());
+    array_push($matching_games, $records->fetch_array());
   }
 
-  // Flattening the array
-  $res = array();
-  foreach ($matching_games as $query) {
-    foreach ($query as $selection) {
-      $game_id = $selection[0];
-      array_push($res, $game_id);
-    }
-  }
-
-  return $res;
+  return $matching_games;
 }
 
 /**
@@ -335,6 +326,18 @@ function db_connect() {
 }
 
 /**
+ * Create an entry to the log table on each call of db_insert() or
+ * populate_matching_games()
+ */
+function create_log($category, $user, $text) {
+  $conn = db_connect();
+  $conn->query(sprintf("INSERT INTO log (`timestamp`, category, user, `text`)
+  VALUES (FROM_UNIXTIME(%d), '%s', '%s', '%s')", time(), $category, $user, $text));
+  if (!$conn->commit())
+    echo "Creating log failed<br/>";
+}
+
+/**
  * Insert values from the associated array into the DB
  * They will be inserted under gameid NULL as the game itself is unconfirmed
  */
@@ -364,7 +367,7 @@ function db_insert($data_arr) {
    */
   $src = "";
   if ($author == "cli")
-    $src = "cli";
+    $src = "scan";
   elseif ($author == "scummvm")
     $src = "detection";
   else
@@ -397,11 +400,13 @@ function db_insert($data_arr) {
     echo "Inserting failed<br/>";
 }
 
-function populate_matching_games($conn) {
+function populate_matching_games() {
+  $conn = db_connect();
+
   // Getting unmatched filesets
   $unmatched_filesets = array();
 
-  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, file.checksum from fileset
+  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, file.checksum, fileset.src from fileset
   JOIN file ON file.fileset = fileset.id
   WHERE fileset.game IS NULL"));
   $unmatched_files = $unmatched_files->fetch_all();
@@ -409,6 +414,7 @@ function populate_matching_games($conn) {
   // Splitting them into different filesets
   for ($i = 0; $i < count($unmatched_files); $i++) {
     $cur_fileset = $unmatched_files[$i][0];
+    $src = $unmatched_files[$i][2];
     $temp = array();
     while ($i < count($unmatched_files) - 1 && $cur_fileset == $unmatched_files[$i][0]) {
       array_push($temp, $unmatched_files[$i]);
@@ -417,17 +423,35 @@ function populate_matching_games($conn) {
     array_push($unmatched_filesets, $temp);
   }
 
-  // return;
   foreach ($unmatched_filesets as $fileset) {
     $matching_games = find_matching_game($fileset);
+
     if (count($matching_games) != 1) // If there is no match/non-unique match
       continue;
 
-    // Updating the fileset.game value to be $matching_games[0]
+    $matched_game = $matching_games[0];
+
+    // Update status depending on $matched_game["src"] (dat -> partialmatch, scan -> fullmatch)
+    $status = "unconfirmed";
+    if ($matched_game["src"] == "dat")
+      $status = "partialmatch";
+    elseif ($matched_game["src"] == "scan")
+      $status = "fullmatch";
+
+    // Convert NULL values to string with value NULL for printing
+    $matched_game = array_map(function ($val) {
+      return (is_null($val)) ? "NULL" : $val;
+    }, $matched_game);
+    $log_text = sprintf("Matched game %s: %s-%s-%s variant %s from %s",
+      $matched_game["engineid"], $matched_game["gameid"], $matched_game["platform"],
+      $matched_game["language"], $matched_game["key"], $matched_game["src"]);
+
+    // Updating the fileset.game value to be $matched_game["id"]
     $query = sprintf("UPDATE fileset
-    SET game = %d
-    WHERE id = %d", $matching_games[0], $fileset[0]);
-    $conn->query($query);
+    SET game = %d, status = '%s'
+    WHERE id = %d", $matched_game["id"], $status, $fileset[0]);
+    if ($conn->query($query))
+      create_log("Matched, state '" . $status . "'", "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
 
     if (!$conn->commit())
       echo "Updating matched games failed<br/>";
@@ -437,7 +461,7 @@ function populate_matching_games($conn) {
 echo "<pre>";
 // db_insert(parse_dat("scummvm_detection_entries.dat"));
 // db_insert(parse_dat("drascula-2.0.dat"));
-populate_matching_games(db_connect());
+populate_matching_games();
 echo "</pre>";
 ?>
 
