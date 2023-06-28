@@ -132,6 +132,22 @@ else {
   echo "Error creating 'queue' table: " . $conn->error;
 }
 
+// Create log table
+$table = "CREATE TABLE IF NOT EXISTS log (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  `timestamp` TIMESTAMP NOT NULL,
+  category VARCHAR(100) NOT NULL,
+  user VARCHAR(100) NOT NULL,
+  `text` varchar(300)
+)";
+
+if ($conn->query($table) === TRUE) {
+  echo "Table 'log' created successfully<br/>";
+}
+else {
+  echo "Error creating 'log' table: " . $conn->error;
+}
+
 // Create indices for fast data retrieval
 // PK and FK are automatically indexed in InnoDB, so they are not included
 $index = "CREATE INDEX detection ON file (detection)";
@@ -150,6 +166,15 @@ if ($conn->query($index) === TRUE) {
 }
 else {
   echo "Error creating index for 'filechecksum.checksum': " . $conn->error;
+}
+
+$index = "CREATE INDEX engineid ON engine (engineid)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'engine.engineid'<br/>";
+}
+else {
+  echo "Error creating index for 'engine.engineid': " . $conn->error;
 }
 
 $conn->close();
