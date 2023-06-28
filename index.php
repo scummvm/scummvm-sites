@@ -1,4 +1,5 @@
 <?php
+$filename = "index.php";
 
 $servername = "localhost";
 $username = "username";
@@ -30,7 +31,8 @@ $offset = ($page - 1) * $results_per_page;
 $num_of_results = $conn->query("SELECT COUNT(id) FROM game")->fetch_column();
 $num_of_pages = ceil($num_of_results / $results_per_page);
 
-$query = sprintf("SELECT * FROM game LIMIT %d OFFSET %d", $results_per_page, $offset);
+$query = sprintf("SELECT name, extra, platform, language FROM game LIMIT %d OFFSET %d",
+  $results_per_page, $offset);
 $result = $conn->query($query);
 
 echo "<ol start=\"" . $offset + 1 . "\">";
@@ -40,12 +42,12 @@ while ($row = $result->fetch_array()) {
   echo "</li>";
 }
 echo "</ol>";
-if ($page != 1)
-  echo '<a href = "index.php?page=' . $page - 1 . '">' . "prev" . ' </a>';
-if ($page != $num_of_pages)
-  echo '<a href = "index.php?page=' . $page + 1 . '">' . "next" . ' </a>';
 
-if (!$conn->commit())
-  echo "Error fetching games";
+echo '<a href =' . $filename . '"?page=1">first</a>';
+if ($page > 1)
+  echo '<a href =' . $filename . '"?page=' . $page - 1 . '">prev</a>';
+if ($page < $num_of_pages)
+  echo '<a href =' . $filename . '"?page=' . $page + 1 . '">next</a>';
+echo '<a href =' . $filename . '"?page=' . $num_of_pages . '">last</a>';
 ?>
 
