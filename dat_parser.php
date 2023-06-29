@@ -3,6 +3,20 @@
 ini_set('memory_limit', '512M');
 
 /**
+ * Calculate `key` value as md5("file1:size:md5:file2:...")
+ */
+function calc_key($files) {
+  $key_string = "";
+  foreach ($files as $file) {
+    foreach ($file as $key => $value) {
+      $key_string .= ':' . $value;
+    }
+  }
+  $key_string = trim($key_string, ':');
+  return md5($key_string);
+}
+
+/**
  * Convert string of checksum data from rom into associated array
  * Returns array instead of updating one like map_key_values
  */
@@ -392,9 +406,16 @@ function db_insert($data_arr) {
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
     insert_fileset($src, $detection, $conn);
+    calc_key($fileset["rom"]);
     foreach ($fileset["rom"] as $file) {
       insert_file($file, $detection, $conn);
       insert_filechecksum($file, "md5-5000", $conn);
+    }
+
+    // Add key if uploaded DAT is of detection entries
+    if ($detection) {
+      $conn->query(sprintf("UPDATE fileset SET `key` = '%s' WHERE id = @fileset_last",
+        calc_key($fileset["rom"])));
     }
   }
   if (!$conn->commit())
@@ -460,9 +481,9 @@ function populate_matching_games() {
 }
 
 echo "<pre>";
-// db_insert(parse_dat("scummvm_detection_entries.dat"));
-// db_insert(parse_dat("drascula-2.0.dat"));
-populate_matching_games();
+db_insert(parse_dat("scummvm_detection_entries.dat"));
+// db_insert(parse_dat("drascula-1.0.dat"));
+// populate_matching_games();
 echo "</pre>";
 ?>
 
