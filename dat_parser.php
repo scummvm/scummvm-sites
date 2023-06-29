@@ -150,7 +150,7 @@ function parse_dat($dat_filepath) {
   // print_r($resources);
   // echo "</pre>";
 
-  return array($header, $game_data, $resources);
+  return array($header, $game_data, $resources, $dat_filepath);
 }
 
 /**
@@ -360,6 +360,7 @@ function db_insert($data_arr) {
   $header = $data_arr[0];
   $game_data = $data_arr[1];
   $resources = $data_arr[2];
+  $filepath = $data_arr[3];
 
   $conn = db_connect();
 
@@ -370,6 +371,7 @@ function db_insert($data_arr) {
    *  _anything else_ -> DAT file
    */
   $author = $header["author"];
+  $version = $header["version"];
 
   /**
    * src can be:
@@ -384,11 +386,12 @@ function db_insert($data_arr) {
   if ($author == "cli")
     $src = "scan";
   elseif ($author == "scummvm")
-    $src = "detection";
+    $src = "scummvm";
   else
     $src = "dat";
 
-  $detection = ($src == "detection");
+  $detection = ($src == "scummvm");
+  $status = $detection ? "detection" : $src;
 
   foreach ($game_data as $fileset) {
     if ($detection) {
@@ -418,8 +421,14 @@ function db_insert($data_arr) {
         calc_key($fileset["rom"])));
     }
   }
+  $category_text = "Uploaded from " . $src . ", state '" . $status . "'";
+  $log_text = sprintf("Loaded DAT file, filename \"%s\", size %d, author \"%s\", version %s",
+    $filepath, filesize($filepath), $author, $version);
+
   if (!$conn->commit())
     echo "Inserting failed<br/>";
+  else
+    create_log(mysqli_real_escape_string($conn, $category_text), "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: User name is "unknown"
 }
 
 function populate_matching_games() {
@@ -464,6 +473,8 @@ function populate_matching_games() {
     $matched_game = array_map(function ($val) {
       return (is_null($val)) ? "NULL" : $val;
     }, $matched_game);
+
+    $category_text = "Matched, state '" . $status . "'";
     $log_text = sprintf("Matched game %s: %s-%s-%s variant %s from %s",
       $matched_game["engineid"], $matched_game["gameid"], $matched_game["platform"],
       $matched_game["language"], $matched_game["key"], $matched_game["src"]);
@@ -473,7 +484,7 @@ function populate_matching_games() {
     SET game = %d, status = '%s'
     WHERE id = %d", $matched_game["id"], $status, $fileset[0]);
     if ($conn->query($query))
-      create_log("Matched, state '" . $status . "'", "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
+      create_log($category_text, "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
 
     if (!$conn->commit())
       echo "Updating matched games failed<br/>";
@@ -481,8 +492,8 @@ function populate_matching_games() {
 }
 
 echo "<pre>";
-db_insert(parse_dat("scummvm_detection_entries.dat"));
-// db_insert(parse_dat("drascula-1.0.dat"));
+// db_insert(parse_dat("scummvm_detection_entries.dat"));
+db_insert(parse_dat("drascula-1.0.dat"));
 // populate_matching_games();
 echo "</pre>";
 ?>
