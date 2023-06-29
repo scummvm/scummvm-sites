@@ -1,9 +1,10 @@
 <?php
 $filename = "logs.php";
 
+$mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
 $servername = "localhost";
-$username = "username";
-$password = "password";
+$username = $mysql_cred["username"];
+$password = $mysql_cred["password"];
 $dbname = "integrity";
 
 // Create connection
