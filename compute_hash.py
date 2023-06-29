@@ -8,6 +8,17 @@ def filesize(filepath):
     return os.stat(filepath).st_size
 
 
+def get_dirs_at_depth(directory, depth):
+    directory = directory.rstrip(os.path.sep)
+    assert os.path.isdir(directory)
+    num_sep = directory.count(os.path.sep)
+
+    for root, dirs, contents in os.walk(directory):
+        num_sep_this = root.count(os.path.sep)
+        if depth == num_sep_this - num_sep:
+            yield root
+
+
 def checksum(filepath, alg, size):
     """ Returns checksum value of file using a specific algoritm """
     with open(filepath, "rb") as file:
@@ -59,20 +70,28 @@ def checksum(filepath, alg, size):
         return hashes
 
 
-def compute_hash_of_dir(directory, depth, alg="md5", size=0):
+def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
     """ Return dictionary containing checksums of all files in directory """
-    res = dict()
-    # Getting contents of directory and filtering only the files
-    files = [f for f in os.listdir(directory) if os.path.isfile(
-        os.path.join(directory, f))]
+    res = []
 
-    for file in files:
-        res[file] = checksum(os.path.join(directory, file), alg=alg, size=size)
+    for directory in get_dirs_at_depth(root_directory, depth):
+        hash_of_dir = dict()
+        files = []
+
+        # Getting only files of directory and subdirectories recursively
+        for root, dirs, contents in os.walk(directory):
+            files.extend([os.path.join(root, f) for f in contents])
+
+        for file in files:
+            hash_of_dir[os.path.relpath(file, root_directory)] = checksum(
+                file, alg, size)
+
+        res.append(hash_of_dir)
 
     return res
 
 
-def create_dat_file(hash_of_dir, path):
+def create_dat_file(hash_of_dirs, path):
     with open(f"{os.path.basename(path)}.dat", "w") as file:
         # Header
         file.writelines([
@@ -82,12 +101,13 @@ def create_dat_file(hash_of_dir, path):
         ])
 
         # Game files
-        file.write("game (\n")
-        for filename, hashes in hash_of_dir.items():
-            # Only works for MD5s, ignores optional extra size
-            data = f"name \"{filename}\" size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
-            file.write(f"\trom ( {data} )\n")
-        file.write(")\n\n")
+        for hash_of_dir in hash_of_dirs:
+            file.write("game (\n")
+            for filename, hashes in hash_of_dir.items():
+                # Only works for MD5s, ignores optional extra size
+                data = f"name \"{filename}\" size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
+                file.write(f"\trom ( {data} )\n")
+            file.write(")\n\n")
 
 
 parser = argparse.ArgumentParser()
@@ -99,9 +119,7 @@ parser.add_argument("--size",
                     help="Use first n bytes of file to calculate checksum")
 args = parser.parse_args()
 path = os.path.abspath(args.directory) if args.directory else os.getcwd()
-depth = args.depth
-checksum_size = args.size
+depth = int(args.depth) if args.depth else 0
+checksum_size = int(args.size) if args.size else 0
 
-
-path = os.path.expanduser("~/Downloads/drascula-1.0")
-create_dat_file(compute_hash_of_dir(path, depth, size=4000), path)
+create_dat_file(compute_hash_of_dirs(path, depth, checksum_size), path)
