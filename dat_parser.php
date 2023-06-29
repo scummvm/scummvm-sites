@@ -195,7 +195,7 @@ function find_matching_game($game_files) {
   foreach (array_count_values($matching_filesets) as $key => $value) {
     $count_files_in_fileset = $conn->query(sprintf("SELECT COUNT(file.id) FROM file
     JOIN fileset ON file.fileset = fileset.id
-    WHERE fileset.id = '%s'", $key))->fetch_column();
+    WHERE fileset.id = '%s'", $key))->fetch_array()[0];
 
     // We use < instead of != since one file may have more than one entry in the fileset
     // We see this in Drascula English version, where one entry is duplicated

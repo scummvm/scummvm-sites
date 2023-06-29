@@ -29,7 +29,7 @@ else {
 
 $results_per_page = 25;
 $offset = ($page - 1) * $results_per_page;
-$num_of_results = $conn->query("SELECT COUNT(id) FROM game")->fetch_column();
+$num_of_results = $conn->query("SELECT COUNT(id) FROM game")->fetch_array()[0];
 $num_of_pages = ceil($num_of_results / $results_per_page);
 
 $query = sprintf("SELECT name, extra, platform, language FROM game LIMIT %d OFFSET %d",
