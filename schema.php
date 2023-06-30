@@ -87,7 +87,7 @@ $table = "CREATE TABLE IF NOT EXISTS file (
   checksum VARCHAR(64) NOT NULL,
   fileset INT NOT NULL,
   detection BOOLEAN NOT NULL,
-  FOREIGN KEY (fileset) REFERENCES fileset(id)
+  FOREIGN KEY (fileset) REFERENCES fileset(id) ON DELETE CASCADE
 )";
 
 if ($conn->query($table) === TRUE) {
@@ -101,10 +101,10 @@ else {
 $table = "CREATE TABLE IF NOT EXISTS filechecksum (
   id INT AUTO_INCREMENT PRIMARY KEY,
   file INT NOT NULL,
-  checksize INT NOT NULL,
+  checksize VARCHAR(10) NOT NULL,
   checktype VARCHAR(10) NOT NULL,
   checksum VARCHAR(64) NOT NULL,
-  FOREIGN KEY (file) REFERENCES file(id)
+  FOREIGN KEY (file) REFERENCES file(id) ON DELETE CASCADE
 )";
 
 if ($conn->query($table) === TRUE) {
