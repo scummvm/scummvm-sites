@@ -83,8 +83,8 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
             files.extend([os.path.join(root, f) for f in contents])
 
         for file in files:
-            hash_of_dir[os.path.relpath(file, root_directory)] = checksum(
-                file, alg, size)
+            hash_of_dir[os.path.relpath(file, directory)] = (checksum(
+                file, alg, size), filesize(file))
 
         res.append(hash_of_dir)
 
@@ -103,9 +103,9 @@ def create_dat_file(hash_of_dirs, path):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
-            for filename, hashes in hash_of_dir.items():
+            for filename, (hashes, filesize) in hash_of_dir.items():
                 # Only works for MD5s, ignores optional extra size
-                data = f"name \"{filename}\" size {filesize(os.path.join(path, filename))} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
+                data = f"name \"{filename}\" size {filesize} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
                 file.write(f"\trom ( {data} )\n")
             file.write(")\n\n")
 
