@@ -468,8 +468,9 @@ function populate_matching_games() {
   // Getting unmatched filesets
   $unmatched_filesets = array();
 
-  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, file.checksum, fileset.src from fileset
+  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, filechecksum.checksum, fileset.src from fileset
   JOIN file ON file.fileset = fileset.id
+  JOIN filechecksum ON file.id = filechecksum.file
   WHERE fileset.game IS NULL"));
   $unmatched_files = $unmatched_files->fetch_all();
 
@@ -525,11 +526,11 @@ function populate_matching_games() {
   }
 }
 
-// echo "<pre>";
+echo "<pre>";
 // db_insert(parse_dat("scummvm_detection_entries.dat"));
 // db_insert(parse_dat("drascula-1.0.dat"));
 // db_insert(parse_dat("Downloads.dat"));
-// populate_matching_games();
-// echo "</pre>";
+populate_matching_games();
+echo "</pre>";
 ?>
 
