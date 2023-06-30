@@ -32,23 +32,31 @@ $offset = ($page - 1) * $results_per_page;
 $num_of_results = $conn->query("SELECT COUNT(id) FROM game")->fetch_array()[0];
 $num_of_pages = ceil($num_of_results / $results_per_page);
 
-$query = sprintf("SELECT name, extra, platform, language FROM game LIMIT %d OFFSET %d",
+$query = sprintf("SELECT engineid, gameid, extra, platform, language, game.name, status
+FROM game
+JOIN engine ON engine.id = game.engine
+JOIN fileset ON game.id = fileset.game
+LIMIT %d OFFSET %d",
   $results_per_page, $offset);
 $result = $conn->query($query);
 
 echo "<ol start=\"" . $offset + 1 . "\">";
 while ($row = $result->fetch_array()) {
   echo "<li>";
-  echo sprintf("%s (%s, %s, %s)<br/>", $row["name"], $row["extra"], $row["platform"], $row["language"]);
+  echo sprintf("%s:%s-%s-%s-%s %s %s<br/>",
+    $row["engineid"], $row["gameid"], $row["extra"], $row["platform"], $row["language"],
+    $row["name"], $row["status"]);
   echo "</li>";
 }
 echo "</ol>";
 
-echo '<a href =' . $filename . '"?page=1">first</a>';
-if ($page > 1)
-  echo '<a href =' . $filename . '"?page=' . $page - 1 . '">prev</a>';
-if ($page < $num_of_pages)
-  echo '<a href =' . $filename . '"?page=' . $page + 1 . '">next</a>';
-echo '<a href =' . $filename . '"?page=' . $num_of_pages . '">last</a>';
+if ($page > 1) {
+  echo sprintf('<a href=%s>first</a>', $filename);
+  echo sprintf('<a href=%s?page=%d>prev</a>', $filename, $page - 1);
+}
+if ($page < $num_of_pages) {
+  echo sprintf('<a href=%s?page=%d>next</a>', $filename, $page + 1);
+  echo sprintf('<a href=%s?page=%d>last</a>', $filename, $num_of_pages);
+}
 ?>
 

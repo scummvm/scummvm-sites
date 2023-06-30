@@ -38,16 +38,18 @@ $result = $conn->query($query);
 echo "<ol start=\"" . $offset + 1 . "\">";
 while ($row = $result->fetch_array()) {
   echo "<li>";
-  echo sprintf("%s (%s, %s, %s)<br/>", $row["timestamp"], $row["category"], $row["user"], $row["text"]);
+  echo sprintf("%s (%s, user %s) %s<br/>", $row["timestamp"], $row["category"], $row["user"], $row["text"]);
   echo "</li>";
 }
 echo "</ol>";
 
-echo '<a href =' . $filename . '"?page=1">first</a>';
-if ($page > 1)
-  echo '<a href =' . $filename . '"?page=' . $page - 1 . '">prev</a>';
-if ($page < $num_of_pages)
-  echo '<a href =' . $filename . '"?page=' . $page + 1 . '">next</a>';
-echo '<a href =' . $filename . '"?page=' . $num_of_pages . '">last</a>';
+if ($page > 1) {
+  echo sprintf('<a href=%s>first</a>', $filename);
+  echo sprintf('<a href=%s?page=%d>prev</a>', $filename, $page - 1);
+}
+if ($page < $num_of_pages) {
+  echo sprintf('<a href=%s?page=%d>next</a>', $filename, $page + 1);
+  echo sprintf('<a href=%s?page=%d>last</a>', $filename, $num_of_pages);
+}
 ?>
 
