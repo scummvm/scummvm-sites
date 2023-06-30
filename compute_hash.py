@@ -2,6 +2,8 @@ import hashlib
 import os
 import argparse
 
+script_version = "0.1"
+
 
 def filesize(filepath):
     """ Returns size of file """
@@ -97,6 +99,7 @@ def create_dat_file(hash_of_dirs, path):
         file.writelines([
             "scummvm (\n",
             f"\tauthor cli\n",
+            f"\tversion {script_version}\n",
             ")\n\n"
         ])
 
