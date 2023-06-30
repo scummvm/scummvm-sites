@@ -216,7 +216,8 @@ function find_matching_game($game_files) {
     if ($value < $matches_count || $value < $count_files_in_fileset)
       continue;
 
-    $records = $conn->query(sprintf("SELECT engineid, game.id, gameid, platform, language, `key`, src
+    $records = $conn->query(sprintf("SELECT engineid, game.id, gameid, platform,
+    language, `key`, src, fileset.id as fileset
     FROM game
     JOIN fileset ON fileset.game = game.id
     JOIN engine ON engine.id = game.engine
@@ -285,13 +286,18 @@ function insert_fileset($src, $detection, $conn) {
  * $file is an associated array (the contents of 'rom')
  * If checksum of the given checktype doesn't exists, silently fails
  */
-function insert_file($file, $detection, $conn) {
-  // Find first checksum value
+function insert_file($file, $detection, $src, $conn) {
+  // Find md5-5000, or else use first checksum value
   $checksum = "";
-  foreach ($file as $key => $value) {
-    if (strpos($key, "md5") !== false) {
-      list($tmp1, $tmp2, $checksum) = get_checksum_props($key, $value);
-      break;
+  if (isset($file["md5-5000"])) {
+    $checksum = $file["md5-5000"];
+  }
+  else {
+    foreach ($file as $key => $value) {
+      if (strpos($key, "md5") !== false) {
+        list($tmp1, $tmp2, $checksum) = get_checksum_props($key, $value);
+        break;
+      }
     }
   }
 
@@ -312,6 +318,28 @@ function insert_filechecksum($file, $checktype, $conn) {
   $query = sprintf("INSERT INTO filechecksum (file, checksize, checktype, checksum)
   VALUES (@file_last, '%s', '%s', '%s')", $checksize, $checktype, $checksum);
   $conn->query($query);
+}
+
+/**
+ * Merge two filesets without duplicating files
+ * Used after matching an unconfirmed fileset with a detection entry
+ */
+function merge_filesets($detection_id, $dat_id, $conn) {
+  $detection_files = $conn->query(sprintf("SELECT checksum FROM file
+  WHERE fileset = '%d'", $detection_id))->fetch_all();
+
+  foreach ($detection_files as $file) {
+    $checksum = $file[0];
+
+    // Mark files present in the detection entries
+    $conn->query(sprintf("UPDATE file
+    SET detection = TRUE
+    WHERE id = '%d' AND checksum = '%s'", $dat_id, $checksum));
+
+    // Delete original detection entry so newly matched fileset is the only fileset for game
+    $conn->query(sprintf("DELETE FROM fileset
+    WHERE id = '%d'", $detection_id));
+  }
 }
 
 /**
@@ -411,8 +439,11 @@ function db_insert($data_arr) {
     insert_fileset($src, $detection, $conn);
     calc_key($fileset["rom"]);
     foreach ($fileset["rom"] as $file) {
-      insert_file($file, $detection, $conn);
-      insert_filechecksum($file, "md5-5000", $conn);
+      insert_file($file, $detection, $src, $conn);
+      foreach ($file as $key => $value) {
+        if ($key != "name" && $key != "size")
+          insert_filechecksum($file, $key, $conn);
+      }
     }
 
     // Add key if uploaded DAT is of detection entries
@@ -464,9 +495,9 @@ function populate_matching_games() {
 
     // Update status depending on $matched_game["src"] (dat -> partialmatch, scan -> fullmatch)
     $status = "unconfirmed";
-    if ($matched_game["src"] == "dat")
+    if ($fileset[0][2] == "dat")
       $status = "partialmatch";
-    elseif ($matched_game["src"] == "scan")
+    elseif ($fileset[0][2] == "scan")
       $status = "fullmatch";
 
     // Convert NULL values to string with value NULL for printing
@@ -481,20 +512,24 @@ function populate_matching_games() {
 
     // Updating the fileset.game value to be $matched_game["id"]
     $query = sprintf("UPDATE fileset
-    SET game = %d, status = '%s'
-    WHERE id = %d", $matched_game["id"], $status, $fileset[0]);
+    SET game = %d, status = '%s', `key` = '%s'
+    WHERE id = %d", $matched_game["id"], $status, $matched_game["key"], $fileset[0][0]);
+    merge_filesets($matched_game["fileset"], $fileset[0][0], $conn);
+
     if ($conn->query($query))
-      create_log($category_text, "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
+      create_log(mysqli_real_escape_string($conn, $category_text), "unknown",
+        mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
 
     if (!$conn->commit())
       echo "Updating matched games failed<br/>";
   }
 }
 
-echo "<pre>";
+// echo "<pre>";
 // db_insert(parse_dat("scummvm_detection_entries.dat"));
-db_insert(parse_dat("drascula-1.0.dat"));
+// db_insert(parse_dat("drascula-1.0.dat"));
+// db_insert(parse_dat("Downloads.dat"));
 // populate_matching_games();
-echo "</pre>";
+// echo "</pre>";
 ?>
 
