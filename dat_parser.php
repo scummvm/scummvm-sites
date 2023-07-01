@@ -264,8 +264,7 @@ function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn
  * Called for both detection entries and other forms of DATs
  */
 function insert_fileset($src, $detection, $conn) {
-  // $status can be: {detection, unconfirmed, confirmed (unused here)}
-  $status = "unconfirmed";
+  $status = $detection ? "detection" : $src;
   $game = "NULL";
 
   if ($detection) {
@@ -324,7 +323,9 @@ function insert_filechecksum($file, $checktype, $conn) {
  * Merge two filesets without duplicating files
  * Used after matching an unconfirmed fileset with a detection entry
  */
-function merge_filesets($detection_id, $dat_id, $conn) {
+function merge_filesets($detection_id, $dat_id) {
+  $conn = db_connect();
+
   $detection_files = $conn->query(sprintf("SELECT filechecksum.checksum, checksize, checktype
   FROM filechecksum JOIN file on file.id = filechecksum.file
   WHERE fileset = '%d'", $detection_id))->fetch_all();
@@ -341,7 +342,7 @@ function merge_filesets($detection_id, $dat_id, $conn) {
     // Move any remaining files (duplicates) to the new fileset
     $conn->query(sprintf("UPDATE file
     SET fileset = %d
-    WHERE fileset = %d AND checksum = '%s'"), $dat_id, $detection_id, $checksum);
+    WHERE fileset = %d AND checksum = '%s'", $dat_id, $detection_id, $checksum));
 
     // Mark files present in the detection entries
     $conn->query(sprintf("UPDATE file
@@ -507,7 +508,7 @@ function populate_matching_games() {
     $matched_game = $matching_games[0];
 
     // Update status depending on $matched_game["src"] (dat -> partialmatch, scan -> fullmatch)
-    $status = "unconfirmed";
+    $status = $fileset[0][2];
     if ($fileset[0][2] == "dat")
       $status = "partialmatch";
     elseif ($fileset[0][2] == "scan")
