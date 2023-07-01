@@ -325,20 +325,32 @@ function insert_filechecksum($file, $checktype, $conn) {
  * Used after matching an unconfirmed fileset with a detection entry
  */
 function merge_filesets($detection_id, $dat_id, $conn) {
-  $detection_files = $conn->query(sprintf("SELECT checksum FROM file
+  $detection_files = $conn->query(sprintf("SELECT filechecksum.checksum, checksize, checktype
+  FROM filechecksum JOIN file on file.id = filechecksum.file
   WHERE fileset = '%d'", $detection_id))->fetch_all();
 
   foreach ($detection_files as $file) {
     $checksum = $file[0];
+    $checksize = $file[1];
+    $checktype = $file[2];
+
+    // Delete original detection entry so newly matched fileset is the only fileset for game
+    $conn->query(sprintf("DELETE FROM file
+      WHERE checksum = '%s' LIMIT 1", $checksum));
+
+    // Move any remaining files (duplicates) to the new fileset
+    $conn->query(sprintf("UPDATE file
+    SET fileset = %d
+    WHERE fileset = %d AND checksum = '%s'"), $dat_id, $detection_id, $checksum);
 
     // Mark files present in the detection entries
     $conn->query(sprintf("UPDATE file
-    SET detection = TRUE
-    WHERE id = '%d' AND checksum = '%s'", $dat_id, $checksum));
-
-    // Delete original detection entry so newly matched fileset is the only fileset for game
-    $conn->query(sprintf("DELETE FROM fileset
-    WHERE id = '%d'", $detection_id));
+    JOIN filechecksum ON filechecksum.file = file.id
+    SET detection = TRUE,
+    checksize = %d,
+    checktype = '%s'
+    WHERE fileset = '%d' AND filechecksum.checksum = '%s'",
+      $checksize, $checktype, $dat_id, $checksum));
   }
 }
 
@@ -526,11 +538,11 @@ function populate_matching_games() {
   }
 }
 
-echo "<pre>";
+// echo "<pre>";
 // db_insert(parse_dat("scummvm_detection_entries.dat"));
 // db_insert(parse_dat("drascula-1.0.dat"));
 // db_insert(parse_dat("Downloads.dat"));
-populate_matching_games();
-echo "</pre>";
+// populate_matching_games();
+// echo "</pre>";
 ?>
 
