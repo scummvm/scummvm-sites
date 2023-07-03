@@ -16,6 +16,14 @@ function calc_key($files) {
   return md5($key_string);
 }
 
+function remove_quotes($string) {
+  // Remove quotes from value if they are present
+  if ($string[0] == "\"")
+    $string = substr($string, 1, -1);
+
+  return $string;
+}
+
 /**
  * Convert string of checksum data from rom into associated array
  * Returns array instead of updating one like map_key_values
@@ -27,9 +35,8 @@ function map_checksum_data($content_string) {
   for ($i = 1; $i < count($temp); $i += 2) {
     if ($temp[$i] == ')')
       continue;
-    if ($temp[$i + 1][0] == '"') {
-      $temp[$i + 1] = substr($temp[$i + 1], 1, -1);
-    }
+    $temp[$i + 1] = remove_quotes($temp[$i + 1]);
+
     $arr[$temp[$i]] = stripslashes($temp[$i + 1]);
   }
 
@@ -49,10 +56,7 @@ function map_key_values($content_string, &$arr) {
     if (trim($pair) == "(" or trim($pair) == ")")
       continue;
     $pair = array_map("trim", preg_split("/ +/", $pair, 2));
-
-    // Remove quotes from value if they are present
-    if ($pair[1][0] == "\"")
-      $pair[1] = substr($pair[1], 1, -1);
+    $pair[1] = remove_quotes($pair[1]);
 
     // Handle duplicate keys (if the key is rom) and add values to a arary instead
     if ($pair[0] == "rom") {
