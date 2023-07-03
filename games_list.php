@@ -1,5 +1,5 @@
 <?php
-$filename = "index.php";
+$filename = "games_list.php";
 
 $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
 $servername = "localhost";
