@@ -43,8 +43,19 @@ LIMIT %d OFFSET %d",
 $result = $conn->query($query);
 
 echo "<table>";
+echo "<th></th>";
+echo "<th>engineid</th>";
+echo "<th>gameid</th>";
+echo "<th>extra</th>";
+echo "<th>platform</th>";
+echo "<th>language</th>";
+echo "<th>name</th>";
+echo "<th>status</th>";
+
+$counter = $offset + 1;
 while ($row = $result->fetch_array()) {
   echo "<tr>";
+  echo "<td>{$counter}.</td>";
   echo "<td>{$row['engineid']}</td>";
   echo "<td>{$row['gameid']}</td>";
   echo "<td>{$row['extra']}</td>";
@@ -53,16 +64,20 @@ while ($row = $result->fetch_array()) {
   echo "<td>{$row['name']}</td>";
   echo "<td>{$row['status']}</td>";
   echo "</tr>";
+
+  $counter++;
 }
 echo "</table>";
 
+echo "<div class=pagination>";
 if ($page > 1) {
-  echo sprintf('<a href=%s>first</a>', $filename);
-  echo sprintf('<a href=%s?page=%d>prev</a>', $filename, $page - 1);
+  echo "<a href={$filename}>❮❮</a>";
+  echo sprintf("<a href=%s?page=%d>❮</a>", $filename, $page - 1);
 }
 if ($page < $num_of_pages) {
-  echo sprintf('<a href=%s?page=%d>next</a>', $filename, $page + 1);
-  echo sprintf('<a href=%s?page=%d>last</a>', $filename, $num_of_pages);
+  echo sprintf("<a href=%s?page=%d>❯</a>", $filename, $page + 1);
+  echo "<a href={$filename}?page={$num_of_pages}>❯❯</a>";
 }
+echo "</div>";
 ?>
 
