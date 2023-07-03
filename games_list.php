@@ -1,5 +1,7 @@
 <?php
 $filename = "games_list.php";
+$stylesheet = "style.css";
+echo "<link rel='stylesheet' href='{$stylesheet}'>";
 
 $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
 $servername = "localhost";
@@ -40,15 +42,19 @@ LIMIT %d OFFSET %d",
   $results_per_page, $offset);
 $result = $conn->query($query);
 
-echo "<ol start=\"" . $offset + 1 . "\">";
+echo "<table>";
 while ($row = $result->fetch_array()) {
-  echo "<li>";
-  echo sprintf("%s:%s-%s-%s-%s %s %s<br/>",
-    $row["engineid"], $row["gameid"], $row["extra"], $row["platform"], $row["language"],
-    $row["name"], $row["status"]);
-  echo "</li>";
+  echo "<tr>";
+  echo "<td>{$row['engineid']}</td>";
+  echo "<td>{$row['gameid']}</td>";
+  echo "<td>{$row['extra']}</td>";
+  echo "<td>{$row['platform']}</td>";
+  echo "<td>{$row['language']}</td>";
+  echo "<td>{$row['name']}</td>";
+  echo "<td>{$row['status']}</td>";
+  echo "</tr>";
 }
-echo "</ol>";
+echo "</table>";
 
 if ($page > 1) {
   echo sprintf('<a href=%s>first</a>', $filename);
