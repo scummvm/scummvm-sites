@@ -353,6 +353,10 @@ function merge_filesets($detection_id, $dat_id) {
     WHERE fileset = '%d' AND filechecksum.checksum = '%s'",
       $checksize, $checktype, $dat_id, $checksum));
   }
+
+  // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
+  $conn->query(sprintf("INSERT INTO history (fileset, oldfileset)
+  VALUES (%d, %d)", $dat_id, $detection_id));
 }
 
 /**
@@ -528,7 +532,7 @@ function populate_matching_games() {
     $query = sprintf("UPDATE fileset
     SET game = %d, status = '%s', `key` = '%s'
     WHERE id = %d", $matched_game["id"], $status, $matched_game["key"], $fileset[0][0]);
-    merge_filesets($matched_game["fileset"], $fileset[0][0], $conn);
+    merge_filesets($matched_game["fileset"], $fileset[0][0]);
 
     if ($conn->query($query))
       create_log(mysqli_real_escape_string($conn, $category_text), "unknown",

@@ -149,6 +149,20 @@ else {
   echo "Error creating 'log' table: " . $conn->error;
 }
 
+// Create history table
+$table = "CREATE TABLE IF NOT EXISTS history (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  fileset INT NOT NULL,
+  oldfileset INT NOT NULL
+)";
+
+if ($conn->query($table) === TRUE) {
+  echo "Table 'history' created successfully<br/>";
+}
+else {
+  echo "Error creating 'history' table: " . $conn->error;
+}
+
 // Create indices for fast data retrieval
 // PK and FK are automatically indexed in InnoDB, so they are not included
 $index = "CREATE INDEX detection ON file (detection)";
@@ -176,6 +190,15 @@ if ($conn->query($index) === TRUE) {
 }
 else {
   echo "Error creating index for 'engine.engineid': " . $conn->error;
+}
+
+$index = "CREATE INDEX fileset ON history (fileset)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'history.fileset'<br/>";
+}
+else {
+  echo "Error creating index for 'history.fileset': " . $conn->error;
 }
 
 $conn->close();
