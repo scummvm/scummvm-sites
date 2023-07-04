@@ -1,9 +1,23 @@
-table, th, td {
-  border: 1px solid;
+:root {
+  --primary-color: #27b5e8;
 }
 
-th, td {
+td, th {
+  border: 1px solid #ddd;
   padding-inline: 5px;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2;}
+tr {background-color: white;}
+
+tr:hover {background-color: #ddd;}
+
+th {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: left;
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .pagination {
@@ -22,14 +36,16 @@ th, td {
   float: left;
   padding: 8px 16px;
   text-decoration: none;
-  transition: background-color .3s;
+  transition: background-color 0.3s;
   border: 1px solid #ddd;
 }
 
 .pagination a.active {
-  background-color: #27b5e8;
   color: white;
-  border: 1px solid #27b5e8;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
 }
 
-.pagination a:hover:not(.active) {background-color: #ddd;}
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+}
