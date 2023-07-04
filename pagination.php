@@ -2,7 +2,7 @@
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
-function create_page($filename, $results_per_page, $count_query, $select_query) {
+function create_page($filename, $results_per_page, $count_query, $select_query, $filters) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = "localhost";
   $username = $mysql_cred["username"];
@@ -30,26 +30,60 @@ function create_page($filename, $results_per_page, $count_query, $select_query) 
   }
 
   $offset = ($page - 1) * $results_per_page;
-  $num_of_results = $conn->query($count_query)->fetch_array()[0];
+  if (isset($_GET['column']) && isset($_GET['value'])) {
+    $column = $_GET['column'];
+    $value = $_GET['value'];
+    $num_of_results = $conn->query("{$count_query} WHERE {$column} = '{$value}'")->fetch_array()[0];
+    $query = "{$select_query} WHERE {$column} = '{$value}' LIMIT {$results_per_page} OFFSET {$offset}";
+  }
+  else {
+    $num_of_results = $conn->query($count_query)->fetch_array()[0];
+    $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
+  }
   $num_of_pages = ceil($num_of_results / $results_per_page);
-
-  $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
   $result = $conn->query($query);
 
+
+  // Create filter dropdown
+  echo "<div class='filter'>\n";
+  echo "<form name='filter' method='GET'>\n";
+  echo "Filter: ";
+
+  echo "<select name='column'>\n";
+  foreach (array_keys($filters) as $key) {
+    echo "<option>{$key}</option>\n";
+  }
+  echo "</select>\n";
+
+  if (isset($_GET['column'])) {
+    echo "<select name='value'>\n";
+    $res = $conn->query("SELECT DISTINCT({$_GET['column']}) FROM {$filters[$_GET['column']]}");
+    while ($value = $res->fetch_array()[0]) {
+      echo "<option>{$value}</option>\n";
+    }
+    echo "</select>\n";
+  }
+
+  echo "<input type='submit' name='submit' value='Select' />\n";
+  echo "</form>\n";
+  echo "</div>\n";
+
+
+  // Table
   echo "<table>\n";
   echo "<th/>\n"; // Numbering column
 
   $counter = $offset + 1;
   while ($row = $result->fetch_assoc()) {
     if ($counter == $offset + 1) { // If it is the first run of the loop
-      foreach ($row as $key => $value) {
+      foreach (array_keys($row) as $key) {
         echo "<th>{$key}</th>\n";
       }
     }
 
     echo "<tr>\n";
     echo "<td>{$counter}.</td>\n";
-    foreach ($row as $key => $value) {
+    foreach (array_values($row) as $value) {
       echo "<td>{$value}</td>\n";
     }
     echo "</tr>\n";
@@ -58,6 +92,7 @@ function create_page($filename, $results_per_page, $count_query, $select_query) 
   }
 
   echo "</table>\n";
+
 
   // Navigation elements
   echo "<div class=pagination>\n";
