@@ -69,15 +69,26 @@ while ($row = $result->fetch_array()) {
 }
 echo "</table>";
 
+// Navigation elements
 echo "<div class=pagination>";
-if ($page > 1) {
+if ($page > 1)
   echo "<a href={$filename}>❮❮</a>";
-  echo sprintf("<a href=%s?page=%d>❮</a>", $filename, $page - 1);
+if ($page - 2 > 1)
+  echo "<div class=more>...</div>";
+
+for ($i = $page - 2; $i <= $page + 2; $i++) {
+  if ($i >= 1 && $i <= $num_of_pages)
+    if ($i == $page)
+      echo sprintf("<a class=active href=%s?page=%d>%d</a>", $filename, $i, $i);
+    else
+      echo sprintf("<a href=%s?page=%d>%d</a>", $filename, $i, $i);
 }
-if ($page < $num_of_pages) {
-  echo sprintf("<a href=%s?page=%d>❯</a>", $filename, $page + 1);
+
+if ($page + 2 < $num_of_pages)
+  echo "<div class=more>...</div>";
+if ($page < $num_of_pages)
   echo "<a href={$filename}?page={$num_of_pages}>❯❯</a>";
-}
+
 echo "</div>";
 ?>
 

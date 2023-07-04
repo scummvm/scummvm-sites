@@ -2,8 +2,19 @@ table, th, td {
   border: 1px solid;
 }
 
+th, td {
+  padding-inline: 5px;
+}
+
 .pagination {
   display: inline-block;
+  align-self: center;
+}
+
+.pagination .more {
+  color: black;
+  float: left;
+  padding: 15px 10px;
 }
 
 .pagination a {
@@ -16,9 +27,9 @@ table, th, td {
 }
 
 .pagination a.active {
-  background-color: #2d56d0;
+  background-color: #27b5e8;
   color: white;
-  border: 1px solid #2d56d0;
+  border: 1px solid #27b5e8;
 }
 
 .pagination a:hover:not(.active) {background-color: #ddd;}
