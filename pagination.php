@@ -100,18 +100,28 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   if ($page - 2 > 1)
     echo "<div class=more>...</div>\n";
 
+  // Preserve GET variables
+  $vars = "";
+  foreach ($_GET as $key => $value) {
+    if ($key == 'page')
+      continue;
+    $vars .= "&{$key}={$value}";
+  }
+
   for ($i = $page - 2; $i <= $page + 2; $i++) {
-    if ($i >= 1 && $i <= $num_of_pages)
+    if ($i >= 1 && $i <= $num_of_pages) {
+
       if ($i == $page)
-        echo sprintf("<a class=active href=%s?page=%d>%d</a>\n", $filename, $i, $i);
+        echo sprintf("<a class=active href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
       else
-        echo sprintf("<a href=%s?page=%d>%d</a>\n", $filename, $i, $i);
+        echo sprintf("<a href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
+    }
   }
 
   if ($page + 2 < $num_of_pages)
     echo "<div class=more>...</div>\n";
   if ($page < $num_of_pages)
-    echo "<a href={$filename}?page={$num_of_pages}>❯❯</a>\n";
+    echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
 
   echo "</div>\n";
 
