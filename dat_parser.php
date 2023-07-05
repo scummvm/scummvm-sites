@@ -545,11 +545,15 @@ function populate_matching_games() {
   }
 }
 
-// echo "<pre>";
-// db_insert(parse_dat("scummvm_detection_entries.dat"));
-// db_insert(parse_dat("drascula-1.0.dat"));
-// db_insert(parse_dat("Downloads.dat"));
-// populate_matching_games();
-// echo "</pre>";
+// Process command line args
+if ($index = array_search("--upload", $argv)) {
+  $filepath = $argv[$index + 1];
+  print($filepath);
+  db_insert(parse_dat($filepath));
+}
+
+if (in_array("--match", $argv)) {
+  populate_matching_games();
+}
 ?>
 
