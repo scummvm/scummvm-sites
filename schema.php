@@ -152,6 +152,7 @@ else {
 // Create history table
 $table = "CREATE TABLE IF NOT EXISTS history (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  `timestamp` TIMESTAMP NOT NULL,
   fileset INT NOT NULL,
   oldfileset INT NOT NULL
 )";

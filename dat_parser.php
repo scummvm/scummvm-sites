@@ -359,7 +359,8 @@ function merge_filesets($detection_id, $dat_id) {
   }
 
   // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
-  $conn->query("INSERT INTO history (fileset, oldfileset) VALUES ({$detection_id}, {$dat_id})");
+  $conn->query(sprintf("INSERT INTO history (`timestamp`, fileset, oldfileset)
+  VALUES (FROM_UNIXTIME(%d), %d, %d)", time(), $detection_id, $dat_id));
   $conn->query("UPDATE history SET fileset = {$detection_id} WHERE fileset = {$dat_id}");
 
   if (!$conn->commit())
@@ -529,9 +530,9 @@ function populate_matching_games() {
     }, $matched_game);
 
     $category_text = "Matched, state '" . $status . "'";
-    $log_text = sprintf("Matched game %s: %s-%s-%s variant %s from %s",
-      $matched_game["engineid"], $matched_game["gameid"], $matched_game["platform"],
-      $matched_game["language"], $matched_game["key"], $fileset[0][2]);
+    $log_text = "Matched game {$matched_game['engineid']}:
+    {$matched_game['gameid']}-{$matched_game['platform']}-{$matched_game['language']}
+    variant {$matched_game['key']} from {$fileset[0][2]}.";
 
     // Updating the fileset.game value to be $matched_game["id"]
     $query = sprintf("UPDATE fileset
