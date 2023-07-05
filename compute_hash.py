@@ -98,7 +98,7 @@ def create_dat_file(hash_of_dirs, path):
         # Header
         file.writelines([
             "scummvm (\n",
-            f"\tauthor cli\n",
+            f"\tauthor scan\n",
             f"\tversion {script_version}\n",
             ")\n\n"
         ])

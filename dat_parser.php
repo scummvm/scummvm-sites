@@ -416,7 +416,7 @@ function db_insert($data_arr) {
   /**
    * Author can be:
    *  scummvm -> Detection Entries
-   *  scanner -> CLI tool
+   *  scanner -> CLI scanner tool in python
    *  _anything else_ -> DAT file
    */
   $author = $header["author"];
@@ -426,16 +426,14 @@ function db_insert($data_arr) {
    * src can be:
    *  detection -> Detection entries (source of truth)
    *  user -> Submitted by users via ScummVM, unmatched (Not used in the parser)
-   *  cli -> Submitted by cli/scanner, unmatched
+   *  scan -> Submitted by cli/scanner, unmatched
    *  dat -> Submitted by DAT, unmatched
    *  partialmatch -> Submitted by DAT, matched
    *  fullmatch -> Submitted by cli/scanner, matched
    */
   $src = "";
-  if ($author == "cli")
-    $src = "scan";
-  elseif ($author == "scummvm")
-    $src = "scummvm";
+  if ($author == "scan" || $author == "scummvm")
+    $src = $author;
   else
     $src = "dat";
 
@@ -530,7 +528,7 @@ function populate_matching_games() {
     $category_text = "Matched, state '" . $status . "'";
     $log_text = sprintf("Matched game %s: %s-%s-%s variant %s from %s",
       $matched_game["engineid"], $matched_game["gameid"], $matched_game["platform"],
-      $matched_game["language"], $matched_game["key"], $matched_game["src"]);
+      $matched_game["language"], $matched_game["key"], $fileset[0][2]);
 
     // Updating the fileset.game value to be $matched_game["id"]
     $query = sprintf("UPDATE fileset
