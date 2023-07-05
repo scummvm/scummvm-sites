@@ -94,6 +94,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
 
   // Navigation elements
+  echo "<form method='GET'>\n";
   echo "<div class=pagination>\n";
   if ($page > 1)
     echo "<a href={$filename}>❮❮</a>\n";
@@ -122,6 +123,10 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     echo "<div class=more>...</div>\n";
   if ($page < $num_of_pages)
     echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
+
+  echo "<input type='text' name='page'>\n";
+  echo "<input type='submit' name='submit' value='Submit'>\n";
+  echo "</form>\n";
 
   echo "</div>\n";
 
