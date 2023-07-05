@@ -22,26 +22,32 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   $conn->query("USE " . $dbname);
 
-  if (!isset($_GET['page'])) {
-    $page = 1;
-  }
-  else {
-    $page = $_GET['page'];
-  }
-
-  $offset = ($page - 1) * $results_per_page;
   if (isset($_GET['column']) && isset($_GET['value'])) {
     $column = $_GET['column'];
     $value = mysqli_real_escape_string($conn, $_GET['value']);
     $num_of_results = $conn->query(
       "SELECT COUNT(id) FROM {$filters[$column]} WHERE {$column} = '{$value}'")->fetch_array()[0];
-    $query = "{$select_query} WHERE {$column} = '{$value}' LIMIT {$results_per_page} OFFSET {$offset}";
   }
   else {
     $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
-    $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
   }
   $num_of_pages = ceil($num_of_results / $results_per_page);
+
+  if (!isset($_GET['page'])) {
+    $page = 1;
+  }
+  else {
+    $page = max(1, min($_GET['page'], $num_of_pages));
+  }
+
+  $offset = ($page - 1) * $results_per_page;
+  if (isset($_GET['column']) && isset($_GET['value'])) {
+    $query = "{$select_query} WHERE {$column} = '{$value}' LIMIT {$results_per_page} OFFSET {$offset}";
+  }
+  else {
+    $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
+  }
+
   $result = $conn->query($query);
 
 
