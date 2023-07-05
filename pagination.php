@@ -55,15 +55,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     echo "<option>{$key}</option>\n";
   }
   echo "</select>\n";
-
-  if (isset($_GET['column'])) {
-    echo "<select name='value'>\n";
-    $res = $conn->query("SELECT DISTINCT({$_GET['column']}) FROM {$filters[$_GET['column']]}");
-    while ($value = $res->fetch_array()[0]) {
-      echo "<option>{$value}</option>\n";
-    }
-    echo "</select>\n";
-  }
+  echo "<input type='text' name='value' placeholder='Value'>\n";
 
   echo "<input type='submit' name='submit' value='Select' />\n";
   echo "</form>\n";
