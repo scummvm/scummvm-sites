@@ -2,7 +2,7 @@
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
-function create_page($filename, $results_per_page, $count_query, $select_query, $filters) {
+function create_page($filename, $results_per_page, $records_table, $select_query, $filters) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = "localhost";
   $username = $mysql_cred["username"];
@@ -32,12 +32,13 @@ function create_page($filename, $results_per_page, $count_query, $select_query, 
   $offset = ($page - 1) * $results_per_page;
   if (isset($_GET['column']) && isset($_GET['value'])) {
     $column = $_GET['column'];
-    $value = $_GET['value'];
-    $num_of_results = $conn->query("{$count_query} WHERE {$column} = '{$value}'")->fetch_array()[0];
+    $value = mysqli_real_escape_string($conn, $_GET['value']);
+    $num_of_results = $conn->query(
+      "SELECT COUNT(id) FROM {$filters[$column]} WHERE {$column} = '{$value}'")->fetch_array()[0];
     $query = "{$select_query} WHERE {$column} = '{$value}' LIMIT {$results_per_page} OFFSET {$offset}";
   }
   else {
-    $num_of_results = $conn->query($count_query)->fetch_array()[0];
+    $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
     $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
   }
   $num_of_pages = ceil($num_of_results / $results_per_page);

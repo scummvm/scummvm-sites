@@ -2,12 +2,13 @@
 require "pagination.php";
 
 $filename = "games_list.php";
-$count_query = "SELECT COUNT(id) FROM game";
+$records_table = "game";
 $select_query = "SELECT engineid, gameid, extra, platform, language, game.name as 'game name', status
 FROM game
 JOIN engine ON engine.id = game.engine
 JOIN fileset ON game.id = fileset.game";
 
+// Filter column => table
 $filters = array(
   "engineid" => "engine",
   "gameid" => "game",
@@ -18,6 +19,6 @@ $filters = array(
   "status" => "fileset"
 );
 
-create_page($filename, 25, $count_query, $select_query, $filters);
+create_page($filename, 25, $records_table, $select_query, $filters);
 ?>
 
