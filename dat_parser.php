@@ -547,13 +547,17 @@ function populate_matching_games() {
 
 // Process command line args
 if ($index = array_search("--upload", $argv)) {
-  $filepath = $argv[$index + 1];
-  print($filepath);
-  db_insert(parse_dat($filepath));
+  foreach (array_slice($argv, $index + 1) as $filepath) {
+    if ($filepath == "--match")
+      continue;
+
+    db_insert(parse_dat($filepath));
+  }
 }
 
 if (in_array("--match", $argv)) {
   populate_matching_games();
 }
+
 ?>
 
