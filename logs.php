@@ -2,10 +2,15 @@
 require "pagination.php";
 
 $filename = "logs.php";
-$count_query = "SELECT COUNT(id) FROM log";
+$records_table = "log";
 $select_query = "SELECT `timestamp`, category, user, `text`
 FROM log";
 
-create_page($filename, 25, $count_query, $select_query);
+$filters = array(
+  "category" => "log",
+  "user" => "log"
+);
+
+create_page($filename, 25, $records_table, $select_query, $filters);
 ?>
 
