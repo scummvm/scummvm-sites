@@ -5,8 +5,10 @@ This repository contains the server-side code for the upcoming file integrity ch
 This website needs a `mysql_config.json` in the root to run, in the form:
 
     {
+        "servername": "<your servername>",
         "username": "<your username>",
-        "password": "<your password>"
+        "password": "<your password>",
+        "dbname": "<your db name>"
     }
 
 The apache2 .conf file is located under `apache2-conf/`.

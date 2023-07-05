@@ -368,10 +368,10 @@ function merge_filesets($detection_id, $dat_id) {
  */
 function db_connect() {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
-  $servername = "localhost";
+  $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
   $password = $mysql_cred["password"];
-  $dbname = "integrity";
+  $dbname = $mysql_cred["dbname"];
 
   // Create connection
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

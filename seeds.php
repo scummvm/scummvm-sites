@@ -1,10 +1,10 @@
 <?php
 
 $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
-$servername = "localhost";
+$servername = $mysql_cred["servername"];
 $username = $mysql_cred["username"];
 $password = $mysql_cred["password"];
-$dbname = "integrity";
+$dbname = $mysql_cred["dbname"];
 
 // Create connection
 $conn = new mysqli($servername, $username, $password);

@@ -4,10 +4,10 @@ echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
 function create_page($filename, $results_per_page, $records_table, $select_query, $filters) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
-  $servername = "localhost";
+  $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
   $password = $mysql_cred["password"];
-  $dbname = "integrity";
+  $dbname = $mysql_cred["dbname"];
 
   // Create connection
   mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
