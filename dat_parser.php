@@ -343,11 +343,6 @@ function merge_filesets($detection_id, $dat_id) {
     $conn->query(sprintf("DELETE FROM file
       WHERE checksum = '%s' LIMIT 1", $checksum));
 
-    // Move any remaining files (duplicates) to the new fileset
-    $conn->query(sprintf("UPDATE file
-    SET fileset = %d
-    WHERE fileset = %d AND checksum = '%s'", $dat_id, $detection_id, $checksum));
-
     // Mark files present in the detection entries
     $conn->query(sprintf("UPDATE file
     JOIN filechecksum ON filechecksum.file = file.id
@@ -356,11 +351,19 @@ function merge_filesets($detection_id, $dat_id) {
     checktype = '%s'
     WHERE fileset = '%d' AND filechecksum.checksum = '%s'",
       $checksize, $checktype, $dat_id, $checksum));
+
+    // Move files from the new fileset to the original fileset
+    $conn->query(sprintf("UPDATE file
+    SET fileset = %d
+    WHERE fileset = %d AND checksum = '%s'", $detection_id, $dat_id, $checksum));
   }
 
   // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
-  $conn->query(sprintf("INSERT INTO history (fileset, oldfileset)
-  VALUES (%d, %d)", $dat_id, $detection_id));
+  $conn->query("INSERT INTO history (fileset, oldfileset) VALUES ({$detection_id}, {$dat_id})");
+  $conn->query("UPDATE history SET fileset = {$detection_id} WHERE fileset = {$dat_id}");
+
+  if (!$conn->commit())
+    echo "Error matching filesets";
 }
 
 /**
