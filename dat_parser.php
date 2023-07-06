@@ -330,7 +330,7 @@ function insert_filechecksum($file, $checktype, $conn) {
 function merge_filesets($detection_id, $dat_id) {
   $conn = db_connect();
 
-  $detection_files = $conn->query(sprintf("SELECT filechecksum.checksum, checksize, checktype
+  $detection_files = $conn->query(sprintf("SELECT DISTINCT(filechecksum.checksum), checksize, checktype
   FROM filechecksum JOIN file on file.id = filechecksum.file
   WHERE fileset = '%d'", $detection_id))->fetch_all();
 
@@ -341,7 +341,7 @@ function merge_filesets($detection_id, $dat_id) {
 
     // Delete original detection entry so newly matched fileset is the only fileset for game
     $conn->query(sprintf("DELETE FROM file
-      WHERE checksum = '%s' LIMIT 1", $checksum));
+    WHERE checksum = '%s' AND fileset = %d LIMIT 1", $checksum, $detection_id));
 
     // Mark files present in the detection entries
     $conn->query(sprintf("UPDATE file
@@ -351,20 +351,23 @@ function merge_filesets($detection_id, $dat_id) {
     checktype = '%s'
     WHERE fileset = '%d' AND filechecksum.checksum = '%s'",
       $checksize, $checktype, $dat_id, $checksum));
-
-    // Move files from the new fileset to the original fileset
-    $conn->query(sprintf("UPDATE file
-    SET fileset = %d
-    WHERE fileset = %d AND checksum = '%s'", $detection_id, $dat_id, $checksum));
   }
+
+  // Move files from the original fileset to the new fileset
+  $conn->query(sprintf("UPDATE file
+  SET fileset = %d
+  WHERE fileset = %d", $dat_id, $detection_id));
 
   // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
   $conn->query(sprintf("INSERT INTO history (`timestamp`, fileset, oldfileset)
-  VALUES (FROM_UNIXTIME(%d), %d, %d)", time(), $detection_id, $dat_id));
-  $conn->query("UPDATE history SET fileset = {$detection_id} WHERE fileset = {$dat_id}");
+  VALUES (FROM_UNIXTIME(%d), %d, %d)", time(), $dat_id, $detection_id));
+  $conn->query("UPDATE history SET fileset = {$dat_id} WHERE fileset = {$detection_id}");
+
+  // Delete original fileset
+  $conn->query("DELETE FROM fileset WHERE id = {$detection_id}");
 
   if (!$conn->commit())
-    echo "Error matching filesets";
+    echo "Error merging filesets";
 }
 
 /**
