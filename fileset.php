@@ -2,8 +2,12 @@
 require 'pagination.php';
 
 $filename = 'fileset.php';
-$stylesheet = "style.css";
+$stylesheet = 'style.css';
+$jquery_file = 'https://code.jquery.com/jquery-3.7.0.min.js';
+$js_file = 'js_functions.js';
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
+echo "<script type='text/javascript' src='{$jquery_file}'></script>\n";
+echo "<script type='text/javascript' src='{$js_file}'></script>\n";
 
 function get_log_page($log_id) {
   $records_per_page = 25; // FIXME: Fetch this directly from logs.php
@@ -45,6 +49,8 @@ ORDER BY `timestamp`");
 
 
 // Display fileset details
+echo "<h2><u>Fileset: {$id}</u></h2>";
+
 $result = $conn->query("SELECT * FROM fileset WHERE id = {$id}")->fetch_assoc();
 
 echo "<h3>Fileset details</h3>";
@@ -58,6 +64,7 @@ WHERE fileset.id = {$id}");
 else {
   unset($result['key']);
   unset($result['status']);
+  unset($result['delete']);
 }
 
 foreach (array_keys($result) as $column) {
@@ -82,12 +89,24 @@ create_page($filename, 15, "file WHERE fileset = {$id}",
   "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}");
 
 
+// Dev Actions
+echo "<h3>Developer Actions</h3>";
+echo "<button id='delete-button' type='button' onclick='delete_id({$id})'>Mark Fileset for Deletion</button>";
+
+if (isset($_POST['delete'])) {
+  $conn->query("UPDATE fileset SET `delete` = TRUE WHERE id = {$_POST['delete']}");
+  $conn->commit();
+}
+
+echo "<p id='delete-confirm' class='hidden'>Fileset marked for deletion</p>"; // Hidden
+
+
 // Display history
+echo "<h3>Fileset history</h3>";
 if ($history->num_rows == 0) {
-  echo "Fileset has no history.";
+  echo "<p>Fileset has no history.</p>";
 }
 else {
-  echo "<h3>Fileset history</h3>";
   echo "<table>\n";
   echo "<th>Old ID</th>";
   echo "<th>Changed on</th>";

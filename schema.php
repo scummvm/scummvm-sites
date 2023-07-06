@@ -69,6 +69,7 @@ $table = "CREATE TABLE IF NOT EXISTS fileset (
   status VARCHAR(20),
   src VARCHAR(20),
   `key` VARCHAR(64),
+  `delete` BOOLEAN DEFAULT FALSE NOT NULL,
   FOREIGN KEY (game) REFERENCES game(id)
 )";
 
