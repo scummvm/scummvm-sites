@@ -2,7 +2,7 @@
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
-function create_page($filename, $results_per_page, $records_table, $select_query, $filters) {
+function create_page($filename, $results_per_page, $records_table, $select_query, $filters = array()) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
@@ -52,20 +52,22 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
 
   // Create filter dropdown
-  echo "<div class='filter'>\n";
-  echo "<form name='filter' method='GET'>\n";
-  echo "Filter: ";
+  if ($filters) {
+    echo "<div class='filter'>\n";
+    echo "<form name='filter' method='GET'>\n";
+    echo "Filter: ";
 
-  echo "<select name='column'>\n";
-  foreach (array_keys($filters) as $key) {
-    echo "<option>{$key}</option>\n";
+    echo "<select name='column'>\n";
+    foreach (array_keys($filters) as $key) {
+      echo "<option>{$key}</option>\n";
+    }
+    echo "</select>\n";
+    echo "<input type='text' name='value' placeholder='Value'>\n";
+
+    echo "<input type='submit' name='submit' value='Select' />\n";
+    echo "</form>\n";
+    echo "</div>\n";
   }
-  echo "</select>\n";
-  echo "<input type='text' name='value' placeholder='Value'>\n";
-
-  echo "<input type='submit' name='submit' value='Select' />\n";
-  echo "</form>\n";
-  echo "</div>\n";
 
 
   // Table
@@ -92,15 +94,6 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   echo "</table>\n";
 
-
-  // Navigation elements
-  echo "<form method='GET'>\n";
-  echo "<div class=pagination>\n";
-  if ($page > 1)
-    echo "<a href={$filename}>❮❮</a>\n";
-  if ($page - 2 > 1)
-    echo "<div class=more>...</div>\n";
-
   // Preserve GET variables
   $vars = "";
   foreach ($_GET as $key => $value) {
@@ -108,6 +101,15 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       continue;
     $vars .= "&{$key}={$value}";
   }
+
+  // Navigation elements
+  echo "<form method='GET'>\n";
+  echo "<div class=pagination>\n";
+  if ($page > 1)
+    echo "<a href={$filename}?{$vars}>❮❮</a>\n";
+  if ($page - 2 > 1)
+    echo "<div class=more>...</div>\n";
+
 
   for ($i = $page - 2; $i <= $page + 2; $i++) {
     if ($i >= 1 && $i <= $num_of_pages) {
@@ -124,7 +126,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   if ($page < $num_of_pages)
     echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
 
-  echo "<input type='text' name='page'>\n";
+  echo "<input type='text' name='page' placeholder='Page Number'>\n";
   echo "<input type='submit' name='submit' value='Submit'>\n";
   echo "</form>\n";
 

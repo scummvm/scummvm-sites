@@ -1,4 +1,7 @@
 <?php
+require 'pagination.php';
+
+$filename = 'fileset.php';
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
@@ -31,10 +34,10 @@ else {
     $id = $conn->query("SELECT fileset FROM history WHERE oldfileset = {$id}")->fetch_array()[0];
 }
 
-// Display history
 $history = $conn->query("SELECT `timestamp`, oldfileset
 FROM history WHERE fileset = {$id}
 ORDER BY `timestamp`");
+
 
 // Display fileset details
 $result = $conn->query("SELECT * FROM fileset WHERE id = {$id}")->fetch_assoc();
@@ -70,31 +73,11 @@ echo "</tr>\n";
 echo "</table>\n";
 
 echo "<h3>Files in the fileset</h3>";
-echo "<table>\n";
-$res = $conn->query("SELECT * from file WHERE fileset = {$id}");
-$first_row = true;
-while ($row = $res->fetch_assoc()) {
-  if ($first_row) { // If it is the first run
-    foreach (array_keys($row) as $column) {
-      if ($column == 'id')
-        continue;
+create_page($filename, 15, "file WHERE fileset = {$id}",
+  "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}");
 
-      echo "<th>{$column}</th>\n";
-    }
-    $first_row = false;
-  }
 
-  echo "<tr>\n";
-  foreach ($row as $column => $value) {
-    if ($column == 'id')
-      continue;
-
-    echo "<td>{$value}</td>";
-  }
-  echo "</tr>\n";
-}
-echo "</table>\n";
-
+// Display history
 if ($history->num_rows == 0) {
   echo "Fileset has no history.";
 }
