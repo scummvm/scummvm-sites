@@ -478,9 +478,10 @@ function db_insert($data_arr) {
         calc_key($fileset["rom"])));
     }
   }
-  $category_text = "Uploaded from " . $src . ", state '" . $status . "'";
-  $log_text = sprintf("Loaded DAT file, filename \"%s\", size %d, author \"%s\", version %s",
-    $filepath, filesize($filepath), $author, $version);
+  $category_text = "Uploaded from {$src}";
+  $log_text = sprintf("Loaded DAT file, filename '%s', size %d, author '%s', version %s.
+  State '%s'. Fileset:@fileset_last.",
+    $filepath, filesize($filepath), $author, $version, $status);
 
   if (!$conn->commit())
     echo "Inserting failed<br/>";
@@ -532,15 +533,16 @@ function populate_matching_games() {
       return (is_null($val)) ? "NULL" : $val;
     }, $matched_game);
 
-    $category_text = "Matched, state '" . $status . "'";
+    $category_text = "Matched from {$fileset[0][2]}";
     $log_text = "Matched game {$matched_game['engineid']}:
     {$matched_game['gameid']}-{$matched_game['platform']}-{$matched_game['language']}
-    variant {$matched_game['key']} from {$fileset[0][2]}.";
+    variant {$matched_game['key']}. State {$status}. Fileset:{$fileset[0][0]}.";
 
     // Updating the fileset.game value to be $matched_game["id"]
     $query = sprintf("UPDATE fileset
     SET game = %d, status = '%s', `key` = '%s'
     WHERE id = %d", $matched_game["id"], $status, $matched_game["key"], $fileset[0][0]);
+
     merge_filesets($matched_game["fileset"], $fileset[0][0]);
 
     if ($conn->query($query))
