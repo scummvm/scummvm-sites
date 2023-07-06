@@ -85,6 +85,12 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     echo "<tr>\n";
     echo "<td>{$counter}.</td>\n";
     foreach (array_values($row) as $value) {
+      // Add hyperlink to filesets
+      $matches = array();
+      if (preg_match("/Fileset:(\d+)/", $value, $matches, PREG_OFFSET_CAPTURE)) {
+        $value = substr($value, 0, $matches[0][1]) . "<a href='fileset.php?id={$matches[1][0]}'>{$matches[0][0]}</a>";
+      }
+
       echo "<td>{$value}</td>\n";
     }
     echo "</tr>\n";
