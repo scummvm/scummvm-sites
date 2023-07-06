@@ -5,6 +5,11 @@ $filename = 'fileset.php';
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
+function get_log_page($log_id) {
+  $records_per_page = 25; // FIXME: Fetch this directly from logs.php
+  return intdiv($log_id, $records_per_page) + 1;
+}
+
 $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
 $servername = $mysql_cred["servername"];
 $username = $mysql_cred["username"];
@@ -34,7 +39,7 @@ else {
     $id = $conn->query("SELECT fileset FROM history WHERE oldfileset = {$id}")->fetch_array()[0];
 }
 
-$history = $conn->query("SELECT `timestamp`, oldfileset
+$history = $conn->query("SELECT `timestamp`, oldfileset, log
 FROM history WHERE fileset = {$id}
 ORDER BY `timestamp`");
 
@@ -86,10 +91,13 @@ else {
   echo "<table>\n";
   echo "<th>Old ID</th>";
   echo "<th>Changed on</th>";
+  echo "<th>Log ID</th>";
   while ($row = $history->fetch_assoc()) {
+    $log_page = get_log_page($row['log']);
     echo "<tr>\n";
     echo "<td>{$row['oldfileset']}</td>\n";
     echo "<td>{$row['timestamp']}</td>\n";
+    echo "<td><a href='logs.php?page={$log_page}'>{$row['log']}</a></td>\n";
     echo "</tr>\n";
   }
   echo "</table>\n";

@@ -361,6 +361,8 @@ function merge_filesets($detection_id, $dat_id) {
   // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
   $conn->query(sprintf("INSERT INTO history (`timestamp`, fileset, oldfileset)
   VALUES (FROM_UNIXTIME(%d), %d, %d)", time(), $dat_id, $detection_id));
+  $history_last = $conn->query("SELECT LAST_INSERT_ID()")->fetch_array()[0];
+
   $conn->query("UPDATE history SET fileset = {$dat_id} WHERE fileset = {$detection_id}");
 
   // Delete original fileset
@@ -368,6 +370,8 @@ function merge_filesets($detection_id, $dat_id) {
 
   if (!$conn->commit())
     echo "Error merging filesets";
+
+  return $history_last;
 }
 
 /**
@@ -404,8 +408,12 @@ function create_log($category, $user, $text) {
   $conn = db_connect();
   $conn->query(sprintf("INSERT INTO log (`timestamp`, category, user, `text`)
   VALUES (FROM_UNIXTIME(%d), '%s', '%s', '%s')", time(), $category, $user, $text));
+  $log_last = $conn->query("SELECT LAST_INSERT_ID()")->fetch_array()[0];
+
   if (!$conn->commit())
     echo "Creating log failed<br/>";
+
+  return $log_last;
 }
 
 /**
@@ -480,8 +488,9 @@ function db_insert($data_arr) {
   }
   $category_text = "Uploaded from {$src}";
   $log_text = sprintf("Loaded DAT file, filename '%s', size %d, author '%s', version %s.
-  State '%s'. Fileset:@fileset_last.",
-    $filepath, filesize($filepath), $author, $version, $status);
+  State '%s'. Fileset:%d.",
+    $filepath, filesize($filepath), $author, $version, $status,
+    $conn->query("SELECT @fileset_last")->fetch_array()[0]);
 
   if (!$conn->commit())
     echo "Inserting failed<br/>";
@@ -545,12 +554,15 @@ function populate_matching_games() {
     SET game = %d, status = '%s', `key` = '%s'
     WHERE id = %d", $matched_game["id"], $status, $matched_game["key"], $fileset[0][0]);
 
-    merge_filesets($matched_game["fileset"], $fileset[0][0]);
+    $history_last = merge_filesets($matched_game["fileset"], $fileset[0][0]);
 
     if ($conn->query($query)) {
       $user = 'cli:' . get_current_user();
-      create_log(mysqli_real_escape_string($conn, $category_text), $user,
+      $log_last = create_log(mysqli_real_escape_string($conn, $category_text), $user,
         mysqli_real_escape_string($conn, $log_text));
+
+      // Add log id to the history table
+      $conn->query("UPDATE history SET log = {$log_last} WHERE id = {$history_last}");
     }
 
     if (!$conn->commit())
