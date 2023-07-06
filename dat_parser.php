@@ -485,8 +485,10 @@ function db_insert($data_arr) {
 
   if (!$conn->commit())
     echo "Inserting failed<br/>";
-  else
-    create_log(mysqli_real_escape_string($conn, $category_text), "unknown", mysqli_real_escape_string($conn, $log_text)); // FIXME: User name is "unknown"
+  else {
+    $user = 'cli:' . get_current_user();
+    create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
+  }
 }
 
 function populate_matching_games() {
@@ -545,9 +547,11 @@ function populate_matching_games() {
 
     merge_filesets($matched_game["fileset"], $fileset[0][0]);
 
-    if ($conn->query($query))
-      create_log(mysqli_real_escape_string($conn, $category_text), "unknown",
-        mysqli_real_escape_string($conn, $log_text)); // FIXME: user name is unknown
+    if ($conn->query($query)) {
+      $user = 'cli:' . get_current_user();
+      create_log(mysqli_real_escape_string($conn, $category_text), $user,
+        mysqli_real_escape_string($conn, $log_text));
+    }
 
     if (!$conn->commit())
       echo "Updating matched games failed<br/>";
