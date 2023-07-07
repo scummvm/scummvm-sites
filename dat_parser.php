@@ -180,11 +180,21 @@ function get_checksum_props($checktype, $checksum) {
 }
 
 /**
+ * Return fileset statuses that can be merged with set of given status
+ * eg: scan and dat -> detection
+ *     fullmatch -> partialmatch, detection
+ */
+function status_to_match($status) {
+  $order = array("detection", "dat", "scan", "partialmatch", "fullmatch");
+  return array_slice($order, 0, array_search($status, $order));
+}
+
+/**
  * Detects games based on the file descriptions in $dat_arr
  * Compares the files with those in the detection entries table
  * $game_files consists of both the game ( ) and resources ( ) parts
  */
-function find_matching_game($game_files) {
+function find_matching_game($game_files, $status) {
   $matching_games = array(); // All matching games
   $matching_filesets = array(); // All filesets containing one file from $game_files
   $matches_count = 0; // Number of files with a matching detection entry
@@ -197,7 +207,9 @@ function find_matching_game($game_files) {
     $records = $conn->query(sprintf("SELECT file.fileset
     FROM filechecksum
     JOIN file ON filechecksum.file = file.id
-    WHERE filechecksum.checksum = '%s' AND file.detection = TRUE", $checksum));
+    JOIN fileset ON fileset.id = file.fileset
+    WHERE filechecksum.checksum = '%s' AND file.detection = TRUE AND
+    fileset.status IN ('%s')", $checksum, implode("', '", status_to_match($status))));
     $records = $records->fetch_all();
 
     // If file is not part of detection entries, skip it
@@ -506,7 +518,8 @@ function populate_matching_games() {
   // Getting unmatched filesets
   $unmatched_filesets = array();
 
-  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, filechecksum.checksum, fileset.src from fileset
+  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, filechecksum.checksum, src, status
+  FROM fileset
   JOIN file ON file.fileset = fileset.id
   JOIN filechecksum ON file.id = filechecksum.file
   WHERE fileset.game IS NULL"));
@@ -525,7 +538,7 @@ function populate_matching_games() {
   }
 
   foreach ($unmatched_filesets as $fileset) {
-    $matching_games = find_matching_game($fileset);
+    $matching_games = find_matching_game($fileset, $fileset[0][3]);
 
     if (count($matching_games) != 1) // If there is no match/non-unique match
       continue;
