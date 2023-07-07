@@ -33,12 +33,13 @@ if ($conn->connect_errno) {
 
 $conn->query("USE " . $dbname);
 
+$min_id = $conn->query("SELECT MIN(id) FROM fileset")->fetch_array()[0];
 if (!isset($_GET['id'])) {
-  $id = 1;
+  $id = $min_id;
 }
 else {
   $max_id = $conn->query("SELECT MAX(id) FROM fileset")->fetch_array()[0];
-  $id = max(1, min($_GET['id'], $max_id));
+  $id = max($min_id, min($_GET['id'], $max_id));
   if ($conn->query("SELECT id FROM fileset WHERE id = {$id}")->num_rows == 0)
     $id = $conn->query("SELECT fileset FROM history WHERE oldfileset = {$id}")->fetch_array()[0];
 }
