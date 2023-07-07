@@ -7,6 +7,7 @@ $select_query = "SELECT engineid, gameid, extra, platform, language, game.name a
 FROM game
 JOIN engine ON engine.id = game.engine
 JOIN fileset ON game.id = fileset.game";
+$order = "ORDER BY gameid";
 
 // Filter column => table
 $filters = array(
@@ -19,6 +20,6 @@ $filters = array(
   "status" => "fileset"
 );
 
-create_page($filename, 25, $records_table, $select_query, $filters);
+create_page($filename, 25, $records_table, $select_query, $order, $filters);
 ?>
 

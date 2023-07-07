@@ -86,7 +86,7 @@ echo "</table>\n";
 
 echo "<h3>Files in the fileset</h3>";
 create_page($filename, 15, "file WHERE fileset = {$id}",
-  "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}");
+  "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}", "ORDER BY name");
 
 
 // Dev Actions

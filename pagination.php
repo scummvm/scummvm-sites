@@ -2,7 +2,7 @@
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
-function create_page($filename, $results_per_page, $records_table, $select_query, $filters = array()) {
+function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array()) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
@@ -42,10 +42,10 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   $offset = ($page - 1) * $results_per_page;
   if (isset($_GET['column']) && isset($_GET['value'])) {
-    $query = "{$select_query} WHERE {$column} = '{$value}' LIMIT {$results_per_page} OFFSET {$offset}";
+    $query = "{$select_query} WHERE {$column} = '{$value}' {$order} LIMIT {$results_per_page} OFFSET {$offset}";
   }
   else {
-    $query = "{$select_query} LIMIT {$results_per_page} OFFSET {$offset}";
+    $query = "{$select_query} {$order} LIMIT {$results_per_page} OFFSET {$offset}";
   }
 
   $result = $conn->query($query);
