@@ -132,7 +132,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   if ($page < $num_of_pages)
     echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
 
-  echo "<input type='text' name='page' placeholder='Page Number'>\n";
+  echo "<input type='text' name='page' placeholder='Page No'>\n";
   echo "<input type='submit' name='submit' value='Submit'>\n";
   echo "</form>\n";
 

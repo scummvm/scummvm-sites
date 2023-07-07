@@ -1,5 +1,6 @@
 :root {
   --primary-color: #27b5e8;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 td, th {
@@ -17,6 +18,49 @@ th {
   text-align: left;
   background-color: var(--primary-color);
   color: white;
+}
+
+button {
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: background-color 0.1s;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+button:hover {
+  background-color: #29afe0;
+}
+button:active {
+  background-color: #1a95c2;
+}
+
+input[type=submit] {
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: background-color 0.1s;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+input[type=submit]:hover {
+  background-color: #29afe0;
+}
+input[type=submit]:active {
+  background-color: #1a95c2;
+}
+
+input[type=text], select {
+  width: 25%;
+  height: 38px;
+  padding: 6px 12px;
+  margin: 0px 8px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 
 .pagination {
