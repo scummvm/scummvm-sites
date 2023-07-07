@@ -109,34 +109,36 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   }
 
   // Navigation elements
-  echo "<form method='GET'>\n";
-  echo "<div class=pagination>\n";
-  if ($page > 1)
-    echo "<a href={$filename}?{$vars}>❮❮</a>\n";
-  if ($page - 2 > 1)
-    echo "<div class=more>...</div>\n";
+  if ($num_of_pages > 1) {
+    echo "<form method='GET'>\n";
+    echo "<div class=pagination>\n";
+    if ($page > 1)
+      echo "<a href={$filename}?{$vars}>❮❮</a>\n";
+    if ($page - 2 > 1)
+      echo "<div class=more>...</div>\n";
 
 
-  for ($i = $page - 2; $i <= $page + 2; $i++) {
-    if ($i >= 1 && $i <= $num_of_pages) {
+    for ($i = $page - 2; $i <= $page + 2; $i++) {
+      if ($i >= 1 && $i <= $num_of_pages) {
 
-      if ($i == $page)
-        echo sprintf("<a class=active href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
-      else
-        echo sprintf("<a href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
+        if ($i == $page)
+          echo sprintf("<a class=active href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
+        else
+          echo sprintf("<a href=%s?page=%d%s>%d</a>\n", $filename, $i, $vars, $i);
+      }
     }
+
+    if ($page + 2 < $num_of_pages)
+      echo "<div class=more>...</div>\n";
+    if ($page < $num_of_pages)
+      echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
+
+    echo "<input type='text' name='page' placeholder='Page No'>\n";
+    echo "<input type='submit' name='submit' value='Submit'>\n";
+    echo "</div>\n";
+    
+    echo "</form>\n";
   }
-
-  if ($page + 2 < $num_of_pages)
-    echo "<div class=more>...</div>\n";
-  if ($page < $num_of_pages)
-    echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
-
-  echo "<input type='text' name='page' placeholder='Page No'>\n";
-  echo "<input type='submit' name='submit' value='Submit'>\n";
-  echo "</form>\n";
-
-  echo "</div>\n";
 
 }
 ?>
