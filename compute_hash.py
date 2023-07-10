@@ -1,6 +1,7 @@
 import hashlib
 import os
 import argparse
+import struct
 
 script_version = "0.1"
 
@@ -21,55 +22,99 @@ def get_dirs_at_depth(directory, depth):
             yield root
 
 
-def checksum(filepath, alg, size):
-    """ Returns checksum value of file using a specific algoritm """
+def is_macbin(filepath):
+    return True
+
+
+def macbin_get_resfork(file_byte_stream):
+    (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
+    return file_byte_stream[0x80 + datalen:]
+
+
+def macbin_get_datafork(file_byte_stream):
+    (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
+    return file_byte_stream[0x80: 0x80 + datalen]
+
+
+def file_checksum(filepath, alg, size):
+    if not is_macbin(filepath):
+        with open(filepath, "rb") as file:
+            return checksum(file, alg, size, filepath)
+
+    # If the file is a MacBinary
     with open(filepath, "rb") as file:
-        # Will contain 5 elements:
-        #  - Full size checksum
-        #  - Checksum of first 5000B
-        #  - Checksum of first 1MB
-        #  - Checksum of last 5000B (tail)
-        #  - Checksum of first *size* bytes
-        hashes = []
+        res = []
 
-        if alg == "md5":
-            hashes = [hashlib.md5() for _ in range(5)]
-        elif alg == "sha1":
-            hashes = [hashlib.sha1() for _ in range(5)]
-        elif alg == "sha256":
-            hashes = [hashlib.sha256() for _ in range(5)]
+        file = macbin_get_resfork(file)
+        prefix = 'r'
 
-        # Read file in 8MB chunks for full checksum
-        for byte_block in iter(lambda: file.read(8 * 1024 * 1024), b""):
-            hashes[0].update(byte_block)
+        if len(file):
+            for h in checksum(file, alg, size, filepath):
+                if ':' not in h:
+                    res.append(f"{prefix}:{h}")
+                else:
+                    res.append(f"{prefix}{h}")  # If the checksum is like "t:..."
 
-        # First 5000B
+        file = macbin_get_datafork(file)
+        prefix = 'd'
+
+        for h in checksum(file, alg, size, filepath):
+            if ':' not in h:
+                res.append(f"{prefix}:{h}")
+            else:
+                res.append(f"{prefix}{h}")  # If the checksum is like "t:..."
+
+        return res
+
+
+def checksum(file, alg, size, filepath):
+    """ Returns checksum value of file buffer using a specific algoritm """
+    # Will contain 5 elements:
+    #  - Full size checksum
+    #  - Checksum of first 5000B
+    #  - Checksum of first 1MB
+    #  - Checksum of last 5000B (tail)
+    #  - Checksum of first *size* bytes
+    hashes = []
+
+    if alg == "md5":
+        hashes = [hashlib.md5() for _ in range(5)]
+    elif alg == "sha1":
+        hashes = [hashlib.sha1() for _ in range(5)]
+    elif alg == "sha256":
+        hashes = [hashlib.sha256() for _ in range(5)]
+
+    # Read file in 8MB chunks for full checksum
+    for byte_block in iter(lambda: file.read(8 * 1024 * 1024), b""):
+        hashes[0].update(byte_block)
+
+    # First 5000B
+    file.seek(0)
+    hashes[1].update(file.read(5000))
+
+    # First 1MB
+    file.seek(0)
+    hashes[2].update(file.read(1024 * 1024))
+
+    # Last 5000B
+    if filesize(filepath) >= 5000:
+        file.seek(-5000, os.SEEK_END)
+        hashes[3].update(file.read())
+    else:
+        hashes[3] = hashes[0]
+
+    # Custom size; may be None
+    # Size is in bytes
+    # Reads entire required size at once, inefficient for large sizes
+    if size and size <= filesize(filepath):
         file.seek(0)
-        hashes[1].update(file.read(5000))
+        hashes[4].update(file.read(size))
+    else:
+        hashes[4] = None
 
-        # First 1MB
-        file.seek(0)
-        hashes[2].update(file.read(1024 * 1024))
-
-        # Last 5000B
-        if filesize(filepath) >= 5000:
-            file.seek(-5000, os.SEEK_END)
-            hashes[3].update(file.read())
-        else:
-            hashes[3] = hashes[0]
-
-        # Custom size; may be None
-        # Size is in bytes
-        # Reads entire required size at once, inefficient for large sizes
-        if size and size <= filesize(filepath):
-            file.seek(0)
-            hashes[4].update(file.read(size))
-        else:
-            hashes[4] = None
-
-        hashes = [h.hexdigest() for h in hashes if h]
-        hashes[3] = 't:' + hashes[3]  # Add tail prefix
-        return hashes
+    hashes = [h.hexdigest() for h in hashes if h]
+    hashes[3] = 't:' + hashes[3]  # Add tail prefix
+    return hashes
 
 
 def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
@@ -85,7 +130,7 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
             files.extend([os.path.join(root, f) for f in contents])
 
         for file in files:
-            hash_of_dir[os.path.relpath(file, directory)] = (checksum(
+            hash_of_dir[os.path.relpath(file, directory)] = (file_checksum(
                 file, alg, size), filesize(file))
 
         res.append(hash_of_dir)
