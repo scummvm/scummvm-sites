@@ -131,14 +131,14 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
 
         for file in files:
             hash_of_dir[os.path.relpath(file, directory)] = (file_checksum(
-                file, alg, size), filesize(file))
+                file, alg, size), alg, filesize(file))
 
         res.append(hash_of_dir)
 
     return res
 
 
-def create_dat_file(hash_of_dirs, path):
+def create_dat_file(hash_of_dirs, path, checksum_size=0):
     with open(f"{os.path.basename(path)}.dat", "w") as file:
         # Header
         file.writelines([
@@ -151,9 +151,12 @@ def create_dat_file(hash_of_dirs, path):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
-            for filename, (hashes, filesize) in hash_of_dir.items():
+            for filename, (hashes, alg, filesize) in hash_of_dir.items():
                 # Only works for MD5s, ignores optional extra size
-                data = f"name \"{filename}\" size {filesize} md5 {hashes[0]} md5-5000 {hashes[1]} md5-1M {hashes[2]} md5-5000-t {hashes[3]}"
+                data = f"name \"{filename}\" size {filesize} {alg} {hashes[0]} {alg}-5000 {hashes[1]} {alg}-1M {hashes[2]} {alg}-5000-t {hashes[3]}"
+                if checksum_size:
+                    data += f" {alg}-{checksum_size} {hashes[4]}"
+
                 file.write(f"\trom ( {data} )\n")
             file.write(")\n\n")
 
@@ -170,4 +173,5 @@ path = os.path.abspath(args.directory) if args.directory else os.getcwd()
 depth = int(args.depth) if args.depth else 0
 checksum_size = int(args.size) if args.size else 0
 
-create_dat_file(compute_hash_of_dirs(path, depth, checksum_size), path)
+create_dat_file(compute_hash_of_dirs(
+    path, depth, checksum_size), path, checksum_size)
