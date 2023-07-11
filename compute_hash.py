@@ -2,6 +2,7 @@ import hashlib
 import os
 import argparse
 import struct
+import zlib
 
 script_version = "0.1"
 
@@ -22,8 +23,42 @@ def get_dirs_at_depth(directory, depth):
             yield root
 
 
+def read_be(byte_stream, size_in_bits):
+    """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
+    (uint,) = struct.unpack(">I", byte_stream[:size_in_bits//8])
+    return uint
+
+
 def is_macbin(filepath):
-    return True
+    with open(filepath, "rb") as file:
+        header = file.read(128)
+        if len(header) != 128:
+            return False
+
+        res_fork_offset = -1
+
+        # Preliminary check
+        # Exclude files that have zero name len, zero data fork, zero name fork and zero type_creator.
+        if not header[1] and not read_be(header[83:], 32) and not read_be(header[87:], 32) and not read_be(header[69:], 32):
+            return False
+
+        checksum = zlib.crc32(header)
+        if checksum != read_be(header[124:], 32):
+            return False
+
+        if not header[0] and not header[74] and not header[82] and header[1] <= 63:
+            # Get fork lengths
+            datalen = read_be(header[83:], 32)
+            rsrclen = read_be(header[87:], 32)
+
+            # Files produced by ISOBuster are not padded, thus, compare with the actual size
+            datalen_pad = (((datalen + 127) >> 7) << 7)
+
+            # Length check
+            if (128 + datalen_pad + rsrclen >= len(header)):
+                return False
+
+            return True
 
 
 def macbin_get_resfork(file_byte_stream):
