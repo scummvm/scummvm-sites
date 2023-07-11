@@ -27,25 +27,46 @@ def is_macbin(filepath):
 
 
 def macbin_get_resfork(file_byte_stream):
+    if not file_byte_stream:
+        return file_byte_stream
+
     (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
     return file_byte_stream[0x80 + datalen:]
 
 
 def macbin_get_datafork(file_byte_stream):
+    if not file_byte_stream:
+        return file_byte_stream
+
     (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
     return file_byte_stream[0x80: 0x80 + datalen]
+
+
+def create_checksum_pairs(hashes, alg, size, prefix=None):
+    res = []
+
+    keys = [f"{alg}", f"{alg}-5000", f"{alg}-1M", f"{alg}-5000-t"]
+    if size:
+        keys.append(f"{alg}-{size}")
+    if prefix:
+        keys = [key+f'-{prefix}' for key in keys]
+
+    for i, h in enumerate(hashes):
+        res.append((keys[i], h))
+
+    return res
 
 
 def file_checksum(filepath, alg, size):
     if not is_macbin(filepath):
         with open(filepath, "rb") as file:
-            return checksum(file, alg, size, filepath)
+            return create_checksum_pairs(checksum(file, alg, size, filepath), alg, size)
 
-    # If the file is a MacBinary
+            # If the file is a MacBinary
     with open(filepath, "rb") as file:
         res = []
 
-        file = macbin_get_resfork(file)
+        file = macbin_get_resfork(file.read())
         prefix = 'r'
 
         if len(file):
@@ -53,7 +74,8 @@ def file_checksum(filepath, alg, size):
                 if ':' not in h:
                     res.append(f"{prefix}:{h}")
                 else:
-                    res.append(f"{prefix}{h}")  # If the checksum is like "t:..."
+                    # If the checksum is like "t:..."
+                    res.append(f"{prefix}{h}")
 
         file = macbin_get_datafork(file)
         prefix = 'd'
@@ -64,7 +86,7 @@ def file_checksum(filepath, alg, size):
             else:
                 res.append(f"{prefix}{h}")  # If the checksum is like "t:..."
 
-        return res
+        return create_checksum_pairs(res, alg, size, prefix)
 
 
 def checksum(file, alg, size, filepath):
@@ -84,33 +106,51 @@ def checksum(file, alg, size, filepath):
     elif alg == "sha256":
         hashes = [hashlib.sha256() for _ in range(5)]
 
-    # Read file in 8MB chunks for full checksum
-    for byte_block in iter(lambda: file.read(8 * 1024 * 1024), b""):
-        hashes[0].update(byte_block)
+    # If file is not a MacBinary
+    if not isinstance(file, bytes):
+        # Read file in 8MB chunks for full checksum
+        for byte_block in iter(lambda: file.read(8 * 1024 * 1024), b""):
+            hashes[0].update(byte_block)
 
-    # First 5000B
-    file.seek(0)
-    hashes[1].update(file.read(5000))
-
-    # First 1MB
-    file.seek(0)
-    hashes[2].update(file.read(1024 * 1024))
-
-    # Last 5000B
-    if filesize(filepath) >= 5000:
-        file.seek(-5000, os.SEEK_END)
-        hashes[3].update(file.read())
-    else:
-        hashes[3] = hashes[0]
-
-    # Custom size; may be None
-    # Size is in bytes
-    # Reads entire required size at once, inefficient for large sizes
-    if size and size <= filesize(filepath):
+        # First 5000B
         file.seek(0)
-        hashes[4].update(file.read(size))
+        hashes[1].update(file.read(5000))
+
+        # First 1MB
+        file.seek(0)
+        hashes[2].update(file.read(1024 * 1024))
+
+        # Last 5000B
+        if filesize(filepath) >= 5000:
+            file.seek(-5000, os.SEEK_END)
+            hashes[3].update(file.read())
+        else:
+            hashes[3] = hashes[0]
+
+        # Custom size; may be None
+        # Size is in bytes
+        # Reads entire required size at once, inefficient for large sizes
+        if size and size <= filesize(filepath):
+            file.seek(0)
+            hashes[4].update(file.read(size))
+        else:
+            hashes[4] = None
     else:
-        hashes[4] = None
+        bytes_stream = file
+
+        hashes[0].update(bytes_stream)
+        hashes[1].update(bytes_stream[:5000])
+        hashes[2].update(bytes_stream[:1024 * 1024])
+        if filesize(filepath) >= 5000:
+            hashes[3].update(bytes_stream[-5000:])
+        else:
+            hashes[3] = hashes[0]
+
+        # Custom size
+        if size and size <= filesize(filepath):
+            hashes[4].update(bytes_stream[:size])
+        else:
+            hashes[4] = None
 
     hashes = [h.hexdigest() for h in hashes if h]
     hashes[3] = 't:' + hashes[3]  # Add tail prefix
@@ -131,7 +171,7 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
 
         for file in files:
             hash_of_dir[os.path.relpath(file, directory)] = (file_checksum(
-                file, alg, size), alg, filesize(file))
+                file, alg, size), filesize(file))
 
         res.append(hash_of_dir)
 
@@ -151,11 +191,10 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
-            for filename, (hashes, alg, filesize) in hash_of_dir.items():
-                # Only works for MD5s, ignores optional extra size
-                data = f"name \"{filename}\" size {filesize} {alg} {hashes[0]} {alg}-5000 {hashes[1]} {alg}-1M {hashes[2]} {alg}-5000-t {hashes[3]}"
-                if checksum_size:
-                    data += f" {alg}-{checksum_size} {hashes[4]}"
+            for filename, (hashes, filesize) in hash_of_dir.items():
+                data = f"name \"{filename}\" size {filesize}"
+                for key, value in hashes:
+                    data += f" {key} {value}"
 
                 file.write(f"\trom ( {data} )\n")
             file.write(")\n\n")
