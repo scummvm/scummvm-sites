@@ -22,11 +22,22 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   $conn->query("USE " . $dbname);
 
-  if (isset($_GET['column']) && isset($_GET['value'])) {
-    $column = $_GET['column'];
-    $value = mysqli_real_escape_string($conn, $_GET['value']);
+  // If there exist get variables that are for filtering
+  $_GET = array_filter($_GET);
+  if (array_diff(array_keys($_GET), array('page'))) {
+    $condition = "WHERE ";
+    foreach ($_GET as $key => $value) {
+      if ($key == "page" || $value == "")
+        continue;
+
+      $last_table = $key;
+      $condition .= $condition != "WHERE " ? " AND {$filters[$key]}.{$key} REGEXP '{$value}'" : "{$filters[$key]}.{$key} REGEXP '{$value}'";
+    }
+    if ($condition == "WHERE ")
+      $condition = "";
+
     $num_of_results = $conn->query(
-      "SELECT COUNT(id) FROM {$filters[$column]} WHERE {$column} = '{$value}'")->fetch_array()[0];
+      "SELECT COUNT(id) FROM {$filters[$last_table]} {$condition}")->fetch_array()[0];
   }
   else {
     $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
@@ -41,8 +52,20 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   }
 
   $offset = ($page - 1) * $results_per_page;
-  if (isset($_GET['column']) && isset($_GET['value'])) {
-    $query = "{$select_query} WHERE {$column} = '{$value}' {$order} LIMIT {$results_per_page} OFFSET {$offset}";
+
+  // If there exist get variables that are for filtering
+  if (array_diff(array_keys($_GET), array('page'))) {
+    $condition = "WHERE ";
+    foreach ($_GET as $key => $value) {
+      if ($key == "page" || $value == "")
+        continue;
+
+      $condition .= $condition != "WHERE " ? "AND {$filters[$key]}.{$key} REGEXP '{$value}'" : "{$filters[$key]}.{$key} REGEXP '{$value}'";
+    }
+    if ($condition == "WHERE ")
+      $condition = "";
+
+    $query = "{$select_query} {$condition} {$order} LIMIT {$results_per_page} OFFSET {$offset}";
   }
   else {
     $query = "{$select_query} {$order} LIMIT {$results_per_page} OFFSET {$offset}";
@@ -51,32 +74,35 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   $result = $conn->query($query);
 
 
-  // Create filter dropdown
-  if ($filters) {
-    echo "<div class='filter'>\n";
-    echo "<form name='filter' method='GET'>\n";
-    echo "Filter: ";
-
-    echo "<select name='column'>\n";
-    foreach (array_keys($filters) as $key) {
-      echo "<option>{$key}</option>\n";
-    }
-    echo "</select>\n";
-    echo "<input type='text' name='value' placeholder='Value'>\n";
-
-    echo "<input type='submit' name='submit' value='Select' />\n";
-    echo "</form>\n";
-    echo "</div>\n";
-  }
-
-
   // Table
+  echo "<form method='GET'>";
   echo "<table>\n";
-  echo "<th/>\n"; // Numbering column
+
+  // Preserve GET variables on form submit
+  foreach ($_GET as $k => $v) {
+    if ($k == 'page')
+      continue;
+
+    $k = htmlspecialchars($k);
+    $v = htmlspecialchars($v);
+    echo "<input type='hidden' name='{$k}' value='{$v}'>";
+  }
 
   $counter = $offset + 1;
   while ($row = $result->fetch_assoc()) {
     if ($counter == $offset + 1) { // If it is the first run of the loop
+      echo "<tr class=filter><td></td>";
+      foreach (array_keys($row) as $key) {
+        // Filter textbox
+        $filter_value = isset($_GET[$key]) ? $_GET[$key] : "";
+
+
+        echo "<td class=filter><input type=text class=filter placeholder='{$key}' name='{$key}' value='{$filter_value}'/></td>\n";
+      }
+      echo "</tr>";
+      echo "<tr class=filter><td></td><td class=filter><input type=submit value='Submit'></td></tr>";
+
+      echo "<th/>\n"; // Numbering column
       foreach (array_keys($row) as $key) {
         echo "<th>{$key}</th>\n";
       }
@@ -99,6 +125,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   }
 
   echo "</table>\n";
+  echo "</form>\n";
 
   // Preserve GET variables
   $vars = "";
@@ -111,6 +138,18 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   // Navigation elements
   if ($num_of_pages > 1) {
     echo "<form method='GET'>\n";
+
+    // Preserve GET variables on form submit
+    foreach ($_GET as $key => $value) {
+      if ($key == 'page')
+        continue;
+
+      $key = htmlspecialchars($key);
+      $value = htmlspecialchars($value);
+      if ($v != "")
+        echo "<input type='hidden' name='{$key}' value='{$value}'>";
+    }
+
     echo "<div class=pagination>\n";
     if ($page > 1)
       echo "<a href={$filename}?{$vars}>❮❮</a>\n";
@@ -134,9 +173,9 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
 
     echo "<input type='text' name='page' placeholder='Page No'>\n";
-    echo "<input type='submit' name='submit' value='Submit'>\n";
+    echo "<input type='submit' value='Submit'>\n";
     echo "</div>\n";
-    
+
     echo "</form>\n";
   }
 

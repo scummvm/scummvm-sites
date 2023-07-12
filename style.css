@@ -12,10 +12,13 @@ tr {background-color: white;}
 
 tr:hover {background-color: #ddd;}
 
+tr.filter:hover {background-color:inherit;}
+td.filter {text-align: center;}
+
 th {
   padding-top: 5px;
   padding-bottom: 5px;
-  text-align: left;
+  text-align: center;
   background-color: var(--primary-color);
   color: white;
 }
@@ -63,6 +66,10 @@ input[type=text], select {
   box-sizing: border-box;
 }
 
+input[type=text].filter {
+  width: 80%;
+}
+
 .pagination {
   display: inline-block;
   align-self: center;
@@ -91,4 +98,10 @@ input[type=text], select {
 
 .pagination a:hover:not(.active) {
   background-color: #ddd;
+}
+
+form {
+  padding: 0px;
+  margin: 0px;
+  display: inline;
 }
