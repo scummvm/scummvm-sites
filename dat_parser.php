@@ -16,6 +16,35 @@ function calc_key($files) {
   return md5($key_string);
 }
 
+/**
+ * Get an array containing files in a fileset, to be passed into calc_key()
+ */
+function compare_filesets($id1, $id2, $conn) {
+  $fileset1 = $conn->query("SELECT name, size, checksum
+                            FROM file WHERE fileset = '{$id1}'")->fetch_all();
+  $fileset2 = $conn->query("SELECT name, size, checksum
+                            FROM file WHERE fileset = '{$id2}'")->fetch_all();
+
+  // Sort filesets on checksum
+  usort($fileset1, function ($a, $b) {
+    return $a[2] <=> $b[2];
+  });
+  usort($fileset2, function ($a, $b) {
+    return $a[2] <=> $b[2];
+  });
+
+  if (count($fileset1) != count($fileset2))
+    return false;
+
+  for ($i = 0; $i < count($fileset1); $i++) {
+    // If checksums do not match
+    if ($fileset1[2] != $fileset2[2])
+      return false;
+  }
+
+  return True;
+}
+
 function remove_quotes($string) {
   // Remove quotes from value if they are present
   if ($string[0] == "\"")
@@ -195,7 +224,7 @@ function status_to_match($status) {
  * Compares the files with those in the detection entries table
  * $game_files consists of both the game ( ) and resources ( ) parts
  */
-function find_matching_game($game_files, $status) {
+function find_matching_game($game_files) {
   $matching_games = array(); // All matching games
   $matching_filesets = array(); // All filesets containing one file from $game_files
   $matches_count = 0; // Number of files with a matching detection entry
@@ -205,13 +234,11 @@ function find_matching_game($game_files, $status) {
   foreach ($game_files as $file) {
     $checksum = $file[1];
 
-    $records = $conn->query(sprintf("SELECT file.fileset
+    $query = "SELECT file.fileset as file_fileset
     FROM filechecksum
     JOIN file ON filechecksum.file = file.id
-    JOIN fileset ON fileset.id = file.fileset
-    WHERE filechecksum.checksum = '%s' AND file.detection = TRUE AND
-    fileset.status IN ('%s')", $checksum, implode("', '", status_to_match($status))));
-    $records = $records->fetch_all();
+    WHERE filechecksum.checksum = '{$checksum}' AND file.detection = TRUE";
+    $records = $conn->query($query)->fetch_all();
 
     // If file is not part of detection entries, skip it
     if (count($records) == 0)
@@ -220,9 +247,7 @@ function find_matching_game($game_files, $status) {
     $matches_count++;
     foreach ($records as $record)
       array_push($matching_filesets, $record[0]);
-  }
-
-  // Check if there is a fileset_id that is present in all results
+  } // Check if there is a fileset_id that is present in all results
   foreach (array_count_values($matching_filesets) as $key => $value) {
     $count_files_in_fileset = $conn->query(sprintf("SELECT COUNT(file.id) FROM file
     JOIN fileset ON file.fileset = fileset.id
@@ -241,6 +266,23 @@ function find_matching_game($game_files, $status) {
     WHERE fileset.id = '%s'", $key));
 
     array_push($matching_games, $records->fetch_array());
+  }
+
+  if (count($matching_games) != 1)
+    return $matching_games;
+
+  // Check the current fileset priority with that of the match
+  $records = $conn->query(sprintf("SELECT id FROM fileset, ({$query}) AS res
+      WHERE id = file_fileset AND
+      status IN ('%s')", implode("', '", status_to_match($game_files[3]))));
+
+  // If priority order is correct
+  if ($records->num_rows != 0)
+    return $matching_games;
+
+  if (compare_filesets($matching_games[0]['fileset'], $game_files[0][0], $conn)) {
+    $conn->query("UPDATE fileset SET `delete` = TRUE WHERE id = {$game_files[0]}");
+    return array();
   }
 
   return $matching_games;
@@ -539,17 +581,16 @@ function populate_matching_games() {
   // Getting unmatched filesets
   $unmatched_filesets = array();
 
-  $unmatched_files = $conn->query(sprintf("SELECT fileset.id, filechecksum.checksum, src, status
+  $unmatched_files = $conn->query("SELECT fileset.id, filechecksum.checksum, src, status
   FROM fileset
   JOIN file ON file.fileset = fileset.id
   JOIN filechecksum ON file.id = filechecksum.file
-  WHERE fileset.game IS NULL"));
+  WHERE fileset.game IS NULL");
   $unmatched_files = $unmatched_files->fetch_all();
 
   // Splitting them into different filesets
   for ($i = 0; $i < count($unmatched_files); $i++) {
     $cur_fileset = $unmatched_files[$i][0];
-    $src = $unmatched_files[$i][2];
     $temp = array();
     while ($i < count($unmatched_files) - 1 && $cur_fileset == $unmatched_files[$i][0]) {
       array_push($temp, $unmatched_files[$i]);
@@ -559,7 +600,9 @@ function populate_matching_games() {
   }
 
   foreach ($unmatched_filesets as $fileset) {
-    $matching_games = find_matching_game($fileset, $fileset[0][3]);
+    // If another fileset with the same key exists, mark current fileset for deletion
+
+    $matching_games = find_matching_game($fileset);
 
     if (count($matching_games) != 1) // If there is no match/non-unique match
       continue;
