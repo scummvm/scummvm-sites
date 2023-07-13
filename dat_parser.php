@@ -290,8 +290,8 @@ function insert_fileset($src, $detection, $conn) {
   }
 
   // $game should not be parsed as a mysql string, hence no quotes
-  $query = sprintf("INSERT INTO fileset (game, status, src, `key`)
-  VALUES (%s, '%s', '%s', NULL)", $game, $status, $src);
+  $query = sprintf("INSERT INTO fileset (game, status, src, `key`, `timestamp`)
+  VALUES (%s, '%s', '%s', NULL, FROM_UNIXTIME(@fileset_time_last))", $game, $status, $src);
   $conn->query($query);
   $conn->query("SET @fileset_last = LAST_INSERT_ID()");
 }
@@ -451,13 +451,14 @@ function db_insert($data_arr) {
   $version = $header["version"];
 
   /**
-   * src can be:
+   * status can be:
    *  detection -> Detection entries (source of truth)
    *  user -> Submitted by users via ScummVM, unmatched (Not used in the parser)
    *  scan -> Submitted by cli/scanner, unmatched
    *  dat -> Submitted by DAT, unmatched
    *  partialmatch -> Submitted by DAT, matched
    *  fullmatch -> Submitted by cli/scanner, matched
+   *  obsolete -> Detection entries that are no longer part of the detection set
    */
   $src = "";
   if ($author == "scan" || $author == "scummvm")
@@ -467,6 +468,9 @@ function db_insert($data_arr) {
 
   $detection = ($src == "scummvm");
   $status = $detection ? "detection" : $src;
+
+  // Set timestamp of fileset insertion
+  $conn->query(sprintf("SET @fileset_time_last = %d", time()));
 
   foreach ($game_data as $fileset) {
     if ($detection) {
@@ -496,12 +500,25 @@ function db_insert($data_arr) {
     // Add key if uploaded DAT is of detection entries
     if ($detection) {
       $fileset_key = calc_key($fileset["rom"]);
-      if ($conn->query("SELECT id FROM fileset WHERE `key` = '{$fileset_key}'")->num_rows == 0)
+      $existing_entries = $conn->query("SELECT id FROM fileset WHERE `key` = '{$fileset_key}'");
+      if ($existing_entries->num_rows == 0)
         $conn->query("UPDATE fileset SET `key` = '{$fileset_key}' WHERE id = @fileset_last");
-      else
+      else {
+        $existing_entry = $existing_entries->fetch_array()[0];
+        $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
+                      WHERE id = {$existing_entry}");
+        $conn->query("UPDATE fileset SET status = 'detection'
+                      WHERE id = {$existing_entry} AND status = 'obsolete'");
         $conn->query("DELETE FROM fileset WHERE id = @fileset_last");
+      }
     }
   }
+
+  if ($detection)
+    $conn->query("UPDATE fileset SET status = 'obsolete'
+                  WHERE `timestamp` != FROM_UNIXTIME(@fileset_time_last)
+                  AND status = 'detection'");
+
   $category_text = "Uploaded from {$src}";
   $log_text = sprintf("Loaded DAT file, filename '%s', size %d, author '%s', version %s.
   State '%s'. Fileset:%d.",
