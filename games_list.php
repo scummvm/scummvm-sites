@@ -20,6 +20,11 @@ $filters = array(
   "status" => "fileset"
 );
 
-create_page($filename, 25, $records_table, $select_query, $order, $filters);
+$mapping = array(
+  'engine.id' => 'game.engine',
+  'game.id' => 'fileset.game',
+);
+
+create_page($filename, 25, $records_table, $select_query, $order, $filters, $mapping);
 ?>
 

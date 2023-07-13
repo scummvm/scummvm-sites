@@ -2,7 +2,22 @@
 $stylesheet = "style.css";
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 
-function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array()) {
+/**
+ * Return a string denoting which two columns link two tables
+ */
+function get_join_columns($table1, $table2, $mapping) {
+  foreach ($mapping as $primary => $foreign) {
+    $primary = explode('.', $primary);
+    $foreign = explode('.', $foreign);
+    if (($primary[0] == $table1 && $foreign[0] == $table2) ||
+      ($primary[0] == $table2 && $foreign[0] == $table1))
+      return "{$primary[0]}.{$primary[1]} = {$foreign[0]}.{$foreign[1]}";
+  }
+
+  echo "No primary-foreign key mapping provided";
+}
+
+function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array(), $mapping = array()) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
@@ -26,18 +41,29 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   $_GET = array_filter($_GET);
   if (array_diff(array_keys($_GET), array('page'))) {
     $condition = "WHERE ";
+    $tables = array();
     foreach ($_GET as $key => $value) {
       if ($key == "page" || $value == "")
         continue;
 
-      $last_table = $key;
+      array_push($tables, $filters[$key]);
       $condition .= $condition != "WHERE " ? " AND {$filters[$key]}.{$key} REGEXP '{$value}'" : "{$filters[$key]}.{$key} REGEXP '{$value}'";
     }
     if ($condition == "WHERE ")
       $condition = "";
 
+    // If more than one table is to be searched
+    $from_query = "$records_table";
+    if (count($tables) > 1 || $tables[0] != $records_table)
+      for ($i = 0; $i < count($tables); $i++) {
+        if ($tables[$i] == $records_table)
+          continue;
+
+        $from_query .= sprintf(" JOIN %s ON %s", $tables[$i], get_join_columns($records_table, $tables[$i], $mapping));
+      }
+
     $num_of_results = $conn->query(
-      "SELECT COUNT(id) FROM {$filters[$last_table]} {$condition}")->fetch_array()[0];
+      "SELECT COUNT({$records_table}.id) FROM {$from_query} {$condition}")->fetch_array()[0];
   }
   else {
     $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
