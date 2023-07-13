@@ -485,7 +485,6 @@ function db_insert($data_arr) {
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
     insert_fileset($src, $detection, $conn);
-    calc_key($fileset["rom"]);
     foreach ($fileset["rom"] as $file) {
       insert_file($file, $detection, $src, $conn);
       foreach ($file as $key => $value) {
@@ -496,8 +495,11 @@ function db_insert($data_arr) {
 
     // Add key if uploaded DAT is of detection entries
     if ($detection) {
-      $conn->query(sprintf("UPDATE fileset SET `key` = '%s' WHERE id = @fileset_last",
-        calc_key($fileset["rom"])));
+      $fileset_key = calc_key($fileset["rom"]);
+      if ($conn->query("SELECT id FROM fileset WHERE `key` = '{$fileset_key}'")->num_rows == 0)
+        $conn->query("UPDATE fileset SET `key` = '{$fileset_key}' WHERE id = @fileset_last");
+      else
+        $conn->query("DELETE FROM fileset WHERE id = @fileset_last");
     }
   }
   $category_text = "Uploaded from {$src}";

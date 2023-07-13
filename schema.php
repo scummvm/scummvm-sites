@@ -195,6 +195,15 @@ else {
   echo "Error creating index for 'engine.engineid': " . $conn->error;
 }
 
+$index = "CREATE INDEX fileset_key ON fileset (`key`)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'fileset.key'<br/>";
+}
+else {
+  echo "Error creating index for 'fileset.key': " . $conn->error;
+}
+
 $index = "CREATE INDEX fileset ON history (fileset)";
 
 if ($conn->query($index) === TRUE) {
