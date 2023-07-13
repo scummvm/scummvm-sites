@@ -250,7 +250,7 @@ function find_matching_game($game_files, $status) {
  * Routine for inserting a game into the database, inserting into engine and
  * game tables
  */
-function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn) {
+function insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform, $lang, $conn) {
   // Set @engine_last if engine already present in table
   $exists = false;
   if ($res = $conn->query(sprintf("SELECT id FROM engine WHERE engineid = '%s'", $engineid))) {
@@ -263,7 +263,7 @@ function insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn
   // Insert into table if not present
   if (!$exists) {
     $query = sprintf("INSERT INTO engine (name, engineid)
-  VALUES (NULL, '%s')", $engineid);
+  VALUES ('%s', '%s')", mysqli_real_escape_string($conn, $engine_name), $engineid);
     $conn->query($query);
     $conn->query("SET @engine_last = LAST_INSERT_ID()");
   }
@@ -470,6 +470,7 @@ function db_insert($data_arr) {
 
   foreach ($game_data as $fileset) {
     if ($detection) {
+      $engine_name = $fileset["engine"];
       $engineid = $fileset["sourcefile"];
       $gameid = $fileset["name"];
       $title = $fileset["title"];
@@ -477,7 +478,7 @@ function db_insert($data_arr) {
       $platform = $fileset["platform"];
       $lang = $fileset["language"];
 
-      insert_game($engineid, $title, $gameid, $extra, $platform, $lang, $conn);
+      insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform, $lang, $conn);
     }
     elseif ($src == "dat")
       if (isset($resources[$fileset["romof"]]))
