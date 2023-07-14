@@ -322,20 +322,35 @@ function insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform
  * Inserting new fileset
  * Called for both detection entries and other forms of DATs
  */
-function insert_fileset($src, $detection, $conn) {
+function insert_fileset($src, $detection, $key, $conn) {
   $status = $detection ? "detection" : $src;
   $game = "NULL";
+  $key = $key == "" ? "NULL" : "'{$key}'";
 
   if ($detection) {
     $status = "detection";
     $game = "@game_last";
+
+    // Check if key already exists, if so, skip insertion
+    $existing_entry = $conn->query("SELECT id FROM fileset WHERE `key` = {$key}");
+    if ($existing_entry->num_rows > 0) {
+      $existing_entry = $existing_entry->fetch_array()[0];
+      $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
+                      WHERE id = {$existing_entry}");
+      $conn->query("UPDATE fileset SET status = 'detection'
+                    WHERE id = {$existing_entry} AND status = 'obsolete'");
+      $conn->query("DELETE FROM game WHERE id = @game_last");
+      return false;
+    }
   }
 
-  // $game should not be parsed as a mysql string, hence no quotes
-  $query = sprintf("INSERT INTO fileset (game, status, src, `key`, `timestamp`)
-  VALUES (%s, '%s', '%s', NULL, FROM_UNIXTIME(@fileset_time_last))", $game, $status, $src);
+  // $game and $key should not be parsed as a mysql string, hence no quotes
+  $query = "INSERT INTO fileset (game, status, src, `key`, `timestamp`)
+  VALUES ({$game}, '{$status}', '{$src}', {$key}, FROM_UNIXTIME(@fileset_time_last))";
   $conn->query($query);
   $conn->query("SET @fileset_last = LAST_INSERT_ID()");
+
+  return true;
 }
 
 /**
@@ -530,29 +545,14 @@ function db_insert($data_arr) {
       if (isset($resources[$fileset["romof"]]))
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
-    insert_fileset($src, $detection, $conn);
-    foreach ($fileset["rom"] as $file) {
-      insert_file($file, $detection, $src, $conn);
-      foreach ($file as $key => $value) {
-        if ($key != "name" && $key != "size")
-          insert_filechecksum($file, $key, $conn);
-      }
-    }
-
-    // Add key if uploaded DAT is of detection entries
-    if ($detection) {
-      $fileset_key = calc_key($fileset["rom"]);
-      $existing_entries = $conn->query("SELECT id FROM fileset WHERE `key` = '{$fileset_key}'");
-      if ($existing_entries->num_rows == 0)
-        $conn->query("UPDATE fileset SET `key` = '{$fileset_key}' WHERE id = @fileset_last");
-      else {
-        $existing_entry = $existing_entries->fetch_array()[0];
-        $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
-                      WHERE id = {$existing_entry}");
-        $conn->query("UPDATE fileset SET status = 'detection'
-                      WHERE id = {$existing_entry} AND status = 'obsolete'");
-        $conn->query("DELETE FROM fileset WHERE id = @fileset_last");
-        $conn->query("DELETE FROM game WHERE id = @game_last");
+    $key = $detection ? calc_key($fileset['rom']) : "";
+    if (insert_fileset($src, $detection, $key, $conn)) {
+      foreach ($fileset["rom"] as $file) {
+        insert_file($file, $detection, $src, $conn);
+        foreach ($file as $key => $value) {
+          if ($key != "name" && $key != "size")
+            insert_filechecksum($file, $key, $conn);
+        }
       }
     }
   }
