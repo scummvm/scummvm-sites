@@ -2,9 +2,51 @@ import hashlib
 import os
 import argparse
 import struct
-import zlib
 
 script_version = "0.1"
+
+# CRC table
+CRC16_XMODEM_TABLE = [
+    0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
+    0x8108, 0x9129, 0xa14a, 0xb16b, 0xc18c, 0xd1ad, 0xe1ce, 0xf1ef,
+    0x1231, 0x0210, 0x3273, 0x2252, 0x52b5, 0x4294, 0x72f7, 0x62d6,
+    0x9339, 0x8318, 0xb37b, 0xa35a, 0xd3bd, 0xc39c, 0xf3ff, 0xe3de,
+    0x2462, 0x3443, 0x0420, 0x1401, 0x64e6, 0x74c7, 0x44a4, 0x5485,
+    0xa56a, 0xb54b, 0x8528, 0x9509, 0xe5ee, 0xf5cf, 0xc5ac, 0xd58d,
+    0x3653, 0x2672, 0x1611, 0x0630, 0x76d7, 0x66f6, 0x5695, 0x46b4,
+    0xb75b, 0xa77a, 0x9719, 0x8738, 0xf7df, 0xe7fe, 0xd79d, 0xc7bc,
+    0x48c4, 0x58e5, 0x6886, 0x78a7, 0x0840, 0x1861, 0x2802, 0x3823,
+    0xc9cc, 0xd9ed, 0xe98e, 0xf9af, 0x8948, 0x9969, 0xa90a, 0xb92b,
+    0x5af5, 0x4ad4, 0x7ab7, 0x6a96, 0x1a71, 0x0a50, 0x3a33, 0x2a12,
+    0xdbfd, 0xcbdc, 0xfbbf, 0xeb9e, 0x9b79, 0x8b58, 0xbb3b, 0xab1a,
+    0x6ca6, 0x7c87, 0x4ce4, 0x5cc5, 0x2c22, 0x3c03, 0x0c60, 0x1c41,
+    0xedae, 0xfd8f, 0xcdec, 0xddcd, 0xad2a, 0xbd0b, 0x8d68, 0x9d49,
+    0x7e97, 0x6eb6, 0x5ed5, 0x4ef4, 0x3e13, 0x2e32, 0x1e51, 0x0e70,
+    0xff9f, 0xefbe, 0xdfdd, 0xcffc, 0xbf1b, 0xaf3a, 0x9f59, 0x8f78,
+    0x9188, 0x81a9, 0xb1ca, 0xa1eb, 0xd10c, 0xc12d, 0xf14e, 0xe16f,
+    0x1080, 0x00a1, 0x30c2, 0x20e3, 0x5004, 0x4025, 0x7046, 0x6067,
+    0x83b9, 0x9398, 0xa3fb, 0xb3da, 0xc33d, 0xd31c, 0xe37f, 0xf35e,
+    0x02b1, 0x1290, 0x22f3, 0x32d2, 0x4235, 0x5214, 0x6277, 0x7256,
+    0xb5ea, 0xa5cb, 0x95a8, 0x8589, 0xf56e, 0xe54f, 0xd52c, 0xc50d,
+    0x34e2, 0x24c3, 0x14a0, 0x0481, 0x7466, 0x6447, 0x5424, 0x4405,
+    0xa7db, 0xb7fa, 0x8799, 0x97b8, 0xe75f, 0xf77e, 0xc71d, 0xd73c,
+    0x26d3, 0x36f2, 0x0691, 0x16b0, 0x6657, 0x7676, 0x4615, 0x5634,
+    0xd94c, 0xc96d, 0xf90e, 0xe92f, 0x99c8, 0x89e9, 0xb98a, 0xa9ab,
+    0x5844, 0x4865, 0x7806, 0x6827, 0x18c0, 0x08e1, 0x3882, 0x28a3,
+    0xcb7d, 0xdb5c, 0xeb3f, 0xfb1e, 0x8bf9, 0x9bd8, 0xabbb, 0xbb9a,
+    0x4a75, 0x5a54, 0x6a37, 0x7a16, 0x0af1, 0x1ad0, 0x2ab3, 0x3a92,
+    0xfd2e, 0xed0f, 0xdd6c, 0xcd4d, 0xbdaa, 0xad8b, 0x9de8, 0x8dc9,
+    0x7c26, 0x6c07, 0x5c64, 0x4c45, 0x3ca2, 0x2c83, 0x1ce0, 0x0cc1,
+    0xef1f, 0xff3e, 0xcf5d, 0xdf7c, 0xaf9b, 0xbfba, 0x8fd9, 0x9ff8,
+    0x6e17, 0x7e36, 0x4e55, 0x5e74, 0x2e93, 0x3eb2, 0x0ed1, 0x1ef0,
+]
+
+
+def crc16xmodem(data, crc=0):
+    for byte in data:
+        crc = ((crc << 8) & 0xff00) ^ CRC16_XMODEM_TABLE[(
+            (crc >> 8) & 0xff) ^ byte]
+    return crc & 0xffff
 
 
 def filesize(filepath):
@@ -76,9 +118,15 @@ def punyencode(orig: str) -> str:
     return orig
 
 
-def read_be(byte_stream, size_in_bits):
+def read_be_32(byte_stream):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
-    (uint,) = struct.unpack(">I", byte_stream[:size_in_bits//8])
+    (uint,) = struct.unpack(">I", byte_stream[:32//8])
+    return uint
+
+
+def read_be_16(byte_stream):
+    """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
+    (uint,) = struct.unpack(">H", byte_stream[:16//8])
     return uint
 
 
@@ -92,23 +140,26 @@ def is_macbin(filepath):
 
         # Preliminary check
         # Exclude files that have zero name len, zero data fork, zero name fork and zero type_creator.
-        if not header[1] and not read_be(header[83:], 32) and not read_be(header[87:], 32) and not read_be(header[69:], 32):
+        if not header[1] and not read_be_32(header[83:]) and not read_be_32(header[87:]) and not read_be_32(header[69:]):
             return False
 
-        checksum = zlib.crc32(header)
-        if checksum != read_be(header[124:], 32):
+        checksum = crc16xmodem(header[:124])
+        if checksum != read_be_16(header[124:]):
             return False
 
         if not header[0] and not header[74] and not header[82] and header[1] <= 63:
             # Get fork lengths
-            datalen = read_be(header[83:], 32)
-            rsrclen = read_be(header[87:], 32)
+            datalen = read_be_32(header[83:])
+            rsrclen = read_be_32(header[87:])
 
             # Files produced by ISOBuster are not padded, thus, compare with the actual size
             datalen_pad = (((datalen + 127) >> 7) << 7)
 
             # Length check
-            if (128 + datalen_pad + rsrclen >= len(header)):
+            if (128 + datalen_pad + rsrclen <= filesize(filepath)):
+                res_fork_offset = 128 + datalen_pad
+
+            if res_fork_offset < 0:
                 return False
 
             return True
@@ -150,31 +201,39 @@ def file_checksum(filepath, alg, size):
         with open(filepath, "rb") as file:
             return create_checksum_pairs(checksum(file, alg, size, filepath), alg, size)
 
-            # If the file is a MacBinary
-    with open(filepath, "rb") as file:
+    # If the file is a MacBinary
+    with open(filepath, "rb") as f:
         res = []
 
-        file = macbin_get_resfork(file.read())
+        hashes = []
+        file = macbin_get_resfork(f.read())
         prefix = 'r'
 
         if len(file):
             for h in checksum(file, alg, size, filepath):
                 if ':' not in h:
-                    res.append(f"{prefix}:{h}")
+                    hashes.append(f"{prefix}:{h}")
                 else:
                     # If the checksum is like "t:..."
-                    res.append(f"{prefix}{h}")
+                    hashes.append(f"{prefix}{h}")
 
-        file = macbin_get_datafork(file)
+        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+        hashes = []
+        f.seek(0)
+        file = macbin_get_datafork(f.read())
         prefix = 'd'
 
         for h in checksum(file, alg, size, filepath):
             if ':' not in h:
-                res.append(f"{prefix}:{h}")
+                hashes.append(f"{prefix}:{h}")
             else:
-                res.append(f"{prefix}{h}")  # If the checksum is like "t:..."
+                # If the checksum is like "t:..."
+                hashes.append(f"{prefix}{h}")
 
-        return create_checksum_pairs(res, alg, size, prefix)
+        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+        return res
 
 
 def checksum(file, alg, size, filepath):
