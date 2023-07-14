@@ -193,8 +193,9 @@ function parse_dat($dat_filepath) {
 function get_checksum_props($checktype, $checksum) {
   $checksize = 0;
   if (strpos($checktype, '-') !== false) {
-    if (gettype(explode('-', $checktype)[1]) == 'integer')
-      $checksize = explode('-', $checktype)[1];
+    $temp = explode('-', $checktype)[1];
+    if (in_array($temp, array('0', '5000', '1M')))
+      $checksize = $temp;
     $checktype = explode('-', $checktype)[0];
   }
 
