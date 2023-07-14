@@ -552,6 +552,7 @@ function db_insert($data_arr) {
         $conn->query("UPDATE fileset SET status = 'detection'
                       WHERE id = {$existing_entry} AND status = 'obsolete'");
         $conn->query("DELETE FROM fileset WHERE id = @fileset_last");
+        $conn->query("DELETE FROM game WHERE id = @game_last");
       }
     }
   }
