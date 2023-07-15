@@ -83,6 +83,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   if (array_diff(array_keys($_GET), array('page'))) {
     $condition = "WHERE ";
     foreach ($_GET as $key => $value) {
+      $value = mysqli_real_escape_string($conn, $value);
       if ($key == "page" || $value == "")
         continue;
 
