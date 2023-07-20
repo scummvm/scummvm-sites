@@ -323,31 +323,39 @@ function insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform
  * Inserting new fileset
  * Called for both detection entries and other forms of DATs
  */
-function insert_fileset($src, $detection, $key, $conn) {
+function insert_fileset($src, $detection, $key, $megakey, $conn) {
   $status = $detection ? "detection" : $src;
   $game = "NULL";
   $key = $key == "" ? "NULL" : "'{$key}'";
+  $megakey = $megakey == "" ? "NULL" : "'{$megakey}'";
 
   if ($detection) {
     $status = "detection";
     $game = "@game_last";
+  }
 
-    // Check if key already exists, if so, skip insertion
+  // Check if key/megakey already exists, if so, skip insertion (no quotes on purpose)
+  if ($detection)
     $existing_entry = $conn->query("SELECT id FROM fileset WHERE `key` = {$key}");
-    if ($existing_entry->num_rows > 0) {
-      $existing_entry = $existing_entry->fetch_array()[0];
-      $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
-                      WHERE id = {$existing_entry}");
-      $conn->query("UPDATE fileset SET status = 'detection'
-                    WHERE id = {$existing_entry} AND status = 'obsolete'");
-      $conn->query("DELETE FROM game WHERE id = @game_last");
+  else
+    $existing_entry = $conn->query("SELECT id FROM fileset WHERE megakey = {$megakey}");
+
+  if ($existing_entry->num_rows > 0) {
+    if (!$detection)
       return false;
-    }
+
+    $existing_entry = $existing_entry->fetch_array()[0];
+    $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
+                      WHERE id = {$existing_entry}");
+    $conn->query("UPDATE fileset SET status = 'detection'
+                    WHERE id = {$existing_entry} AND status = 'obsolete'");
+    $conn->query("DELETE FROM game WHERE id = @game_last");
+    return false;
   }
 
   // $game and $key should not be parsed as a mysql string, hence no quotes
-  $query = "INSERT INTO fileset (game, status, src, `key`, `timestamp`)
-  VALUES ({$game}, '{$status}', '{$src}', {$key}, FROM_UNIXTIME(@fileset_time_last))";
+  $query = "INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`)
+  VALUES ({$game}, '{$status}', '{$src}', {$key}, {$megakey}, FROM_UNIXTIME(@fileset_time_last))";
   $conn->query($query);
   $conn->query("SET @fileset_last = LAST_INSERT_ID()");
 
@@ -547,7 +555,8 @@ function db_insert($data_arr) {
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
     $key = $detection ? calc_key($fileset['rom']) : "";
-    if (insert_fileset($src, $detection, $key, $conn)) {
+    $megakey = !$detection ? calc_key($fileset['rom']) : "";
+    if (insert_fileset($src, $detection, $key, $megakey, $conn)) {
       foreach ($fileset["rom"] as $file) {
         insert_file($file, $detection, $src, $conn);
         foreach ($file as $key => $value) {
