@@ -14,7 +14,7 @@ function get_join_columns($table1, $table2, $mapping) {
       return "{$primary[0]}.{$primary[1]} = {$foreign[0]}.{$foreign[1]}";
   }
 
-  echo "No primary-foreign key mapping provided";
+  echo "No primary-foreign key mapping provided. Filter is invalid";
 }
 
 function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array(), $mapping = array()) {
@@ -115,14 +115,20 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     echo "<input type='hidden' name='{$k}' value='{$v}'>";
   }
 
+  $fileset_column_index = null;
+
   $counter = $offset + 1;
   while ($row = $result->fetch_assoc()) {
     if ($counter == $offset + 1) { // If it is the first run of the loop
       echo "<tr class=filter><td></td>";
       foreach (array_keys($row) as $key) {
+        if (!isset($filters[$key])) {
+          echo "<td class=filter />";
+          continue;
+        }
+
         // Filter textbox
         $filter_value = isset($_GET[$key]) ? $_GET[$key] : "";
-
 
         echo "<td class=filter><input type=text class=filter placeholder='{$key}' name='{$key}' value='{$filter_value}'/></td>\n";
       }
@@ -130,15 +136,21 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       echo "<tr class=filter><td></td><td class=filter><input type=submit value='Submit'></td></tr>";
 
       echo "<th/>\n"; // Numbering column
-      foreach (array_keys($row) as $key) {
+      foreach (array_keys($row) as $index => $key) {
         echo "<th>{$key}</th>\n";
+
+        if ($key == "fileset")
+          $fileset_column_index = $index;
       }
     }
 
     echo "<tr>\n";
     echo "<td>{$counter}.</td>\n";
-    foreach (array_values($row) as $value) {
+    foreach (array_values($row) as $key => $value) {
       // Add hyperlink to filesets
+      if ($fileset_column_index && $key == $fileset_column_index)
+        $value = "<a href='fileset.php?id={$value}'>{$value}</a>";
+
       $matches = array();
       if (preg_match("/Fileset:(\d+)/", $value, $matches, PREG_OFFSET_CAPTURE)) {
         $value = substr($value, 0, $matches[0][1]) . "<a href='fileset.php?id={$matches[1][0]}'>{$matches[0][0]}</a>";

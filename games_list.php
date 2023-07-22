@@ -3,7 +3,8 @@ require "pagination.php";
 
 $filename = "games_list.php";
 $records_table = "game";
-$select_query = "SELECT engineid, gameid, extra, platform, language, game.name, status
+$select_query = "SELECT engineid, gameid, extra, platform, language, game.name,
+status, fileset.id as fileset
 FROM game
 JOIN engine ON engine.id = game.engine
 JOIN fileset ON game.id = fileset.game";
