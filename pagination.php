@@ -39,7 +39,13 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   // If there exist get variables that are for filtering
   $_GET = array_filter($_GET);
-  if (array_diff(array_keys($_GET), array('page'))) {
+
+  // If $records_table has a JOIN (multiple tables)
+  if (preg_match("/JOIN/", $records_table) !== false) {
+    $first_table = explode(" ", $records_table)[0];
+    $num_of_results = $conn->query("SELECT COUNT({$first_table}.id) FROM {$records_table}")->fetch_array()[0];
+  }
+  elseif (array_diff(array_keys($_GET), array('page'))) {
     $condition = "WHERE ";
     $tables = array();
     foreach ($_GET as $key => $value) {
@@ -53,7 +59,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       $condition = "";
 
     // If more than one table is to be searched
-    $from_query = "$records_table";
+    $from_query = $records_table;
     if (count($tables) > 1 || $tables[0] != $records_table)
       for ($i = 0; $i < count($tables); $i++) {
         if ($tables[$i] == $records_table)
@@ -84,7 +90,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     $condition = "WHERE ";
     foreach ($_GET as $key => $value) {
       $value = mysqli_real_escape_string($conn, $value);
-      if ($key == "page" || $value == "")
+      if ($key == "page" || $key == "id" || $value == "")
         continue;
 
       $condition .= $condition != "WHERE " ? "AND {$filters[$key]}.{$key} REGEXP '{$value}'" : "{$filters[$key]}.{$key} REGEXP '{$value}'";
@@ -97,7 +103,6 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   else {
     $query = "{$select_query} {$order} LIMIT {$results_per_page} OFFSET {$offset}";
   }
-
   $result = $conn->query($query);
 
 
@@ -120,20 +125,22 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   $counter = $offset + 1;
   while ($row = $result->fetch_assoc()) {
     if ($counter == $offset + 1) { // If it is the first run of the loop
-      echo "<tr class=filter><td></td>";
-      foreach (array_keys($row) as $key) {
-        if (!isset($filters[$key])) {
-          echo "<td class=filter />";
-          continue;
+      if (count($filters) > 0) {
+        echo "<tr class=filter><td></td>";
+        foreach (array_keys($row) as $key) {
+          if (!isset($filters[$key])) {
+            echo "<td class=filter />";
+            continue;
+          }
+
+          // Filter textbox
+          $filter_value = isset($_GET[$key]) ? $_GET[$key] : "";
+
+          echo "<td class=filter><input type=text class=filter placeholder='{$key}' name='{$key}' value='{$filter_value}'/></td>\n";
         }
-
-        // Filter textbox
-        $filter_value = isset($_GET[$key]) ? $_GET[$key] : "";
-
-        echo "<td class=filter><input type=text class=filter placeholder='{$key}' name='{$key}' value='{$filter_value}'/></td>\n";
+        echo "</tr>";
+        echo "<tr class=filter><td></td><td class=filter><input type=submit value='Submit'></td></tr>";
       }
-      echo "</tr>";
-      echo "<tr class=filter><td></td><td class=filter><input type=submit value='Submit'></td></tr>";
 
       echo "<th/>\n"; // Numbering column
       foreach (array_keys($row) as $index => $key) {
