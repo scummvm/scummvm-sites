@@ -90,7 +90,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     $condition = "WHERE ";
     foreach ($_GET as $key => $value) {
       $value = mysqli_real_escape_string($conn, $value);
-      if ($key == "page" || $key == "id" || $value == "")
+      if (!isset($filters[$key]))
         continue;
 
       $condition .= $condition != "WHERE " ? "AND {$filters[$key]}.{$key} REGEXP '{$value}'" : "{$filters[$key]}.{$key} REGEXP '{$value}'";
