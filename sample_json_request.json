@@ -1,0 +1,53 @@
+{
+  "gameid": "drascula",
+  "engineid": "drascula",
+  "extra": "",
+  "platform": "pc",
+  "language": "en",
+  "files": [
+    {
+      "name": "Packet.001",
+      "size": 32847563,
+      "checksums": [
+        {
+          "type": "md5",
+          "checksum": "fac946707f07d51696a02c00cc182078"
+        },
+        {
+          "type": "md5-5000",
+          "checksum": "c6a8697396e213a18472542d5f547cb4"
+        },
+        {
+          "type": "md5-1M",
+          "checksum": "9ae6c33420e4e187c9d07a144a6c5fa2"
+        },
+        {
+          "type": "md5-t",
+          "checksum": "e223c341cfd15879d5fa77e696e82167"
+        }
+      ]
+    },
+    {
+      "name": "readme.txt",
+      "size": 2871,
+      "checksums": [
+        {
+          "type": "md5",
+          "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
+        },
+        {
+          "type": "md5-5000",
+          "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
+        },
+        {
+          "type": "md5-1M",
+          "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
+        },
+        {
+          "type": "md5-t",
+          "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
+        }
+      ]
+    }
+  ]
+}
