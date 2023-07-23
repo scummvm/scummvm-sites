@@ -197,8 +197,10 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     }
 
     echo "<div class=pagination>\n";
-    if ($page > 1)
+    if ($page > 1) {
       echo "<a href={$filename}?{$vars}>❮❮</a>\n";
+      echo sprintf("<a href=%s?page=%d%s>❮</a>\n", $filename, $page - 1, $vars);
+    }
     if ($page - 2 > 1)
       echo "<div class=more>...</div>\n";
 
@@ -215,8 +217,10 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
     if ($page + 2 < $num_of_pages)
       echo "<div class=more>...</div>\n";
-    if ($page < $num_of_pages)
+    if ($page < $num_of_pages) {
+      echo sprintf("<a href=%s?page=%d%s>❯</a>\n", $filename, $page + 1, $vars);
       echo "<a href={$filename}?page={$num_of_pages}{$vars}>❯❯</a>\n";
+    }
 
     echo "<input type='text' name='page' placeholder='Page No'>\n";
     echo "<input type='submit' value='Submit'>\n";
