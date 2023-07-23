@@ -206,6 +206,15 @@ else {
   echo "Error creating index for 'fileset.key': " . $conn->error;
 }
 
+$index = "CREATE INDEX status ON fileset (status)";
+
+if ($conn->query($index) === TRUE) {
+  echo "Created index for 'fileset.status'<br/>";
+}
+else {
+  echo "Error creating index for 'fileset.status': " . $conn->error;
+}
+
 $index = "CREATE INDEX fileset ON history (fileset)";
 
 if ($conn->query($index) === TRUE) {
