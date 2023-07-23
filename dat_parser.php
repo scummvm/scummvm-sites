@@ -194,7 +194,7 @@ function get_checksum_props($checktype, $checksum) {
   $checksize = 0;
   if (strpos($checktype, '-') !== false) {
     $temp = explode('-', $checktype)[1];
-    if (in_array($temp, array('0', '5000', '1M')))
+    if ($temp == '1M' || is_numeric($temp))
       $checksize = $temp;
     $checktype = explode('-', $checktype)[0];
   }
