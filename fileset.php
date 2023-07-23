@@ -85,10 +85,41 @@ foreach ($result as $column => $value) {
 echo "</tr>\n";
 echo "</table>\n";
 
+if (isset($_GET['widetable']) && $_GET['widetable'] == 'true') {
+  $records_table = "filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
+  $select_query = "SELECT name, size, filechecksum.checksum, checksize, checktype, detection
+  FROM filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
+}
+else {
+  $records_table = "file WHERE fileset = {$id}";
+  $select_query = "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}";
+}
+
 echo "<h3>Files in the fileset</h3>";
-$records_table = "filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
-$select_query = "SELECT name, size, filechecksum.checksum, checksize, checktype, detection
- FROM filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
+echo "<form>";
+// Preserve GET variables on form submit
+foreach ($_GET as $k => $v) {
+  if ($k == 'widetable')
+    continue;
+
+  $k = htmlspecialchars($k);
+  $v = htmlspecialchars($v);
+  echo "<input type='hidden' name='{$k}' value='{$v}'>";
+}
+
+// Come up with a better solution to set widetable=true on button click
+// Currently uses hidden text input
+if (isset($_GET['widetable']) && $_GET['widetable'] == 'true') {
+  echo "<input class='hidden' type='text' name='widetable' value='false' />";
+  echo "<input type='submit' value='Hide extra checksums' />";
+}
+else {
+  echo "<input class='hidden' type='text' name='widetable' value='true' />";
+  echo "<input type='submit' value='Expand Table' />";
+}
+
+echo "</form>";
+
 create_page($filename, 15, $records_table, $select_query, "ORDER BY name");
 
 
