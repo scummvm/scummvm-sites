@@ -11,6 +11,19 @@ function delete_id(value) {
   });
 }
 
+function remove_empty_inputs() {
+  var myForm = document.getElementById("filters-form");
+  var allInputs = myForm.getElementsByTagName("input");
+  var input, i;
+
+  for (i = 0; (input = allInputs[i]); i++) {
+    if (input.getAttribute("name") && !input.value) {
+      console.log(input);
+      input.setAttribute("name", "");
+    }
+  }
+}
+
 $(document).ready(function () {
   $(".hidden").hide();
   $("#delete-button").one("click", delete_id);

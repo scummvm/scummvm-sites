@@ -1,6 +1,10 @@
 <?php
 $stylesheet = "style.css";
+$jquery_file = 'https://code.jquery.com/jquery-3.7.0.min.js';
+$js_file = 'js_functions.js';
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
+echo "<script type='text/javascript' src='{$jquery_file}'></script>\n";
+echo "<script type='text/javascript' src='{$js_file}'></script>\n";
 
 /**
  * Return a string denoting which two columns link two tables
@@ -107,18 +111,8 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
 
   // Table
-  echo "<form method='GET'>";
+  echo "<form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>";
   echo "<table>\n";
-
-  // Preserve GET variables on form submit
-  foreach ($_GET as $k => $v) {
-    if ($k == 'page')
-      continue;
-
-    $k = htmlspecialchars($k);
-    $v = htmlspecialchars($v);
-    echo "<input type='hidden' name='{$k}' value='{$v}'>";
-  }
 
   $fileset_column_index = null;
 
@@ -192,7 +186,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
       $key = htmlspecialchars($key);
       $value = htmlspecialchars($value);
-      if ($v != "")
+      if ($value != "")
         echo "<input type='hidden' name='{$key}' value='{$value}'>";
     }
 
