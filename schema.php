@@ -17,7 +17,7 @@ if ($conn->connect_errno) {
 // Create database
 $sql = "CREATE DATABASE IF NOT EXISTS " . $dbname;
 if ($conn->query($sql) === TRUE) {
-  echo "Database created successfully<br/>";
+  echo "Database created successfully\n";
 }
 else {
   echo "Error creating database: " . $conn->error;
@@ -37,7 +37,7 @@ $table = "CREATE TABLE IF NOT EXISTS engine (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'engine' created successfully<br/>";
+  echo "Table 'engine' created successfully\n";
 }
 else {
   echo "Error creating 'engine' table: " . $conn->error;
@@ -56,7 +56,7 @@ $table = "CREATE TABLE IF NOT EXISTS game (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'game' created successfully<br/>";
+  echo "Table 'game' created successfully\n";
 }
 else {
   echo "Error creating 'game' table: " . $conn->error;
@@ -76,7 +76,7 @@ $table = "CREATE TABLE IF NOT EXISTS fileset (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'fileset' created successfully<br/>";
+  echo "Table 'fileset' created successfully\n";
 }
 else {
   echo "Error creating 'fileset' table: " . $conn->error;
@@ -94,7 +94,7 @@ $table = "CREATE TABLE IF NOT EXISTS file (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'file' created successfully<br/>";
+  echo "Table 'file' created successfully\n";
 }
 else {
   echo "Error creating 'file' table: " . $conn->error;
@@ -111,7 +111,7 @@ $table = "CREATE TABLE IF NOT EXISTS filechecksum (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'filechecksum' created successfully<br/>";
+  echo "Table 'filechecksum' created successfully\n";
 }
 else {
   echo "Error creating 'filechecksum' table: " . $conn->error;
@@ -130,7 +130,7 @@ $table = "CREATE TABLE IF NOT EXISTS queue (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'queue' created successfully<br/>";
+  echo "Table 'queue' created successfully\n";
 }
 else {
   echo "Error creating 'queue' table: " . $conn->error;
@@ -146,7 +146,7 @@ $table = "CREATE TABLE IF NOT EXISTS log (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'log' created successfully<br/>";
+  echo "Table 'log' created successfully\n";
 }
 else {
   echo "Error creating 'log' table: " . $conn->error;
@@ -162,7 +162,7 @@ $table = "CREATE TABLE IF NOT EXISTS history (
 )";
 
 if ($conn->query($table) === TRUE) {
-  echo "Table 'history' created successfully<br/>";
+  echo "Table 'history' created successfully\n";
 }
 else {
   echo "Error creating 'history' table: " . $conn->error;
@@ -173,7 +173,7 @@ else {
 $index = "CREATE INDEX detection ON file (detection)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'file.detection'<br/>";
+  echo "Created index for 'file.detection'\n";
 }
 else {
   echo "Error creating index for 'file.detection': " . $conn->error;
@@ -182,7 +182,7 @@ else {
 $index = "CREATE INDEX checksum ON filechecksum (checksum)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'filechecksum.checksum'<br/>";
+  echo "Created index for 'filechecksum.checksum'\n";
 }
 else {
   echo "Error creating index for 'filechecksum.checksum': " . $conn->error;
@@ -191,7 +191,7 @@ else {
 $index = "CREATE INDEX engineid ON engine (engineid)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'engine.engineid'<br/>";
+  echo "Created index for 'engine.engineid'\n";
 }
 else {
   echo "Error creating index for 'engine.engineid': " . $conn->error;
@@ -200,7 +200,7 @@ else {
 $index = "CREATE INDEX fileset_key ON fileset (`key`)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'fileset.key'<br/>";
+  echo "Created index for 'fileset.key'\n";
 }
 else {
   echo "Error creating index for 'fileset.key': " . $conn->error;
@@ -209,7 +209,7 @@ else {
 $index = "CREATE INDEX status ON fileset (status)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'fileset.status'<br/>";
+  echo "Created index for 'fileset.status'\n";
 }
 else {
   echo "Error creating index for 'fileset.status': " . $conn->error;
@@ -218,7 +218,7 @@ else {
 $index = "CREATE INDEX fileset ON history (fileset)";
 
 if ($conn->query($index) === TRUE) {
-  echo "Created index for 'history.fileset'<br/>";
+  echo "Created index for 'history.fileset'\n";
 }
 else {
   echo "Error creating index for 'history.fileset': " . $conn->error;
