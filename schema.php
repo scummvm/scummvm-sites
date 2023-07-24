@@ -72,6 +72,7 @@ $table = "CREATE TABLE IF NOT EXISTS fileset (
   `megakey` VARCHAR(64),
   `delete` BOOLEAN DEFAULT FALSE NOT NULL,
   `timestamp` TIMESTAMP NOT NULL,
+  detection_size INT,
   FOREIGN KEY (game) REFERENCES game(id)
 )";
 

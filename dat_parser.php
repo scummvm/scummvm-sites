@@ -192,13 +192,13 @@ function parse_dat($dat_filepath) {
  * Retrieves the checksum and checktype of a given type + checksum
  * eg: md5-5000 t:12345... -> 5000, md5-t, 12345...
  */
-function get_checksum_props($checktype, $checksum) {
+function get_checksum_props($checkcode, $checksum) {
   $checksize = 0;
-  if (strpos($checktype, '-') !== false) {
-    $temp = explode('-', $checktype)[1];
+  if (strpos($checkcode, '-') !== false) {
+    $temp = explode('-', $checkcode)[1];
     if ($temp == '1M' || is_numeric($temp))
       $checksize = $temp;
-    $checktype = explode('-', $checktype)[0];
+    $checktype = explode('-', $checkcode)[0];
   }
 
   if (strpos($checksum, ':') !== false) {
@@ -379,7 +379,7 @@ function insert_file($file, $detection, $src, $conn) {
   else {
     foreach ($file as $key => $value) {
       if (strpos($key, "md5") !== false) {
-        list($tmp1, $tmp2, $checksum) = get_checksum_props($key, $value);
+        list($checksize, $checktype, $checksum) = get_checksum_props($key, $value);
         break;
       }
     }
@@ -389,6 +389,8 @@ function insert_file($file, $detection, $src, $conn) {
   VALUES ('%s', '%s', '%s', @fileset_last, %d)", mysqli_real_escape_string($conn, $file["name"]),
     $file["size"], $checksum, $detection);
   $conn->query($query);
+
+  $conn->query("UPDATE fileset SET detection_size = {$checksize} WHERE id = @fileset_last AND detection_size IS NULL");
   $conn->query("SET @file_last = LAST_INSERT_ID()");
 }
 
