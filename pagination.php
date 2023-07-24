@@ -148,10 +148,11 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     echo "<tr>\n";
     echo "<td>{$counter}.</td>\n";
     foreach (array_values($row) as $key => $value) {
-      // Add hyperlink to filesets
+      // Add hyperlink to fileset in game_list table
       if ($fileset_column_index && $key == $fileset_column_index)
         $value = "<a href='fileset.php?id={$value}'>{$value}</a>";
 
+      // Add links to fileset in logs table
       $matches = array();
       if (preg_match("/Fileset:(\d+)/", $value, $matches, PREG_OFFSET_CAPTURE)) {
         $value = substr($value, 0, $matches[0][1]) . "<a href='fileset.php?id={$matches[1][0]}'>{$matches[0][0]}</a>";
