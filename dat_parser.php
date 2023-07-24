@@ -64,8 +64,10 @@ function map_checksum_data($content_string) {
   for ($i = 1; $i < count($temp); $i += 2) {
     if ($temp[$i] == ')')
       continue;
-    $temp[$i + 1] = remove_quotes($temp[$i + 1]);
 
+    $temp[$i + 1] = remove_quotes($temp[$i + 1]);
+    if ($temp[$i + 1] == ')')
+      $temp[$i + 1] = "";
     $arr[$temp[$i]] = stripslashes($temp[$i + 1]);
   }
 
@@ -611,8 +613,6 @@ function populate_matching_games() {
   }
 
   foreach ($unmatched_filesets as $fileset) {
-    // If another fileset with the same key exists, mark current fileset for deletion
-
     $matching_games = find_matching_game($fileset);
 
     if (count($matching_games) != 1) // If there is no match/non-unique match
