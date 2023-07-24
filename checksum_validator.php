@@ -1,27 +1,5 @@
 <?php
-
-function calc_key($json_object) {
-  $key_string = '';
-
-  $file_object = $json_object->files;
-  foreach ($file_object as $file) {
-    foreach ($file as $key => $value) {
-      if ($key != 'checksums') {
-        $key_string .= ':' . $value;
-        continue;
-      }
-
-      foreach ($value as $checksum_data) {
-        foreach ($checksum_data as $key => $value) {
-          $key_string .= ':' . $value;
-        }
-      }
-    }
-  }
-
-  $key_string = trim($key_string, ':');
-  return md5($key_string);
-}
+require('dat_parser.php');
 
 $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
 $servername = $mysql_cred["servername"];
@@ -51,23 +29,70 @@ foreach ($json_object as $key => $value) {
 }
 
 // Find game(s) that fit the metadata
-// $query = "SELECT game.id FROM game
-// JOIN engine ON game.engine = engine.id
-// WHERE gameid = '{$game_metadata['gameid']}'
-// AND engineid = '{$game_metadata['engineid']}'
-// AND extra = '{$game_metadata['extra']}'
-// AND platform = '{$game_metadata['platform']}'
-// AND language = '{$game_metadata['language']}'";
-// $games = $conn->query($query)->fetch_all();
+$query = "SELECT game.id FROM game
+JOIN engine ON game.engine = engine.id
+WHERE gameid = '{$game_metadata['gameid']}'
+AND engineid = '{$game_metadata['engineid']}'
+AND extra = '{$game_metadata['extra']}'
+AND platform = '{$game_metadata['platform']}'
+AND language = '{$game_metadata['language']}'";
+$games = $conn->query($query);
 
-$matches = $conn->query(sprintf("SELECT game.id FROM fileset
-JOIN game ON fileset.game = game.id
-WHERE `key` = '%s' AND fileset.status = 'fullmatch'", calc_key($json_object)));
+$json_response = array(
+  'error' => 0,
+  'files' => array()
+);
 
-if ($matches->num_rows == 0)
-  echo "No games found / Files corrupted";
-else
-  echo "Game files are correct";
+// Check if all files in fullmatch filesets are present with user
+while ($game = $games->fetch_array()) {
+  $fileset = $conn->query("SELECT name, size,
+  checksize, checktype, filechecksum.checksum
+  FROM filechecksum
+  JOIN file ON file.id = filechecksum.file
+  JOIN fileset ON fileset.id = file.fileset
+  WHERE fileset.game = {$game['id']} AND fileset.status = 'fullmatch'");
+
+  if ($fileset->num_rows == 0)
+    continue;
+
+  $file_object = $json_object->files;
+  print_r($fileset);
+
+  $mismatch = false;
+  foreach ($file_object as $user_file) {
+    $status = 'ok';
+    $db_file = $fileset->fetch_array();
+
+    if (!($db_file['name'] == $user_file['name'])) {
+      $mismatch = true;
+      $status = 'unknown';
+    }
+
+
+    if ($mismatch)
+      break;
+
+    foreach ($value as $checksum_data) {
+      if ($mismatch)
+        break;
+
+      foreach ($checksum_data as $key => $value) {
+        $user_checkcode = $checksum_data->type;
+        $user_checksum = $checksum_data->checksum;
+
+        list($checksize, $checktype, $checksum) = get_checksum_props($user_checkcode, $user_checksum);
+        $mismatch == !($db_file['checksum'] == $checksum) ||
+          !($db_file['checktype'] == $checktype) ||
+          !($db_file['checksize'] == $checksize);
+
+        if ($mismatch)
+          break;
+      }
+    }
+  }
+
+
+}
 
 $conn->close();
 ?>
