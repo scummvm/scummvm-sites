@@ -85,16 +85,6 @@ foreach ($result as $column => $value) {
 echo "</tr>\n";
 echo "</table>\n";
 
-if (isset($_GET['widetable']) && $_GET['widetable'] == 'true') {
-  $records_table = "filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
-  $select_query = "SELECT name, size, filechecksum.checksum, checksize, checktype, detection
-  FROM filechecksum JOIN file ON file.id = filechecksum.file WHERE fileset = {$id}";
-}
-else {
-  $records_table = "file WHERE fileset = {$id}";
-  $select_query = "SELECT name, size, checksum, detection FROM file WHERE fileset = {$id}";
-}
-
 echo "<h3>Files in the fileset</h3>";
 echo "<form>";
 // Preserve GET variables on form submit
@@ -120,8 +110,48 @@ else {
 
 echo "</form>";
 
-create_page($filename, 15, $records_table, $select_query, "ORDER BY name");
+// Table
+echo "<table>\n";
 
+$result = $conn->query("SELECT file.id, name, size, checksum, detection
+  FROM file WHERE fileset = {$id}")->fetch_all(MYSQLI_ASSOC);
+
+if (isset($_GET['widetable']) && $_GET['widetable'] == 'true') {
+  foreach (array_values($result) as $index => $file) {
+    $spec_checksum_res = $conn->query("SELECT checksum, checksize, checktype
+    FROM filechecksum WHERE file = {$file['id']}");
+
+    while ($spec_checksum = $spec_checksum_res->fetch_assoc()) {
+      $result[$index][$spec_checksum['checktype'] . '-' . $spec_checksum['checksize']] = $spec_checksum['checksum'];
+    }
+  }
+}
+
+$counter = 1;
+foreach ($result as $row) {
+  if ($counter == 1) {
+    echo "<th/>\n"; // Numbering column
+    foreach (array_keys($row) as $index => $key) {
+      if ($key == 'id')
+        continue;
+
+      echo "<th>{$key}</th>\n";
+    }
+  }
+
+  echo "<tr>\n";
+  echo "<td>{$counter}.</td>\n";
+  foreach ($row as $key => $value) {
+    if ($key == 'id')
+      continue;
+
+    echo "<td>{$value}</td>\n";
+  }
+  echo "</tr>\n";
+
+  $counter++;
+}
+echo "</table>\n";
 
 // Dev Actions
 echo "<h3>Developer Actions</h3>";
