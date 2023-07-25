@@ -169,6 +169,9 @@ else {
   echo "Error creating 'history' table: " . $conn->error;
 }
 
+
+///////////////////////// CREATE INDEX /////////////////////////
+
 // Create indices for fast data retrieval
 // PK and FK are automatically indexed in InnoDB, so they are not included
 $index = "CREATE INDEX detection ON file (detection)";
