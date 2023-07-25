@@ -194,6 +194,7 @@ function parse_dat($dat_filepath) {
  */
 function get_checksum_props($checkcode, $checksum) {
   $checksize = 0;
+  $checktype = $checkcode;
   if (strpos($checkcode, '-') !== false) {
     $temp = explode('-', $checkcode)[1];
     if ($temp == '1M' || is_numeric($temp))
@@ -373,6 +374,7 @@ function insert_fileset($src, $detection, $key, $megakey, $conn) {
 function insert_file($file, $detection, $src, $conn) {
   // Find md5-5000, or else use first checksum value
   $checksum = "";
+  $checksize = 5000;
   if (isset($file["md5-5000"])) {
     $checksum = $file["md5-5000"];
   }
@@ -390,7 +392,8 @@ function insert_file($file, $detection, $src, $conn) {
     $file["size"], $checksum, $detection);
   $conn->query($query);
 
-  $conn->query("UPDATE fileset SET detection_size = {$checksize} WHERE id = @fileset_last AND detection_size IS NULL");
+  if ($detection)
+    $conn->query("UPDATE fileset SET detection_size = {$checksize} WHERE id = @fileset_last AND detection_size IS NULL");
   $conn->query("SET @file_last = LAST_INSERT_ID()");
 }
 
@@ -435,11 +438,6 @@ function merge_filesets($detection_id, $dat_id) {
     WHERE fileset = '%d' AND filechecksum.checksum = '%s'",
       $checksize, $checktype, $dat_id, $checksum));
   }
-
-  // Move files from the original fileset to the new fileset
-  $conn->query(sprintf("UPDATE file
-  SET fileset = %d
-  WHERE fileset = %d", $dat_id, $detection_id));
 
   // Add fileset pair to history ($dat_id is the new fileset for $detection_id)
   $conn->query(sprintf("INSERT INTO history (`timestamp`, fileset, oldfileset)
