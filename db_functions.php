@@ -33,18 +33,21 @@ function db_connect() {
 function get_checksum_props($checkcode, $checksum) {
   $checksize = 0;
   $checktype = $checkcode;
+
   if (strpos($checkcode, '-') !== false) {
-    $temp = explode('-', $checkcode)[1];
-    if ($temp == '1M' || is_numeric($temp))
-      $checksize = $temp;
-    $checktype = explode('-', $checkcode)[0];
+    $exploded_checkcode = explode('-', $checkcode);
+    $last = array_pop($exploded_checkcode);
+    if ($last == '1M' || is_numeric($last))
+      $checksize = $last;
+
+    $checktype = implode('-', $exploded_checkcode);
   }
 
+  // Detection entries have checktypes as part of the checksum prefix
   if (strpos($checksum, ':') !== false) {
     $prefix = explode(':', $checksum)[0];
+    $checktype .= "-" . $prefix;
 
-    if (strpos($prefix, 't') !== false)
-      $checktype .= "-" . 't';
     $checksum = explode(':', $checksum)[1];
   }
 
