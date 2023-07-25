@@ -553,7 +553,7 @@ function db_insert($data_arr) {
       insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform, $lang, $conn);
     }
     elseif ($src == "dat")
-      if (isset($resources[$fileset["romof"]]))
+      if (isset($fileset['romof']) && isset($resources[$fileset['romof']]))
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
     $key = $detection ? calc_key($fileset['rom']) : "";
