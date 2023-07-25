@@ -175,7 +175,7 @@ function create_log($category, $user, $text) {
   $log_last = $conn->query("SELECT LAST_INSERT_ID()")->fetch_array()[0];
 
   if (!$conn->commit())
-    echo "Creating log failed<br/>";
+    echo "Creating log failed\n";
 
   return $log_last;
 }
@@ -278,7 +278,7 @@ function db_insert($data_arr) {
     $conn->query("SELECT @fileset_last")->fetch_array()[0]);
 
   if (!$conn->commit())
-    echo "Inserting failed<br/>";
+    echo "Inserting failed\n";
   else {
     $user = 'cli:' . get_current_user();
     create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
@@ -434,7 +434,7 @@ function merge_filesets($detection_id, $dat_id) {
   $conn->query("DELETE FROM fileset WHERE id = {$detection_id}");
 
   if (!$conn->commit())
-    echo "Error merging filesets";
+    echo "Error merging filesets\n";
 
   return $history_last;
 }
@@ -510,7 +510,7 @@ function populate_matching_games() {
     }
 
     if (!$conn->commit())
-      echo "Updating matched games failed<br/>";
+      echo "Updating matched games failed\n";
   }
 }
 
