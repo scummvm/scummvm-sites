@@ -1,19 +1,7 @@
 <?php
-$mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
-$servername = $mysql_cred["servername"];
-$username = $mysql_cred["username"];
-$password = $mysql_cred["password"];
-$dbname = $mysql_cred["dbname"];
+require('db_functions.php');
 
-// Create connection
-$conn = new mysqli($servername, $username, $password);
-
-// Check connection
-if ($conn->connect_errno) {
-  die("Connect failed: " . $conn->connect_error);
-}
-
-$conn->query("USE " . $dbname);
+$conn = db_connect();
 
 $json_string = file_get_contents('sample_json_request.json');
 $json_object = json_decode($json_string);
@@ -114,6 +102,60 @@ while ($game = $games->fetch_array()) {
 }
 
 $json_response = json_encode($json_response);
+
+function user_calc_key($user_fileset) {
+  $key_string = "";
+  foreach ($user_fileset as $file) {
+    foreach ($file as $key => $value) {
+      if ($key != 'checksums') {
+        $key_string .= ':' . $value;
+        continue;
+      }
+
+      foreach ($value as $checksum_pair)
+        $key_string .= ':' . $checksum_pair->checksum;
+    }
+  }
+  $key_string = trim($key_string, ':');
+
+  return md5($key_string);
+}
+
+function file_json_to_array($file_json_object) {
+  $res = array();
+
+  foreach ($file_json_object as $key => $value) {
+    if ($key != 'checksums') {
+      $res[$key] = $value;
+      continue;
+    }
+
+    foreach ($value as $checksum_pair)
+      $res[$checksum_pair->type] = $checksum_pair->checksum;
+  }
+
+  return $res;
+}
+
+function user_insert_fileset($user_fileset, $conn) {
+  $src = 'user';
+  $detection = 'false';
+  $key = '';
+  $megakey = user_calc_key($user_fileset);
+  $conn = db_connect();
+
+  if (insert_fileset($src, $detection, $key, $megakey, $conn)) {
+    foreach ($user_fileset as $file) {
+      $file = file_json_to_array($file);
+
+      insert_file($file, $detection, $src, $conn);
+      foreach ($file as $key => $value) {
+        if ($key != "name" && $key != "size")
+          insert_filechecksum($file, $key, $conn);
+      }
+    }
+  }
+}
 
 $conn->close();
 ?>
