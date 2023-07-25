@@ -22,8 +22,8 @@
           "checksum": "9ae6c33420e4e187c9d07a144a6c5fa2"
         },
         {
-          "type": "md5",
-          "checksum": "t:e223c341cfd15879d5fa77e696e82167"
+          "type": "md5-t-5000",
+          "checksum": "e223c341cfd15879d5fa77e696e82167"
         }
       ]
     },
@@ -44,8 +44,8 @@
           "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
         },
         {
-          "type": "md5",
-          "checksum": "t:2bc04d164f561ee8a8cfd9618869e5d5"
+          "type": "md5-t-5000",
+          "checksum": "2bc04d164f561ee8a8cfd9618869e5d5"
         }
       ]
     }
