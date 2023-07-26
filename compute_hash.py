@@ -159,7 +159,6 @@ def is_macbin(filepath):
             datalen = read_be_32(header[83:])
             rsrclen = read_be_32(header[87:])
 
-            # Files produced by ISOBuster are not padded, thus, compare with the actual size
             datalen_pad = (((datalen + 127) >> 7) << 7)
 
             # Length check
@@ -177,7 +176,10 @@ def macbin_get_resfork(file_byte_stream):
         return file_byte_stream
 
     (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
-    return file_byte_stream[0x80 + datalen:]
+    datalen_padded = ((datalen + 127) >> 7) << 7
+    (rsrclen,) = struct.unpack(">I", file_byte_stream[0x57:0x5B])
+
+    return file_byte_stream[0x80 + datalen_padded: 0x80 + datalen_padded + rsrclen]
 
 
 def macbin_get_datafork(file_byte_stream):
