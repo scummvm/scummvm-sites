@@ -222,18 +222,22 @@ def file_checksum(filepath, alg, size):
     with open(filepath, "rb") as f:
         res = []
 
-        file = macbin_get_resfork(f.read())
-        hashes = checksum(file, alg, size, filepath)
-        prefix = 'r'
+        resfork = macbin_get_resfork(f.read())
+        f.seek(0)
+        datafork = macbin_get_datafork(f.read())
+        combined_forks = datafork + resfork
 
-        if len(file):
+        hashes = checksum(resfork, alg, size, filepath)
+        prefix = 'r'
+        if len(resfork):
             res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
-        f.seek(0)
-        file = macbin_get_datafork(f.read())
-        hashes = checksum(file, alg, size, filepath)
+        hashes = checksum(datafork, alg, size, filepath)
         prefix = 'd'
+        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
+        hashes = checksum(combined_forks, alg, size, filepath)
+        prefix = 'm'
         res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
         return res
