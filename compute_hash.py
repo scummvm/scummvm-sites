@@ -190,6 +190,83 @@ def macbin_get_datafork(file_byte_stream):
     return file_byte_stream[0x80: 0x80 + datalen]
 
 
+def is_appledouble(file_byte_stream):
+    # Check AppleDouble magic number
+    if (not file_byte_stream or read_be_32(file_byte_stream) != 0x00051607):
+        return False
+
+    return True
+
+
+def appledouble_get_resfork(file_byte_stream):
+    entry_count = read_be_32(file_byte_stream[24:])
+    for _ in range(entry_count):
+        id = read_be_32(file_byte_stream[28:])
+        offset = read_be_32(file_byte_stream[32:])
+        length = read_be_32(file_byte_stream[36:])
+
+        if id == 2:
+            return file_byte_stream[offset:offset+length]
+
+    return b''
+
+
+def appledouble_get_datafork(filepath):
+    return open(filepath[2:], "rb")
+
+
+def rsrc_get_datafork(filepath):
+    return b''
+
+
+def file_checksum(filepath, alg, size):
+    filename = os.path.basename(filepath)
+
+    # If it is Apple file with 2 forks
+    if (filepath.endswith('.rsrc') or is_macbin(filepath) or
+            filename.startswith('._') or filename.startswith('__MACOS')):
+        res = []
+        resfork = b''
+        datafork = b''
+
+        with open(filepath, "rb") as f:
+            if is_appledouble(f.read()):
+                f.seek(0)
+                resfork = appledouble_get_resfork(f.read())
+                datafork = appledouble_get_datafork(filepath)
+
+            elif is_macbin(filepath):
+                f.seek(0)
+                resfork = macbin_get_resfork(f.read())
+                f.seek(0)
+                datafork = macbin_get_datafork(f.read())
+
+            elif filepath.endswith('.rsrc'):
+                resfork = f.read()
+                datafork = rsrc_get_datafork(filepath)
+
+            combined_forks = datafork + resfork
+
+            hashes = checksum(resfork, alg, size, filepath)
+            prefix = 'r'
+            if len(resfork):
+                res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+            hashes = checksum(datafork, alg, size, filepath)
+            prefix = 'd'
+            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+            hashes = checksum(combined_forks, alg, size, filepath)
+            prefix = 'm'
+            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+        return res
+
+    # If it is a normal file
+    with open(filepath, "rb") as file:
+        return create_checksum_pairs(checksum(file, alg, size, filepath), alg, size)
+
+
 def create_checksum_pairs(hashes, alg, size, prefix=None):
     res = []
 
@@ -213,36 +290,6 @@ def create_checksum_pairs(hashes, alg, size, prefix=None):
         res.append((keys[i], h))
 
     return res
-
-
-def file_checksum(filepath, alg, size):
-    if not is_macbin(filepath):
-        with open(filepath, "rb") as file:
-            return create_checksum_pairs(checksum(file, alg, size, filepath), alg, size)
-
-    # If the file is a MacBinary
-    with open(filepath, "rb") as f:
-        res = []
-
-        resfork = macbin_get_resfork(f.read())
-        f.seek(0)
-        datafork = macbin_get_datafork(f.read())
-        combined_forks = datafork + resfork
-
-        hashes = checksum(resfork, alg, size, filepath)
-        prefix = 'r'
-        if len(resfork):
-            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-        hashes = checksum(datafork, alg, size, filepath)
-        prefix = 'd'
-        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-        hashes = checksum(combined_forks, alg, size, filepath)
-        prefix = 'm'
-        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-        return res
 
 
 def checksum(file, alg, size, filepath):
