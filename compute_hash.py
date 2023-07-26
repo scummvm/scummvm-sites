@@ -118,6 +118,13 @@ def punyencode(orig: str) -> str:
     return orig
 
 
+def punyencode_filepath(filepath):
+    filepath = filepath.rstrip("/")
+    prefix, filename = os.path.split(filepath)
+
+    return os.path.join(prefix, punyencode(filename))
+
+
 def read_be_32(byte_stream):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
     (uint,) = struct.unpack(">I", byte_stream[:32//8])
@@ -334,7 +341,7 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
             for filename, (hashes, filesize) in hash_of_dir.items():
-                filename = (punyencode(filename)
+                filename = (punyencode_filepath(filename)
                             if needs_punyencoding(filename) else filename)
                 data = f"name \"{filename}\" size {filesize}"
                 for key, value in hashes:
