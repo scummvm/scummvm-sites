@@ -184,11 +184,21 @@ def macbin_get_datafork(file_byte_stream):
 def create_checksum_pairs(hashes, alg, size, prefix=None):
     res = []
 
-    keys = [f"{alg}", f"{alg}-5000", f"{alg}-1M", f"{alg}-5000-t"]
+    keys = [f"{alg}", f"{alg}-5000", f"{alg}-1M", f"{alg}-t-5000"]
+
     if size:
         keys.append(f"{alg}-{size}")
     if prefix:
-        keys = [key+f'-{prefix}' for key in keys]
+        for i, key in enumerate(keys):
+            key_split = key.split('-')
+
+            # If key is of the form "md5-t-5000"
+            if (len(key_split) == 3):
+                key_split[1] = f"{prefix}{key_split[1]}"
+            else:
+                key_split.insert(1, prefix)
+
+            keys[i] = '-'.join(key_split)
 
     for i, h in enumerate(hashes):
         res.append((keys[i], h))
@@ -205,31 +215,17 @@ def file_checksum(filepath, alg, size):
     with open(filepath, "rb") as f:
         res = []
 
-        hashes = []
         file = macbin_get_resfork(f.read())
+        hashes = checksum(file, alg, size, filepath)
         prefix = 'r'
 
         if len(file):
-            for h in checksum(file, alg, size, filepath):
-                if ':' not in h:
-                    hashes.append(f"{prefix}:{h}")
-                else:
-                    # If the checksum is like "t:..."
-                    hashes.append(f"{prefix}{h}")
+            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
-        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-        hashes = []
         f.seek(0)
         file = macbin_get_datafork(f.read())
+        hashes = checksum(file, alg, size, filepath)
         prefix = 'd'
-
-        for h in checksum(file, alg, size, filepath):
-            if ':' not in h:
-                hashes.append(f"{prefix}:{h}")
-            else:
-                # If the checksum is like "t:..."
-                hashes.append(f"{prefix}{h}")
 
         res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
@@ -300,7 +296,6 @@ def checksum(file, alg, size, filepath):
             hashes[4] = None
 
     hashes = [h.hexdigest() for h in hashes if h]
-    hashes[3] = 't:' + hashes[3]  # Add tail prefix
     return hashes
 
 
