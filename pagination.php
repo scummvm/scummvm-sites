@@ -79,6 +79,10 @@ function create_page($filename, $results_per_page, $records_table, $select_query
     $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
   }
   $num_of_pages = ceil($num_of_results / $results_per_page);
+  if ($num_of_results == 0) {
+    echo "No results for given filters";
+    return;
+  }
 
   if (!isset($_GET['page'])) {
     $page = 1;
