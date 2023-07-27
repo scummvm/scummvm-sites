@@ -130,11 +130,11 @@ function insert_fileset($src, $detection, $key, $megakey, $conn) {
  * If checksum of the given checktype doesn't exists, silently fails
  */
 function insert_file($file, $detection, $src, $conn) {
-  // Find md5-5000, or else use first checksum value
+  // Find full md5, or else use first checksum value
   $checksum = "";
   $checksize = 5000;
-  if (isset($file["md5-5000"])) {
-    $checksum = $file["md5-5000"];
+  if (isset($file["md5"])) {
+    $checksum = $file["md5"];
   }
   else {
     foreach ($file as $key => $value) {
