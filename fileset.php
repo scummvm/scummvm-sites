@@ -122,6 +122,10 @@ if (isset($_GET['widetable']) && $_GET['widetable'] == 'true') {
     FROM filechecksum WHERE file = {$file['id']}");
 
     while ($spec_checksum = $spec_checksum_res->fetch_assoc()) {
+      // md5-0 is skipped since it is already shown as file.checksum
+      if ($spec_checksum['checksize'] == 0)
+        continue;
+
       $result[$index][$spec_checksum['checktype'] . '-' . $spec_checksum['checksize']] = $spec_checksum['checksum'];
     }
   }
