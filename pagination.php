@@ -159,7 +159,9 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       // Add links to fileset in logs table
       $matches = array();
       if (preg_match("/Fileset:(\d+)/", $value, $matches, PREG_OFFSET_CAPTURE)) {
-        $value = substr($value, 0, $matches[0][1]) . "<a href='fileset.php?id={$matches[1][0]}'>{$matches[0][0]}</a>";
+        $value = substr($value, 0, $matches[0][1]) .
+          "<a href='fileset.php?id={$matches[1][0]}'>{$matches[0][0]}</a>" .
+          substr($value, $matches[0][1] + strlen($matches[0][0]));
       }
 
       echo "<td>{$value}</td>\n";

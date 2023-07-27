@@ -84,7 +84,7 @@ function insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform
   $conn->query("SET @game_last = LAST_INSERT_ID()");
 }
 
-function insert_fileset($src, $detection, $key, $megakey, $conn) {
+function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_text, $conn) {
   $status = $detection ? "detection" : $src;
   $game = "NULL";
   $key = $key == "" ? "NULL" : "'{$key}'";
@@ -102,10 +102,17 @@ function insert_fileset($src, $detection, $key, $megakey, $conn) {
     $existing_entry = $conn->query("SELECT id FROM fileset WHERE megakey = {$megakey}");
 
   if ($existing_entry->num_rows > 0) {
+    $existing_entry = $existing_entry->fetch_array()[0];
+
+    $category_text = "Uploaded from {$src}";
+    $log_text = "Duplicate of Fileset:{$existing_entry}, {$log_text}";
+
+    $user = 'cli:' . get_current_user();
+    create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
+
     if (!$detection)
       return false;
 
-    $existing_entry = $existing_entry->fetch_array()[0];
     $conn->query("UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last)
                       WHERE id = {$existing_entry}");
     $conn->query("UPDATE fileset SET status = 'detection'
@@ -119,6 +126,14 @@ function insert_fileset($src, $detection, $key, $megakey, $conn) {
   VALUES ({$game}, '{$status}', '{$src}', {$key}, {$megakey}, FROM_UNIXTIME(@fileset_time_last))";
   $conn->query($query);
   $conn->query("SET @fileset_last = LAST_INSERT_ID()");
+
+  $category_text = "Uploaded from {$src}";
+  $fileset_last = $conn->query("SELECT @fileset_last")->fetch_array()[0];
+  $log_text = "Created Fileset:{$fileset_last}, {$log_text}";
+
+  $user = 'cli:' . get_current_user();
+  create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
+  $conn->query("INSERT INTO transactions (`transaction`, fileset) VALUES ({$transaction}, {$fileset_last})");
 
   return true;
 }
@@ -240,6 +255,17 @@ function db_insert($data_arr) {
   // Set timestamp of fileset insertion
   $conn->query(sprintf("SET @fileset_time_last = %d", time()));
 
+  // Create start log entry
+  $transaction_id = $conn->query("SELECT MAX(`transaction`) FROM transactions")->fetch_array()[0] + 1;
+
+  $category_text = "Uploaded from {$src}";
+  $log_text = sprintf("Started loading DAT file, filename '%s', size %d, author '%s', version %s.
+  State '%s'. Transaction: %d",
+    $filepath, filesize($filepath), $author, $version, $status, $transaction_id);
+
+  $user = 'cli:' . get_current_user();
+  create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
+
   foreach ($game_data as $fileset) {
     if ($detection) {
       $engine_name = $fileset["engine"];
@@ -258,7 +284,11 @@ function db_insert($data_arr) {
 
     $key = $detection ? calc_key($fileset['rom']) : "";
     $megakey = !$detection ? calc_key($fileset['rom']) : "";
-    if (insert_fileset($src, $detection, $key, $megakey, $conn)) {
+    $log_text = sprintf("from filename '%s', size %d, author '%s', version %s.
+    State '%s'.",
+      $filepath, filesize($filepath), $author, $version, $status);
+
+    if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn)) {
       foreach ($fileset["rom"] as $file) {
         insert_file($file, $detection, $src, $conn);
         foreach ($file as $key => $value) {
@@ -274,11 +304,11 @@ function db_insert($data_arr) {
                   WHERE `timestamp` != FROM_UNIXTIME(@fileset_time_last)
                   AND status = 'detection'");
 
+  $fileset_insertion_count = $conn->query("SELECT COUNT(fileset) from transactions WHERE `transaction` = {$transaction_id}")->fetch_array()[0];
   $category_text = "Uploaded from {$src}";
-  $log_text = sprintf("Loaded DAT file, filename '%s', size %d, author '%s', version %s.
-  State '%s'. Fileset:%d.",
-    $filepath, filesize($filepath), $author, $version, $status,
-    $conn->query("SELECT @fileset_last")->fetch_array()[0]);
+  $log_text = sprintf("Completed loading DAT file, filename '%s', size %d, author '%s', version %s.
+  State '%s'. Number of filesets: %d. Transaction: %d",
+    $filepath, filesize($filepath), $author, $version, $status, $fileset_insertion_count, $transaction_id);
 
   if (!$conn->commit())
     echo "Inserting failed\n";
