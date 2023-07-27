@@ -44,12 +44,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   // If there exist get variables that are for filtering
   $_GET = array_filter($_GET);
 
-  // If $records_table has a JOIN (multiple tables)
-  if (preg_match("/JOIN/", $records_table) !== false) {
-    $first_table = explode(" ", $records_table)[0];
-    $num_of_results = $conn->query("SELECT COUNT({$first_table}.id) FROM {$records_table}")->fetch_array()[0];
-  }
-  elseif (array_diff(array_keys($_GET), array('page'))) {
+  if (array_diff(array_keys($_GET), array('page'))) {
     $condition = "WHERE ";
     $tables = array();
     foreach ($_GET as $key => $value) {
@@ -74,6 +69,11 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
     $num_of_results = $conn->query(
       "SELECT COUNT({$records_table}.id) FROM {$from_query} {$condition}")->fetch_array()[0];
+  }
+  // If $records_table has a JOIN (multiple tables)
+  elseif (preg_match("/JOIN/", $records_table) !== false) {
+    $first_table = explode(" ", $records_table)[0];
+    $num_of_results = $conn->query("SELECT COUNT({$first_table}.id) FROM {$records_table}")->fetch_array()[0];
   }
   else {
     $num_of_results = $conn->query("SELECT COUNT(id) FROM {$records_table}")->fetch_array()[0];
