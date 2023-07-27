@@ -169,6 +169,20 @@ else {
   echo "Error creating 'history' table: " . $conn->error;
 }
 
+// Create transactions table
+$table = "CREATE TABLE IF NOT EXISTS transactions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  `transaction` INT NOT NULL,
+  fileset INT NOT NULL
+)";
+
+if ($conn->query($table) === TRUE) {
+  echo "Table 'transactions' created successfully\n";
+}
+else {
+  echo "Error creating 'transactions' table: " . $conn->error;
+}
+
 
 ///////////////////////// CREATE INDEX /////////////////////////
 
