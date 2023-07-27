@@ -212,11 +212,29 @@ def appledouble_get_resfork(file_byte_stream):
 
 
 def appledouble_get_datafork(filepath):
-    return open(filepath[2:], "rb")
+    try:
+        index = filepath.index("__MACOSX")
+    except ValueError:
+        index = None
+
+    if index is not None:
+        # Remove '__MACOSX/' from filepath
+        filepath = filepath[:index] + filepath[index+8+1:]
+
+        # Remove '._' from filepath
+        filename = os.path.basename(filepath)
+        filepath = filepath[:-len(filename)] + (filename[2:]
+                                                if filename.startswith('._') else filename)
+
+        return filepath
+        # return open(filepath, "rb")
+
+    return b''
 
 
 def rsrc_get_datafork(filepath):
-    return b''
+    # Data fork is the same filename without the .rsrc extension
+    return open(filepath[:-5], "rb")
 
 
 def file_checksum(filepath, alg, size):
@@ -230,20 +248,20 @@ def file_checksum(filepath, alg, size):
         datafork = b''
 
         with open(filepath, "rb") as f:
+            if filepath.endswith('.rsrc'):
+                resfork = f.read()
+                datafork = rsrc_get_datafork(filepath)
+
             if is_appledouble(f.read()):
                 f.seek(0)
                 resfork = appledouble_get_resfork(f.read())
                 datafork = appledouble_get_datafork(filepath)
 
-            elif is_macbin(filepath):
+            if is_macbin(filepath):
                 f.seek(0)
                 resfork = macbin_get_resfork(f.read())
                 f.seek(0)
                 datafork = macbin_get_datafork(f.read())
-
-            elif filepath.endswith('.rsrc'):
-                resfork = f.read()
-                datafork = rsrc_get_datafork(filepath)
 
             combined_forks = datafork + resfork
 
