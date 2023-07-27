@@ -23,6 +23,9 @@ function map_checksum_data($content_string) {
     if ($temp[$i] == ')')
       continue;
 
+    if ($temp[$i] == 'crc' || $temp[$i] == 'sha1')
+      continue;
+
     $temp[$i + 1] = remove_quotes($temp[$i + 1]);
     if ($temp[$i + 1] == ')')
       $temp[$i + 1] = "";
