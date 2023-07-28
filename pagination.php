@@ -21,7 +21,7 @@ function get_join_columns($table1, $table2, $mapping) {
   echo "No primary-foreign key mapping provided. Filter is invalid";
 }
 
-function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array(), $mapping = array()) {
+function create_page($filename, $results_per_page, $records_table, $select_query, $order, $webpage = "", $filters = array(), $mapping = array()) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
@@ -118,8 +118,6 @@ function create_page($filename, $results_per_page, $records_table, $select_query
   echo "<form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>";
   echo "<table>\n";
 
-  $fileset_column_index = null;
-
   $counter = $offset + 1;
   while ($row = $result->fetch_assoc()) {
     if ($counter == $offset + 1) { // If it is the first run of the loop
@@ -141,20 +139,22 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       }
 
       echo "<th/>\n"; // Numbering column
-      foreach (array_keys($row) as $index => $key) {
-        echo "<th>{$key}</th>\n";
+      foreach (array_keys($row) as $key) {
+        if ($key == 'fileset')
+          continue;
 
-        if ($key == "fileset")
-          $fileset_column_index = $index;
+        echo "<th>{$key}</th>\n";
       }
     }
 
-    echo "<tr>\n";
+    if ($webpage == 'games_list.php')
+      echo "<tr class=games_list onclick='hyperlink(\"fileset.php?id={$row['fileset']}\")'>\n";
+    else
+      echo "<tr>\n";
     echo "<td>{$counter}.</td>\n";
-    foreach (array_values($row) as $key => $value) {
-      // Add hyperlink to fileset in game_list table
-      if ($fileset_column_index && $key == $fileset_column_index)
-        $value = "<a href='fileset.php?id={$value}'>{$value}</a>";
+    foreach ($row as $key => $value) {
+      if ($key == 'fileset')
+        continue;
 
       // Add links to fileset in logs table
       $matches = array();

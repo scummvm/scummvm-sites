@@ -24,6 +24,10 @@ function remove_empty_inputs() {
   }
 }
 
+function hyperlink(link) {
+  window.location = link;
+}
+
 $(document).ready(function () {
   $(".hidden").hide();
   $("#delete-button").one("click", delete_id);
