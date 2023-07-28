@@ -199,9 +199,33 @@ function create_log($category, $user, $text) {
 }
 
 /**
- * Calculate `key` value as md5("file1:size:md5:file2:...")
+ * Calculate `key` value as md5("name:title:...:engine:file1:size:md5:file2:...")
  */
-function calc_key($files) {
+function calc_key($fileset) {
+  $key_string = "";
+
+  foreach ($fileset as $key => $value) {
+    if ($key == 'rom')
+      continue;
+
+    $key_string .= ':' . $value;
+  }
+
+  $files = $fileset['rom'];
+  foreach ($files as $file) {
+    foreach ($file as $key => $value) {
+      $key_string .= ':' . $value;
+    }
+  }
+
+  $key_string = trim($key_string, ':');
+  return md5($key_string);
+}
+
+/**
+ * Calculate `megakey` value as md5("file1:size:md5:file2:...")
+ */
+function calc_megakey($files) {
   $key_string = "";
   foreach ($files as $file) {
     foreach ($file as $key => $value) {
@@ -282,8 +306,8 @@ function db_insert($data_arr) {
       if (isset($fileset['romof']) && isset($resources[$fileset['romof']]))
         $fileset["rom"] = array_merge($fileset["rom"], $resources[$fileset["romof"]]["rom"]);
 
-    $key = $detection ? calc_key($fileset['rom']) : "";
-    $megakey = !$detection ? calc_key($fileset['rom']) : "";
+    $key = $detection ? calc_key($fileset) : "";
+    $megakey = !$detection ? calc_megakey($fileset['rom']) : "";
     $log_text = sprintf("from filename '%s', size %d, author '%s', version %s.
     State '%s'.",
       $filepath, filesize($filepath), $author, $version, $status);
