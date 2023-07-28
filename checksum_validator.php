@@ -83,13 +83,18 @@ while ($game = $games->fetch_array()) {
     if ($status == 'ok') {
       foreach ($user_file->checksums as $checksum_data) {
         foreach ($checksum_data as $key => $value) {
+          // If it's not the full checksum
+          if (strpos($user_checkcode, '-') !== false)
+            continue;
+
           $user_checksum = $checksum_data->checksum;
           $user_checkcode = $checksum_data->type;
-          if (strpos($user_checkcode, '-') === false)
             $user_checkcode .= '-0';
 
           if (strcasecmp($db_file[$user_checkcode], $user_checksum) != 0)
             $status = 'checksum_mismatch';
+
+          break;
         }
       }
     }
@@ -142,9 +147,11 @@ function user_insert_fileset($user_fileset, $conn) {
   $detection = 'false';
   $key = '';
   $megakey = user_calc_key($user_fileset);
+  $transaction_id = $conn->query("SELECT MAX(`transaction`) FROM transactions")->fetch_array()[0] + 1;
+  $log_text = "from user submitted files";
   $conn = db_connect();
 
-  if (insert_fileset($src, $detection, $key, $megakey, $conn)) {
+  if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn)) {
     foreach ($user_fileset as $file) {
       $file = file_json_to_array($file);
 
