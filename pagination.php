@@ -21,7 +21,7 @@ function get_join_columns($table1, $table2, $mapping) {
   echo "No primary-foreign key mapping provided. Filter is invalid";
 }
 
-function create_page($filename, $results_per_page, $records_table, $select_query, $order, $webpage = "", $filters = array(), $mapping = array()) {
+function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array(), $mapping = array()) {
   $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
@@ -43,12 +43,20 @@ function create_page($filename, $results_per_page, $records_table, $select_query
 
   // If there exist get variables that are for filtering
   $_GET = array_filter($_GET);
+  if (isset($_GET['sort'])) {
+    $column = $_GET['sort'];
+    $column = explode('-', $column);
+    $order = "ORDER BY {$column[0]}";
 
-  if (array_diff(array_keys($_GET), array('page'))) {
+    if (strpos($_GET['sort'], 'desc') !== false)
+      $order .= " DESC";
+  }
+
+  if (array_diff(array_keys($_GET), array('page', 'sort'))) {
     $condition = "WHERE ";
     $tables = array();
     foreach ($_GET as $key => $value) {
-      if ($key == "page" || $value == "")
+      if ($key == 'page' || $key == 'sort' || $value == '')
         continue;
 
       array_push($tables, $filters[$key]);
@@ -143,11 +151,23 @@ function create_page($filename, $results_per_page, $records_table, $select_query
         if ($key == 'fileset')
           continue;
 
-        echo "<th>{$key}</th>\n";
+        // Preserve GET variables
+        $vars = "";
+        foreach ($_GET as $k => $v) {
+          if ($k == 'sort' && $v == $key)
+            $vars .= "&{$k}={$v}-desc";
+          elseif ($k != 'sort')
+            $vars .= "&{$k}={$v}";
+        }
+
+        if (strpos($vars, "&sort={$key}") === false)
+          echo "<th><a href='{$filename}?{$vars}&sort={$key}'>{$key}</th>\n";
+        else
+          echo "<th><a href='{$filename}?{$vars}'>{$key}</th>\n";
       }
     }
 
-    if ($webpage == 'games_list.php')
+    if ($filename == 'games_list.php')
       echo "<tr class=games_list onclick='hyperlink(\"fileset.php?id={$row['fileset']}\")'>\n";
     else
       echo "<tr>\n";

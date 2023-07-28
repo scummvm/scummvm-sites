@@ -15,6 +15,6 @@ $filters = array(
   'text' => 'log'
 );
 
-create_page($filename, 25, $records_table, $select_query, $order, "logs.php", $filters);
+create_page($filename, 25, $records_table, $select_query, $order, $filters);
 ?>
 

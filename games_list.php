@@ -26,6 +26,6 @@ $mapping = array(
   'game.id' => 'fileset.game',
 );
 
-create_page($filename, 25, $records_table, $select_query, $order, "games_list.php", $filters, $mapping);
+create_page($filename, 25, $records_table, $select_query, $order, $filters, $mapping);
 ?>
 
