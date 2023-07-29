@@ -142,6 +142,13 @@ function file_json_to_array($file_json_object) {
   return $res;
 }
 
+function user_insert_queue($user_fileset, $conn) {
+  $query = sprintf("INSERT INTO queue (time, notes, fileset, ticketid, userid, commit)
+  VALUES (%d, NULL, @fileset_last, NULL, NULL, NULL)", time());
+
+  $conn->query($query);
+}
+
 function user_insert_fileset($user_fileset, $conn) {
   $src = 'user';
   $detection = 'false';

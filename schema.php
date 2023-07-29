@@ -121,7 +121,7 @@ else {
 // Create queue table
 $table = "CREATE TABLE IF NOT EXISTS queue (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  date DATETIME NOT NULL,
+  time TIMESTAMP NOT NULL,
   notes varchar(300),
   fileset INT,
   ticketid INT NOT NULL,
