@@ -1,5 +1,5 @@
 <?php
-require 'pagination.php';
+require 'include/pagination.php';
 
 $filename = 'fileset.php';
 $stylesheet = 'style.css';

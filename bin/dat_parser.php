@@ -1,6 +1,6 @@
 <?php
 
-require('db_functions.php');
+require 'include/db_functions.php';
 ini_set('memory_limit', '512M');
 
 function remove_quotes($string) {

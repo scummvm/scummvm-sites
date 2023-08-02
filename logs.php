@@ -1,5 +1,5 @@
 <?php
-require "pagination.php";
+require 'include/pagination.php';
 
 $filename = "logs.php";
 $records_table = "log";

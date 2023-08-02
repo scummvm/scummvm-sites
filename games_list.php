@@ -1,5 +1,5 @@
 <?php
-require "pagination.php";
+require 'include/pagination.php';
 
 $filename = "games_list.php";
 $records_table = "game";

@@ -124,7 +124,6 @@ $table = "CREATE TABLE IF NOT EXISTS queue (
   time TIMESTAMP NOT NULL,
   notes varchar(300),
   fileset INT,
-  ticketid INT NOT NULL,
   userid INT NOT NULL,
   commit VARCHAR(64) NOT NULL,
   FOREIGN KEY (fileset) REFERENCES fileset(id)

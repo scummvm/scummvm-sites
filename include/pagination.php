@@ -1,5 +1,5 @@
 <?php
-$stylesheet = "style.css";
+$stylesheet = 'style.css';
 $jquery_file = 'https://code.jquery.com/jquery-3.7.0.min.js';
 $js_file = 'js_functions.js';
 echo "<link rel='stylesheet' href='{$stylesheet}'>\n";

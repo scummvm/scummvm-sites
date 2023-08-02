@@ -1,9 +1,9 @@
 <?php
-require('db_functions.php');
+require '../include/db_functions.php';
 
 $conn = db_connect();
 
-$json_string = file_get_contents('sample_json_request.json');
+$json_string = file_get_contents('../sample_json_request.json');
 $json_object = json_decode($json_string);
 
 $game_metadata = array();
@@ -89,7 +89,7 @@ while ($game = $games->fetch_array()) {
 
           $user_checksum = $checksum_data->checksum;
           $user_checkcode = $checksum_data->type;
-            $user_checkcode .= '-0';
+          $user_checkcode .= '-0';
 
           if (strcasecmp($db_file[$user_checkcode], $user_checksum) != 0)
             $status = 'checksum_mismatch';
