@@ -56,10 +56,10 @@ while ($game = $games->fetch_array()) {
 
   // Sort the filesets by filename
   usort($file_object, function ($a, $b) {
-    return strcmp($a->name, $b->name) == -1 ? -1 : 1;
+    return strcmp($a->name, $b->name);
   });
   usort($fileset, function ($a, $b) {
-    return strcmp($a['name'], $b['name']) == -1 ? -1 : 1;
+    return strcmp($a['name'], $b['name']);
   });
 
   for ($i = 0, $j = 0; $i < count($fileset), $j < count($file_object); $i++, $j++) {
