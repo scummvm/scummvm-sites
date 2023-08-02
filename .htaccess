@@ -1,0 +1,16 @@
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}\.php -f
+RewriteRule ^(.*)$ $1.php [NC,L]
+
+<Files "mysql_config.json">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "bin/*">
+    Order allow,deny
+    Deny from all
+</Files>
+<Files "include/*">
+    Order allow,deny
+    Deny from all
+</Files>
