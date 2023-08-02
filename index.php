@@ -1,5 +1,15 @@
 <?php
 
-echo '<a href="games_list.php">List of Detection entries</a><br/>';
-echo '<a href="logs.php">Logs of developer actions</a><br/>';
+$request = $_SERVER['REQUEST_URI'];
+$api_root = '/endpoints/';
+
+switch ($request) {
+  case '':
+  case '/':
+    require __DIR__ . '/index.html';
+    break;
+
+  case '/api/validate':
+    require __DIR__ . $api_root . 'validate.php';
+}
 ?>
