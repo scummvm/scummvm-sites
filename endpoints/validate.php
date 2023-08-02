@@ -2,7 +2,7 @@
 require 'include/user_fileset_functions.php';
 
 header('Access-Contol-Allow-Origin: *');
-// header('Content-Type: application/json');
+header('Content-Type: application/json');
 
 $conn = db_connect();
 
@@ -31,6 +31,14 @@ $json_response = array(
   'error' => 0,
   'files' => array()
 );
+
+if ($games->num_rows == 0) {
+  $json_response['error'] = 1;
+  unset($json_response['files']);
+  $json_response['status'] = 'unknown_variant';
+
+  user_insert_fileset($json_object->files, $conn);
+}
 
 // Check if all files in fullmatch filesets are present with user
 while ($game = $games->fetch_array()) {
