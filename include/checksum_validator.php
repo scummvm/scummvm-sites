@@ -83,12 +83,12 @@ while ($game = $games->fetch_array()) {
     if ($status == 'ok') {
       foreach ($user_file->checksums as $checksum_data) {
         foreach ($checksum_data as $key => $value) {
+          $user_checkcode = $checksum_data->type;
           // If it's not the full checksum
           if (strpos($user_checkcode, '-') !== false)
             continue;
 
           $user_checksum = $checksum_data->checksum;
-          $user_checkcode = $checksum_data->type;
           $user_checkcode .= '-0';
 
           if (strcasecmp($db_file[$user_checkcode], $user_checksum) != 0)
