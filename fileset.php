@@ -1,5 +1,5 @@
 <?php
-require 'include/pagination.php';
+require $_SERVER['DOCUMENT_ROOT'] . '/include/pagination.php';
 
 $filename = 'fileset.php';
 $stylesheet = 'style.css';
@@ -14,7 +14,7 @@ function get_log_page($log_id) {
   return intdiv($log_id, $records_per_page) + 1;
 }
 
-$mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
+$mysql_cred = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/mysql_config.json'), true);
 $servername = $mysql_cred["servername"];
 $username = $mysql_cred["username"];
 $password = $mysql_cred["password"];

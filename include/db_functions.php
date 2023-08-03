@@ -4,7 +4,7 @@
  * Create and return a mysqli connection
  */
 function db_connect() {
-  $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
+  $mysql_cred = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
   $password = $mysql_cred["password"];

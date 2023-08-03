@@ -22,7 +22,7 @@ function get_join_columns($table1, $table2, $mapping) {
 }
 
 function create_page($filename, $results_per_page, $records_table, $select_query, $order, $filters = array(), $mapping = array()) {
-  $mysql_cred = json_decode(file_get_contents('mysql_config.json'), true);
+  $mysql_cred = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/mysql_config.json'), true);
   $servername = $mysql_cred["servername"];
   $username = $mysql_cred["username"];
   $password = $mysql_cred["password"];

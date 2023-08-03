@@ -6,10 +6,10 @@ $api_root = '/endpoints/';
 switch ($request) {
   case '':
   case '/':
-    require __DIR__ . '/index.html';
+    require $_SERVER['DOCUMENT_ROOT'] . '/index.html';
     break;
 
   case '/api/validate':
-    require __DIR__ . $api_root . 'validate.php';
+    require $_SERVER['DOCUMENT_ROOT'] . $api_root . 'validate.php';
 }
 ?>
