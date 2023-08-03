@@ -44,12 +44,15 @@ function user_insert_queue($user_fileset, $conn) {
 
 function user_insert_fileset($user_fileset, $conn) {
   $src = 'user';
-  $detection = 'false';
+  $detection = false;
   $key = '';
   $megakey = user_calc_key($user_fileset);
   $transaction_id = $conn->query("SELECT MAX(`transaction`) FROM transactions")->fetch_array()[0] + 1;
   $log_text = "from user submitted files";
   $conn = db_connect();
+
+  // Set timestamp of fileset insertion
+  $conn->query(sprintf("SET @fileset_time_last = %d", time()));
 
   if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn)) {
     foreach ($user_fileset as $file) {
@@ -62,6 +65,8 @@ function user_insert_fileset($user_fileset, $conn) {
       }
     }
   }
+
+  $conn->commit();
 }
 ?>
 
