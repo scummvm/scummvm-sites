@@ -114,6 +114,9 @@ while ($game = $games->fetch_array()) {
       $json_response['error'] = 1;
 
     array_push($json_response['files'], array('status' => $status, 'name' => $filename));
+
+    if ($i < count($fileset) && $j < count($file_object))
+      break;
   }
 }
 
