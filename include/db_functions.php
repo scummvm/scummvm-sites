@@ -205,7 +205,7 @@ function calc_key($fileset) {
   $key_string = "";
 
   foreach ($fileset as $key => $value) {
-    if ($key == 'rom')
+    if ($key == 'engineid' || $key == 'gameid' || $key == 'rom')
       continue;
 
     $key_string .= ':' . $value;
