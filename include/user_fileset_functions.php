@@ -66,7 +66,9 @@ function user_insert_fileset($user_fileset, $conn) {
     }
   }
 
+  $fileset_id = $conn->query("SELECT @fileset_last");
   $conn->commit();
+  return $fileset_id;
 }
 ?>
 
