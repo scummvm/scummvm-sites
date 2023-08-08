@@ -11331,5 +11331,112 @@
             "TIMEGIRL.ICO",
             "TIMEGIRL.SAV"
         ]
-    }
+    },
+    {
+        "name": "Director tests D2-mac",
+        "directory": "director-tests/D2-mac",
+        "game_id": "director",
+        "platform": "mac",
+        "version": "D2",
+        "debugflags": "fewframesonly,fast,screenshot",
+        "movienames": [
+            "autohilite-matte-d2.bin",
+            "castNum-puppets-setloc-moveable-d2",
+            "GUIDE"
+        ]
+    },
+    {
+        "name": "Director tests D3-mac",
+        "directory": "director-tests/D3-mac",
+        "game_id": "director",
+        "platform": "mac",
+        "version": "D3",
+        "debugflags": "fewframesonly,fast,screenshot",
+        "movienames": [
+            "autohilite-d3.bin",
+            "autohilite-matte-d3.bin",
+            "autohilite-moveable-d3.bin",
+            "castNum-puppets-setloc-moveable-d3",
+            "D3.1-BITD-Test",
+            "D3-Events-NonShared",
+            "D3-Events-NonShared-Macros",
+            "eventsd3.bin",
+            "palette2",
+            "qd-sq1-color1",
+            "qd-sq1-color2",
+            "sev-Frames",
+            "text-colour madness",
+            "text-colour madness1",
+            "text-colour madness2",
+            "transcol.bin",
+            "Transitions A-P",
+            "Transitions S-Z"
+        ]
+    },
+    {
+        "name": "Director tests D4-mac",
+        "directory": "director-tests/D4-mac",
+        "game_id": "director",
+        "platform": "mac",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast,screenshot",
+        "movienames": [
+            "all-inks-test",
+            "autohilite-d4",
+            "autohilite-matte-d4",
+            "autohilite-moveable-d4",
+            "castNum-puppets-setloc-moveable-d4",
+            "D4-BITD-Test",
+            "D4-Events-NonShared",
+            "events/eventsd4",
+            "events/eventsd4-pause",
+            "events/eventsd4-perframehook",
+            "events/mousepass",
+            "factory_test",
+            "fontTest",
+            "foreColor_blackrect_test",
+            "multitext",
+            "non-puppet-act",
+            "nonpuppetloop.dir",
+            "patterns",
+            "puppet_immed",
+            "puppetSprite-test",
+            "puppetSprite-test.bin",
+            "puppetTransition-test",
+            "redraw-test",
+            "sprite-loc*-castNum-without-puppet",
+            "sprite-properties-without-puppet",
+            "text-colors"
+        ]
+    },
+    {
+        "name": "Director tests D4-win",
+        "directory": "director-tests/D4-win",
+        "game_id": "director",
+        "platform": "win",
+        "version": "D4",
+        "debugflags": "fewframesonly,fast,screenshot",
+        "movienames": [
+            "INK1B-1.DIR",
+            "INK1B-2.DIR",
+            "INK1B-3.DIR",
+            "INK1B-4.DIR",
+            "INK1B-5.DIR",
+            "INK1B-6.DIR",
+            "INK1B-7.DIR",
+            "INK1B-8.DIR",
+            "INK1B-9.DIR",
+            "INK8B-1.DIR",
+            "INK8B-2.DIR",
+            "INK8B-3.DIR",
+            "INK8B-4.DIR",
+            "INK8B-5.DIR",
+            "INK8B-6.DIR",
+            "INK8B-7.DIR",
+            "INK8B-8.DIR",
+            "INK8B-9.DIR",
+            "INK8COL.DIR",
+            "PALSWITC.DIR"
+        ]
+    }    
 ]
