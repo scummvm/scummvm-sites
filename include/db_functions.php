@@ -183,6 +183,14 @@ function insert_filechecksum($file, $checktype, $conn) {
 }
 
 /**
+ * Delete filesets marked for deletion
+ */
+function delete_filesets($conn) {
+  $query = "DELETE FROM fileset WHERE `delete` == TRUE";
+  $conn->query($query);
+}
+
+/**
  * Create an entry to the log table on each call of db_insert() or
  * populate_matching_games()
  */
