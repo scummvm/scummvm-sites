@@ -167,7 +167,7 @@ function create_page($filename, $results_per_page, $records_table, $select_query
       }
     }
 
-    if ($filename == 'games_list.php')
+    if ($filename == 'games_list.php' || $filename == 'user_games_list.php')
       echo "<tr class=games_list onclick='hyperlink(\"fileset.php?id={$row['fileset']}\")'>\n";
     else
       echo "<tr>\n";
