@@ -33,7 +33,7 @@ $json_response = array(
 );
 
 if ($games->num_rows == 0) {
-  $json_response['error'] = 1;
+  $json_response['error'] = -1;
   unset($json_response['files']);
   $json_response['status'] = 'unknown_variant';
 
