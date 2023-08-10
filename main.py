@@ -217,7 +217,7 @@ if __name__ == "__main__":
                 return
             logging.debug(f"relay_data: Relaying data to host (user 1)")
             peers_to_send.add(peer)
-        elif type_of_send == PN_SENDTYPE_ALL:
+        elif type_of_send in (PN_SENDTYPE_ALL, PN_SENDTYPE_ALL_RELIABLE, PN_SENDTYPE_ALL_RELIABLE_TIMED):
             # Send to all peers
             for peer in peers_by_user_id.values():
                 peers_to_send.add(peer)
