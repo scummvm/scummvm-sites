@@ -120,9 +120,11 @@ def punyencode(orig: str) -> str:
 
 def punyencode_filepath(filepath):
     filepath = filepath.rstrip("/")
-    prefix, filename = os.path.split(filepath)
+    path_components = filepath.split(os.path.sep)
+    for i, component in enumerate(path_components):
+        path_components[i] = punyencode(component)
 
-    return os.path.join(prefix, punyencode(filename))
+    return os.path.join(*path_components)
 
 
 def read_be_32(byte_stream):
