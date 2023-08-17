@@ -199,18 +199,33 @@ server.handleMessage('get_teams', async (client, args) => {
 
     logEvent('get_teams', client, args.version, {'userTeam': userTeamResponse, 'opponentTeam': opponentTeamResponse});
 
-    let userMessages = [];
+    let responseErrorMessages = [];
     if (userTeamResponse.error) {
-        userMessages.push("User: " + userTeamResponse.message);
+        responseErrorMessages.push("User: " + userTeamResponse.message);
     }
     if (opponentTeamResponse.error) {
-        userMessages.push("Opponent: " + opponentTeamResponse.message);
+        responseErrorMessages.push("Opponent: " + opponentTeamResponse.message);
     }
-    if (userMessages.length > 0) {
-        const errorMessage = userMessages.join(" ");
-        client.send("teams", {error: 1, message: errorMessage, user: [], opponent: []});
-    } else {
-        const teams = {error: 0, message: "", user: userTeamResponse.team, opponent: opponentTeamResponse.team};
-        client.send("teams", teams);
+
+    if (responseErrorMessages.length > 0) {
+        const fullErrorMessage = responseErrorMessages.join(" ");
+        client.send("teams", {error: 1, message: fullErrorMessage, user: [], opponent: []});
+        return;
     }
+
+    let duplicatePlayers = userTeamResponse.team.filter(
+        player => opponentTeamResponse.team.indexOf(player) != -1
+    );
+    if (duplicatePlayers.length > 0) {
+        client.send("teams", {
+            error: 1,
+            message: `Both teams have the same player(s): ${duplicatePlayers.join(", ")}`,
+            user: [],
+            opponent: []
+        });
+        return;
+    }
+
+    const teams = {error: 0, message: "", user: userTeamResponse.team, opponent: opponentTeamResponse.team};
+    client.send("teams", teams);
 });
