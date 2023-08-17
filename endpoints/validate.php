@@ -6,6 +6,12 @@ header('Content-Type: application/json');
 
 $conn = db_connect();
 
+$error_codes = array(
+  "unknown" => -1,
+  "success" => 0,
+  "empty" => 2
+);
+
 $json_string = file_get_contents('php://input');
 $json_object = json_decode($json_string);
 
@@ -15,6 +21,35 @@ foreach ($json_object as $key => $value) {
     continue;
 
   $game_metadata[$key] = $value;
+}
+
+$json_response = array(
+  'error' => $error_codes['success'],
+  'files' => array()
+);
+
+if (count($game_metadata) == 0) {
+  if (count($json_object->files) == 0) {
+    $json_response['error'] = $error_codes['empty'];
+    unset($json_response['files']);
+    $json_response['status'] = 'empty_fileset';
+
+
+    $json_response = json_encode($json_response);
+    echo $json_response;
+    return;
+  }
+
+  $json_response['error'] = $error_codes['unknown'];
+  unset($json_response['files']);
+  $json_response['status'] = 'unknown_variant';
+
+  $fileset_id = user_insert_fileset($json_object->files, $conn);
+  $json_response['fileset'] = $fileset_id;
+
+  $json_response = json_encode($json_response);
+  echo $json_response;
+  return;
 }
 
 // Find game(s) that fit the metadata
@@ -27,13 +62,8 @@ AND platform = '{$game_metadata['platform']}'
 AND language = '{$game_metadata['language']}'";
 $games = $conn->query($query);
 
-$json_response = array(
-  'error' => 0,
-  'files' => array()
-);
-
 if ($games->num_rows == 0) {
-  $json_response['error'] = -1;
+  $json_response['error'] = $error_codes['unknown'];
   unset($json_response['files']);
   $json_response['status'] = 'unknown_variant';
 
