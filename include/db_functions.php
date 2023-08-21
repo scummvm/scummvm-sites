@@ -568,6 +568,12 @@ function populate_matching_games() {
 
     if ($conn->query($query)) {
       $user = 'cli:' . get_current_user();
+
+      // Merge log
+      create_log("Fileset merge", $user,
+        mysqli_real_escape_string($conn, "Merged Fileset:{$matched_game['fileset']} and Fileset:{$fileset[0][0]}"));
+
+      // Matching log
       $log_last = create_log(mysqli_real_escape_string($conn, $category_text), $user,
         mysqli_real_escape_string($conn, $log_text));
 

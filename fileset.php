@@ -172,26 +172,49 @@ if (isset($_POST['delete'])) {
 echo "<p id='delete-confirm' class='hidden'>Fileset marked for deletion</p>"; // Hidden
 
 
-// Display history
+// Display history and logs
 echo "<h3>Fileset history</h3>";
-if ($history->num_rows == 0) {
-  echo "<p>Fileset has no history.</p>";
+
+echo "<table>\n";
+echo "<th>Timestamp</th>";
+echo "<th>Category</th>";
+echo "<th>Description</th>";
+echo "<th>Log ID</th>";
+
+$logs = $conn->query("SELECT `timestamp`, category, `text`, id FROM log
+WHERE `text` REGEXP 'Fileset:{$id}'
+ORDER BY `timestamp` DESC, id DESC");
+
+while ($row = $logs->fetch_assoc()) {
+  $log_page = get_log_page($row['log'], $conn);
+
+  echo "<tr>\n";
+  echo "<td>{$row['timestamp']}</td>\n";
+  echo "<td>{$row['category']}</td>\n";
+  echo "<td>{$row['text']}</td>\n";
+  echo "<td><a href='logs.php?page={$log_page}'>{$row['id']}</a></td>\n";
+  echo "</tr>\n";
 }
-else {
-  echo "<table>\n";
-  echo "<th>Old ID</th>";
-  echo "<th>Changed on</th>";
-  echo "<th>Log ID</th>";
-  while ($row = $history->fetch_assoc()) {
+
+while ($history_row = $history->fetch_assoc()) {
+  $logs = $conn->query("SELECT `timestamp`, category, `text`, id FROM log
+  WHERE `text` REGEXP 'Fileset:{$history_row['oldfileset']}'
+  AND `category` NOT REGEXP 'merge'
+  ORDER BY `timestamp` DESC, id DESC");
+
+  while ($row = $logs->fetch_assoc()) {
     $log_page = get_log_page($row['log'], $conn);
+
     echo "<tr>\n";
-    echo "<td>{$row['oldfileset']}</td>\n";
     echo "<td>{$row['timestamp']}</td>\n";
-    echo "<td><a href='logs.php?page={$log_page}'>{$row['log']}</a></td>\n";
+    echo "<td>{$row['category']}</td>\n";
+    echo "<td>{$row['text']}</td>\n";
+    echo "<td><a href='logs.php?page={$log_page}'>{$row['id']}</a></td>\n";
     echo "</tr>\n";
   }
-  echo "</table>\n";
 }
+
+echo "</table>\n";
 
 ?>
 
