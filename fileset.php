@@ -9,9 +9,12 @@ echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 echo "<script type='text/javascript' src='{$jquery_file}'></script>\n";
 echo "<script type='text/javascript' src='{$js_file}'></script>\n";
 
-function get_log_page($log_id) {
-  $records_per_page = 25; // FIXME: Fetch this directly from logs.php
-  return intdiv($log_id, $records_per_page) + 1;
+function get_log_page($log_id, $conn) {
+  $results_per_page = 25; // FIXME: Fetch this directly from logs.php
+  $num_of_results = $conn->query("SELECT COUNT(id) FROM log")->fetch_array()[0];
+  $num_of_pages = ceil($num_of_results / $results_per_page);
+
+  return $num_of_pages - (intdiv($log_id, $results_per_page) + 1);
 }
 
 $mysql_cred = json_decode(file_get_contents(__DIR__ . '/mysql_config.json'), true);
@@ -180,7 +183,7 @@ else {
   echo "<th>Changed on</th>";
   echo "<th>Log ID</th>";
   while ($row = $history->fetch_assoc()) {
-    $log_page = get_log_page($row['log']);
+    $log_page = get_log_page($row['log'], $conn);
     echo "<tr>\n";
     echo "<td>{$row['oldfileset']}</td>\n";
     echo "<td>{$row['timestamp']}</td>\n";
