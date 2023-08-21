@@ -141,8 +141,12 @@ while ($game = $games->fetch_array()) {
       }
     }
 
-    if ($status != 'ok')
+    if ($status != 'ok') {
       $json_response['error'] = 1;
+
+      $fileset_id = user_insert_fileset($json_object->files, $conn);
+      $json_response['fileset'] = $fileset_id;
+    }
 
     array_push($json_response['files'], array('status' => $status, 'name' => $filename));
   }
