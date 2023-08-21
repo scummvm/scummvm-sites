@@ -2,6 +2,7 @@ import hashlib
 import os
 import argparse
 import struct
+import sys
 
 script_version = "0.1"
 
@@ -422,6 +423,13 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
 
                 file.write(f"\trom ( {data} )\n")
             file.write(")\n\n")
+
+
+class MyParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('Error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
 
 parser = argparse.ArgumentParser()
