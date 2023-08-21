@@ -1,5 +1,5 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/include/db_functions.php';
+require __DIR__ . '/../include/db_functions.php';
 
 function user_calc_key($user_fileset) {
   $key_string = "";

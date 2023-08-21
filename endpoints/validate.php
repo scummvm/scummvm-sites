@@ -1,5 +1,5 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/include/user_fileset_functions.php';
+require __DIR__ . '/../include/user_fileset_functions.php';
 
 header('Access-Contol-Allow-Origin: *');
 header('Content-Type: application/json');

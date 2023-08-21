@@ -1,5 +1,5 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/include/pagination.php';
+require __DIR__ . '/include/pagination.php';
 
 $filename = "user_games_list.php";
 $records_table = "game";

@@ -1,5 +1,5 @@
 <?php
-require $_SERVER['DOCUMENT_ROOT'] . '/include/pagination.php';
+require __DIR__ . '/include/pagination.php';
 
 $filename = "logs.php";
 $records_table = "log";
