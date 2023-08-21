@@ -103,6 +103,7 @@ function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_tex
 
   if ($existing_entry->num_rows > 0) {
     $existing_entry = $existing_entry->fetch_array()[0];
+    $conn->query("SET @fileset_last = {$existing_entry}");
 
     $category_text = "Uploaded from {$src}";
     $log_text = "Duplicate of Fileset:{$existing_entry}, {$log_text}";
