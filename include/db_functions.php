@@ -296,7 +296,7 @@ function db_insert($data_arr) {
   $transaction_id = $conn->query("SELECT MAX(`transaction`) FROM transactions")->fetch_array()[0] + 1;
 
   $category_text = "Uploaded from {$src}";
-  $log_text = sprintf("Started loading DAT file, filename '%s', size %d, author '%s', version %s.
+  $log_text = sprintf("Started loading DAT file, size %d, author '%s', version %s.
   State '%s'. Transaction: %d",
     $filepath, filesize($filepath), $author, $version, $status, $transaction_id);
 
@@ -321,9 +321,9 @@ function db_insert($data_arr) {
 
     $key = $detection ? calc_key($fileset) : "";
     $megakey = !$detection ? calc_megakey($fileset['rom']) : "";
-    $log_text = sprintf("from filename '%s', size %d, author '%s', version %s.
+    $log_text = sprintf("size %d, author '%s', version %s.
     State '%s'.",
-      $filepath, filesize($filepath), $author, $version, $status);
+      filesize($filepath), $author, $version, $status);
 
     if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn)) {
       foreach ($fileset["rom"] as $file) {
