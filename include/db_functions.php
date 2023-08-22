@@ -84,7 +84,7 @@ function insert_game($engine_name, $engineid, $title, $gameid, $extra, $platform
   $conn->query("SET @game_last = LAST_INSERT_ID()");
 }
 
-function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_text, $conn) {
+function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_text, $conn, $ip = '') {
   $status = $detection ? "detection" : $src;
   $game = "NULL";
   $key = $key == "" ? "NULL" : "'{$key}'";
@@ -107,6 +107,8 @@ function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_tex
 
     $category_text = "Uploaded from {$src}";
     $log_text = "Duplicate of Fileset:{$existing_entry}, {$log_text}";
+    if ($src == 'user')
+      $log_text = "Duplicate of Fileset:{$existing_entry}, from user IP {$ip}, {$log_text}";
 
     $user = 'cli:' . get_current_user();
     create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));
@@ -131,6 +133,8 @@ function insert_fileset($src, $detection, $key, $megakey, $transaction, $log_tex
   $category_text = "Uploaded from {$src}";
   $fileset_last = $conn->query("SELECT @fileset_last")->fetch_array()[0];
   $log_text = "Created Fileset:{$fileset_last}, {$log_text}";
+  if ($src == 'user')
+    $log_text = "Created Fileset:{$fileset_last}, from user IP {$ip}, {$log_text}";
 
   $user = 'cli:' . get_current_user();
   create_log(mysqli_real_escape_string($conn, $category_text), $user, mysqli_real_escape_string($conn, $log_text));

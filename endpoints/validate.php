@@ -15,6 +15,11 @@ $error_codes = array(
 $json_string = file_get_contents('php://input');
 $json_object = json_decode($json_string);
 
+$ip = $_SERVER['REMOTE_ADDR'];
+// Take only first 3 bytes, set 4th byte as '.X'
+// FIXME: Assumes IPv4
+$ip = implode('.', array_slice(explode('.', $ip), 0, 3)) . '.X';
+
 $game_metadata = array();
 foreach ($json_object as $key => $value) {
   if ($key == 'files')
@@ -44,7 +49,7 @@ if (count($game_metadata) == 0) {
   unset($json_response['files']);
   $json_response['status'] = 'unknown_variant';
 
-  $fileset_id = user_insert_fileset($json_object->files, $conn);
+  $fileset_id = user_insert_fileset($json_object->files, $ip, $conn);
   $json_response['fileset'] = $fileset_id;
 
   $json_response = json_encode($json_response);
@@ -67,7 +72,7 @@ if ($games->num_rows == 0) {
   unset($json_response['files']);
   $json_response['status'] = 'unknown_variant';
 
-  $fileset_id = user_insert_fileset($json_object->files, $conn);
+  $fileset_id = user_insert_fileset($json_object->files, $ip, $conn);
   $json_response['fileset'] = $fileset_id;
 }
 
@@ -144,7 +149,7 @@ while ($game = $games->fetch_array()) {
     if ($status != 'ok') {
       $json_response['error'] = 1;
 
-      $fileset_id = user_insert_fileset($json_object->files, $conn);
+      $fileset_id = user_insert_fileset($json_object->files, $ip, $conn);
       $json_response['fileset'] = $fileset_id;
     }
 

@@ -42,7 +42,7 @@ function user_insert_queue($user_fileset, $conn) {
   $conn->query($query);
 }
 
-function user_insert_fileset($user_fileset, $conn) {
+function user_insert_fileset($user_fileset, $ip, $conn) {
   $src = 'user';
   $detection = false;
   $key = '';
@@ -54,7 +54,7 @@ function user_insert_fileset($user_fileset, $conn) {
   // Set timestamp of fileset insertion
   $conn->query(sprintf("SET @fileset_time_last = %d", time()));
 
-  if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn)) {
+  if (insert_fileset($src, $detection, $key, $megakey, $transaction_id, $log_text, $conn, $ip)) {
     foreach ($user_fileset as $file) {
       $file = file_json_to_array($file);
 
