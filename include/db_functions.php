@@ -524,7 +524,7 @@ function populate_matching_games() {
   FROM fileset
   JOIN file ON file.fileset = fileset.id
   JOIN filechecksum ON file.id = filechecksum.file
-  WHERE fileset.game IS NULL");
+  WHERE fileset.game IS NULL AND status != 'user'");
   $unmatched_files = $unmatched_files->fetch_all();
 
   // Splitting them into different filesets

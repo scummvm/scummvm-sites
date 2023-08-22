@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/include/pagination.php';
+require __DIR__ . '/include/user_fileset_functions.php';
 
 $filename = 'fileset.php';
 $stylesheet = 'style.css';
@@ -163,10 +164,14 @@ echo "</table>\n";
 // Dev Actions
 echo "<h3>Developer Actions</h3>";
 echo "<button id='delete-button' type='button' onclick='delete_id({$id})'>Mark Fileset for Deletion</button>";
+echo "<button id='match-button' type='button' onclick='match_id({$id})'>Match and Merge Fileset</button>";
 
 if (isset($_POST['delete'])) {
   $conn->query("UPDATE fileset SET `delete` = TRUE WHERE id = {$_POST['delete']}");
   $conn->commit();
+}
+if (isset($_POST['match'])) {
+  populate_matching_user_filesets();
 }
 
 echo "<p id='delete-confirm' class='hidden'>Fileset marked for deletion</p>"; // Hidden

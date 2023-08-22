@@ -11,6 +11,17 @@ function delete_id(value) {
   });
 }
 
+function match_id(value) {
+  $.ajax({
+    url: "fileset.php",
+    type: "post",
+    dataType: "json",
+    data: {
+      match: value,
+    },
+  });
+}
+
 function remove_empty_inputs() {
   var myForm = document.getElementById("filters-form");
   var allInputs = myForm.getElementsByTagName("input");
@@ -31,4 +42,5 @@ function hyperlink(link) {
 $(document).ready(function () {
   $(".hidden").hide();
   $("#delete-button").one("click", delete_id);
+  $("#match-button").one("click", match_id);
 });
