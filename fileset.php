@@ -10,13 +10,6 @@ echo "<link rel='stylesheet' href='{$stylesheet}'>\n";
 echo "<script type='text/javascript' src='{$jquery_file}'></script>\n";
 echo "<script type='text/javascript' src='{$js_file}'></script>\n";
 
-function get_log_page($log_id, $conn) {
-  $results_per_page = 25; // FIXME: Fetch this directly from logs.php
-  $num_of_results = $conn->query("SELECT COUNT(id) FROM log")->fetch_array()[0];
-  $num_of_pages = ceil($num_of_results / $results_per_page);
-
-  return $num_of_pages - (intdiv($log_id, $results_per_page) + 1);
-}
 
 $mysql_cred = json_decode(file_get_contents(__DIR__ . '/mysql_config.json'), true);
 $servername = $mysql_cred["servername"];
@@ -191,13 +184,11 @@ WHERE `text` REGEXP 'Fileset:{$id}'
 ORDER BY `timestamp` DESC, id DESC");
 
 while ($row = $logs->fetch_assoc()) {
-  $log_page = get_log_page($row['log'], $conn);
-
   echo "<tr>\n";
   echo "<td>{$row['timestamp']}</td>\n";
   echo "<td>{$row['category']}</td>\n";
   echo "<td>{$row['text']}</td>\n";
-  echo "<td><a href='logs.php?page={$log_page}'>{$row['id']}</a></td>\n";
+  echo "<td><a href='logs.php?id={$row['id']}'>{$row['id']}</a></td>\n";
   echo "</tr>\n";
 }
 
@@ -208,13 +199,11 @@ while ($history_row = $history->fetch_assoc()) {
   ORDER BY `timestamp` DESC, id DESC");
 
   while ($row = $logs->fetch_assoc()) {
-    $log_page = get_log_page($row['log'], $conn);
-
     echo "<tr>\n";
     echo "<td>{$row['timestamp']}</td>\n";
     echo "<td>{$row['category']}</td>\n";
     echo "<td>{$row['text']}</td>\n";
-    echo "<td><a href='logs.php?page={$log_page}'>{$row['id']}</a></td>\n";
+    echo "<td><a href='logs.php?id={$row['id']}'>{$row['id']}</a></td>\n";
     echo "</tr>\n";
   }
 }
