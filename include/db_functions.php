@@ -360,9 +360,9 @@ function db_insert($data_arr) {
  */
 function compare_filesets($id1, $id2, $conn) {
   $fileset1 = $conn->query("SELECT name, size, checksum
-                            FROM file WHERE fileset = '{$id1}'")->fetch_all();
+                            FROM file WHERE fileset = '{$id1}'")->fetch_array();
   $fileset2 = $conn->query("SELECT name, size, checksum
-                            FROM file WHERE fileset = '{$id2}'")->fetch_all();
+                            FROM file WHERE fileset = '{$id2}'")->fetch_array();
 
   // Sort filesets on checksum
   usort($fileset1, function ($a, $b) {
@@ -390,7 +390,7 @@ function compare_filesets($id1, $id2, $conn) {
  *     fullmatch -> partialmatch, detection
  */
 function status_to_match($status) {
-  $order = array("detection", "dat", "scan", "partialmatch", "fullmatch");
+  $order = array("detection", "dat", "scan", "partialmatch", "fullmatch", "user");
   return array_slice($order, 0, array_search($status, $order));
 }
 
@@ -456,7 +456,7 @@ function find_matching_game($game_files) {
     return $matching_games;
 
   if (compare_filesets($matching_games[0]['fileset'], $game_files[0][0], $conn)) {
-    $conn->query("UPDATE fileset SET `delete` = TRUE WHERE id = {$game_files[0]}");
+    $conn->query("UPDATE fileset SET `delete` = TRUE WHERE id = {$game_files[0][0]}");
     return array();
   }
 

@@ -74,8 +74,10 @@ function user_insert_fileset($user_fileset, $ip, $conn) {
 
 /**
  * (Attempt to) match fileset that have fileset.game as NULL
+ * This will delete the original detection fileset and replace it with the newly
+ * matched fileset
  */
-function match_user_filesets() {
+function match_and_merge_user_filesets() {
   $conn = db_connect();
 
   // Getting unmatched filesets
@@ -107,12 +109,7 @@ function match_user_filesets() {
 
     $matched_game = $matching_games[0];
 
-    // Update status depending on $matched_game["src"] (dat -> partialmatch, scan -> fullmatch)
-    $status = $fileset[0][2];
-    if ($fileset[0][2] == "dat")
-      $status = "partialmatch";
-    elseif ($fileset[0][2] == "scan")
-      $status = "fullmatch";
+    $status = 'fullmatch';
 
     // Convert NULL values to string with value NULL for printing
     $matched_game = array_map(function ($val) {
@@ -129,16 +126,6 @@ function match_user_filesets() {
     SET game = %d, status = '%s', `key` = '%s'
     WHERE id = %d", $matched_game["id"], $status, $matched_game["key"], $fileset[0][0]);
 
-    if (!$conn->commit())
-      echo "Matching user fileset failed\n";
-  }
-}
-
-/*
- * Delete the original detection fileset and replace it with the newly matched
- * fileset
- */
-function merge_user_filesets() {
     $history_last = merge_filesets($matched_game["fileset"], $fileset[0][0]);
 
     if ($conn->query($query)) {
@@ -153,9 +140,14 @@ function merge_user_filesets() {
         mysqli_real_escape_string($conn, $log_text));
 
       // Add log id to the history table
-    $conn->query("UPDATE history SET log = {$log_last} WHERE id = {$history_last}");
+      $conn->query("UPDATE history SET log = {$log_last} WHERE id = {$history_last}");
+    }
+
+    if (!$conn->commit())
+      echo "Updating matched games failed\n";
   }
 }
+
 
 ?>
 

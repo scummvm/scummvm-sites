@@ -62,7 +62,6 @@ $query = "SELECT game.id FROM game
 JOIN engine ON game.engine = engine.id
 WHERE gameid = '{$game_metadata['gameid']}'
 AND engineid = '{$game_metadata['engineid']}'
-AND extra = '{$game_metadata['extra']}'
 AND platform = '{$game_metadata['platform']}'
 AND language = '{$game_metadata['language']}'";
 $games = $conn->query($query);
@@ -76,11 +75,12 @@ if ($games->num_rows == 0) {
   $json_response['fileset'] = $fileset_id;
 }
 
-// Check if all files in fullmatch filesets are present with user
+// Check if all files in the (first) fileset are present with user
 while ($game = $games->fetch_array()) {
   $fileset = $conn->query("SELECT file.id, name, size FROM file
   JOIN fileset ON fileset.id = file.fileset
-  WHERE fileset.game = {$game['id']} AND fileset.status = 'fullmatch'");
+  WHERE fileset.game = {$game['id']} AND
+  (status = 'fullmatch' OR status = 'partialmatch' OR status = 'detection')");
 
   if ($fileset->num_rows == 0)
     continue;
@@ -106,14 +106,14 @@ while ($game = $games->fetch_array()) {
     return strcmp($a['name'], $b['name']);
   });
 
-  for ($i = 0, $j = 0; $i < count($fileset), $j < count($file_object); $i++, $j++) {
+  for ($i = 0, $j = 0; $i < count($fileset) && $j < count($file_object); $i++, $j++) {
     $status = 'ok';
     $db_file = $fileset[$i];
     $user_file = $file_object[$j];
-    $filename = $user_file->name;
+    $filename = strtolower($user_file->name);
 
-    if ($db_file['name'] != $user_file->name) {
-      if ($db_file['name'] > $user_file->name) {
+    if (strtolower($db_file['name']) != $filename) {
+      if (strtolower($db_file['name']) > $filename) {
         $status = 'unknown_file';
         $i--; // Retain same db_file for next iteration
       }
@@ -155,6 +155,8 @@ while ($game = $games->fetch_array()) {
 
     array_push($json_response['files'], array('status' => $status, 'name' => $filename));
   }
+
+  break;
 }
 
 $json_response = json_encode($json_response);
