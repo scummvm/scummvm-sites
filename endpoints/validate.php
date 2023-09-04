@@ -9,7 +9,8 @@ $conn = db_connect();
 $error_codes = array(
   "unknown" => -1,
   "success" => 0,
-  "empty" => 2
+  "empty" => 2,
+  "no_metadata" => 3,
 );
 
 $json_string = file_get_contents('php://input');
@@ -45,9 +46,9 @@ if (count($game_metadata) == 0) {
     return;
   }
 
-  $json_response['error'] = $error_codes['unknown'];
+  $json_response['error'] = $error_codes['no_metadata'];
   unset($json_response['files']);
-  $json_response['status'] = 'unknown_variant';
+  $json_response['status'] = 'no_metadata';
 
   $fileset_id = user_insert_fileset($json_object->files, $ip, $conn);
   $json_response['fileset'] = $fileset_id;

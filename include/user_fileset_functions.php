@@ -77,7 +77,7 @@ function user_insert_fileset($user_fileset, $ip, $conn) {
  * This will delete the original detection fileset and replace it with the newly
  * matched fileset
  */
-function match_and_merge_user_filesets() {
+function match_and_merge_user_filesets($id) {
   $conn = db_connect();
 
   // Getting unmatched filesets
@@ -87,7 +87,7 @@ function match_and_merge_user_filesets() {
   FROM fileset
   JOIN file ON file.fileset = fileset.id
   JOIN filechecksum ON file.id = filechecksum.file
-  WHERE fileset.game IS NULL AND status = 'user'");
+  WHERE status = 'user' AND fileset.id = {$id}");
   $unmatched_files = $unmatched_files->fetch_all();
 
   // Splitting them into different filesets

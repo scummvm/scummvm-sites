@@ -164,8 +164,8 @@ if (isset($_POST['delete'])) {
   $conn->commit();
 }
 if (isset($_POST['match'])) {
-  match_and_merge_user_filesets();
-  header("Location: {$filename}?id={$id}");
+  match_and_merge_user_filesets($_POST['match']);
+  header("Location: {$filename}?id={$_POST['match']}");
 }
 
 echo "<p id='delete-confirm' class='hidden'>Fileset marked for deletion</p>"; // Hidden
