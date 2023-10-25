@@ -24,11 +24,13 @@
 const createLogger = require('logging').default;
 const ioredis = require("ioredis")
 const Areas = require('../global/Areas.js');
+const { default: Redlock } = require('redlock');
 
 class Redis {
     constructor(config) {
         this.logger = createLogger("Redis");
         this.redis = new ioredis(config);
+        this.redlock = new Redlock([this.redis]);
 
         this.redis.on("ready", async () => {
             this.logger.info("Connected");
@@ -78,6 +80,7 @@ class Redis {
             'icon': Number(response['icon']),
             'stats': stats
             .split(',').map(Number),
+            'version': response['version'],
             'game': response['game'],
             'area': Number(response['area']),
             'inGame': Number(response['inGame']),
@@ -94,8 +97,9 @@ class Redis {
         return undefined;
     }
 
-    async addUser(userId, user, game) {
+    async addUser(userId, user, version, game) {
         // Add some server specific keys.
+        user.version = version
         user.game = game;
         user.area = 0;
         user.phone = 0;
@@ -106,14 +110,14 @@ class Redis {
         await this.redis.hset("byonline:users:nameToId", user['user'].toUpperCase(), userId);
     }
 
-    async getUser(username, password, game) {
+    async getUser(username, password, version, game) {
         if (database != this) {
             this.logger.warn("Redis isn't set as default database, calling getUser shouldn't be possible");
             return {error: 1, message: "Internal error."};
         }
         let user = await this.getUserByName(username);
         if (user) {
-            await this.addUser(user.id, user, game)
+            await this.addUser(user.id, user, version, game)
             return user;
         } else {
             const userId = await this.redis.incr("byonline:globals:userId")
@@ -123,7 +127,7 @@ class Redis {
                 'f_stats': Array(42).fill(0),
                 'b_stats': Array(29).fill(0),
             }
-            this.addUser(userId, user, game);
+            this.addUser(userId, user, version, game);
             user['id'] = userId;
             return user;
         }
@@ -161,6 +165,14 @@ class Redis {
 
     async setIcon(userId, icon) {
         await this.redis.hset(`byonline:users:${userId}`, 'icon', icon);
+    }
+
+    async setStats(userId, stats, game) {
+        let field = "stats"
+        if (database == this) {
+            field = game == "football" ? "f_stats" : "b_stats";
+        }
+        await this.redis.hset(`byonline:users:${userId}`, field, String(stats));
     }
 
     async getUserIdsInArea(areaId, game) {

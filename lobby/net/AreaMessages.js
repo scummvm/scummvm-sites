@@ -36,11 +36,18 @@ server.handleMessage('get_population', async (client, args) => {
     let population = 0;
     if (areaId in Areas.Groups) {
         for (const area of Areas.Groups[areaId]) {
-            const users = await redis.getUserIdsInArea(area, client.game);
-            population += users.length;
+            const users = await redis.getUsersInArea(area, client.game);
+            for (const user of users) {
+                if (client.versionNumber == user.version)
+                    population += 1
+            }
         }
     } else {
-        population = (await redis.getUserIdsInArea(areaId, client.game)).length;
+        const users = await redis.getUsersInArea(areaId, client.game);
+        for (const user of users) {
+            if (client.versionNumber == user.version)
+                population += 1
+        }
     }
     client.send('population_resp', {area: areaId, population: population});
 
@@ -90,8 +97,8 @@ server.handleMessage('get_players', async (client, args) => {
 
     const players = [];
     for (const user of users) {
-        if (user.id == client.userId) {
-            // Don't add ourselves in.
+        if ((user.id == client.userId) || (user.version != client.versionNumber)) {
+            // Don't add ourselves or mismatched versions in.
             continue;
         }
         players.push([user.user, user.id, user.icon, user.stats[0], user.stats[1], user.stats[2], user.phone, user.opponent]);
@@ -109,8 +116,8 @@ process.on('update_players_list', (args) => {
         if (client.areaId == areaId && client.game == game) {
             const players = [];
             for (const user of users) {
-                if (user.id == client.userId) {
-                    // Don't add ourselves in.
+                if ((user.id == client.userId) || (user.version != client.versionNumber)) {
+                    // Don't add ourselves or mismatched versions in.
                     continue;
                 }
                 players.push([user.user, user.id, user.icon, user.stats[0], user.stats[1], user.stats[2], user.phone, user.opponent]);
@@ -138,9 +145,6 @@ server.handleMessage('game_finished', async (client, args) => {
     logEvent('game_finished', client, args.version, {'area': client.areaId, 'opponent': client.opponentId});
     await redis.setInGame(client.userId, 0);
     await redis.sendGamesPlayingInArea(client.areaId, client.game);
-
-    await redis.removeOngoingResults(client.opponentId, client.game);
-    await redis.removeOngoingResults(client.userId, client.game);
 });
 
 process.on('update_games_playing', async (args) => {

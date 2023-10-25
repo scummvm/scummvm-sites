@@ -13,3 +13,10 @@ network:
   # This sets the session server that the game will connect to
   # to host and join their sessions.
   session_server: "127.0.0.1:9120"
+
+  # This restricts access from certain versions of ScummVM.
+  # Setting the build version by a date will disable access who have built
+  # ScummVM prior to that date.  Setting it to null will restrict that version
+  # all together.
+  version_restrictions:
+    2.8.0git: "Oct 25 2023 UTC"

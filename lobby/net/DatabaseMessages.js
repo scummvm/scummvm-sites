@@ -35,17 +35,75 @@ server.handleMessage("login", async (client, args) => {
     const competitive_mods = args.competitive_mods;
 
     if (username === undefined) {
-        client.kick("Missing username parameter!");
+        client.send("login_resp", {error_code: 1,
+                                   id: 0,
+                                   sessionServer: "",
+                                   response: "Missing username parameter!"});
         return;
     } else if (password === undefined) {
-        client.kick("Missing password parameter!");
+        client.send("login_resp", {error_code: 1,
+                                   id: 0,
+                                   sessionServer: "",
+                                   response: "Missing password parameter!"});
         return;
     } else if (game === undefined) {
-        client.kick("Missing game parameter!");
+        client.send("login_resp", {error_code: 1,
+                                   id: 0,
+                                   sessionServer: "",
+                                   response: "Missing game parameter!"});
         return;
     } else if (version == undefined) {
-        client.kick("Missing version paremeter!");
+        client.send("login_resp", {error_code: 1,
+                                   id: 0,
+                                   sessionServer: "",
+                                   response: "Missing version paremeter!"});
         return;
+    }
+
+    // This code parses the ScummVM version string sent by the client.
+    // e.g. ScummVM 2.8.0git-{revision} (Oct 21 2023 19:11:48)
+    const versionArray = version.split(" ");
+    if (versionArray[0] != "ScummVM") {
+        client.send("login_resp", {error_code: 1,
+                                   id: 0,
+                                   sessionServer: "",
+                                   response: "Only ScummVM clients are supported."});
+        return;
+    }
+    client.versionNumber = versionArray[1]
+    if (client.versionNumber.includes("git")) {
+        // This is a development build, exclude the revision since it does not matter here.
+        const gitLocation = client.versionNumber.indexOf("git")
+        // This should result with "2.8.0git"
+        client.versionNumber = client.versionNumber.substr(0, gitLocation + 3)
+    }
+
+    if (client.versionNumber in server.versionRestrictions) {
+        if (server.versionRestrictions[client.versionNumber] == null) {
+            // Discontinued
+            logEvent('discontinuedLogin', client, version, {'username': username, 'game': game, 'server_version': server.versionRestrictions[client.versionNumber]});
+            client.send("login_resp", {error_code: 1,
+                                       id: 0,
+                                       sessionServer: "",
+                                       response: `ScummVM version ${client.versionNumber} is no longer being supported.  Please visit scummvm.org and update to the latest version to continue playing online.`})
+            return;
+        }
+        // Parse version date and check against the timestamp in the config.
+        // The substr call is to remove the first bracket from the date string.
+
+        const clientTimestamp = Date.parse(`${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`);
+        const serverTimestamp = Date.parse(server.versionRestrictions[client.versionNumber])
+
+        const isBuildCompatable = clientTimestamp >= serverTimestamp
+        if (!isBuildCompatable) {
+            // Outdated build.
+            logEvent('outdatedLogin', client, version, {'username': username, 'game': game, 'server_version': server.versionRestrictions[client.versionNumber]});
+            client.send("login_resp", {error_code: 1,
+                                       id: 0,
+                                       sessionServer: "",
+                                       response: `This build of ${client.versionNumber} is no longer being supported.  Please download the latest daily build or pull and build the latest changes to continue playing online.`});
+            return;
+        }
     }
 
     const games = ["football", "baseball"];
@@ -57,7 +115,7 @@ server.handleMessage("login", async (client, args) => {
     client.version = version;
     client.competitiveMods = competitive_mods || false;
 
-    const user = await database.getUser(username, password, game);
+    const user = await database.getUser(username, password, client.versionNumber, game);
     logEvent('login', client, args.version, {'user': user.id, 'username': user.user, 'game': game, 'competitive_mods': competitive_mods});
     if (user.error) {
         client.send("login_resp", {error_code: user.error,
@@ -144,8 +202,8 @@ server.handleMessage('locate_player', async (client, args) => {
                       area: ""};
 
     const user = await redis.getUserByName(username);
-    if (!user || !user.game || user.game != client.game) {
-        // Player not logged in or in the different game
+    if (!user || !user.game || user.game != client.game || user.version != client.versionNumber) {
+        // Player is either not logged in, playing a different game, or using a different version.
         client.send("locate_resp", response);
         return
     }
@@ -167,6 +225,7 @@ server.handleMessage('locate_player', async (client, args) => {
 server.handleMessage("game_results", async (client, args) => {
     const resultsUserId = args.user;
     const reportingUserId = client.userId;
+    const lastFlag = args.last;
     let isHome;
     let opponentId;
     // The home team always reports the game results, so we can use that
@@ -180,12 +239,44 @@ server.handleMessage("game_results", async (client, args) => {
         opponentId = client.userId;
     }
     const resultsFields = args.fields;
-    const ongoingResults = Stats.ResultsMappers[client.game](
-        resultsFields, isHome, opponentId
+    const results = Stats.ResultsMappers[client.game](
+        resultsFields, isHome, opponentId, Number(lastFlag)
     );
-    logEvent('game_results', client, args.version, {'results': ongoingResults, 'rawResults': resultsFields});
+    logEvent('game_results', client, args.version, {'resultsUserId': resultsUserId, 'results': results, 'rawResults': resultsFields});
 
-    await redis.setOngoingResults(resultsUserId, client.game, ongoingResults);
+    // Set a lock here to ensure that CalculateStats gets called only once.
+    await redis.redlock.using([resultsUserId, opponentId], 5000, async (signal) => {
+        await redis.setOngoingResults(resultsUserId, client.game, results);
+
+        if (!lastFlag) {
+            // We got the results, but the game is still on-going.
+            return;
+        }
+
+        // Get the opponent's own final results and calcuate stats for both.
+        const opponentResultsStrings = await redis.getOngoingResults(opponentId, client.game);
+        const opponentResults = Object.fromEntries(
+            Object.entries(opponentResultsStrings).map(([k, stat]) => [k, Number(stat)])
+        );
+        if (Object.keys(opponentResults).length == 0 || !opponentResults.last) {
+            // We have not gotten the final results for the opponent yet, return and wait.
+            return;
+        }
+        console.log(results, opponentResults)
+
+        const [changedStats, opponentChangedStats] = await Stats.CalculateStats[client.game](resultsUserId, results, opponentId, opponentResults);
+        logEvent('updated_stats', client, args.version, {'resultsUserId': resultsUserId, 'stats': changedStats, 'rawStats': Object.values(changedStats), 'opponentId': opponentId, 'opponentStats': opponentChangedStats, 'rawOpponentStats': Object.values(opponentChangedStats)});
+
+        // Store in database:
+        if (Object.keys(changedStats).length > 0)
+            await database.setStats(resultsUserId, Object.values(changedStats), client.game);
+        if (Object.keys(opponentChangedStats).length > 0)
+            await database.setStats(opponentId, Object.values(opponentChangedStats), client.game);
+
+        // Now we should be done with the results, erase them from Redis
+        await redis.removeOngoingResults(reportingUserId, client.game);
+        await redis.removeOngoingResults(opponentId, client.game);
+    });
 });
 
 server.handleMessage('get_teams', async (client, args) => {

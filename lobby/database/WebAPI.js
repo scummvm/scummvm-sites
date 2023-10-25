@@ -34,7 +34,7 @@ class WebAPI {
         this.post = bent(endpoint, 'POST', 'json', 200);
     }
 
-    async getUser(username, password, game) {
+    async getUser(username, password, version, game) {
         const user = await this.post('/new_login', {token: this.token,
                                                     user: username,
                                                     pass: password,
@@ -45,7 +45,7 @@ class WebAPI {
         // Store the user into the Redis cache
         redis.addUser(user.id, {user: user.user,
                                 icon: user.icon,
-                                stats: user.stats}, game);
+                                stats: user.stats}, version, game);
         return user;
     }
 
@@ -65,6 +65,19 @@ class WebAPI {
 
         // Set the icon in the Redis cache.
         redis.setIcon(userId, icon);
+    }
+
+    async setStats(userId, stats, game) {
+        const response = await this.post('/set_stats', {token: this.token,
+                                                        userId: userId,
+                                                        stats: stats,
+                                                        game: game});
+        if (response.error) {
+            this.logger.error("Failed the update stats!", { response });
+        }
+
+        // Set the stats in the Redis cache.
+        redis.setStats(userId, stats, game);
     }
 
     async getTeam(userId, game) {
