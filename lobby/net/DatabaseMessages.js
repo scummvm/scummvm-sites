@@ -262,7 +262,6 @@ server.handleMessage("game_results", async (client, args) => {
             // We have not gotten the final results for the opponent yet, return and wait.
             return;
         }
-        console.log(results, opponentResults)
 
         const [changedStats, opponentChangedStats] = await Stats.CalculateStats[client.game](resultsUserId, results, opponentId, opponentResults);
         logEvent('updated_stats', client, args.version, {'resultsUserId': resultsUserId, 'stats': changedStats, 'rawStats': Object.values(changedStats), 'opponentId': opponentId, 'opponentStats': opponentChangedStats, 'rawOpponentStats': Object.values(opponentChangedStats)});
