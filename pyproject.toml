@@ -9,13 +9,12 @@ python= ">=3.10,<4"
 environs = "*"
 treq = "*"
 crossbar = "^22.6.1"
-buildbot = {extras = ["bundle"], version = "^3.7.0"}
+buildbot = {extras = ["bundle"], version = "^3.9.2"}
 psycopg2 = "^2.9.5"
-autobahn = "22.7.1"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
-mypy = "^0.991"
+mypy = "*"
 pylint = "*"
 black = "*"
 ipdb = "*"
