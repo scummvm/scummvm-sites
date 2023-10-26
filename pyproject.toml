@@ -11,7 +11,6 @@ treq = "*"
 crossbar = "^22.6.1"
 buildbot = {extras = ["bundle"], version = "^3.9.2"}
 psycopg2 = "^2.9.5"
-certifi = "^2023.7.22"
 
 [tool.poetry.group.dev.dependencies]
 isort = "^5.11.4"
