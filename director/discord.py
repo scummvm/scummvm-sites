@@ -76,10 +76,11 @@ class DiscordStatusPush(service.BuildbotService):
             want_steps=True,
             want_previous_build=True,
         )
+
         prev_steps = yield defer.gatherResults(
             [
                 self.master.data.get(("builds", b["buildid"], "steps"))
-                for b in [build["prev_build"]]
+                for b in [build["prev_build"]] if b # Janitor actions means prev_build is none.
             ]
         )
         build["prev_build"]["steps"] = prev_steps[0]
