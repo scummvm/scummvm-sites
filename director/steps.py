@@ -82,7 +82,7 @@ class ScummVMTest(steps.WarningCountingShellCommand):
 
     @defer.inlineCallbacks
     def createSummary(self):
-        super().createSummary()
+        yield super().createSummary()
         if self.errorCount:
             yield self.addCompleteLog(
                 f"errors ({self.errorCount})", "\n".join(self.loggedErrors) + "\n"
