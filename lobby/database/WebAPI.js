@@ -49,6 +49,23 @@ class WebAPI {
         return user;
     }
 
+    async getUserById(userId, game) {
+        // This should not be confused with redis.getUserById
+        // which gets users who are already logged in to the lobby.
+        //
+        // This call should only be used only if you want user infomation
+        // who are not logged in (which should happen rarely).
+
+        const user = await this.post('/get_user_by_id', {token: this.token,
+                                                         userId: userId,
+                                                         game: game});
+        if (user.error) {
+            this.logger.error(`Failed to get user with id ${userId}: ${user}`);
+            return {};
+        }
+        return user;
+    }
+
     async getNews() {
         const news = await this.post('/get_news', {token: this.token});
         return news;

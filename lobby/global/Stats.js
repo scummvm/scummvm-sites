@@ -135,21 +135,19 @@ const ResultsMappers = {
 
 const CalculateStats = {
     "baseball": async (userId, gameResults, opponentId, opponentGameResults) => {
-        const user = await redis.getUserById(userId, "baseball");
+        let user = await redis.getUserById(userId, "baseball");
         if (Object.keys(user).length == 0) {
-            // TODO: User must've disconnected from the lobby, get
-            // stats from the WebAPI and work from there.
-            logger.warn(`TODO: User ${userId} not in redis.`);
-            return
+            // User must've disconnected from the lobby, get
+            // stats from the database and work from there.
+            user = await database.getUserById(userId, "baseball");
         }
         const stats = ProfileMappers["baseball"](user.stats);
 
-        const opponent = await redis.getUserById(opponentId, "baseball");
+        let opponent = await redis.getUserById(opponentId, "baseball");
         if (Object.keys(opponent).length == 0) {
-            // TODO: User must've disconnected from the lobby, get
-            // stats from the WebAPI and work from there.
-            logger.warn(`TODO: User ${opponentId} not in redis.`);
-            return
+            // User must've disconnected from the lobby, get
+            // stats from the database and work from there.
+            opponent = await database.getUserById(opponentId, "baseball");
         }
         const opponentStats = ProfileMappers["baseball"](opponent.stats);
 
