@@ -8,7 +8,7 @@ authors = ["Roland van Laar <roland@micite.net>"]
 python= ">=3.10,<4"
 environs = "*"
 treq = "*"
-buildbot = {extras = ["bundle"], version = "3.8.0"}
+buildbot = {extras = ["bundle"], version = "3.9.2"}
 psycopg2 = "^2.9.5"
 certifi = "^2023.7.22"
 
