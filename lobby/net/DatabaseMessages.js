@@ -62,7 +62,7 @@ server.handleMessage("login", async (client, args) => {
 
     // This code parses the ScummVM version string sent by the client.
     // e.g. ScummVM 2.8.0git-{revision} (Oct 21 2023 19:11:48)
-    const versionArray = version.split(" ");
+    const versionArray = version.split(" ").filter((str) => str !== '');
     if (versionArray[0] != "ScummVM") {
         client.send("login_resp", {error_code: 1,
                                    id: 0,
@@ -91,6 +91,7 @@ server.handleMessage("login", async (client, args) => {
         // Parse version date and check against the timestamp in the config.
         // The substr call is to remove the first bracket from the date string.
 
+        console.log(`${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`)
         const clientTimestamp = Date.parse(`${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`);
         const serverTimestamp = Date.parse(server.versionRestrictions[client.versionNumber])
 
@@ -185,6 +186,28 @@ server.handleMessage('set_icon', async (client, args) => {
     }
 
     await database.setIcon(client.userId, icon);
+});
+
+server.handleMessage('set_poll_answer', async (client, args) => {
+    const answer = args.answer;
+    logEvent('set_poll_answer', client, args.version, {'answer': answer});
+
+    if (client.userId == 0) {
+        client.kick("Attempting to answer poll without logging in first.");
+        return;
+    } else if (answer === undefined) {
+        logger.warn("Got set_poll_answer with missing answer!  Ignoring.");
+        return;
+    }
+
+    const user = await redis.getUserById(client.userId, client.game);
+    const stats = Stats.ProfileMappers[client.game](user.stats);
+    if (!stats.hasOwnProperty('poll')) {
+        logger.warn(`Stats for user id ${client.userId} has no poll stat for game ${client.game}!  Ignoring.`);
+        return;
+    }
+    stats['poll'] = answer;
+    await database.setStats(client.userId, Object.values(stats), client.game);
 });
 
 server.handleMessage('locate_player', async (client, args) => {
