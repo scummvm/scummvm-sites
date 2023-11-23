@@ -93,7 +93,7 @@ if __name__ == "__main__":
             return redis.hgetall(f"{game}:session:{session_id}")
         return None
 
-    def create_session(name: str, maxplayers: int, address: str):
+    def create_session(name: str, maxplayers: int, scummvm_version: str, address: str):
         # Get our new session ID
         session_id = redis.incr(f"{game}:counter")
         # Create and store our new session
@@ -103,6 +103,7 @@ if __name__ == "__main__":
                 "name": name,
                 "players": 0,
                 "maxplayers": maxplayers,
+                "scummvm_version": scummvm_version,
                 "address": str(event.peer.address),
             },
         )
@@ -316,7 +317,6 @@ if __name__ == "__main__":
                 continue
 
             game = data.get("game")
-            version = data.get("version")
             if not command:
                 logging.warning(f"{event.peer.address}: Command missing")
                 continue
@@ -328,6 +328,7 @@ if __name__ == "__main__":
                 logging.warning(f'Game "{game}" not supported.')
                 continue
 
+            version = data.get("version")
             versions = VERSIONS.get(game)
             if versions:
                 if not version:
@@ -343,11 +344,26 @@ if __name__ == "__main__":
                 # Update the game to contain the version
                 game = f"{game}:{version}"
 
+            scummvm_version = data.get("scummvm_version", "unknown")
+            if scummvm_version != "unknown":
+                # Parse the version string to only contain the version number (2.8.0[git])
+                # Only host_session and get_sessions messages has this currently.
+                if scummvm_version[:7] == "ScummVM":
+                    scummvm_version = scummvm_version.split(" ")[1]
+                    if "git" in scummvm_version:
+                        # Strip out the specific revision details, we only need the "git".
+                        index = scummvm_version.index("git")
+                        scummvm_version = scummvm_version[:index + 3]
+                else:
+                    # We don't know how to parse this string, revert back to unknown.
+                    logging.warning(f"Don't know how to parse scummvm_version string: {scummvm_version}")
+                    scummvm_version = "unknown"
+
             if command == "host_session":
                 name = data.get("name")
                 maxplayers = data.get("maxplayers")
 
-                session_id = create_session(name, maxplayers, event.peer.address)
+                session_id = create_session(name, maxplayers, scummvm_version, event.peer.address)
                 send(event.peer, {"cmd": "host_session_resp", "id": session_id})
 
             elif command == "update_players":
@@ -366,6 +382,10 @@ if __name__ == "__main__":
                 session_ids = redis.lrange(f"{game}:sessions", 0, num_sessions)
                 for id in session_ids:
                     session = redis.hgetall(f"{game}:session:{id}")
+                    if scummvm_version != session["scummvm_version"]:
+                        logging.debug(f"get_sessions: {scummvm_version} != {session['scummvm_version']}")
+                        # Mismatched version, skip.
+                        continue
                     sessions.append(
                         {
                             "id": int(id),
