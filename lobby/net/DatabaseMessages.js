@@ -91,14 +91,13 @@ server.handleMessage("login", async (client, args) => {
         // Parse version date and check against the timestamp in the config.
         // The substr call is to remove the first bracket from the date string.
 
-        console.log(`${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`)
         const clientTimestamp = Date.parse(`${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`);
         const serverTimestamp = Date.parse(server.versionRestrictions[client.versionNumber])
 
         const isBuildCompatable = clientTimestamp >= serverTimestamp
         if (!isBuildCompatable) {
             // Outdated build.
-            logEvent('outdatedLogin', client, version, {'username': username, 'game': game, 'server_version': server.versionRestrictions[client.versionNumber]});
+            logEvent('outdatedLogin', client, version, {'username': username, 'game': game, 'client_version': `${versionArray[2].substr(1)} ${versionArray[3]} ${versionArray[4]} UTC`, 'server_version': server.versionRestrictions[client.versionNumber]});
             client.send("login_resp", {error_code: 1,
                                        id: 0,
                                        sessionServer: "",
