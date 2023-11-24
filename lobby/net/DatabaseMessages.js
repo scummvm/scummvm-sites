@@ -199,14 +199,14 @@ server.handleMessage('set_poll_answer', async (client, args) => {
         return;
     }
 
-    const user = await redis.getUserById(client.userId, client.game);
-    const stats = Stats.ProfileMappers[client.game](user.stats);
-    if (!stats.hasOwnProperty('poll')) {
-        logger.warn(`Stats for user id ${client.userId} has no poll stat for game ${client.game}!  Ignoring.`);
-        return;
-    }
-    stats['poll'] = answer;
-    await database.setStats(client.userId, Object.values(stats), client.game);
+    // const user = await redis.getUserById(client.userId, client.game);
+    // const stats = Stats.ProfileMappers[client.game](user.stats);
+    // if (!stats.hasOwnProperty('poll')) {
+    //     logger.warn(`Stats for user id ${client.userId} has no poll stat for game ${client.game}!  Ignoring.`);
+    //     return;
+    // }
+    // stats['poll'] = answer;
+    // await database.setStats(client.userId, Object.values(stats), client.game);
 });
 
 server.handleMessage('locate_player', async (client, args) => {
