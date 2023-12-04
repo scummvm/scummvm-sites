@@ -49,6 +49,7 @@ class NetworkListener {
         this.sessionServer = this.config['session_server'] || '127.0.0.1:9120';
 
         this.versionRestrictions = this.config['version_restrictions'] || {}
+        this.mergeVersions = this.config['merge_versions'] || {}
 
         const host = this.config['host'];
         const port = Number(this.config['port']);

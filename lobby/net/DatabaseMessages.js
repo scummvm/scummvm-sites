@@ -78,6 +78,15 @@ server.handleMessage("login", async (client, args) => {
         client.versionNumber = client.versionNumber.substr(0, gitLocation + 3)
     }
 
+    for (const [keyVersion, versions] of Object.entries(server.mergeVersions)) {
+        if (versions.includes(client.versionNumber)) {
+            // Change the client version to the merged version.
+            logEvent('mergedVersion', client, version, {'username': username, 'game': game, 'merged_version': keyVersion});
+            client.versionNumber = keyVersion;
+            break;
+        }
+    }
+
     if (client.versionNumber in server.versionRestrictions) {
         if (server.versionRestrictions[client.versionNumber] == null) {
             // Discontinued
