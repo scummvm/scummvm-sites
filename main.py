@@ -93,7 +93,9 @@ if __name__ == "__main__":
             return redis.hgetall(f"{game}:session:{session_id}")
         return None
 
-    def create_session(name: str, maxplayers: int, scummvm_version: str, address: str):
+    def create_session(
+        name: str, maxplayers: int, scummvm_version: str, map_data: dict, address: str
+    ):
         # Get our new session ID
         session_id = redis.incr(f"{game}:counter")
         # Create and store our new session
@@ -105,6 +107,7 @@ if __name__ == "__main__":
                 "maxplayers": maxplayers,
                 "scummvm_version": scummvm_version,
                 "address": str(event.peer.address),
+                "map_data": json.dumps(map_data),
             },
         )
         # Add session to sessions list
@@ -368,9 +371,11 @@ if __name__ == "__main__":
             if command == "host_session":
                 name = data.get("name")
                 maxplayers = data.get("maxplayers")
+                # Moonbase generated map data
+                map_data = data.get("map_data", {})
 
                 session_id = create_session(
-                    name, maxplayers, scummvm_version, event.peer.address
+                    name, maxplayers, scummvm_version, map_data, event.peer.address
                 )
                 send(event.peer, {"cmd": "host_session_resp", "id": session_id})
 
@@ -409,6 +414,7 @@ if __name__ == "__main__":
                             "name": session["name"],
                             "players": int(session["players"]),
                             "address": str(session["address"]),
+                            "map_data": json.loads(session["map_data"]),
                         }
                     )
 
