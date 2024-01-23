@@ -94,7 +94,7 @@ if __name__ == "__main__":
         return None
 
     def create_session(
-        name: str, maxplayers: int, scummvm_version: str, map_data: dict, address: str
+        name: str, maxplayers: int, network_version: str, map_data: dict, address: str
     ):
         # Get our new session ID
         session_id = redis.incr(f"{game}:counter")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
                 "name": name,
                 "players": 0,
                 "maxplayers": maxplayers,
-                "scummvm_version": scummvm_version,
+                "network_version": network_version,
                 "address": str(event.peer.address),
                 "map_data": json.dumps(map_data),
             },
@@ -351,22 +351,10 @@ if __name__ == "__main__":
                 # Update the game to contain the version
                 game = f"{game}:{version}"
 
-            scummvm_version = data.get("scummvm_version", "unknown")
-            if scummvm_version != "unknown":
-                # Parse the version string to only contain the version number (2.8.0[git])
-                # Only host_session and get_sessions messages has this currently.
-                if scummvm_version[:7] == "ScummVM":
-                    scummvm_version = scummvm_version.split(" ")[1]
-                    if "git" in scummvm_version:
-                        # Strip out the specific revision details, we only need the "git".
-                        index = scummvm_version.index("git")
-                        scummvm_version = scummvm_version[: index + 3]
-                else:
-                    # We don't know how to parse this string, revert back to unknown.
-                    logging.warning(
-                        f"Don't know how to parse scummvm_version string: {scummvm_version}"
-                    )
-                    scummvm_version = "unknown"
+            network_version = data.get("network_version", "unknown")
+            if data.get("scummvm_version"):
+                # Set version to 1.0 for backwards compatiblity
+                network_version = "1.0"
 
             if command == "host_session":
                 name = data.get("name")
@@ -375,7 +363,7 @@ if __name__ == "__main__":
                 map_data = data.get("map_data", {})
 
                 session_id = create_session(
-                    name, maxplayers, scummvm_version, map_data, event.peer.address
+                    name, maxplayers, network_version, map_data, event.peer.address
                 )
                 send(event.peer, {"cmd": "host_session_resp", "id": session_id})
 
@@ -395,16 +383,9 @@ if __name__ == "__main__":
                 session_ids = redis.lrange(f"{game}:sessions", 0, num_sessions)
                 for id in session_ids:
                     session = redis.hgetall(f"{game}:session:{id}")
-                    if (
-                        # Skipping if their playing football or
-                        # baseball because they might be
-                        # playing with merged versions
-                        # (e.g. 2.9.0git playing as 2.8.0git)
-                        game not in ("football", "baseball2001")
-                        and scummvm_version != session["scummvm_version"]
-                    ):
+                    if (network_version != session["network_version"]):
                         logging.debug(
-                            f"get_sessions: {scummvm_version} != {session['scummvm_version']}"
+                            f"get_sessions: {network_version} != {session['network_version']}"
                         )
                         # Mismatched version, skip.
                         continue

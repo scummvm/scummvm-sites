@@ -59,23 +59,10 @@ server.handleMessage("login", async (client, args) => {
                                    response: "Missing version paremeter!"});
         return;
     }
-
-    // This code parses the ScummVM version string sent by the client.
-    // e.g. ScummVM 2.8.0git-{revision} (Oct 21 2023 19:11:48)
-    const versionArray = version.split(" ").filter((str) => str !== '');
-    if (versionArray[0] != "ScummVM") {
-        client.send("login_resp", {error_code: 1,
-                                   id: 0,
-                                   sessionServer: "",
-                                   response: "Only ScummVM clients are supported."});
-        return;
-    }
-    client.versionNumber = versionArray[1]
-    if (client.versionNumber.includes("git")) {
-        // This is a development build, exclude the revision since it does not matter here.
-        const gitLocation = client.versionNumber.indexOf("git")
-        // This should result with "2.8.0git"
-        client.versionNumber = client.versionNumber.substr(0, gitLocation + 3)
+    client.versionNumber = version
+    if (version.startsWith("ScummVM")) {
+        // Set version to 1.0 to maintain compatibility.
+        client.versionNumber = "1.0"
     }
 
     for (const [keyVersion, versions] of Object.entries(server.mergeVersions)) {
@@ -94,7 +81,7 @@ server.handleMessage("login", async (client, args) => {
             client.send("login_resp", {error_code: 1,
                                        id: 0,
                                        sessionServer: "",
-                                       response: `ScummVM version ${client.versionNumber} is no longer being supported.  Please visit scummvm.org and update to the latest version to continue playing online.`})
+                                       response: `Network version ${client.versionNumber} is no longer being supported.  Please visit scummvm.org and update to the latest version to continue playing online.`})
             return;
         }
         // Parse version date and check against the timestamp in the config.
@@ -110,7 +97,7 @@ server.handleMessage("login", async (client, args) => {
             client.send("login_resp", {error_code: 1,
                                        id: 0,
                                        sessionServer: "",
-                                       response: `This build of ${client.versionNumber} is no longer being supported.  Please download the latest daily build or pull and build the latest changes to continue playing online.`});
+                                       response: `This build of network version ${client.versionNumber} is no longer being supported.  Please download the latest daily build or pull and build the latest changes to continue playing online.`});
             return;
         }
     }

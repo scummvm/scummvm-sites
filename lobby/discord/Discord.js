@@ -130,9 +130,9 @@ class Discord {
         area = `${user.inGame ? '(In-Game) ' : ''}(${Areas[user.area]}, ${groupName})`;
       }
       if (user.game == "baseball") {
-        baseballUsers += `${user.user} (${user.version}) ${area}\n`;
+        baseballUsers += `${user.user} (v${user.version}) ${area}\n`;
       } else {
-        footballUsers += `${user.user} (${user.version}) ${area}\n`;
+        footballUsers += `${user.user} (v${user.version}) ${area}\n`;
       }
     }
 
