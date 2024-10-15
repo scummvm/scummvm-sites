@@ -108,6 +108,11 @@ class NetworkConnection {
         this.socket.write(json + "\n");
     }
 
+    alert(type, message) {
+        if (this.terminated) return;
+        this.send("system_alert", {"type": type, message: message});
+    }
+
     kick(type, reason) {
         if (this.terminated) return;
         this.logger.warn("Kicking:", reason);

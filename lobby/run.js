@@ -51,6 +51,11 @@ const credentials = {
     }
 };
 
+// Enable new games by default
+if (!process.env.DISABLE_NEW_GAMES) {
+    process.env.DISABLE_NEW_GAMES = "0";
+}
+
 if (cluster.isMaster) {
     // Fork out workers
     for (let i = 0; i < (config['cores'] || 1); i++) {

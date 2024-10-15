@@ -108,6 +108,12 @@ server.handleMessage('challenge_player', async (client, args) => {
         clearTimeout(busyTimeouts[client.userId]);
     }
 
+    if (process.env.DISABLE_NEW_GAMES !== "0") {
+        client.send("decline_challenge", {not_responding: 1});
+        client.alert(2, process.env.DISABLE_NEW_GAMES_REASON || "Server maintenance is being planned, you cannot start new games until maintenance has ended.  Sorry for the inconvenience.");
+        return;
+    }
+
     process.send({cmd: "receive_challenge", user: challengeUserId,
                                             opponent: client.userId,
                                             stadium: stadium});

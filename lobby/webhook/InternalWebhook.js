@@ -84,7 +84,21 @@ class InternalWebhook {
                   type: 901,
                   reason: reason});
             res.status(200).json({message: `Kick request received for user id ${req.params.userId}.`})
-        })
+        });
+
+        this.app.post("/getGamesEnabled", (req, res) => {
+            res.status(200).json({enabled: process.env.DISABLE_NEW_GAMES === "0", message: process.env.DISABLE_NEW_GAMES_REASON || ""});
+        });
+
+        this.app.post("/setGamesEnabled", (req, res) => {
+            const enabled = req.body.enabled;
+            const reason = req.body.message;
+
+            process.env.DISABLE_NEW_GAMES = enabled === true ? "0" : "1";
+            process.env.DISABLE_NEW_GAMES_REASON = reason || "";
+
+            res.status(200).json({message: "Updated successfully"});
+        });
     }
 }
 
