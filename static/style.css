@@ -1,0 +1,113 @@
+:root {
+  --primary-color: #27b5e8;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+td, th {
+  padding-inline: 5px;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2;}
+tr {background-color: white;}
+
+tr:hover {background-color: #ddd;}
+tr.games_list:hover {cursor: pointer;}
+
+tr.filter:hover {background-color:inherit;}
+td.filter {text-align: center;}
+
+th {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  text-align: center;
+  background-color: var(--primary-color);
+  color: white;
+}
+
+th a {
+  color: white;
+  text-decoration: none; /* no underline */
+}
+
+button {
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: background-color 0.1s;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+button:hover {
+  background-color: #29afe0;
+}
+button:active {
+  background-color: #1a95c2;
+}
+
+input[type=submit] {
+  color: white;
+  padding: 6px 12px;
+  border-radius: 10px;
+  transition: background-color 0.1s;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+input[type=submit]:hover {
+  background-color: #29afe0;
+}
+input[type=submit]:active {
+  background-color: #1a95c2;
+}
+
+input[type=text], select {
+  width: 25%;
+  height: 38px;
+  padding: 6px 12px;
+  margin: 0px 8px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+input[type=text].filter {
+  width: 80%;
+}
+
+.pagination {
+  display: inline-block;
+  align-self: center;
+}
+
+.pagination .more {
+  color: black;
+  float: left;
+  padding: 15px 10px;
+}
+
+.pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  border: 1px solid #ddd;
+}
+
+.pagination a.active {
+  color: white;
+  background-color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+}
+
+.pagination a:hover:not(.active) {
+  background-color: #ddd;
+}
+
+form {
+  padding: 0px;
+  margin: 0px;
+  display: inline;
+}

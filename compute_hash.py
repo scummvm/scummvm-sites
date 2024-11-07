@@ -79,7 +79,7 @@ def escape_string(s: str) -> str:
     for char in s:
         if char == "\x81":
             new_name += "\x81\x79"
-        elif char in '/":*|\\?%<>\x7f' or ord(char) < 0x20:
+        elif char in '/":*|\\?%<>\x7f' or ord(char) < 0x20 or (ord(char) & 0x80):
             new_name += "\x81" + chr(0x80 + ord(char))
         else:
             new_name += char
