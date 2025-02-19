@@ -12,7 +12,7 @@ default_step_kwargs: dict[str, Any] = {"logEnviron": False}
 default_env: dict[str, str] = {
     "SDL_VIDEODRIVER": "dummy",
     "SDL_AUDIODRIVER": "dummy",
-    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1",
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1,fast_unwind_on_malloc=0",
 }
 
 
