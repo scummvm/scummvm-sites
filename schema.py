@@ -61,8 +61,22 @@ tables = {
             FOREIGN KEY (engine) REFERENCES engine(id)
         )
     """,
+    "fileset": """
+        CREATE TABLE IF NOT EXISTS fileset (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            game INT,
+            status VARCHAR(20),
+            src VARCHAR(20),
+            `key` VARCHAR(64),
+            `megakey` VARCHAR(64),
+            `delete` BOOLEAN DEFAULT FALSE NOT NULL,
+            `timestamp` TIMESTAMP NOT NULL,
+            detection_size INT,
+            FOREIGN KEY (game) REFERENCES game(id)
+        )
+    """,
     "file": """
-        CREATE TABLE IF NOT EXISTS file (
+        CREATE TABLE IF NOT EXISTS file (s
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
             size BIGINT NOT NULL,
@@ -91,20 +105,6 @@ tables = {
             userid INT NOT NULL,
             commit VARCHAR(64) NOT NULL,
             FOREIGN KEY (fileset) REFERENCES fileset(id)
-        )
-    """,
-    "fileset": """
-        CREATE TABLE IF NOT EXISTS fileset (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            game INT,
-            status VARCHAR(20),
-            src VARCHAR(20),
-            `key` VARCHAR(64),
-            `megakey` VARCHAR(64),
-            `delete` BOOLEAN DEFAULT FALSE NOT NULL,
-            `timestamp` TIMESTAMP NOT NULL,
-            detection_size INT,
-            FOREIGN KEY (game) REFERENCES game(id)
         )
     """,
     "log": """
