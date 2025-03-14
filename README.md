@@ -73,7 +73,7 @@ python compute_hash.py --directory <path_to_directory> --depth 0 --size 0
 - `--depth` : Depth from root to game directories
 - `--size` : Use first n bytes of file to calculate checksum
 
-#### Database upload (for developers ) :
+#### Database upload (for developers) :
 Uploading the `.dat` file to the database.
 ```bash
 python dat_parser.py --upload <scanned_dat_file/scan>.dat --user <username> --skiplog
