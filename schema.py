@@ -76,7 +76,7 @@ tables = {
         )
     """,
     "file": """
-        CREATE TABLE IF NOT EXISTS file (s
+        CREATE TABLE IF NOT EXISTS file (
             id INT AUTO_INCREMENT PRIMARY KEY,
             name VARCHAR(200) NOT NULL,
             size BIGINT NOT NULL,
