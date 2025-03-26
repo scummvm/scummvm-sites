@@ -1,3 +1,4 @@
 *.dat
 mysql_config.json
 __pycache__
+.DS_Store
