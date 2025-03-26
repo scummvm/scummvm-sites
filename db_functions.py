@@ -9,6 +9,8 @@ from pymysql.converters import escape_string
 from collections import defaultdict
 import re
 
+SPECIAL_SYMBOLS = '/":*|\\?%<>\x7f'
+
 def db_connect():
     base_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_dir, 'mysql_config.json')
@@ -158,7 +160,6 @@ def insert_file(file, detection, src, conn):
         detection = 0
     detection_type = f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
     if punycode_need_encode(file['name']):
-        print(encode_punycode(file['name']))
         query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{encode_punycode(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
     else:
         query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
@@ -204,7 +205,7 @@ def my_escape_string(s: str) -> str:
             new_name += "\x81" + chr(0x80 + ord(char))
         else:
             new_name += char
-    return new_name
+    return escape_string(new_name)
 
         
 def encode_punycode(orig):
@@ -232,7 +233,9 @@ def punycode_need_encode(orig):
     - contains a char that should be escaped or
     - ends with a dot or a space.
     """
-    if orig != escape_string(orig):
+    if not all(
+            (0x20 <= ord(c) < 0x80) and
+            c not in SPECIAL_SYMBOLS for c in orig):
         return True
     if orig[-1] in " .":
         return True
