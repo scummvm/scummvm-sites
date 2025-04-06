@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>{{ build }} / {{ movie }} / {{ target }}</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .empty-cell {
+      background-color: #f8f8f8;
+      color: #999;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
+</header>
+
+<h2><a href="{{ url_for('build', build=build) }}">{{ build }}</a> / <a href="{{ url_for('movie', movie=movie) }}">{{ movie }}</a> / <a href="{{ url_for('index') }}#{{ target }}">{{ target }}</a></h2>
+
+<p class="alert">This is the first build that contains this movie, so there's no previous build to compare with.</p>
+
+{% if frames %}
+<table class="comparison-table">
+  <thead>
+  <tr>
+    <th><a href="{{ url_for('build', build=build) }}">{{ build }}</a></th>
+    <th> </th>
+    <th> </th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for frame in frames %}
+  <tr>
+    <td>
+      <img class="frame-image" src="data:image/png;base64,{{ frame.img_data }}" alt="Frame {{ frame.frame_number }} in {{ build }}">
+    </td>
+    <td class="empty-cell">
+      No comparison available
+    </td>
+    <td class="empty-cell">
+      No previous build
+    </td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p>No frames found for this movie.</p>
+{% endif %}
+</body>
+</html>
