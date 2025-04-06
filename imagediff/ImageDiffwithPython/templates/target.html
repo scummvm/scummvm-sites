@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target: {{ target }} - ImageDiff</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+    <style>
+        .cell-partial {
+            position: relative;
+        }
+
+        .cell-partial::after {
+            content: "⚠️";
+            position: absolute;
+            font-size: 10px;
+            bottom: 0;
+            right: 0;
+        }
+
+        /* Loading animation styles */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .loading-text {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .loading-status {
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+<!-- Loading overlay -->
+<div id="loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading image diff data...</div>
+    <div class="loading-status">This may take a while. Please be patient.</div>
+</div>
+
+<header>
+    <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
+</header>
+
+<h1>Target: <span class="code">{{ target }}</span></h1>
+
+<section>
+    <h2>Recent Results</h2>
+
+    <div class="quote">
+        <table class="result-table horizontal">
+            <thead>
+            <tr>
+                <th></th>
+                {% for build in builds %}
+                <th class="result-table-build">
+                    <a href="{{ url_for('build', build=build) }}">{{ build }}</a>
+                </th>
+                {% endfor %}
+            </tr>
+            </thead>
+            <tbody id="results-body">
+            <tr>
+                <td colspan="{{ builds|length + 1 }}" style="text-align: center;">
+                    Loading...
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load data via AJAX when page is loaded
+        loadTableData();
+    });
+
+    function loadTableData() {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const resultsBody = document.getElementById('results-body');
+        const loadingStatus = document.querySelector('.loading-status');
+
+        // Show loading animation
+        loadingOverlay.classList.remove('hidden');
+
+        // Build API URL
+        const target = '{{ target }}';
+        const apiUrl = '/api/target_data/' + encodeURIComponent(target);
+
+        // Start timestamp for calculating loading time
+        const startTime = new Date().getTime();
+
+        // Function to update loading status
+        function updateLoadingStatus(message) {
+            if (loadingStatus) {
+                loadingStatus.textContent = message;
+            }
+        }
+
+        // Update loading time every second
+        let loadingTimer = setInterval(() => {
+            const elapsedSeconds = Math.floor((new Date().getTime() - startTime) / 1000);
+            updateLoadingStatus(`${elapsedSeconds} seconds have passed. Please be patient...`);
+        }, 1000);
+
+        // Send AJAX request
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response error');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Clear timer
+                clearInterval(loadingTimer);
+
+                // Update table content
+                updateTableContent(data);
+
+                // Hide loading animation
+                loadingOverlay.classList.add('hidden');
+            })
+            .catch(error => {
+                // Clear timer
+                clearInterval(loadingTimer);
+
+                console.error('Error loading data:', error);
+
+                // Show error message
+                resultsBody.innerHTML = `
+                    <tr>
+                        <td colspan="{{ builds|length + 1 }}" style="text-align: center; color: red;">
+                            Failed to load data. Please refresh the page to try again.
+                        </td>
+                    </tr>
+                `;
+
+                // Update loading status
+                updateLoadingStatus('Loading failed. Please refresh the page to try again.');
+
+                // Hide loading animation after 3 seconds
+                setTimeout(() => {
+                    loadingOverlay.classList.add('hidden');
+                }, 3000);
+            });
+    }
+
+    function updateTableContent(data) {
+        const resultsBody = document.getElementById('results-body');
+        let tableContent = '';
+
+        // Generate table content based on returned data
+        data.movies.forEach(movie => {
+            tableContent += `
+                <tr>
+                    <th>
+                        <a href="${data.urls.movie_url.replace('MOVIE_PLACEHOLDER', movie)}">${movie}</a>
+                    </th>
+            `;
+
+            // Add cells for each build
+            data.continuous_bars[movie].forEach(cell => {
+                tableContent += generateTableCell(cell, movie, data.urls, data.target);
+            });
+
+            tableContent += '</tr>';
+        });
+
+        resultsBody.innerHTML = tableContent;
+    }
+
+    function generateTableCell(cell, movie, urls, target) {
+        // Generate HTML based on cell type
+        if (cell.type === 'diff') {
+            if (cell.is_skipped) {
+                return `<td class="success no-diff" title="Build skipped (no changes from ${cell.reference_build})"></td>`;
+            } else if (cell.is_partial) {
+                if (cell.has_diff) {
+                    return `
+                        <td class="success has-diff cell-partial">
+                            <a href="${urls.compare_url
+                        .replace('BUILD1_PLACEHOLDER', cell.build)
+                        .replace('BUILD2_PLACEHOLDER', cell.compare_with)
+                        .replace('TARGET_PLACEHOLDER', target)
+                        .replace('MOVIE_PLACEHOLDER', movie)}"
+                               title="Partial frames with changes detected">
+                                🔍
+                            </a>
+                        </td>
+                    `;
+                } else {
+                    return `<td class="success no-diff cell-partial" title="Partial frames with no changes"></td>`;
+                }
+            } else if (cell.has_diff) {
+                return `
+                    <td class="success has-diff">
+                        <a href="${urls.compare_url
+                    .replace('BUILD1_PLACEHOLDER', cell.build)
+                    .replace('BUILD2_PLACEHOLDER', cell.compare_with)
+                    .replace('TARGET_PLACEHOLDER', target)
+                    .replace('MOVIE_PLACEHOLDER', movie)}">
+                            🔍
+                        </a>
+                    </td>
+                `;
+            } else {
+                return `<td class="success no-diff"></td>`;
+            }
+        } else if (cell.type === 'first') {
+            return `
+                <td class="success first-build">
+                    <a href="${urls.single_build_url
+                .replace('BUILD_PLACEHOLDER', cell.build)
+                .replace('TARGET_PLACEHOLDER', target)
+                .replace('MOVIE_PLACEHOLDER', movie)}">🔍</a>
+                </td>
+            `;
+        } else if (cell.type === 'missing') {
+            return `<td class="no-data"></td>`;
+        } else if (cell.type === 'readded') {
+            if (cell.compare_with) {
+                return `
+                    <td class="success has-diff">
+                        <a href="${urls.compare_url
+                    .replace('BUILD1_PLACEHOLDER', cell.build)
+                    .replace('BUILD2_PLACEHOLDER', cell.compare_with)
+                    .replace('TARGET_PLACEHOLDER', target)
+                    .replace('MOVIE_PLACEHOLDER', movie)}"
+                           title="Movie was re-added in this build">
+                            🔍
+                        </a>
+                    </td>
+                `;
+            } else {
+                return `
+                    <td class="success has-diff">
+                        <span title="Movie was re-added but no previous version found for comparison">🔄</span>
+                    </td>
+                `;
+            }
+        } else {
+            return `<td class="no-data"></td>`;
+        }
+    }
+</script>
+</body>
+</html>
