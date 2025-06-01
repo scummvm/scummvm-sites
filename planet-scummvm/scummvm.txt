@@ -1,0 +1,19 @@
+##########################################
+# planet starter template pack manifest
+##########################################
+
+
+#######
+#  main planet template - gets merged (uses embedded ruby)
+
+__file__.scummvm.html    planet.scummvm.html.erb
+
+
+
+########
+#  more files - get copied 1:1
+
+css/planet.scummvm.css
+
+i/feed-icon-10x10.png
+i/scummvm_logo.png
