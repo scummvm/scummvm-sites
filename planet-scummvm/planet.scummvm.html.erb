@@ -23,7 +23,12 @@
 <!-- 2) list full articles -->
 
 <%
-   items = site.items.latest.limit(10)
+
+# Fetch items newer than 30 days and sort them by updated date, newest first.
+   items = site.items.select { |item|
+     item.updated > 30.days.ago
+   }.sort { |a, b| b.updated <=> a.updated }
+
    index = 0
    ItemCursor.new( items ).each do |item, new_date, new_feed|
      index += 1
