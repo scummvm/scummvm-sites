@@ -3,6 +3,15 @@ import os
 import argparse
 import struct
 import sys
+from enum import Enum
+
+class FileType(Enum):
+    NON_MAC = "non_mac"
+    MAC_BINARY = "macbinary"
+    APPLE_DOUBLE_RSRC = "apple_double_rsrc"
+    APPLE_DOUBLE_MACOSX = "apple_double_macosx"
+    APPLE_DOUBLE_DOT_ = "apple_double_dot_"
+    RAW_RSRC = "raw_rsrc"
 
 script_version = "0.1"
 
@@ -49,11 +58,9 @@ def crc16xmodem(data, crc=0):
             (crc >> 8) & 0xff) ^ byte]
     return crc & 0xffff
 
-
 def filesize(filepath):
     """ Returns size of file """
     return os.stat(filepath).st_size
-
 
 def get_dirs_at_depth(directory, depth):
     directory = directory.rstrip(os.path.sep)
@@ -64,7 +71,6 @@ def get_dirs_at_depth(directory, depth):
         num_sep_this = root.count(os.path.sep)
         if depth == num_sep_this - num_sep:
             yield root
-
 
 def escape_string(s: str) -> str:
     """
@@ -85,7 +91,6 @@ def escape_string(s: str) -> str:
             new_name += char
     return new_name
 
-
 def needs_punyencoding(orig: str) -> bool:
     """
     A filename needs to be punyencoded when it:
@@ -98,7 +103,6 @@ def needs_punyencoding(orig: str) -> bool:
     if orig[-1] in " .":
         return True
     return False
-
 
 def punyencode(orig: str) -> str:
     """
@@ -118,7 +122,6 @@ def punyencode(orig: str) -> str:
         return "xn--" + encoded
     return orig
 
-
 def punyencode_filepath(filepath):
     filepath = filepath.rstrip("/")
     path_components = filepath.split(os.path.sep)
@@ -127,18 +130,49 @@ def punyencode_filepath(filepath):
 
     return os.path.join(*path_components)
 
-
 def read_be_32(byte_stream):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
     (uint,) = struct.unpack(">I", byte_stream[:32//8])
     return uint
-
 
 def read_be_16(byte_stream):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
     (uint,) = struct.unpack(">H", byte_stream[:16//8])
     return uint
 
+def is_raw_rsrc(filepath):
+    """ Returns boolean, checking whether the given .rsrc file is a raw .rsrc file and not appledouble."""
+    filename = os.path.basename(filepath)
+    if filename.endswith(".rsrc"):
+        with open(filepath, "rb") as f:
+            return not is_appledouble(f.read())
+    return False
+
+def is_appledouble_rsrc(filepath):
+    """ Returns boolean, checking whether the given .rsrc file is an appledouble or not."""
+    filename = os.path.basename(filepath)
+    if filename.endswith(".rsrc"):
+        with open(filepath, "rb") as f:
+            return is_appledouble(f.read())
+    return False
+
+def is_appledouble_in_dot_(filepath):
+    """ Returns boolean, checking whether the given ._ file is an appledouble or not. It also checks that the parent directory is not __MACOSX as that case is handled differently """
+    filename = os.path.basename(filepath)
+    parent_dir = os.path.basename(os.path.dirname(filepath))
+    if filename.startswith("._") and parent_dir != "__MACOSX":
+        with open(filepath, "rb") as f:
+            return is_appledouble(f.read())
+    return False
+    
+def is_appledouble_in_macosx(filepath):
+    """ Returns boolean, checking whether the given ._ file in __MACOSX folder is an appledouble or not. """
+    filename = os.path.basename(filepath)
+    parent_dir = os.path.basename(os.path.dirname(filepath))
+    if filename.startswith("._") and parent_dir == "__MACOSX":
+        with open(filepath, "rb") as f:
+            return is_appledouble(f.read())
+    return False
 
 def is_macbin(filepath):
     with open(filepath, "rb") as file:
@@ -173,8 +207,9 @@ def is_macbin(filepath):
 
             return True
 
+def macbin_get_resfork_data(file_byte_stream):
+    """ Returns the byte stream of the data section of the resource fork of a macbinary file as well as its size """
 
-def macbin_get_resfork(file_byte_stream):
     if not file_byte_stream:
         return file_byte_stream
 
@@ -182,8 +217,13 @@ def macbin_get_resfork(file_byte_stream):
     datalen_padded = ((datalen + 127) >> 7) << 7
     (rsrclen,) = struct.unpack(">I", file_byte_stream[0x57:0x5B])
 
-    return file_byte_stream[0x80 + datalen_padded: 0x80 + datalen_padded + rsrclen]
+    resoure_fork_offset = 128 + datalen_padded
+    data_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+0 : resoure_fork_offset+4])
+    # map_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+4 : resoure_fork_offset+8])
+    data_length = int.from_bytes(file_byte_stream[resoure_fork_offset+8 : resoure_fork_offset+12])
+    # map_length = int.from_bytes(file_byte_stream[resoure_fork_offset+12 : resoure_fork_offset+16])
 
+    return (file_byte_stream[resoure_fork_offset + data_offset: resoure_fork_offset + data_offset + data_length], data_length)
 
 def macbin_get_datafork(file_byte_stream):
     if not file_byte_stream:
@@ -192,29 +232,45 @@ def macbin_get_datafork(file_byte_stream):
     (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
     return file_byte_stream[0x80: 0x80 + datalen]
 
-
 def is_appledouble(file_byte_stream):
-    # Check AppleDouble magic number
+    """
+    Appledouble Structure -
+
+    Header:
+    +$00 / 4: signature (0x00 0x05 0x16 0x00)
+    +$04 / 4: version (0x00 0x01 0x00 0x00 (v1) -or- 0x00 0x02 0x00 0x00 (v2))
+    +$08 /16: home file system string (v1) -or- zeroes (v2)
+    +$18 / 2: number of entries
+
+    Entries:
+    +$00 / 4: entry ID (1-15)
+    +$04 / 4: offset to data from start of file
+    +$08 / 4: length of entry in bytes; may be zero
+    """
     if (not file_byte_stream or read_be_32(file_byte_stream) != 0x00051607):
         return False
 
     return True
 
-
-def appledouble_get_resfork(file_byte_stream):
-    entry_count = read_be_32(file_byte_stream[24:])
-    for _ in range(entry_count):
-        id = read_be_32(file_byte_stream[28:])
-        offset = read_be_32(file_byte_stream[32:])
-        length = read_be_32(file_byte_stream[36:])
+def appledouble_get_resfork_data(file_byte_stream):
+    """ Returns the byte stream of the data section of the resource fork of an appledouble file as well as its size """
+    
+    entry_count = read_be_16(file_byte_stream[24:])
+    for entry in range(entry_count):
+        start_index = 26 + entry*12
+        id = read_be_32(file_byte_stream[start_index:])
+        offset = read_be_32(file_byte_stream[start_index+4:])
+        length = read_be_32(file_byte_stream[start_index+8:])
 
         if id == 2:
-            return file_byte_stream[offset:offset+length]
+            resource_fork_stream = file_byte_stream[offset:offset+length]
+            data_offset = int.from_bytes(resource_fork_stream[0:4])
+            data_length = int.from_bytes(resource_fork_stream[8:12])
 
-    return b''
+            return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
 
-
-def appledouble_get_datafork(filepath):
+def appledouble_get_datafork(filepath, fileinfo):
+    """ Returns data fork byte stream of appledouble file if found, otherwise empty byte string """
     try:
         index = filepath.index("__MACOSX")
     except ValueError:
@@ -223,48 +279,56 @@ def appledouble_get_datafork(filepath):
     if index is not None:
         # Remove '__MACOSX/' from filepath
         filepath = filepath[:index] + filepath[index+8+1:]
+    parent_filepath = os.path.dirname(filepath)
+    data_fork_path = os.path.join(parent_filepath, fileinfo[1])
 
-        # Remove '._' from filepath
-        filename = os.path.basename(filepath)
-        filepath = filepath[:-len(filename)] + (filename[2:]
-                                                if filename.startswith('._') else filename)
+    try:
+        with open(data_fork_path, "rb") as f:
+            return f.read()
+    except (FileNotFoundError, IsADirectoryError):
+        return b''
 
-        return filepath
-        # return open(filepath, "rb")
+def raw_rsrc_get_datafork(filepath):
+    """ Returns data fork byte stream corresponding to raw rsrc file. """
+    with open(filepath[:-5]+".data", "rb") as f:
+        return f.read()
 
-    return b''
+def raw_rsrc_get_resource_fork_data(filepath):
+    """ Returns the byte stream of the data section of the resource fork of a raw rsrc file as well as its size """
+    with open(filepath, "rb") as f:
+        resource_fork_stream = f.read()
+        data_offset = int.from_bytes(resource_fork_stream[0:4])
+        data_length = int.from_bytes(resource_fork_stream[8:12])
 
+        return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
 
-def rsrc_get_datafork(filepath):
-    # Data fork is the same filename without the .rsrc extension
-    return open(filepath[:-5], "rb")
-
-
-def file_checksum(filepath, alg, size):
-    filename = os.path.basename(filepath)
-
-    # If it is Apple file with 2 forks
-    if (filepath.endswith('.rsrc') or is_macbin(filepath) or
-            filename.startswith('._') or filename.startswith('__MACOS')):
-        res = []
-        resfork = b''
-        datafork = b''
-
-        with open(filepath, "rb") as f:
-            if filepath.endswith('.rsrc'):
-                resfork = f.read()
-                datafork = rsrc_get_datafork(filepath)
-
-            if is_appledouble(f.read()):
+def file_checksum(filepath, alg, size, file_info):
+    size = 0
+    with open(filepath, "rb") as f:
+        if file_info[0] == FileType.NON_MAC:
+            return (create_checksum_pairs(checksum(f, alg, size, filepath), alg, size), filesize(filepath))
+        
+        # Processing mac files
+        else:
+            res = []
+            resfork = b''
+            datafork = b''
+            if file_info[0] == FileType.MAC_BINARY:
                 f.seek(0)
-                resfork = appledouble_get_resfork(f.read())
-                datafork = appledouble_get_datafork(filepath)
-
-            if is_macbin(filepath):
-                f.seek(0)
-                resfork = macbin_get_resfork(f.read())
+                (resfork, size) = macbin_get_resfork_data(f.read())
                 f.seek(0)
                 datafork = macbin_get_datafork(f.read())
+            elif file_info[0] == FileType.APPLE_DOUBLE_DOT_ or file_info[0] == FileType.APPLE_DOUBLE_RSRC or file_info[0] == FileType.APPLE_DOUBLE_MACOSX:
+                f.seek(0)
+                (resfork, size) = appledouble_get_resfork_data(f.read())
+                f.seek(0)
+                datafork = appledouble_get_datafork(filepath, file_info)
+
+            elif file_info[0] == FileType.RAW_RSRC:
+                f.seek(0)
+                (resfork, size) = raw_rsrc_get_resource_fork_data(filepath)
+                f.seek(0)
+                datafork = raw_rsrc_get_datafork(filepath)
 
             combined_forks = datafork + resfork
 
@@ -281,12 +345,7 @@ def file_checksum(filepath, alg, size):
             prefix = 'm'
             res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
-        return res
-
-    # If it is a normal file
-    with open(filepath, "rb") as file:
-        return create_checksum_pairs(checksum(file, alg, size, filepath), alg, size)
-
+            return (res, size)
 
 def create_checksum_pairs(hashes, alg, size, prefix=None):
     res = []
@@ -311,7 +370,6 @@ def create_checksum_pairs(hashes, alg, size, prefix=None):
         res.append((keys[i], h))
 
     return res
-
 
 def checksum(file, alg, size, filepath):
     """ Returns checksum value of file buffer using a specific algoritm """
@@ -365,7 +423,7 @@ def checksum(file, alg, size, filepath):
         hashes[0].update(bytes_stream)
         hashes[1].update(bytes_stream[:5000])
         hashes[2].update(bytes_stream[:1024 * 1024])
-        if filesize(filepath) >= 5000:
+        if len(bytes_stream) >= 5000:
             hashes[3].update(bytes_stream[-5000:])
         else:
             hashes[3] = hashes[0]
@@ -379,6 +437,94 @@ def checksum(file, alg, size, filepath):
     hashes = [h.hexdigest() for h in hashes if h]
     return hashes
 
+def extract_macbin_filename_from_header(file):
+    """ Extracts the filename from the header of the macbinary. """
+    with open(file, "rb") as f:
+        header = f.read(128)
+        name_len = header[1]
+        filename_bytes = header[2:2+name_len]
+        return filename_bytes.decode("utf-8")
+
+def file_classification(filepath):
+    """ Returns [ Filetype, Filename ]. Filetype is an enum value - NON_MAC, MAC_BINARY, APPLE_DOUBLE, MAC_RSRC
+        Filename for a normal file is the same as the original. Extensions are dropped for macfiles. """
+
+    # 1. Macbinary
+    if is_macbin(filepath):
+        return [FileType.MAC_BINARY, extract_macbin_filename_from_header(filepath)] 
+    
+    # 2. Appledouble .rsrc
+    if is_appledouble_rsrc(filepath):
+        base_name, _ = os.path.splitext(os.path.basename(filepath))
+        return [FileType.APPLE_DOUBLE_RSRC, base_name]
+    
+    # 3. Raw .rsrc
+    if is_raw_rsrc(filepath):
+        base_name, _ = os.path.splitext(os.path.basename(filepath))
+        return [FileType.RAW_RSRC, base_name]
+
+    # 4. Appledouble in ._
+    if is_appledouble_in_dot_(filepath):
+        filename = os.path.basename(filepath)
+        actual_filename = filename[2:]
+        return [FileType.APPLE_DOUBLE_DOT_, actual_filename]
+
+    # 5. Appledouble in __MACOSX folder
+    if is_appledouble_in_macosx(filepath):
+        filename = os.path.basename(filepath)
+        actual_filename = filename[2:]
+        return [FileType.APPLE_DOUBLE_MACOSX, actual_filename]
+    
+    # Normal file
+    else:
+        return [FileType.NON_MAC, os.path.basename(filepath)]
+
+def file_filter(files):
+    """ Removes extra macfiles from the given dictionary of files that are not needed for fork calculation.
+        This avoids extra checksum calculation of these mac files in form of non-mac files """
+    
+    to_be_deleted = []
+    
+    for filepath, file_info in files.items():
+        # For filename.rsrc (apple double rsrc), corresponding filename file (data fork) will be removed from the files dictionary 
+        if (file_info[0] == FileType.APPLE_DOUBLE_RSRC):
+            parent_dir_path = os.path.dirname(filepath)
+            expected_data_fork_path = os.path.join(parent_dir_path, file_info[1])
+            if (expected_data_fork_path in files):
+                to_be_deleted.append(expected_data_fork_path)
+            # else:
+            #     print(f"Resource-fork-only appledouble file: {filepath}")
+
+        # For ._filename, corresponding filename file (data fork) will be removed from the files dictionary 
+        elif (file_info[0] == FileType.APPLE_DOUBLE_DOT_):
+            parent_dir_path = os.path.dirname(filepath)
+            expected_data_fork_path = os.path.join(parent_dir_path, file_info[1])
+            if (expected_data_fork_path in files):
+               to_be_deleted.append(expected_data_fork_path)
+            # else:
+            #     print(f"Resource-fork-only appledouble file: {filepath}")
+
+        # For ._filename, corresponding ../filename file (data fork) will be removed from the files dictionary 
+        elif (file_info[0] == FileType.APPLE_DOUBLE_MACOSX):
+            grand_parent_dir_path = os.path.dirname(os.path.dirname(filepath))
+            expected_data_fork_path = os.path.join(grand_parent_dir_path, file_info[1])
+            if (expected_data_fork_path in files):
+                to_be_deleted.append(expected_data_fork_path)
+            # else:
+            #     print(f"Resource-fork-only appledouble file: {filepath}")
+
+        # For filename.rsrc (raw rsrc), corresponding filename.data file (data fork) and filename.finf file (finder info) will be removed from the files dictionary
+        elif (file_info[0] == FileType.RAW_RSRC):
+            parent_dir_path = os.path.dirname(filepath)
+            expected_data_fork_path = os.path.join(parent_dir_path, file_info[1]) + ".data"
+            expected_finf_path = os.path.join(parent_dir_path, file_info[1]) + ".finf"
+            if (expected_data_fork_path in files):
+                to_be_deleted.append(expected_data_fork_path)
+            if (expected_finf_path in files):
+                to_be_deleted.append(expected_finf_path)
+
+    for file in to_be_deleted:
+        del files[file]
 
 def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
     """ Return dictionary containing checksums of all files in directory """
@@ -387,19 +533,38 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
     for directory in get_dirs_at_depth(root_directory, depth):
         hash_of_dir = dict()
         files = []
-
+        # Dictionary with key : path and value : [ Filetype, Filename ]
+        file_collection = dict()
         # Getting only files of directory and subdirectories recursively
-        for root, dirs, contents in os.walk(directory):
+        for root, _, contents in os.walk(directory):
             files.extend([os.path.join(root, f) for f in contents])
 
-        for file in files:
-            hash_of_dir[os.path.relpath(file, directory)] = (file_checksum(
-                file, alg, size), filesize(file))
+        # Produce filetype and filename(name to be used in game entry) for each file
+        for filepath in files:
+            file_collection[filepath] = file_classification(filepath)
+
+        # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
+        # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
+        # print(file_collection)
+        file_filter(file_collection)
+        # print(file_collection)
+
+        # Calculate checksum of files
+        for file_path, file_info in file_collection.items():
+            # relative_path is used for the name field in game entry
+            relative_path = os.path.relpath(file_path, directory)
+            base_name = file_info[1]
+            relative_dir = os.path.dirname(relative_path)
+            relative_path = os.path.join(relative_dir, base_name)
+
+            if (file_info[0] == FileType.APPLE_DOUBLE_MACOSX):
+                relative_dir = os.path.dirname(os.path.dirname(relative_path))
+                relative_path = os.path.join(relative_dir, base_name) 
+
+            hash_of_dir[relative_path] = file_checksum(file_path, alg, size, file_info)
 
         res.append(hash_of_dir)
-
     return res
-
 
 def create_dat_file(hash_of_dirs, path, checksum_size=0):
     with open(f"{os.path.basename(path)}.dat", "w") as file:
@@ -415,8 +580,7 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
             for filename, (hashes, filesize) in hash_of_dir.items():
-                filename = (punyencode_filepath(filename)
-                            if needs_punyencoding(filename) else filename)
+                filename = (punyencode_filepath(filename) if needs_punyencoding(filename) else filename)
                 data = f"name \"{filename}\" size {filesize}"
                 for key, value in hashes:
                     data += f" {key} {value}"
