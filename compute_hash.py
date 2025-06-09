@@ -73,64 +73,6 @@ def get_dirs_at_depth(directory, depth):
         if depth == num_sep_this - num_sep:
             yield root
 
-def escape_string(s: str) -> str:
-    """
-    Escape strings
-
-    Escape the following:
-    - escape char: \x81
-    - unallowed filename chars: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
-    - control chars < 0x20
-    """
-    new_name = ""
-    for char in s:
-        if char == "\x81":
-            new_name += "\x81\x79"
-        elif char in '/":*|\\?%<>\x7f' or ord(char) < 0x20 or (ord(char) & 0x80):
-            new_name += "\x81" + chr(0x80 + ord(char))
-        else:
-            new_name += char
-    return new_name
-
-def needs_punyencoding(orig: str) -> bool:
-    """
-    A filename needs to be punyencoded when it:
-
-    - contains a char that should be escaped or
-    - ends with a dot or a space.
-    """
-    if orig != escape_string(orig):
-        return True
-    if orig[-1] in " .":
-        return True
-    return False
-
-def punyencode(orig: str) -> str:
-    """
-    Punyencode strings
-
-    - escape special characters and
-    - ensure filenames can't end in a space or dot
-    """
-    s = escape_string(orig)
-    encoded = s.encode("punycode").decode("ascii")
-    # punyencoding adds an '-' at the end when there are no special chars
-    # don't use it for comparing
-    compare = encoded
-    if encoded.endswith("-"):
-        compare = encoded[:-1]
-    if orig != compare or compare[-1] in " .":
-        return "xn--" + encoded
-    return orig
-
-def punyencode_filepath(filepath):
-    filepath = filepath.rstrip("/")
-    path_components = filepath.split(os.path.sep)
-    for i, component in enumerate(path_components):
-        path_components[i] = punyencode(component)
-
-    return os.path.join(*path_components)
-
 def read_be_32(byte_stream):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
     (uint,) = struct.unpack(">I", byte_stream[:32//8])
@@ -621,7 +563,6 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
             for filename, (hashes, filesize) in hash_of_dir.items():
-                filename = (punyencode_filepath(filename) if needs_punyencoding(filename) else filename)
                 data = f"name \"{filename}\" size {filesize}"
                 for key, value in hashes:
                     data += f" {key} {value}"
