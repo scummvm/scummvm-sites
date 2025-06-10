@@ -1,5 +1,3 @@
-import pytest
-
 from db_functions import punycode_need_encode, encode_punycode
 
 
