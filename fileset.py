@@ -67,13 +67,42 @@ def index():
     <ul>
         <li><a href="{{ url_for('logs') }}">Logs</a></li>
     </ul>
+    <form action="{{ url_for('clear_database') }}" method="POST"> 
+        <button style="margin:100px 0 0 0; background-color:red"  type="submit"> Clear Database </button>
+    </form>
     </body>
     </html>
     """
     return render_template_string(html)
 
+@app.route('/clear_database', methods=['POST'])
+def clear_database():
+    try:
+        conn = db_connect()
+        with conn.cursor() as cursor:
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+            cursor.execute("TRUNCATE TABLE filechecksum")
+            cursor.execute("TRUNCATE TABLE file")
+            cursor.execute("TRUNCATE TABLE fileset")
+            cursor.execute("TRUNCATE TABLE history")
+            cursor.execute("TRUNCATE TABLE game")
+            cursor.execute("TRUNCATE TABLE engine")
+            cursor.execute("TRUNCATE TABLE log")
+            cursor.execute("TRUNCATE TABLE queue")
+            cursor.execute("TRUNCATE TABLE transactions")
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+            conn.commit()
+            print("DATABASE CLEARED")
+    except Exception as e:
+        print(f"Error clearing database: {e}")
+    finally:
+        conn.close()
 
-@app.route("/fileset", methods=["GET", "POST"])
+    return redirect('/')
+
+
+
+@app.route('/fileset', methods=['GET', 'POST'])
 def fileset():
     id = request.args.get("id", default=1, type=int)
     widetable = request.args.get("widetable", default="partial", type=str)
@@ -206,16 +235,10 @@ def fileset():
                     if "desc" in sort:
                         order += " DESC"
 
-            columns_to_select = (
-                "file.id, name, size, checksum, detection, detection_type, `timestamp`"
-            )
+            columns_to_select = "file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`"
             columns_to_select += ", ".join(md5_columns)
-            print(
-                f"SELECT file.id, name, size, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
-            )
-            cursor.execute(
-                f"SELECT file.id, name, size, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
-            )
+            print(f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}")
+            cursor.execute(f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}")
             result = cursor.fetchall()
 
             all_columns = list(result[0].keys()) if result else []
@@ -1047,4 +1070,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(debug=True, host="0.0.0.0")
+    app.run(port=5001,debug=True, host='0.0.0.0')
