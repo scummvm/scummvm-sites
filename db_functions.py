@@ -197,12 +197,21 @@ def insert_file(file, detection, src, conn):
     name = encode_punycode(file['name']) if punycode_need_encode(file['name']) else file['name']
     escaped_name = escape_string(name)
 
-    columns = ['name', 'size']
-    values = [f"'{escaped_name}'", f"'{file['size']}'"]
+    columns = ['name', 'size', '`size-r`', '`size-rd`']
+    values = [f"'{escaped_name}'"]
 
     if extended_file_size:
-        columns.extend(['`size-r`', '`size-rd`'])
-        values.extend([f"'{file['size-r']}'", f"'{file['size-rd']}'"])
+        values.extend([f"'{file['size']}'", f"'{file['size-r']}'", f"'{file['size-rd']}'"])
+    else:
+        values.extend([f"'{file['size']}'", f"'0'", f"'0'"])
+        for key, value in file.items():
+            if key not in ["name", "size", "size-r", "size-rd"] and ':' in file[key]:
+                    c = file[key]
+                    prefix = c.split(':')[0]
+                    if prefix == 'r' or prefix == 'm':
+                        values[1] = f"'0'"
+                        values[3] = f"'{file['size']}'"
+                        break
 
     columns.extend(['checksum', 'fileset', 'detection', 'detection_type', '`timestamp`'])
     values.extend([f"'{checksum}'", '@fileset_last', str(detection), f"'{detection_type}'", 'NOW()'])
