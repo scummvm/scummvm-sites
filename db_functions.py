@@ -48,10 +48,7 @@ def get_checksum_props(checkcode, checksum):
         prefix = checksum.split(":")[0]
         checktype += "-" + prefix
 
-        checksum = checksum.split(":")[1]
-
-    # print(checksize)
-
+        checksum = checksum.split(':')[1]
     return checksize, checktype, checksum
 
 
@@ -140,13 +137,15 @@ def insert_fileset(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
             update_history(existing_entry, existing_entry, conn, log_last)
-
-        return True
+            
+        return existing_entry
 
     # $game and $key should not be parsed as a mysql string, hence no quotes
     query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`) VALUES ({game}, '{status}', '{src}', {key}, {megakey}, FROM_UNIXTIME(@fileset_time_last))"
+    fileset_id = -1
     with conn.cursor() as cursor:
         cursor.execute(query)
+        fileset_id = cursor.lastrowid
         cursor.execute("SET @fileset_last = LAST_INSERT_ID()")
 
     category_text = f"Uploaded from {src}"
@@ -171,7 +170,7 @@ def insert_fileset(
             f"INSERT INTO transactions (`transaction`, fileset) VALUES ({transaction}, {fileset_last})"
         )
 
-    return True
+    return fileset_id
 
 
 def insert_file(file, detection, src, conn):
@@ -181,6 +180,7 @@ def insert_file(file, detection, src, conn):
     checktype = "None"
     if "md5" in file:
         checksum = file["md5"]
+        checksum = checksum.split(':')[1] if ':' in checksum else checksum
     else:
         for key, value in file.items():
             if "md5" in key:
@@ -811,29 +811,18 @@ def process_fileset(
         matched_map = find_matching_filesets(fileset, conn, src)
     else:
         matched_map = matching_set(fileset, conn)
-
-    insert_new_fileset(
-        fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
-    )
-    with conn.cursor() as cursor:
-        cursor.execute("SET @fileset_last = LAST_INSERT_ID()")
-        cursor.execute("SELECT LAST_INSERT_ID()")
-        fileset_last = cursor.fetchone()["LAST_INSERT_ID()"]
+    
+    fileset_id = insert_new_fileset(fileset, conn, detection, src, key, megakey, transaction_id, log_text, user)
+    # with conn.cursor() as cursor:
+    #     cursor.execute("SET @fileset_last = LAST_INSERT_ID()")
+    #     cursor.execute("SELECT LAST_INSERT_ID()")
+    #     fileset_last_old = cursor.fetchone()['LAST_INSERT_ID()']
+    #     fileset_last = cursor.lastrowid
+    #     print(fileset_last_old)
+    #     print(fileset_last)
+        
     if matched_map:
-        handle_matched_filesets(
-            fileset_last,
-            matched_map,
-            fileset,
-            conn,
-            detection,
-            src,
-            key,
-            megakey,
-            transaction_id,
-            log_text,
-            user,
-        )
-
+        handle_matched_filesets(fileset_id, matched_map, fileset, conn, detection, src, key, megakey, transaction_id, log_text, user)
 
 def insert_game_data(fileset, conn):
     engine_name = fileset["engine"]
@@ -887,13 +876,16 @@ def matching_set(fileset, conn):
             matched_set = set()
             if "md5" in file:
                 checksum = file["md5"]
+                if ':' in checksum:
+                    checksum = checksum.split(':')[1]
                 size = file["size"]
+
                 query = f"""
                     SELECT DISTINCT fs.id AS fileset_id
                     FROM fileset fs
                     JOIN file f ON fs.id = f.fileset
                     JOIN filechecksum fc ON f.id = fc.file
-                    WHERE fc.checksum = '{checksum}' AND fc.checktype = 'md5'
+                    WHERE fc.checksum = '{checksum}' AND fc.checktype LIKE 'md5%'
                     AND fc.checksize > {size}
                     AND fs.status = 'detection'
                 """
@@ -977,10 +969,11 @@ def handle_matched_filesets(
 
 def delete_original_fileset(fileset_id, conn):
     with conn.cursor() as cursor:
+        print(fileset_id)
         cursor.execute(f"DELETE FROM file WHERE fileset = {fileset_id}")
         cursor.execute(f"DELETE FROM fileset WHERE id = {fileset_id}")
-
-
+    conn.commit()
+        
 def update_fileset_status(cursor, fileset_id, status):
     cursor.execute(f"""
         UPDATE fileset SET 
@@ -1063,26 +1056,15 @@ def populate_file(fileset, fileset_id, conn, detection):
                     f"UPDATE file SET detection_type = 'None' WHERE id = {file_id}"
                 )
 
-
-def insert_new_fileset(
-    fileset, conn, detection, src, key, megakey, transaction_id, log_text, user, ip=""
-):
-    if insert_fileset(
-        src,
-        detection,
-        key,
-        megakey,
-        transaction_id,
-        log_text,
-        conn,
-        username=user,
-        ip=ip,
-    ):
+def insert_new_fileset(fileset, conn, detection, src, key, megakey, transaction_id, log_text, user, ip=''):
+    fileset_id = insert_fileset(src, detection, key, megakey, transaction_id, log_text, conn, username=user, ip=ip)
+    if fileset_id:
         for file in fileset["rom"]:
             insert_file(file, detection, src, conn)
             for key, value in file.items():
                 if key not in ["name", "size", "size-r", "size-rd" "sha1", "crc"]:
                     insert_filechecksum(file, key, conn)
+    return fileset_id
 
 
 def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
