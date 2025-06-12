@@ -28,6 +28,12 @@ def map_checksum_data(content_string):
         elif tokens[i] == "size":
             current_rom["size"] = int(tokens[i + 1])
             i += 2
+        elif tokens[i] == 'size-r':
+            current_rom['size-r'] = int(tokens[i + 1])
+            i += 2
+        elif tokens[i] == 'size-rd':
+            current_rom['size-rd'] = int(tokens[i + 1])
+            i += 2
         else:
             checksum_key = tokens[i]
             checksum_value = tokens[i + 1] if len(tokens) >= 6 else "0"
@@ -64,7 +70,7 @@ def map_key_values(content_string, arr):
 
 def match_outermost_brackets(input):
     """
-    Parse DAT file and separate the contents each segment into an array
+    Parse DAT file and separate the contents each segment into an array.
     Segments are of the form `scummvm ( )`, `game ( )` etc.
     """
     matches = []
@@ -107,6 +113,7 @@ def parse_dat(dat_filepath):
     resources = {}
 
     matches = match_outermost_brackets(content)
+    # print(matches)
     if matches:
         for data_segment in matches:
             if (
@@ -122,7 +129,7 @@ def parse_dat(dat_filepath):
                 temp = {}
                 temp = map_key_values(data_segment[0], temp)
                 resources[temp["name"]] = temp
-    # print(header, game_data, resources)
+    # print(header, game_data, resources, dat_filepath)
     return header, game_data, resources, dat_filepath
 
 
@@ -148,6 +155,7 @@ def main():
 
     if args.match:
         for filepath in args.match:
+            # print(parse_dat(filepath)[2])
             match_fileset(parse_dat(filepath), args.user)
 
 

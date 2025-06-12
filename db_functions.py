@@ -50,6 +50,8 @@ def get_checksum_props(checkcode, checksum):
 
         checksum = checksum.split(":")[1]
 
+    # print(checksize)
+
     return checksize, checktype, checksum
 
 
@@ -189,10 +191,23 @@ def insert_file(file, detection, src, conn):
         checktype = "None"
         detection = 0
     detection_type = f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-    if punycode_need_encode(file['name']):
-        query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(encode_punycode(file['name']))}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
-    else:
-        query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
+
+    extended_file_size = True if 'size-r' in file else False
+
+    name = encode_punycode(file['name']) if punycode_need_encode(file['name']) else file['name']
+    escaped_name = escape_string(name)
+
+    columns = ['name', 'size']
+    values = [f"'{escaped_name}'", f"'{file['size']}'"]
+
+    if extended_file_size:
+        columns.extend(['`size-r`', '`size-rd`'])
+        values.extend([f"'{file['size-r']}'", f"'{file['size-rd']}'"])
+
+    columns.extend(['checksum', 'fileset', 'detection', 'detection_type', '`timestamp`'])
+    values.extend([f"'{checksum}'", '@fileset_last', str(detection), f"'{detection_type}'", 'NOW()'])
+
+    query = f"INSERT INTO file ({', '.join(columns)}) VALUES ({', '.join(values)})"
     with conn.cursor() as cursor:
         cursor.execute(query)
 
@@ -380,8 +395,11 @@ def calc_key(fileset):
 
 def calc_megakey(fileset):
     key_string = f":{fileset['platform']}:{fileset['language']}"
-    if "rom" in fileset.keys():
-        for file in fileset["rom"]:
+    # print(fileset.keys())
+    if 'rom' in fileset.keys():
+        files = fileset['rom']
+        files.sort(key=lambda x : x['name'])
+        for file in fileset['rom']:
             for key, value in file.items():
                 key_string += ":" + str(value)
     elif "files" in fileset.keys():
@@ -389,7 +407,8 @@ def calc_megakey(fileset):
             for key, value in file.items():
                 key_string += ":" + str(value)
 
-    key_string = key_string.strip(":")
+    key_string = key_string.strip(':')
+    # print(key_string)
     return hashlib.md5(key_string.encode()).hexdigest()
 
 
@@ -467,7 +486,7 @@ def db_insert(data_arr, username=None, skiplog=False):
             for file in fileset["rom"]:
                 insert_file(file, detection, src, conn)
                 for key, value in file.items():
-                    if key not in ["name", "size"]:
+                    if key not in ["name", "size", "size-r", "size-rd"]:
                         insert_filechecksum(file, key, conn)
 
     if detection:
@@ -492,9 +511,9 @@ def db_insert(data_arr, username=None, skiplog=False):
 
 def compare_filesets(id1, id2, conn):
     with conn.cursor() as cursor:
-        cursor.execute(f"SELECT name, size, checksum FROM file WHERE fileset = '{id1}'")
+        cursor.execute(f"SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = '{id1}'")
         fileset1 = cursor.fetchall()
-        cursor.execute(f"SELECT name, size, checksum FROM file WHERE fileset = '{id2}'")
+        cursor.execute(f"SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = '{id2}'")
         fileset2 = cursor.fetchall()
 
     # Sort filesets on checksum
@@ -828,7 +847,7 @@ def find_matching_filesets(fileset, conn, status):
         for file in fileset["rom"]:
             matched_set = set()
             for key, value in file.items():
-                if key not in ["name", "size", "sha1", "crc"]:
+                if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
                     checksum = file[key]
                     checktype = key
                     checksize, checktype, checksum = get_checksum_props(
@@ -993,17 +1012,30 @@ def populate_file(fileset, fileset_id, conn, detection):
                 checktype = "None"
                 detection = 0
             detection_type = f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-            if punycode_need_encode(file['name']):
-                query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(encode_punycode(file['name']))}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
-            else:
-                query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
+
+            extended_file_size = True if 'size-r' in file else False
+
+            name = encode_punycode(file['name']) if punycode_need_encode(file['name']) else file['name']
+            escaped_name = escape_string(name)
+
+            columns = ['name', 'size']
+            values = [f"'{escaped_name}'", f"'{file['size']}'"]
+
+            if extended_file_size:
+                columns.extend(['`size-r`', '`size-rd`'])
+                values.extend([f"'{file['size-r']}'", f"'{file['size-rd']}'"])
+
+            columns.extend(['checksum', 'fileset', 'detection', 'detection_type', '`timestamp`'])
+            values.extend([f"'{checksum}'", str(fileset_id), str(detection), f"'{detection_type}'", 'NOW()'])
+
+            query = f"INSERT INTO file ({', '.join(columns)}) VALUES ({', '.join(values)})"
             cursor.execute(query)
             cursor.execute("SET @file_last = LAST_INSERT_ID()")
             cursor.execute("SELECT @file_last AS file_id")
             file_id = cursor.fetchone()["file_id"]
             target_id = None
             for key, value in file.items():
-                if key not in ["name", "size"]:
+                if key not in ["name", "size", "size-r", "size-rd"]:
                     insert_filechecksum(file, key, conn)
                     if value in target_files_dict and not file_exists:
                         file_exists = True
@@ -1040,7 +1072,7 @@ def insert_new_fileset(
         for file in fileset["rom"]:
             insert_file(file, detection, src, conn)
             for key, value in file.items():
-                if key not in ["name", "size", "sha1", "crc"]:
+                if key not in ["name", "size", "size-r", "size-rd" "sha1", "crc"]:
                     insert_filechecksum(file, key, conn)
 
 
@@ -1076,7 +1108,12 @@ def user_integrity_check(data, ip, game_metadata=None):
     new_files = []
 
     for file in data["files"]:
-        new_file = {"name": file["name"], "size": file["size"]}
+        new_file = {
+            "name": file["name"],
+            "size": file["size"],
+            "size-r": file["size-r"],
+            "size-rd": file["size-rd"] 
+        }
         for checksum in file["checksums"]:
             checksum_type = checksum["type"]
             checksum_value = checksum["checksum"]
