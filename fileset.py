@@ -169,6 +169,13 @@ def fileset():
                         <button type='submit'>Mark as full</button>
                     </form>
                     """
+            
+            
+            cursor.execute("SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset" , (id,))
+            row = cursor.fetchone()
+            print(row)
+            if row:
+                id = row['fileset']
             cursor.execute(f"SELECT * FROM fileset WHERE id = {id}")
             result = cursor.fetchone()
             print(result)
@@ -1031,7 +1038,7 @@ def fileset_search():
     SELECT extra, platform, language, game.gameid, megakey,
     status, fileset.id as fileset
     FROM fileset
-    JOIN game ON game.id = fileset.game
+    LEFT JOIN game ON game.id = fileset.game
     """
     order = "ORDER BY fileset.id"
     filters = {
