@@ -236,9 +236,38 @@ def insert_filechecksum(file, checktype, conn):
     checksum = file[checktype]
     checksize, checktype, checksum = get_checksum_props(checktype, checksum)
 
+
     query = f"INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (@file_last, '{checksize}', '{checktype}', '{checksum}')"
     with conn.cursor() as cursor:
         cursor.execute(query)
+        if "md5" not in checktype:
+            return
+        if (checktype[-1] == 'm' or checktype[-1] == 'd' or checktype[-1] == 'r'):
+            return
+        
+        cursor.execute("SELECT size FROM file WHERE id = @file_last")
+        result = cursor.fetchone()
+        if not result:
+            return
+        file_size = result['size']
+        if file_size != -1 and (int(file_size) <= int(checksize) or int(checksize) == 0) and file_size <= 5000:
+            md5_variants = ['md5-0', 'md5-1M', 'md5-5000', 'md5-t-5000']
+            inserted_checksum_type = checktype + "-" + checksize
+            for cs in md5_variants:
+                if cs != inserted_checksum_type:
+                    exploded_checksum = cs.split('-')
+                    c_size = exploded_checksum.pop()
+                    c_type = '-'.join(exploded_checksum)
+
+                    query = f"INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (@file_last, '{c_size}', '{c_type}', '{checksum}')"
+                    with conn.cursor() as cursor:
+                        cursor.execute(query)
+            
+
+
+
+    
+    
 
 
 def delete_filesets(conn):
@@ -1010,6 +1039,7 @@ def populate_file(fileset, fileset_id, conn, detection):
                     if "md5" in key:
                         checksize, checktype, checksum = get_checksum_props(key, value)
                         break
+            
             if not detection:
                 checktype = "None"
                 detection = 0
