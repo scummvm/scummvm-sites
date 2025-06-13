@@ -195,10 +195,14 @@ def create_page(
                     if matches:
                         fileset_id = matches.group(1)
                         fileset_text = matches.group(0)
-                        value = value.replace(
-                            fileset_text,
-                            f"<a href='fileset?id={fileset_id}'>{fileset_text}</a>",
-                        )
+                        with conn.cursor() as cursor:
+                            cursor.execute("SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset", (fileset_id,))
+                            row = cursor.fetchone()
+                            print(row)
+                            if row:
+                                fileset_id = row['fileset']
+
+                        value = value.replace(fileset_text, f"<a href='fileset?id={fileset_id}'>{fileset_text}</a>")
 
                 html += f"<td>{value}</td>\n"
             html += "</tr>\n"
