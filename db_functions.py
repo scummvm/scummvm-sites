@@ -188,11 +188,9 @@ def insert_file(file, detection, src, conn):
     if not detection:
         checktype = "None"
         detection = 0
-    detection_type = (
-        f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-    )
-    if punycode_need_encode(file["name"]):
-        query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{encode_punycode(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
+    detection_type = f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
+    if punycode_need_encode(file['name']):
+        query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(encode_punycode(file['name']))}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
     else:
         query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
     with conn.cursor() as cursor:
@@ -238,12 +236,11 @@ def my_escape_string(s: str) -> str:
     for char in s:
         if char == "\x81":
             new_name += "\x81\x79"
-        elif char in '/":*|\\?%<>\x7f' or ord(char) < 0x20 or (ord(char) & 0x80):
+        elif char in SPECIAL_SYMBOLS or ord(char) < 0x20:
             new_name += "\x81" + chr(0x80 + ord(char))
         else:
             new_name += char
-    return escape_string(new_name)
-
+    return new_name
 
 def encode_punycode(orig):
     """
@@ -995,12 +992,9 @@ def populate_file(fileset, fileset_id, conn, detection):
             if not detection:
                 checktype = "None"
                 detection = 0
-            detection_type = (
-                f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-            )
-            if punycode_need_encode(file["name"]):
-                print(encode_punycode(file["name"]))
-                query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{encode_punycode(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
+            detection_type = f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
+            if punycode_need_encode(file['name']):
+                query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(encode_punycode(file['name']))}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
             else:
                 query = f"INSERT INTO file (name, size, checksum, fileset, detection, detection_type, `timestamp`) VALUES ('{escape_string(file['name'])}', '{file['size']}', '{checksum}', @fileset_last, {detection}, '{detection_type}', NOW())"
             cursor.execute(query)
