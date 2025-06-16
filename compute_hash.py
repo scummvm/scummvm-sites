@@ -12,6 +12,7 @@ class FileType(Enum):
     APPLE_DOUBLE_MACOSX = "apple_double_macosx"
     APPLE_DOUBLE_DOT_ = "apple_double_dot_"
     RAW_RSRC = "raw_rsrc"
+    ACTUAL_FORK_MAC = "actual_fork_mac"
 
 script_version = "0.1"
 
@@ -141,7 +142,7 @@ def read_be_16(byte_stream):
     return uint
 
 def is_raw_rsrc(filepath):
-    """ Returns boolean, checking whether the given .rsrc file is a raw .rsrc file and not appledouble."""
+    """ Returns boolean, checking if the given .rsrc file is a raw .rsrc file and not appledouble."""
     filename = os.path.basename(filepath)
     if filename.endswith(".rsrc"):
         with open(filepath, "rb") as f:
@@ -207,8 +208,35 @@ def is_macbin(filepath):
 
             return True
 
+def is_actual_resource_fork_mac(filepath):
+    """ Returns boolean, checking the actual mac fork if it exists. """
+
+    resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
+    print(resource_fork_path)
+    return os.path.exists(resource_fork_path)
+
+def is_appledouble(file_byte_stream):
+    """
+    Appledouble Structure -
+
+    Header:
+    +$00 / 4: signature (0x00 0x05 0x16 0x00)
+    +$04 / 4: version (0x00 0x01 0x00 0x00 (v1) -or- 0x00 0x02 0x00 0x00 (v2))
+    +$08 /16: home file system string (v1) -or- zeroes (v2)
+    +$18 / 2: number of entries
+
+    Entries:
+    +$00 / 4: entry ID (1-15)
+    +$04 / 4: offset to data from start of file
+    +$08 / 4: length of entry in bytes; may be zero
+    """
+    if (not file_byte_stream or read_be_32(file_byte_stream) != 0x00051607):
+        return False
+
+    return True
+
 def macbin_get_resfork_data(file_byte_stream):
-    """ Returns the byte stream of the data section of the resource fork of a macbinary file as well as its size """
+    """ Returns the resource fork's data section as bytes of a macbinary file as well as its size """
 
     if not file_byte_stream:
         return file_byte_stream
@@ -219,9 +247,7 @@ def macbin_get_resfork_data(file_byte_stream):
 
     resoure_fork_offset = 128 + datalen_padded
     data_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+0 : resoure_fork_offset+4])
-    # map_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+4 : resoure_fork_offset+8])
     data_length = int.from_bytes(file_byte_stream[resoure_fork_offset+8 : resoure_fork_offset+12])
-    # map_length = int.from_bytes(file_byte_stream[resoure_fork_offset+12 : resoure_fork_offset+16])
 
     return (file_byte_stream[resoure_fork_offset + data_offset: resoure_fork_offset + data_offset + data_length], data_length)
 
@@ -253,7 +279,7 @@ def is_appledouble(file_byte_stream):
     return True
 
 def appledouble_get_resfork_data(file_byte_stream):
-    """ Returns the byte stream of the data section of the resource fork of an appledouble file as well as its size """
+    """ Returns the resource fork's data section as bytes of an appledouble file as well as its size """
     
     entry_count = read_be_16(file_byte_stream[24:])
     for entry in range(entry_count):
@@ -270,7 +296,7 @@ def appledouble_get_resfork_data(file_byte_stream):
             return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
 
 def appledouble_get_datafork(filepath, fileinfo):
-    """ Returns data fork byte stream of appledouble file if found, otherwise empty byte string """
+    """ Returns data fork's content as bytes of appledouble file if found, otherwise empty byte string """
     try:
         index = filepath.index("__MACOSX")
     except ValueError:
@@ -289,13 +315,28 @@ def appledouble_get_datafork(filepath, fileinfo):
         return b''
 
 def raw_rsrc_get_datafork(filepath):
-    """ Returns data fork byte stream corresponding to raw rsrc file. """
+    """ Returns the data fork's content as bytes corresponding to raw rsrc file. """
     with open(filepath[:-5]+".data", "rb") as f:
         return f.read()
 
 def raw_rsrc_get_resource_fork_data(filepath):
-    """ Returns the byte stream of the data section of the resource fork of a raw rsrc file as well as its size """
+    """ Returns the resource fork's data section as bytes of a raw rsrc file as well as its size """
     with open(filepath, "rb") as f:
+        resource_fork_stream = f.read()
+        data_offset = int.from_bytes(resource_fork_stream[0:4])
+        data_length = int.from_bytes(resource_fork_stream[8:12])
+
+        return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
+    
+def actual_mac_fork_get_data_fork(filepath):
+    """ Returns the data fork's content as bytes if the actual mac fork exists """
+    with open(filepath, "rb") as f:
+        return f.read()
+
+def actual_mac_fork_get_resource_fork_data(filepath):
+    """ Returns the resource fork's data section as bytes of the actual mac fork as well as its size """
+    resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
+    with open(resource_fork_path, "rb") as f:
         resource_fork_stream = f.read()
         data_offset = int.from_bytes(resource_fork_stream[0:4])
         data_length = int.from_bytes(resource_fork_stream[8:12])
@@ -303,49 +344,46 @@ def raw_rsrc_get_resource_fork_data(filepath):
         return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
 
 def file_checksum(filepath, alg, size, file_info):
-    size = 0
+    cur_file_size = 0
     with open(filepath, "rb") as f:
         if file_info[0] == FileType.NON_MAC:
             return (create_checksum_pairs(checksum(f, alg, size, filepath), alg, size), filesize(filepath))
         
         # Processing mac files
-        else:
-            res = []
-            resfork = b''
-            datafork = b''
-            if file_info[0] == FileType.MAC_BINARY:
-                f.seek(0)
-                (resfork, size) = macbin_get_resfork_data(f.read())
-                f.seek(0)
-                datafork = macbin_get_datafork(f.read())
-            elif file_info[0] == FileType.APPLE_DOUBLE_DOT_ or file_info[0] == FileType.APPLE_DOUBLE_RSRC or file_info[0] == FileType.APPLE_DOUBLE_MACOSX:
-                f.seek(0)
-                (resfork, size) = appledouble_get_resfork_data(f.read())
-                f.seek(0)
-                datafork = appledouble_get_datafork(filepath, file_info)
+        res = []
+        resfork = b''
+        datafork = b''
+        file_data = f.read()
 
-            elif file_info[0] == FileType.RAW_RSRC:
-                f.seek(0)
-                (resfork, size) = raw_rsrc_get_resource_fork_data(filepath)
-                f.seek(0)
-                datafork = raw_rsrc_get_datafork(filepath)
+        if file_info[0] == FileType.MAC_BINARY:
+            (resfork, cur_file_size) = macbin_get_resfork_data(file_data)
+            datafork = macbin_get_datafork(file_data)
+        elif file_info[0] in {FileType.APPLE_DOUBLE_DOT_, FileType.APPLE_DOUBLE_RSRC, FileType.APPLE_DOUBLE_MACOSX}:
+            (resfork, cur_file_size) = appledouble_get_resfork_data(file_data)
+            datafork = appledouble_get_datafork(filepath, file_info)
+        elif file_info[0] == FileType.RAW_RSRC:
+            (resfork, cur_file_size) = raw_rsrc_get_resource_fork_data(filepath)
+            datafork = raw_rsrc_get_datafork(filepath)
+        elif file_info[0] == FileType.ACTUAL_FORK_MAC:
+            (resfork, cur_file_size) = actual_mac_fork_get_resource_fork_data(filepath)
+            datafork = actual_mac_fork_get_data_fork(filepath)
 
-            combined_forks = datafork + resfork
+        combined_forks = datafork + resfork
 
-            hashes = checksum(resfork, alg, size, filepath)
-            prefix = 'r'
-            if len(resfork):
-                res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-            hashes = checksum(datafork, alg, size, filepath)
-            prefix = 'd'
+        hashes = checksum(resfork, alg, size, filepath)
+        prefix = 'r'
+        if len(resfork):
             res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
-            hashes = checksum(combined_forks, alg, size, filepath)
-            prefix = 'm'
-            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+        hashes = checksum(datafork, alg, size, filepath)
+        prefix = 'd'
+        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
-            return (res, size)
+        hashes = checksum(combined_forks, alg, size, filepath)
+        prefix = 'm'
+        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+
+        return (res, cur_file_size)
 
 def create_checksum_pairs(hashes, alg, size, prefix=None):
     res = []
@@ -446,7 +484,7 @@ def extract_macbin_filename_from_header(file):
         return filename_bytes.decode("utf-8")
 
 def file_classification(filepath):
-    """ Returns [ Filetype, Filename ]. Filetype is an enum value - NON_MAC, MAC_BINARY, APPLE_DOUBLE, MAC_RSRC
+    """ Returns [ Filetype, Filename ]. Filetype is an enum value - NON_MAC, MAC_BINARY, APPLE_DOUBLE_RSRC, APPLE_DOUBLE_MACOSX, APPLE_DOUBLE_DOT_, RAW_RSRC
         Filename for a normal file is the same as the original. Extensions are dropped for macfiles. """
 
     # 1. Macbinary
@@ -475,6 +513,11 @@ def file_classification(filepath):
         actual_filename = filename[2:]
         return [FileType.APPLE_DOUBLE_MACOSX, actual_filename]
     
+    # 6. Actual resource fork of mac
+    if is_actual_resource_fork_mac(filepath):
+        filename = os.path.basename(filepath)
+        return [FileType.ACTUAL_FORK_MAC, filename]
+    
     # Normal file
     else:
         return [FileType.NON_MAC, os.path.basename(filepath)]
@@ -492,8 +535,6 @@ def file_filter(files):
             expected_data_fork_path = os.path.join(parent_dir_path, file_info[1])
             if (expected_data_fork_path in files):
                 to_be_deleted.append(expected_data_fork_path)
-            # else:
-            #     print(f"Resource-fork-only appledouble file: {filepath}")
 
         # For ._filename, corresponding filename file (data fork) will be removed from the files dictionary 
         elif (file_info[0] == FileType.APPLE_DOUBLE_DOT_):
@@ -501,8 +542,6 @@ def file_filter(files):
             expected_data_fork_path = os.path.join(parent_dir_path, file_info[1])
             if (expected_data_fork_path in files):
                to_be_deleted.append(expected_data_fork_path)
-            # else:
-            #     print(f"Resource-fork-only appledouble file: {filepath}")
 
         # For ._filename, corresponding ../filename file (data fork) will be removed from the files dictionary 
         elif (file_info[0] == FileType.APPLE_DOUBLE_MACOSX):
@@ -510,8 +549,6 @@ def file_filter(files):
             expected_data_fork_path = os.path.join(grand_parent_dir_path, file_info[1])
             if (expected_data_fork_path in files):
                 to_be_deleted.append(expected_data_fork_path)
-            # else:
-            #     print(f"Resource-fork-only appledouble file: {filepath}")
 
         # For filename.rsrc (raw rsrc), corresponding filename.data file (data fork) and filename.finf file (finder info) will be removed from the files dictionary
         elif (file_info[0] == FileType.RAW_RSRC):
@@ -545,9 +582,7 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
 
         # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
         # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
-        # print(file_collection)
         file_filter(file_collection)
-        # print(file_collection)
 
         # Calculate checksum of files
         for file_path, file_info in file_collection.items():
