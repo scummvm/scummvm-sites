@@ -316,8 +316,11 @@ def appledouble_get_datafork(filepath, fileinfo):
 
 def raw_rsrc_get_datafork(filepath):
     """ Returns the data fork's content as bytes corresponding to raw rsrc file. """
-    with open(filepath[:-5]+".data", "rb") as f:
-        return f.read()
+    try:
+        with open(filepath[:-5]+".data", "rb") as f:
+            return f.read()
+    except (FileNotFoundError, IsADirectoryError):
+        return b''
 
 def raw_rsrc_get_resource_fork_data(filepath):
     """ Returns the resource fork's data section as bytes of a raw rsrc file as well as its size """
@@ -327,11 +330,14 @@ def raw_rsrc_get_resource_fork_data(filepath):
         data_length = int.from_bytes(resource_fork_stream[8:12])
 
         return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
-    
+
 def actual_mac_fork_get_data_fork(filepath):
     """ Returns the data fork's content as bytes if the actual mac fork exists """
-    with open(filepath, "rb") as f:
-        return f.read()
+    try:
+        with open(filepath, "rb") as f:
+            return f.read()
+    except (FileNotFoundError, IsADirectoryError):
+        return b''
 
 def actual_mac_fork_get_resource_fork_data(filepath):
     """ Returns the resource fork's data section as bytes of the actual mac fork as well as its size """
