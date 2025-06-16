@@ -75,7 +75,8 @@ def index():
     """
     return render_template_string(html)
 
-@app.route('/clear_database', methods=['POST'])
+
+@app.route("/clear_database", methods=["POST"])
 def clear_database():
     try:
         conn = db_connect()
@@ -98,11 +99,10 @@ def clear_database():
     finally:
         conn.close()
 
-    return redirect('/')
+    return redirect("/")
 
 
-
-@app.route('/fileset', methods=['GET', 'POST'])
+@app.route("/fileset", methods=["GET", "POST"])
 def fileset():
     id = request.args.get("id", default=1, type=int)
     widetable = request.args.get("widetable", default="partial", type=str)
@@ -169,13 +169,15 @@ def fileset():
                         <button type='submit'>Mark as full</button>
                     </form>
                     """
-            
-            
-            cursor.execute("SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset" , (id,))
+
+            cursor.execute(
+                "SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset",
+                (id,),
+            )
             row = cursor.fetchone()
             print(row)
             if row:
-                id = row['fileset']
+                id = row["fileset"]
             cursor.execute(f"SELECT * FROM fileset WHERE id = {id}")
             result = cursor.fetchone()
             print(result)
@@ -228,6 +230,8 @@ def fileset():
             share_columns = [
                 "name",
                 "size",
+                "size-r",
+                "size-rd",
                 "checksum",
                 "detection",
                 "detection_type",
@@ -244,8 +248,12 @@ def fileset():
 
             columns_to_select = "file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`"
             columns_to_select += ", ".join(md5_columns)
-            print(f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}")
-            cursor.execute(f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}")
+            print(
+                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
+            )
+            cursor.execute(
+                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
+            )
             result = cursor.fetchall()
 
             all_columns = list(result[0].keys()) if result else []
@@ -651,7 +659,6 @@ def confirm_merge(id):
                 WHERE 
                     fs.id = {target_id}
             """)
-            target_fileset = cursor.fetchone()
 
             def highlight_differences(source, target):
                 diff = difflib.ndiff(source, target)
@@ -682,6 +689,9 @@ def confirm_merge(id):
             <table border="1">
             <tr><th>Field</th><th>Source Fileset</th><th>Target Fileset</th></tr>
             """
+
+            target_fileset = cursor.fetchone()
+
             for column in source_fileset.keys():
                 source_value = str(source_fileset[column])
                 target_value = str(target_fileset[column])
@@ -1077,4 +1087,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(port=5001,debug=True, host='0.0.0.0')
+    app.run(port=5001, debug=True, host="0.0.0.0")
