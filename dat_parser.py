@@ -14,7 +14,6 @@ def remove_quotes(string):
 
 def map_checksum_data(content_string):
     arr = []
-
     content_string = content_string.strip().strip("()").strip()
 
     tokens = re.split(r'\s+(?=(?:[^"]*"[^"]*")*[^"]*$)', content_string)
@@ -28,11 +27,11 @@ def map_checksum_data(content_string):
         elif tokens[i] == "size":
             current_rom["size"] = int(tokens[i + 1])
             i += 2
-        elif tokens[i] == 'size-r':
-            current_rom['size-r'] = int(tokens[i + 1])
+        elif tokens[i] == "size-r":
+            current_rom["size-r"] = int(tokens[i + 1])
             i += 2
-        elif tokens[i] == 'size-rd':
-            current_rom['size-rd'] = int(tokens[i + 1])
+        elif tokens[i] == "size-rd":
+            current_rom["size-rd"] = int(tokens[i + 1])
             i += 2
         else:
             checksum_key = tokens[i]

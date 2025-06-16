@@ -175,15 +175,22 @@ except Exception:
     cursor.execute("ALTER TABLE file MODIFY COLUMN punycode_name VARCHAR(200);")
 
 try:
-    cursor.execute("ALTER TABLE file ADD COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';")
-except:
-    cursor.execute("ALTER TABLE file MODIFY COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';")        
-       
-try:
-    cursor.execute("ALTER TABLE file ADD COLUMN `size-r` BIGINT DEFAULT 0, ADD COLUMN `size-rd` BIGINT DEFAULT 0;")
-except:
-    cursor.execute("ALTER TABLE file MODIFY COLUMN `size-r` BIGINT DEFAULT 0, MODIFY COLUMN `size-rd` BIGINT DEFAULT 0;")
+    cursor.execute(
+        "ALTER TABLE file ADD COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';"
+    )
+except Exception:
+    cursor.execute(
+        "ALTER TABLE file MODIFY COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';"
+    )
 
+try:
+    cursor.execute(
+        "ALTER TABLE file ADD COLUMN `size-r` BIGINT DEFAULT 0, ADD COLUMN `size-rd` BIGINT DEFAULT 0;"
+    )
+except Exception:
+    cursor.execute(
+        "ALTER TABLE file MODIFY COLUMN `size-r` BIGINT DEFAULT 0, MODIFY COLUMN `size-rd` BIGINT DEFAULT 0;"
+    )
 
 
 for index, definition in indices.items():
