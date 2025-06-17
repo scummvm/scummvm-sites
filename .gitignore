@@ -2,3 +2,4 @@
 mysql_config.json
 __pycache__
 .DS_Store
+.pre-commit-config.yaml

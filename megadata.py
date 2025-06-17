@@ -1,6 +1,5 @@
 import os
-import time
-import compute_hash
+
 
 class Megadata:
     def __init__(self, file_path):
@@ -14,11 +13,13 @@ class Megadata:
         pass
 
     def __eq__(self, other):
-        return (self.hash == other.hash and
-                self.size == other.size and
-                self.creation_time == other.creation_time and
-                self.modification_time == other.modification_time)
-    
+        return (
+            self.hash == other.hash
+            and self.size == other.size
+            and self.creation_time == other.creation_time
+            and self.modification_time == other.modification_time
+        )
+
 
 def record_megadata(directory):
     file_megadata = {}
@@ -27,6 +28,7 @@ def record_megadata(directory):
             file_path = os.path.join(root, file)
             file_megadata[file_path] = Megadata(file_path)
     return file_megadata
+
 
 def check_for_updates(old_megadata, current_directory):
     current_megadata = record_megadata(current_directory)
