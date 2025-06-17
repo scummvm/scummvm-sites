@@ -559,7 +559,7 @@ def db_insert(data_arr, username=None, skiplog=False):
             for file in fileset["rom"]:
                 insert_file(file, detection, src, conn)
                 for key, value in file.items():
-                    if key not in ["name", "size", "size-r", "size-rd"]:
+                    if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
                         insert_filechecksum(file, key, conn)
 
     if detection:
@@ -1142,7 +1142,7 @@ def populate_file(fileset, fileset_id, conn, detection):
             previous_checksums = {}
 
             for key, value in file.items():
-                if key not in ["name", "size", "size-r", "size-rd"]:
+                if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
                     insert_filechecksum(file, key, conn)
                     if value in target_files_dict and not file_exists:
                         cursor.execute(
