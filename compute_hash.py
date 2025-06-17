@@ -316,8 +316,6 @@ def file_checksum(filepath, alg, size, file_info):
             (resfork, cur_file_size) = actual_mac_fork_get_resource_fork_data(filepath)
             datafork = actual_mac_fork_get_data_fork(filepath)
 
-        combined_forks = datafork + resfork
-
         hashes = checksum(resfork, alg, size, filepath)
         prefix = 'r'
         if len(resfork):
@@ -325,10 +323,6 @@ def file_checksum(filepath, alg, size, file_info):
 
         hashes = checksum(datafork, alg, size, filepath)
         prefix = 'd'
-        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
-
-        hashes = checksum(combined_forks, alg, size, filepath)
-        prefix = 'm'
         res.extend(create_checksum_pairs(hashes, alg, size, prefix))
 
         return (res, cur_file_size)
