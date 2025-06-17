@@ -2,8 +2,4 @@
 mysql_config.json
 __pycache__
 .DS_Store
-.pre-commit-config.yaml
-dumps
 .pytest_cache
-mac_dats
-macresfork 2

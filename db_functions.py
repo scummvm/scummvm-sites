@@ -487,6 +487,10 @@ def db_insert(data_arr, username=None, skiplog=False):
         print(f"Missing key in header: {e}")
         return
 
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM file;")
+    is_db_empty = list(cursor.fetchone().values())[0] == 0
+
     src = "dat" if author not in ["scan", "scummvm"] else author
 
     detection = src == "scummvm"
@@ -508,6 +512,9 @@ def db_insert(data_arr, username=None, skiplog=False):
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
     for fileset in game_data:
+        key = calc_key(fileset) if not detection else ""
+        megakey = calc_megakey(fileset) if detection else ""
+
         if detection:
             engine_name = fileset["engine"]
             engineid = fileset["sourcefile"]
@@ -517,6 +524,18 @@ def db_insert(data_arr, username=None, skiplog=False):
             platform = fileset["platform"]
             lang = fileset["language"]
 
+            if is_db_empty:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "SELECT id FROM fileset WHERE megakey = %s", (megakey,)
+                    )
+                    existing_entry = cursor.fetchone()
+                    if existing_entry is not None:
+                        log_text = f"Skipping Entry as megakey already exsits in Fileset:{existing_entry['id']} : engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
+                        create_log("Warning", user, escape_string(log_text), conn)
+                        print(log_text)
+                        continue
+
             insert_game(
                 engine_name, engineid, title, gameid, extra, platform, lang, conn
             )
@@ -524,8 +543,6 @@ def db_insert(data_arr, username=None, skiplog=False):
             if "romof" in fileset and fileset["romof"] in resources:
                 fileset["rom"] = fileset["rom"] + resources[fileset["romof"]]["rom"]
 
-        key = calc_key(fileset) if not detection else ""
-        megakey = calc_megakey(fileset) if detection else ""
         log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
 
         if insert_fileset(
@@ -1035,7 +1052,6 @@ def handle_matched_filesets(
 
 def delete_original_fileset(fileset_id, conn):
     with conn.cursor() as cursor:
-        print(fileset_id)
         cursor.execute(f"DELETE FROM file WHERE fileset = {fileset_id}")
         cursor.execute(f"DELETE FROM fileset WHERE id = {fileset_id}")
     conn.commit()
