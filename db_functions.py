@@ -44,17 +44,11 @@ def get_checksum_props(checkcode, checksum):
             checksize = last
         checktype = "-".join(exploded_checkcode)
 
-        # # Of type md5-5000-t
-        # else:
-        #     second_last = exploded_checkcode.pop()
-        #     print(second_last)
-        #     checksize = second_last
-        #     checktype = exploded_checkcode[0]+'-'+last
-
     # Detection entries have checktypes as part of the checksum prefix
     if ":" in checksum:
         prefix = checksum.split(":")[0]
-        checktype += "-" + prefix
+        if prefix != "f":
+            checktype += "-" + prefix
 
         checksum = checksum.split(":")[1]
     return checksize, checktype, checksum
