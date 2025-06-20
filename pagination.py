@@ -191,17 +191,16 @@ def create_page(
 
                 # Add links to fileset in logs table
                 if isinstance(value, str):
-                    matches = re.search(r"Fileset:(\d+)", value)
-                    if matches:
-                        fileset_id = matches.group(1)
-                        fileset_text = matches.group(0)
+                    matches = re.findall(r"Fileset:(\d+)", value)
+                    for fileset_id in matches:
+                        fileset_text = f"Fileset:{fileset_id}"
+
                         with conn.cursor() as cursor:
                             cursor.execute(
                                 "SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset",
                                 (fileset_id,),
                             )
                             row = cursor.fetchone()
-                            print(row)
                             if row:
                                 fileset_id = row["fileset"]
 
