@@ -905,6 +905,19 @@ def set_process(
 
         candidate_filesets = set_filter_candidate_filesets(fileset_id, fileset, conn)
 
+        # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
+        if len(candidate_filesets) == 0:
+            category_text = "Drop set fileset"
+            fileset_name = fileset["name"] if "name" in fileset else ""
+            fileset_description = (
+                fileset["description"] if "description" in fileset else ""
+            )
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}"
+            create_log(
+                escape_string(category_text), user, escape_string(log_text), conn
+            )
+            delete_original_fileset(fileset_id, conn)
+
         set_perform_match(
             fileset, src, user, fileset_id, detection, candidate_filesets, conn
         )
