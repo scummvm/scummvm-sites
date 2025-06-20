@@ -797,6 +797,15 @@ def populate_matching_games():
 
 
 def match_fileset(data_arr, username=None):
+    """
+    data_arr -> tuple : (header, game_data, resources, filepath).
+    header -> dict : Information like author, version, description, etc.
+    game_data -> list[dict] : List of individual game entry as dictionary.
+    rom -> list[dict] : A key from one of the dict values from game_data. Contains all the game files as dict.
+    resources -> dict : Some extra files in case of set.dats
+    filepath -> str : Path of the dat file.
+    """
+
     header, game_data, resources, filepath = data_arr
 
     try:
@@ -806,7 +815,7 @@ def match_fileset(data_arr, username=None):
         return
 
     try:
-        author = header["author"]
+        author = header["author"] if "author" in header else "Unkown author"
         version = header["version"]
     except KeyError as e:
         print(f"Missing key in header: {e}")
@@ -829,9 +838,9 @@ def match_fileset(data_arr, username=None):
     user = f"cli:{getpass.getuser()}" if username is None else username
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
-    for fileset in game_data:
-        process_fileset(
-            fileset,
+    if src == "dat":
+        set_process(
+            game_data,
             resources,
             detection,
             src,
@@ -843,9 +852,204 @@ def match_fileset(data_arr, username=None):
             source_status,
             user,
         )
+    else:
+        for fileset in game_data:
+            process_fileset(
+                fileset,
+                resources,
+                detection,
+                src,
+                conn,
+                transaction_id,
+                filepath,
+                author,
+                version,
+                source_status,
+                user,
+            )
     finalize_fileset_insertion(
         conn, transaction_id, src, filepath, author, version, source_status, user
     )
+
+
+def set_process(
+    game_data,
+    resources,
+    detection,
+    src,
+    conn,
+    transaction_id,
+    filepath,
+    author,
+    version,
+    source_status,
+    user,
+):
+    """
+    Entry point for processing set.dat.
+    -> Creates a new fileset for every fileset (delete later in case of a match).
+    -> set_filter_candidate_filesets(...) : Returns possible candidates for match
+    -> set_perform_match(...) : Handles different kind of scenarios for candidates
+    """
+
+    for fileset in game_data:
+        if "romof" in fileset and fileset["romof"] in resources:
+            fileset["rom"] += resources[fileset["romof"]]["rom"]
+        key = calc_key(fileset)
+        megakey = ""
+        log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}."
+
+        fileset_id = insert_new_fileset(
+            fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
+        )
+
+        candidate_filesets = set_filter_candidate_filesets(fileset_id, fileset, conn)
+
+        set_perform_match(
+            fileset, src, user, fileset_id, detection, candidate_filesets, conn
+        )
+
+
+def set_perform_match(
+    fileset, src, user, fileset_id, detection, candidate_filesets, conn
+):
+    """
+    TODO
+    """
+    with conn.cursor() as cursor:
+        if len(candidate_filesets) == 1:
+            matched_fileset_id = candidate_filesets[0]
+            cursor.execute(
+                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
+            )
+            status = cursor.fetchone()["status"]
+            if status == "detection":
+                update_fileset_status(cursor, matched_fileset_id, "partial")
+                set_populate_file(fileset, matched_fileset_id, conn, detection)
+                log_matched_fileset(
+                    src,
+                    fileset_id,
+                    matched_fileset_id,
+                    "partial",
+                    user,
+                    conn,
+                )
+                delete_original_fileset(fileset_id, conn)
+            else:
+                pass
+
+        elif len(candidate_filesets) > 1:
+            strong_match_candidate_filesets = []
+            for candidate_fileset in candidate_filesets:
+                if is_full_checksum_match(candidate_fileset, fileset, conn):
+                    strong_match_candidate_filesets.append(candidate_fileset)
+
+            if len(strong_match_candidate_filesets) == 1:
+                update_fileset_status(cursor, matched_fileset_id, "partial")
+                set_populate_file(fileset, matched_fileset_id, conn, detection)
+                log_matched_fileset(
+                    src,
+                    fileset_id,
+                    matched_fileset_id,
+                    "partial",
+                    user,
+                    conn,
+                )
+                delete_original_fileset(fileset_id, conn)
+            else:
+                if len(strong_match_candidate_filesets) > 1:
+                    print("Many strong match candidates")
+                category_text = "Manual Merge Required"
+                log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
+                print(log_text)
+                create_log(
+                    escape_string(category_text), user, escape_string(log_text), conn
+                )
+
+
+def is_full_checksum_match(candidate_fileset, fileset, conn):
+    """
+    Return type - Boolean
+    Checks if all the files in the candidate fileset has a matching checksum with the set fileset.
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT id, name FROM file WHERE fileset = %s", (candidate_fileset,)
+        )
+        target_files = cursor.fetchall()
+        candidate_files = {
+            target_file["name"]: target_file["id"] for target_file in target_files
+        }
+        set_checksums = set()
+        for file in fileset["rom"]:
+            if "md5" in file:
+                set_checksums.add((file["name"].lower(), file["md5"]))
+
+        for fname, fid in candidate_files.items():
+            cursor.execute("SELECT checksum FROM filechecksum WHERE file = %s", (fid,))
+            candidate_checksums = cursor.fetchall()
+            if candidate_checksums:
+                found = False
+                for candidate_checksum in candidate_checksums:
+                    if (fname.lower(), candidate_checksum["checksum"]) in set_checksums:
+                        found = True
+                        break
+                if not found:
+                    return False
+        return True
+
+
+def set_filter_candidate_filesets(fileset_id, fileset, conn):
+    """
+    Returns a list of candidate filesets that can be merged
+    """
+    with conn.cursor() as cursor:
+        # Returns those filesets which have the maximum number of all detection files matching in the set fileset filtered by engine, file name and file size(if not -1).
+        # Returns multiple filesets if multiple filesets have same max number of matching files
+
+        query = """
+            WITH candidate_fileset AS ( 
+            SELECT fs.id AS fileset_id, f.name, f.size
+            FROM file f
+            JOIN fileset fs ON f.fileset = fs.id
+            JOIN game g ON g.id = fs.game
+            JOIN engine e ON e.id = g.engine
+            WHERE fs.id != %s
+            AND e.engineid = %s
+            AND f.detection = 1
+            ),
+            total_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS detection_files_found
+            FROM candidate_fileset cf
+            GROUP BY fileset_id
+            ),
+            set_fileset AS (
+            SELECT name, size FROM file
+            WHERE fileset = %s
+            ),
+            matched_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS match_files_count
+            FROM candidate_fileset cf
+            JOIN set_fileset sf ON cf.name = sf.name AND (cf.size = sf.size OR cf.size = -1)
+            GROUP BY cf.fileset_id
+            ),
+            max_match_count AS (
+                SELECT MAX(match_files_count) AS max_count FROM matched_detection_files
+            )
+            SELECT mdf.fileset_id
+            FROM matched_detection_files mdf
+            JOIN total_detection_files tdf ON mdf.fileset_id = tdf.fileset_id
+            JOIN max_match_count mmc ON mdf.match_files_count = mmc.max_count
+            WHERE mdf.match_files_count = tdf.detection_files_found;
+        """
+        cursor.execute(query, (fileset_id, fileset["sourcefile"], fileset_id))
+        rows = cursor.fetchall()
+        candidates = []
+        if rows:
+            for row in rows:
+                candidates.append(row["fileset_id"])
+
+        return candidates
 
 
 def process_fileset(
@@ -877,13 +1081,6 @@ def process_fileset(
     fileset_id = insert_new_fileset(
         fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
     )
-    # with conn.cursor() as cursor:
-    #     cursor.execute("SET @fileset_last = LAST_INSERT_ID()")
-    #     cursor.execute("SELECT LAST_INSERT_ID()")
-    #     fileset_last_old = cursor.fetchone()['LAST_INSERT_ID()']
-    #     fileset_last = cursor.lastrowid
-    #     print(fileset_last_old)
-    #     print(fileset_last)
 
     if matched_map:
         handle_matched_filesets(
@@ -1186,6 +1383,73 @@ def populate_file(fileset, fileset_id, conn, detection):
             else:
                 cursor.execute(
                     f"UPDATE file SET detection_type = 'None' WHERE id = {file_id}"
+                )
+
+
+def set_populate_file(fileset, fileset_id, conn, detection):
+    """
+    TODO
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(f"SELECT id, name FROM file WHERE fileset = {fileset_id}")
+        target_files = cursor.fetchall()
+        candidate_files = {
+            target_file["name"].lower(): target_file["id"]
+            for target_file in target_files
+        }
+
+        for file in fileset["rom"]:
+            if "md5" not in file:
+                continue
+            checksize, checktype, checksum = get_checksum_props("md5", file["md5"])
+
+            if file["name"].lower() not in candidate_files:
+                name = (
+                    encode_punycode(file["name"])
+                    if punycode_need_encode(file["name"])
+                    else file["name"]
+                )
+
+                values = [name]
+
+                values.append(file["size"] if "size" in file else "0")
+                values.append(file["size-r"] if "size-r" in file else "0")
+                values.append(file["size-rd"] if "size-rd" in file else "0")
+
+                values.extend([checksum, fileset_id, detection, "None"])
+
+                placeholders = (
+                    ["%s"] * (len(values[:5])) + ["%s"] + ["%s"] * 2 + ["NOW()"]
+                )
+                query = f"INSERT INTO file ( name, size, `size-r`, `size-rd`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ({', '.join(placeholders)})"
+
+                cursor.execute(query, values)
+                cursor.execute("SET @file_last = LAST_INSERT_ID()")
+                cursor.execute("SELECT @file_last AS file_id")
+
+                insert_filechecksum(file, "md5", conn)
+
+            else:
+                query = """
+                    UPDATE file
+                    SET size = %s
+                    WHERE id = %s
+                """
+                cursor.execute(
+                    query, (file["size"], candidate_files[file["name"].lower()])
+                )
+                query = """
+                    INSERT INTO filechecksum (file, checksize, checktype, checksum)
+                    VALUES (%s, %s, %s, %s)
+                """
+                cursor.execute(
+                    query,
+                    (
+                        candidate_files[file["name"].lower()],
+                        checksize,
+                        checktype,
+                        checksum,
+                    ),
                 )
 
 
