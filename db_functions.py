@@ -867,9 +867,9 @@ def match_fileset(data_arr, username=None):
                 source_status,
                 user,
             )
-    finalize_fileset_insertion(
-        conn, transaction_id, src, filepath, author, version, source_status, user
-    )
+        finalize_fileset_insertion(
+            conn, transaction_id, src, filepath, author, version, source_status, user
+        )
 
 
 def set_process(
@@ -892,6 +892,9 @@ def set_process(
     -> set_perform_match(...) : Handles different kind of scenarios for candidates
     """
 
+    # Keeps count of filesets that were already present
+    fully_matched_filesets = 0
+
     for fileset in game_data:
         if "romof" in fileset and fileset["romof"] in resources:
             fileset["rom"] += resources[fileset["romof"]]["rom"]
@@ -903,7 +906,9 @@ def set_process(
             fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
         )
 
-        candidate_filesets = set_filter_candidate_filesets(fileset_id, fileset, conn)
+        candidate_filesets = set_filter_candidate_filesets(
+            fileset_id, fileset, transaction_id, conn
+        )
 
         # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
         if len(candidate_filesets) == 0:
@@ -918,13 +923,43 @@ def set_process(
             )
             delete_original_fileset(fileset_id, conn)
 
-        set_perform_match(
-            fileset, src, user, fileset_id, detection, candidate_filesets, conn
+        fully_matched_filesets = set_perform_match(
+            fileset,
+            src,
+            user,
+            fileset_id,
+            detection,
+            candidate_filesets,
+            fully_matched_filesets,
+            conn,
         )
+
+    # Final log
+    with conn.cursor() as cursor:
+        query = """
+            UPDATE fileset
+            SET status='partial'
+            WHERE status='partial_pending'
+        """
+        cursor.execute(query)
+        cursor.execute(
+            f"SELECT COUNT(fileset) from transactions WHERE `transaction` = {transaction_id}"
+        )
+        fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
+        category_text = f"Uploaded from {src}"
+        log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Number of filesets: {fileset_insertion_count}. Number of filesets already present: {fully_matched_filesets}.  Transaction: {transaction_id}"
+        create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
 def set_perform_match(
-    fileset, src, user, fileset_id, detection, candidate_filesets, conn
+    fileset,
+    src,
+    user,
+    fileset_id,
+    detection,
+    candidate_filesets,
+    fully_matched_filesets,
+    conn,
 ):
     """
     TODO
@@ -937,7 +972,7 @@ def set_perform_match(
             )
             status = cursor.fetchone()["status"]
             if status == "detection":
-                update_fileset_status(cursor, matched_fileset_id, "partial")
+                update_fileset_status(cursor, matched_fileset_id, "partial_pending")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 log_matched_fileset(
                     src,
@@ -948,17 +983,46 @@ def set_perform_match(
                     conn,
                 )
                 delete_original_fileset(fileset_id, conn)
-            else:
-                pass
+            elif status == "partial" or status == "full":
+                (is_match, unmatched_files) = is_full_checksum_match(
+                    matched_fileset_id, fileset, conn
+                )
+                if is_match:
+                    category_text = "Already present"
+                    log_text = f"Already present as - Fileset:{matched_fileset_id}. Deleting Fileset:{fileset_id}"
+                    log_last = create_log(
+                        escape_string(category_text),
+                        user,
+                        escape_string(log_text),
+                        conn,
+                    )
+                    update_history(fileset_id, matched_fileset_id, conn, log_last)
+                    fully_matched_filesets += 1
+                    delete_original_fileset(fileset_id, conn)
+
+                else:
+                    category_text = "Mismatch"
+                    log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge."
+                    print(
+                        f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
+                    )
+                    # print(f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {', '.join(filename for filename in unmatched_files)}.")
+                    create_log(
+                        escape_string(category_text),
+                        user,
+                        escape_string(log_text),
+                        conn,
+                    )
 
         elif len(candidate_filesets) > 1:
             strong_match_candidate_filesets = []
             for candidate_fileset in candidate_filesets:
-                if is_full_checksum_match(candidate_fileset, fileset, conn):
+                (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
+                if is_match:
                     strong_match_candidate_filesets.append(candidate_fileset)
 
             if len(strong_match_candidate_filesets) == 1:
-                update_fileset_status(cursor, matched_fileset_id, "partial")
+                update_fileset_status(cursor, matched_fileset_id, "partial_pending")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 log_matched_fileset(
                     src,
@@ -970,8 +1034,6 @@ def set_perform_match(
                 )
                 delete_original_fileset(fileset_id, conn)
             else:
-                if len(strong_match_candidate_filesets) > 1:
-                    print("Many strong match candidates")
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
                 print(log_text)
@@ -979,13 +1041,16 @@ def set_perform_match(
                     escape_string(category_text), user, escape_string(log_text), conn
                 )
 
+    return fully_matched_filesets
+
 
 def is_full_checksum_match(candidate_fileset, fileset, conn):
     """
-    Return type - Boolean
+    Return type - (Boolean, List of unmatched files)
     Checks if all the files in the candidate fileset has a matching checksum with the set fileset.
     """
     with conn.cursor() as cursor:
+        unmatched_files = []
         cursor.execute(
             "SELECT id, name FROM file WHERE fileset = %s", (candidate_fileset,)
         )
@@ -996,7 +1061,12 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
         set_checksums = set()
         for file in fileset["rom"]:
             if "md5" in file:
-                set_checksums.add((file["name"].lower(), file["md5"]))
+                name = (
+                    encode_punycode(file["name"])
+                    if punycode_need_encode(file["name"])
+                    else file["name"]
+                )
+                set_checksums.add((name.lower(), file["md5"]))
 
         for fname, fid in candidate_files.items():
             cursor.execute("SELECT checksum FROM filechecksum WHERE file = %s", (fid,))
@@ -1008,11 +1078,12 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
                         found = True
                         break
                 if not found:
-                    return False
-        return True
+                    unmatched_files.append(fname)
+
+        return (len(unmatched_files) == 0, unmatched_files)
 
 
-def set_filter_candidate_filesets(fileset_id, fileset, conn):
+def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
     """
     Returns a list of candidate filesets that can be merged
     """
@@ -1027,9 +1098,12 @@ def set_filter_candidate_filesets(fileset_id, fileset, conn):
             JOIN fileset fs ON f.fileset = fs.id
             JOIN game g ON g.id = fs.game
             JOIN engine e ON e.id = g.engine
+            JOIN transactions t ON t.fileset = fs.id
             WHERE fs.id != %s
             AND e.engineid = %s
             AND f.detection = 1
+            AND t.transaction != %s
+            AND fs.status != 'partial_pending'
             ),
             total_detection_files AS (
             SELECT cf.fileset_id, COUNT(*) AS detection_files_found
@@ -1055,7 +1129,9 @@ def set_filter_candidate_filesets(fileset_id, fileset, conn):
             JOIN max_match_count mmc ON mdf.match_files_count = mmc.max_count
             WHERE mdf.match_files_count = tdf.detection_files_found;
         """
-        cursor.execute(query, (fileset_id, fileset["sourcefile"], fileset_id))
+        cursor.execute(
+            query, (fileset_id, fileset["sourcefile"], transaction_id, fileset_id)
+        )
         rows = cursor.fetchall()
         candidates = []
         if rows:
@@ -1512,7 +1588,6 @@ def finalize_fileset_insertion(
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
-    # conn.close()
 
 
 def user_integrity_check(data, ip, game_metadata=None):
