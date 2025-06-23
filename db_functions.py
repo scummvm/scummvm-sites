@@ -1030,26 +1030,26 @@ def set_perform_match(
                     )
 
         elif len(candidate_filesets) > 1:
-            strong_match_candidate_filesets = []
+            found_match = False
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
-                    strong_match_candidate_filesets.append(candidate_fileset)
+                    update_fileset_status(cursor, matched_fileset_id, "partial")
+                    set_populate_file(fileset, matched_fileset_id, conn, detection)
+                    auto_merged_filesets += 1
+                    log_matched_fileset(
+                        src,
+                        fileset_id,
+                        matched_fileset_id,
+                        "partial",
+                        user,
+                        conn,
+                    )
+                    delete_original_fileset(fileset_id, conn)
+                    found_match = True
+                    break
 
-            if len(strong_match_candidate_filesets) == 1:
-                update_fileset_status(cursor, matched_fileset_id, "partial")
-                set_populate_file(fileset, matched_fileset_id, conn, detection)
-                auto_merged_filesets += 1
-                log_matched_fileset(
-                    src,
-                    fileset_id,
-                    matched_fileset_id,
-                    "partial",
-                    user,
-                    conn,
-                )
-                delete_original_fileset(fileset_id, conn)
-            else:
+            if not found_match:
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
                 print(log_text)
@@ -1110,8 +1110,7 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
     Returns a list of candidate filesets that can be merged
     """
     with conn.cursor() as cursor:
-        # Returns those filesets which have the maximum number of all detection files matching in the set fileset filtered by engine, file name and file size(if not -1).
-        # Returns multiple filesets if multiple filesets have same max number of matching files
+        # Returns those filesets which have all detection files matching in the set fileset filtered by engine, file name and file size(if not -1) sorted in descending order of matches
 
         query = """
             WITH candidate_fileset AS ( 
@@ -1140,15 +1139,12 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             FROM candidate_fileset cf
             JOIN set_fileset sf ON cf.name = sf.name AND (cf.size = sf.size OR cf.size = -1)
             GROUP BY cf.fileset_id
-            ),
-            max_match_count AS (
-                SELECT MAX(match_files_count) AS max_count FROM matched_detection_files
             )
             SELECT mdf.fileset_id
             FROM matched_detection_files mdf
             JOIN total_detection_files tdf ON mdf.fileset_id = tdf.fileset_id
-            JOIN max_match_count mmc ON mdf.match_files_count = mmc.max_count
-            WHERE mdf.match_files_count = tdf.detection_files_found;
+            WHERE mdf.match_files_count = tdf.detection_files_found
+            ORDER BY mdf.match_files_count DESC;
         """
         cursor.execute(
             query, (fileset_id, fileset["sourcefile"], transaction_id, fileset_id)
