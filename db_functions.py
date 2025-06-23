@@ -899,6 +899,10 @@ def set_process(
     mismatch_filesets = 0
     dropped_early_filesets = 0
 
+    # A mapping from set filesets to candidate filesets list
+    set_to_candidate_dict = defaultdict(list)
+    id_to_fileset_dict = defaultdict(dict)
+
     for fileset in game_data:
         if "romof" in fileset and fileset["romof"] in resources:
             fileset["rom"] += resources[fileset["romof"]]["rom"]
@@ -928,6 +932,24 @@ def set_process(
             dropped_early_filesets += 1
             delete_original_fileset(fileset_id, conn)
 
+        id_to_fileset_dict[fileset_id] = fileset
+        set_to_candidate_dict[fileset_id].extend(candidate_filesets)
+
+    # Remove all such filesets, which have many to one mapping with a single candidate, those are extra variants.
+    value_to_keys = defaultdict(list)
+    for set_fileset, candidates in set_to_candidate_dict.items():
+        if len(candidates) == 1:
+            value_to_keys[candidates[0]].append(set_fileset)
+    for candidate, set_filesets in value_to_keys.items():
+        if len(set_filesets) > 1:
+            for set_fileset in set_filesets:
+                dropped_early_filesets += 1
+                delete_original_fileset(set_fileset, conn)
+                del set_to_candidate_dict[set_fileset]
+                del id_to_fileset_dict[set_fileset]
+
+    for fileset_id, candidate_filesets in set_to_candidate_dict.items():
+        fileset = id_to_fileset_dict[fileset_id]
         (
             fully_matched_filesets,
             auto_merged_filesets,
@@ -957,7 +979,7 @@ def set_process(
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
         category_text = "Upload information"
-        log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early(no candidate) - {dropped_early_filesets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
+        log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early(no candidate/ extra variant) - {dropped_early_filesets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
@@ -1034,13 +1056,13 @@ def set_perform_match(
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
-                    update_fileset_status(cursor, matched_fileset_id, "partial")
-                    set_populate_file(fileset, matched_fileset_id, conn, detection)
+                    update_fileset_status(cursor, candidate_fileset, "partial")
+                    set_populate_file(fileset, candidate_fileset, conn, detection)
                     auto_merged_filesets += 1
                     log_matched_fileset(
                         src,
                         fileset_id,
-                        matched_fileset_id,
+                        candidate_fileset,
                         "partial",
                         user,
                         conn,
