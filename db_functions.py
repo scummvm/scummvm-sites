@@ -140,7 +140,7 @@ def insert_fileset(
             )
             update_history(existing_entry, existing_entry, conn, log_last)
 
-        return existing_entry
+        return (existing_entry, True)
 
     # $game and $key should not be parsed as a mysql string, hence no quotes
     query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`) VALUES ({game}, '{status}', '{src}', {key}, {megakey}, FROM_UNIXTIME(@fileset_time_last))"
@@ -172,7 +172,7 @@ def insert_fileset(
             f"INSERT INTO transactions (`transaction`, fileset) VALUES ({transaction}, {fileset_last})"
         )
 
-    return fileset_id
+    return (fileset_id, False)
 
 
 def insert_file(file, detection, src, conn):
@@ -910,9 +910,11 @@ def set_process(
         megakey = ""
         log_text = f"State {source_status}."
 
-        fileset_id = insert_new_fileset(
+        (fileset_id, existing) = insert_new_fileset(
             fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
         )
+        if existing:
+            continue
 
         candidate_filesets = set_filter_candidate_filesets(
             fileset_id, fileset, transaction_id, conn
@@ -1206,7 +1208,7 @@ def process_fileset(
     else:
         matched_map = matching_set(fileset, conn)
 
-    fileset_id = insert_new_fileset(
+    (fileset_id, _) = insert_new_fileset(
         fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
     )
 
@@ -1584,7 +1586,7 @@ def set_populate_file(fileset, fileset_id, conn, detection):
 def insert_new_fileset(
     fileset, conn, detection, src, key, megakey, transaction_id, log_text, user, ip=""
 ):
-    fileset_id = insert_fileset(
+    (fileset_id, existing) = insert_fileset(
         src,
         detection,
         key,
@@ -1601,7 +1603,7 @@ def insert_new_fileset(
             for key, value in file.items():
                 if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
                     insert_filechecksum(file, key, conn)
-    return fileset_id
+    return (fileset_id, existing)
 
 
 def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
