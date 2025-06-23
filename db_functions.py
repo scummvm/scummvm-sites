@@ -894,13 +894,17 @@ def set_process(
 
     # Keeps count of filesets that were already present
     fully_matched_filesets = 0
+    auto_merged_filesets = 0
+    manual_merged_filesets = 0
+    mismatch_filesets = 0
+    dropped_early_filesets = 0
 
     for fileset in game_data:
         if "romof" in fileset and fileset["romof"] in resources:
             fileset["rom"] += resources[fileset["romof"]]["rom"]
         key = calc_key(fileset)
         megakey = ""
-        log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}."
+        log_text = f"State {source_status}."
 
         fileset_id = insert_new_fileset(
             fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
@@ -921,9 +925,15 @@ def set_process(
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
+            dropped_early_filesets += 1
             delete_original_fileset(fileset_id, conn)
 
-        fully_matched_filesets = set_perform_match(
+        (
+            fully_matched_filesets,
+            auto_merged_filesets,
+            manual_merged_filesets,
+            mismatch_filesets,
+        ) = set_perform_match(
             fileset,
             src,
             user,
@@ -931,23 +941,23 @@ def set_process(
             detection,
             candidate_filesets,
             fully_matched_filesets,
+            auto_merged_filesets,
+            manual_merged_filesets,
+            mismatch_filesets,
             conn,
         )
 
     # Final log
     with conn.cursor() as cursor:
-        query = """
-            UPDATE fileset
-            SET status='partial'
-            WHERE status='partial_pending'
-        """
-        cursor.execute(query)
         cursor.execute(
             f"SELECT COUNT(fileset) from transactions WHERE `transaction` = {transaction_id}"
         )
         fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
-        log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Number of filesets: {fileset_insertion_count}. Number of filesets already present: {fully_matched_filesets}.  Transaction: {transaction_id}"
+        log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
+        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        category_text = "Upload information"
+        log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early(no candidate) - {dropped_early_filesets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
@@ -959,6 +969,9 @@ def set_perform_match(
     detection,
     candidate_filesets,
     fully_matched_filesets,
+    auto_merged_filesets,
+    manual_merged_filesets,
+    mismatch_filesets,
     conn,
 ):
     """
@@ -972,8 +985,9 @@ def set_perform_match(
             )
             status = cursor.fetchone()["status"]
             if status == "detection":
-                update_fileset_status(cursor, matched_fileset_id, "partial_pending")
+                update_fileset_status(cursor, matched_fileset_id, "partial")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
+                auto_merged_filesets += 1
                 log_matched_fileset(
                     src,
                     fileset_id,
@@ -1006,6 +1020,7 @@ def set_perform_match(
                     print(
                         f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
                     )
+                    mismatch_filesets += 1
                     # print(f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {', '.join(filename for filename in unmatched_files)}.")
                     create_log(
                         escape_string(category_text),
@@ -1022,8 +1037,9 @@ def set_perform_match(
                     strong_match_candidate_filesets.append(candidate_fileset)
 
             if len(strong_match_candidate_filesets) == 1:
-                update_fileset_status(cursor, matched_fileset_id, "partial_pending")
+                update_fileset_status(cursor, matched_fileset_id, "partial")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
+                auto_merged_filesets += 1
                 log_matched_fileset(
                     src,
                     fileset_id,
@@ -1040,8 +1056,14 @@ def set_perform_match(
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
                 )
+                manual_merged_filesets += 1
 
-    return fully_matched_filesets
+    return (
+        fully_matched_filesets,
+        auto_merged_filesets,
+        manual_merged_filesets,
+        mismatch_filesets,
+    )
 
 
 def is_full_checksum_match(candidate_fileset, fileset, conn):
@@ -1103,7 +1125,6 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             AND e.engineid = %s
             AND f.detection = 1
             AND t.transaction != %s
-            AND fs.status != 'partial_pending'
             ),
             total_detection_files AS (
             SELECT cf.fileset_id, COUNT(*) AS detection_files_found
