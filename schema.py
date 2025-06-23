@@ -149,6 +149,8 @@ indices = {
     "key": "CREATE INDEX fileset_key ON fileset (`key`)",
     "status": "CREATE INDEX status ON fileset (status)",
     "fileset": "CREATE INDEX fileset ON history (fileset)",
+    "file_name_size": "CREATE INDEX file_name_size ON file (name, size)",
+    "file_fileset_detection": "CREATE INDEX file_fileset_detection ON file (fileset, detection)",
 }
 
 try:
