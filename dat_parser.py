@@ -155,7 +155,7 @@ def main():
     if args.match:
         for filepath in args.match:
             # print(parse_dat(filepath)[2])
-            match_fileset(parse_dat(filepath), args.user)
+            match_fileset(parse_dat(filepath), args.user, args.skiplog)
 
 
 if __name__ == "__main__":
