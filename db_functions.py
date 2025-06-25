@@ -429,14 +429,12 @@ def convert_log_text_to_links(log_text):
 def calc_key(fileset):
     key_string = ""
 
-    for key, value in fileset.items():
-        if key in ["engineid", "gameid", "rom"]:
-            continue
-        key_string += ":" + str(value)
-
     files = fileset["rom"]
+    files.sort(key=lambda x: x["name"].lower())
     for file in files:
         for key, value in file.items():
+            if key == "name":
+                value = value.lower()
             key_string += ":" + str(value)
 
     key_string = key_string.strip(":")
@@ -445,12 +443,13 @@ def calc_key(fileset):
 
 def calc_megakey(fileset):
     key_string = f":{fileset['platform']}:{fileset['language']}"
-    # print(fileset.keys())
     if "rom" in fileset.keys():
         files = fileset["rom"]
-        files.sort(key=lambda x: x["name"])
+        files.sort(key=lambda x: x["name"].lower())
         for file in fileset["rom"]:
             for key, value in file.items():
+                if key == "name":
+                    value = value.lower()
                 key_string += ":" + str(value)
     elif "files" in fileset.keys():
         for file in fileset["files"]:
@@ -458,7 +457,6 @@ def calc_megakey(fileset):
                 key_string += ":" + str(value)
 
     key_string = key_string.strip(":")
-    # print(key_string)
     return hashlib.md5(key_string.encode()).hexdigest()
 
 
@@ -481,10 +479,6 @@ def db_insert(data_arr, username=None, skiplog=False):
         print(f"Missing key in header: {e}")
         return
 
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM file;")
-    is_db_empty = list(cursor.fetchone().values())[0] == 0
-
     src = "dat" if author not in ["scan", "scummvm"] else author
 
     detection = src == "scummvm"
@@ -506,8 +500,8 @@ def db_insert(data_arr, username=None, skiplog=False):
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
     for fileset in game_data:
-        key = calc_key(fileset) if not detection else ""
-        megakey = calc_megakey(fileset) if detection else ""
+        key = calc_key(fileset)
+        megakey = calc_megakey(fileset)
 
         if detection:
             engine_name = fileset["engine"]
@@ -518,17 +512,19 @@ def db_insert(data_arr, username=None, skiplog=False):
             platform = fileset["platform"]
             lang = fileset["language"]
 
-            if is_db_empty:
-                with conn.cursor() as cursor:
-                    cursor.execute(
-                        "SELECT id FROM fileset WHERE megakey = %s", (megakey,)
-                    )
-                    existing_entry = cursor.fetchone()
-                    if existing_entry is not None:
-                        log_text = f"Skipping Entry as megakey already exsits in Fileset:{existing_entry['id']} : engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
-                        create_log("Warning", user, escape_string(log_text), conn)
-                        print(log_text)
-                        continue
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT id
+                    FROM fileset
+                    WHERE `key` = %s
+                """
+                cursor.execute(query, (key,))
+                existing_entry = cursor.fetchone()
+                if existing_entry is not None:
+                    log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
+                    create_log("Warning", user, escape_string(log_text), conn)
+                    print(log_text)
+                    continue
 
             insert_game(
                 engine_name, engineid, title, gameid, extra, platform, lang, conn
