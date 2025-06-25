@@ -1045,23 +1045,29 @@ def fileset_search():
     filename = "fileset_search"
     records_table = "fileset"
     select_query = """
-    SELECT extra, platform, language, game.gameid, megakey,
-    status, fileset.id as fileset
+    SELECT fileset.id as fileset, extra, platform, language, game.gameid, megakey,
+    status, transaction, engineid
     FROM fileset
     LEFT JOIN game ON game.id = fileset.game
+    LEFT JOIN engine ON engine.id = game.engine
+    JOIN transactions ON fileset.id = transactions.fileset
     """
     order = "ORDER BY fileset.id"
     filters = {
-        "id": "fileset",
+        "fileset": "fileset",
         "gameid": "game",
         "extra": "game",
         "platform": "game",
         "language": "game",
         "megakey": "fileset",
         "status": "fileset",
+        "transaction": "transactions",
+        "engineid": "engine",
     }
     mapping = {
         "game.id": "fileset.game",
+        "engine.id": "game.engine",
+        "fileset.id": "transactions.fileset",
     }
     return render_template_string(
         create_page(filename, 25, records_table, select_query, order, filters, mapping)
