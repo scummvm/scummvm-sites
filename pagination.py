@@ -56,17 +56,17 @@ def create_page(
 
         if set(request.args.keys()).difference({"page", "sort"}):
             condition = "WHERE "
-            tables = []
+            tables = set()
             for key, value in request.args.items():
                 if key in ["page", "sort"] or value == "":
                     continue
-                tables.append(filters[key])
+                tables.add(filters[key])
                 if value == "":
                     value = ".*"
                 condition += (
-                    f" AND {filters[key]}.{key} REGEXP '{value}'"
+                    f" AND {filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
                     if condition != "WHERE "
-                    else f"{filters[key]}.{key} REGEXP '{value}'"
+                    else f"{filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
                 )
 
             if condition == "WHERE ":
@@ -74,11 +74,18 @@ def create_page(
 
             # Handle multiple tables
             from_query = records_table
-            if len(tables) > 1 or (tables and tables[0] != records_table):
-                for table in tables:
+            tables_list = list(tables)
+            if records_table not in tables_list or len(tables_list) > 1:
+                for table in tables_list:
                     if table == records_table:
                         continue
-                    from_query += f" JOIN {table} ON {get_join_columns(records_table, table, mapping)}"
+                    if table == "engine":
+                        if "game" in tables:
+                            from_query += " JOIN engine ON engine.id = game.engine"
+                        else:
+                            from_query += " JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine"
+                    else:
+                        from_query += f" JOIN {table} ON {get_join_columns(records_table, table, mapping)}"
             cursor.execute(
                 f"SELECT COUNT({records_table}.id) AS count FROM {from_query} {condition}"
             )
@@ -112,9 +119,9 @@ def create_page(
                 if value == "":
                     value = ".*"
                 condition += (
-                    f" AND {filters[key]}.{key} REGEXP '{value}'"
+                    f" AND {filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
                     if condition != "WHERE "
-                    else f"{filters[key]}.{key} REGEXP '{value}'"
+                    else f"{filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
                 )
 
             if condition == "WHERE ":
@@ -141,18 +148,24 @@ def create_page(
         return "No results for given filters"
     if results:
         if filters:
-            html += "<tr class='filter'><td></td>"
+            if records_table != "log":
+                html += "<tr class='filter'><td></td><td></td>"
+            else:
+                html += "<tr class='filter'><td></td>"
+
             for key in results[0].keys():
                 if key not in filters:
                     html += "<td class='filter'></td>"
                     continue
                 filter_value = request.args.get(key, "")
                 html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
-            html += "</tr><tr class='filter'><td></td><td class='filter'><input type='submit' value='Submit'></td></tr>"
+            html += "</tr><tr class='filter'><td></td><td></td><td class='filter'><input type='submit' value='Submit'></td></tr>"
 
-        html += "<th></th>"
+        html += "<th>#</th>"
+        if records_table != "log":
+            html += "<th>Fileset ID</th>"
         for key in results[0].keys():
-            if key == "fileset":
+            if key in ["fileset", "fileset_id"]:
                 continue
             vars = "&".join(
                 [f"{k}={v}" for k, v in request.args.items() if k != "sort"]
@@ -168,7 +181,7 @@ def create_page(
         for row in results:
             if counter == offset + 1:  # If it is the first run of the loop
                 if filters:
-                    html += "<tr class='filter'><td></td>"
+                    html += "<tr class='filter'><td></td><td></td>"
                     for key in row.keys():
                         if key not in filters:
                             html += "<td class='filter'></td>"
@@ -177,16 +190,18 @@ def create_page(
                         # Filter textbox
                         filter_value = request.args.get(key, "")
 
+            fileset_id = row.get("fileset_id", row.get("fileset"))
             if records_table != "log":
-                fileset_id = row["fileset"]
                 html += f"<tr class='games_list' onclick='hyperlink(\"fileset?id={fileset_id}\")'>\n"
-                html += f"<td><a href='fileset?id={fileset_id}'>{counter}.</a></td>\n"
+                html += f"<td>{counter}.</td>\n"
+                html += f"<td><a href='fileset?id={fileset_id}'>{fileset_id}</a></td>\n"
             else:
                 html += "<tr>\n"
                 html += f"<td>{counter}.</td>\n"
+                # html += f"<td>{fileset_id}</td>\n"
 
             for key, value in row.items():
-                if key == "fileset":
+                if key in ["fileset", "fileset_id"]:
                     continue
 
                 # Add links to fileset in logs table
@@ -194,7 +209,6 @@ def create_page(
                     matches = re.findall(r"Fileset:(\d+)", value)
                     for fileset_id in matches:
                         fileset_text = f"Fileset:{fileset_id}"
-
                         with conn.cursor() as cursor:
                             cursor.execute(
                                 "SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset",
@@ -203,7 +217,6 @@ def create_page(
                             row = cursor.fetchone()
                             if row:
                                 fileset_id = row["fileset"]
-
                         value = value.replace(
                             fileset_text,
                             f"<a href='fileset?id={fileset_id}'>{fileset_text}</a>",
@@ -211,7 +224,6 @@ def create_page(
 
                 html += f"<td>{value}</td>\n"
             html += "</tr>\n"
-
             counter += 1
 
     html += "</table></form>"
