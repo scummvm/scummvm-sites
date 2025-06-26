@@ -175,6 +175,14 @@ def insert_fileset(
     return (fileset_id, False)
 
 
+def normalised_path(name):
+    """
+    Converts \ to / in filepaths, to avoid filesystem independent filepath parsing.
+    """
+    path_list = name.split("\\")
+    return "/".join(path_list)
+
+
 def insert_file(file, detection, src, conn):
     # Find full md5, or else use first checksum value
     checksum = ""
@@ -196,11 +204,7 @@ def insert_file(file, detection, src, conn):
         f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
     )
 
-    name = (
-        encode_punycode(file["name"])
-        if punycode_need_encode(file["name"])
-        else file["name"]
-    )
+    name = normalised_path(file["name"])
 
     values = [name]
 
@@ -1129,11 +1133,7 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
         set_checksums = set()
         for file in fileset["rom"]:
             if "md5" in file:
-                name = (
-                    encode_punycode(file["name"])
-                    if punycode_need_encode(file["name"])
-                    else file["name"]
-                )
+                name = normalised_path(file["name"])
                 set_checksums.add((name.lower(), file["md5"]))
 
         for fname, fid in candidate_files.items():
@@ -1446,11 +1446,7 @@ def populate_file(fileset, fileset_id, conn, detection):
 
             extended_file_size = True if "size-r" in file else False
 
-            name = (
-                encode_punycode(file["name"])
-                if punycode_need_encode(file["name"])
-                else file["name"]
-            )
+            name = normalised_path(file["name"])
             escaped_name = escape_string(name)
 
             columns = ["name", "size"]
@@ -1556,12 +1552,7 @@ def set_populate_file(fileset, fileset_id, conn, detection):
             checksize, checktype, checksum = get_checksum_props("md5", file["md5"])
 
             if file["name"].lower() not in candidate_files:
-                name = (
-                    encode_punycode(file["name"])
-                    if punycode_need_encode(file["name"])
-                    else file["name"]
-                )
-
+                name = normalised_path(file["name"])
                 values = [name]
 
                 values.append(file["size"] if "size" in file else "0")
