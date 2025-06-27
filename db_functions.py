@@ -947,7 +947,7 @@ def set_process(
 
         # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
         if len(candidate_filesets) == 0:
-            category_text = "Drop set fileset - A"
+            category_text = "Drop fileset - No Candidates"
             fileset_name = fileset["name"] if "name" in fileset else ""
             fileset_description = (
                 fileset["description"] if "description" in fileset else ""
@@ -988,7 +988,7 @@ def set_process(
 
             for set_fileset in set_filesets:
                 fileset = id_to_fileset_dict[set_fileset]
-                category_text = "Drop set fileset - B"
+                category_text = "Drop fileset - Duplicates"
                 fileset_name = fileset["name"] if "name" in fileset else ""
                 fileset_description = (
                     fileset["description"] if "description" in fileset else ""
@@ -1098,15 +1098,15 @@ def set_perform_match(
                 else:
                     category_text = "Mismatch"
                     log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge."
-                    print(
-                        f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
-                    )
+                    print_text = f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
                     mismatch_filesets += 1
-                    # print(f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {', '.join(filename for filename in unmatched_files)}.")
-                    create_log(
-                        escape_string(category_text),
+                    add_manual_merge(
+                        [matched_fileset_id],
+                        fileset_id,
+                        category_text,
+                        log_text,
+                        print_text,
                         user,
-                        escape_string(log_text),
                         conn,
                     )
 
@@ -1134,11 +1134,16 @@ def set_perform_match(
             if not found_match:
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
-                print(log_text)
-                create_log(
-                    escape_string(category_text), user, escape_string(log_text), conn
-                )
                 manual_merged_filesets += 1
+                add_manual_merge(
+                    candidate_filesets,
+                    fileset_id,
+                    category_text,
+                    log_text,
+                    log_text,
+                    user,
+                    conn,
+                )
 
     return (
         fully_matched_filesets,
@@ -1146,6 +1151,26 @@ def set_perform_match(
         manual_merged_filesets,
         mismatch_filesets,
     )
+
+
+def add_manual_merge(
+    child_filesets, parent_fileset, category_text, log_text, print_text, user, conn
+):
+    """
+    Adds the manual merge entries to a table called possible_merges.
+    """
+    with conn.cursor() as cursor:
+        for child_fileset in child_filesets:
+            query = """
+                    INSERT INTO possible_merges
+                    (child_fileset, parent_fileset)
+                    VALUES
+                    (%s, %s)
+                """
+            cursor.execute(query, (child_fileset, parent_fileset))
+
+    create_log(escape_string(category_text), user, escape_string(log_text), conn)
+    print(print_text)
 
 
 def is_full_checksum_match(candidate_fileset, fileset, conn):
