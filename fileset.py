@@ -164,6 +164,7 @@ def fileset():
             """
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Manual Merge</button>"
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/match'\">Match and Merge</button>"
+            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/possible_merge'\">Possible Merges</button>"
             html += f"""
                     <form action="/fileset/{id}/mark_full" method="post" style="display:inline;">
                         <button type='submit'>Mark as full</button>
@@ -601,6 +602,75 @@ def merge_fileset(id):
     </body>
     </html>
     """
+
+
+@app.route("/fileset/<int:id>/possible_merge", methods=["GET", "POST"])
+def possible_merge_filesets(id):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(base_dir, "mysql_config.json")
+    with open(config_path) as f:
+        mysql_cred = json.load(f)
+
+    connection = pymysql.connect(
+        host=mysql_cred["servername"],
+        user=mysql_cred["username"],
+        password=mysql_cred["password"],
+        db=mysql_cred["dbname"],
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+    )
+
+    try:
+        with connection.cursor() as cursor:
+            query = """
+                SELECT
+                    fs.*,
+                    g.name AS game_name,
+                    g.engine AS game_engine,
+                    g.platform AS game_platform,
+                    g.language AS game_language,
+                    g.extra AS extra
+                FROM
+                    fileset fs
+                LEFT JOIN
+                    game g ON fs.game = g.id
+                JOIN
+                    possible_merges pm ON pm.child_fileset = fs.id
+                WHERE pm.parent_fileset = %s
+            """
+            cursor.execute(query, (id,))
+            results = cursor.fetchall()
+
+            html = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
+            </head>
+            <body>
+            <h2>Possible Merges for fileset-'{id}'</h2>
+            <table>
+            <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Details</th><th>Action</th></tr>
+            """
+            for result in results:
+                html += f"""
+                <tr>
+                    <td>{result["id"]}</td>
+                    <td>{result["game_name"]}</td>
+                    <td>{result["game_platform"]}</td>
+                    <td>{result["game_language"]}</td>
+                    <td>{result["extra"]}</td>
+                    <td><a href="/fileset?id={result["id"]}">View Details</a></td>
+                    <td><a href="/fileset/{id}/merge/confirm?target_id={result["id"]}">Select</a></td>
+                </tr>
+                """
+            html += "</table>\n"
+            html += "</body>\n</html>"
+
+            return render_template_string(html)
+
+    finally:
+        connection.close()
 
 
 @app.route("/fileset/<int:id>/merge/confirm", methods=["GET", "POST"])

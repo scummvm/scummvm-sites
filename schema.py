@@ -132,6 +132,15 @@ tables = {
             fileset INT NOT NULL
         )
     """,
+    "possible_merges": """
+        CREATE TABLE IF NOT EXISTS possible_merges (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            child_fileset INT,
+            parent_fileset INT,
+            FOREIGN KEY (child_fileset) REFERENCES fileset(id) ON DELETE CASCADE,
+            FOREIGN KEY (parent_fileset) REFERENCES fileset(id) ON DELETE CASCADE
+        )
+    """,
 }
 
 for table, definition in tables.items():
