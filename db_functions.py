@@ -467,7 +467,6 @@ def calc_megakey(fileset):
 def db_insert(data_arr, username=None, skiplog=False):
     header = data_arr[0]
     game_data = data_arr[1]
-    resources = data_arr[2]
     filepath = data_arr[3]
 
     try:
@@ -533,9 +532,6 @@ def db_insert(data_arr, username=None, skiplog=False):
             insert_game(
                 engine_name, engineid, title, gameid, extra, platform, lang, conn
             )
-        elif src == "dat":
-            if "romof" in fileset and fileset["romof"] in resources:
-                fileset["rom"] = fileset["rom"] + resources[fileset["romof"]]["rom"]
 
         log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
 
@@ -854,6 +850,7 @@ def match_fileset(data_arr, username=None, skiplog=False):
             skiplog,
         )
     else:
+        game_data_lookup = {fs["name"]: fs for fs in game_data}
         for fileset in game_data:
             process_fileset(
                 fileset,
@@ -867,6 +864,7 @@ def match_fileset(data_arr, username=None, skiplog=False):
                 version,
                 source_status,
                 user,
+                game_data_lookup,
             )
         finalize_fileset_insertion(
             conn, transaction_id, src, filepath, author, version, source_status, user
@@ -905,9 +903,25 @@ def set_process(
     set_to_candidate_dict = defaultdict(list)
     id_to_fileset_dict = defaultdict(dict)
 
+    game_data_lookup = {fs["name"]: fs for fs in game_data}
+
     for fileset in game_data:
-        if "romof" in fileset and fileset["romof"] in resources:
-            fileset["rom"] += resources[fileset["romof"]]["rom"]
+        # Ideally romof should be enough, but adding in case of an edge case
+        current_name = fileset.get("romof") or fileset.get("cloneof")
+
+        # Iteratively check for extra files if linked to multiple filesets
+        while current_name:
+            if current_name in resources:
+                fileset["rom"] += resources[current_name]["rom"]
+                break
+
+            elif current_name in game_data_lookup:
+                linked = game_data_lookup[current_name]
+                fileset["rom"] += linked.get("rom", [])
+                current_name = linked.get("romof") or linked.get("cloneof")
+            else:
+                break
+
         key = calc_key(fileset)
         megakey = ""
         log_text = f"State {source_status}."
@@ -938,7 +952,7 @@ def set_process(
             fileset_description = (
                 fileset["description"] if "description" in fileset else ""
             )
-            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}"
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
@@ -955,6 +969,23 @@ def set_process(
             value_to_keys[candidates[0]].append(set_fileset)
     for candidate, set_filesets in value_to_keys.items():
         if len(set_filesets) > 1:
+            query = """
+                    SELECT e.engineid, g.gameid, g.platform, g.language
+                    FROM fileset fs
+                    JOIN game g ON fs.game = g.id
+                    JOIN engine e ON e.id = g.engine
+                    WHERE fs.id = %s
+                """
+            result = None
+            with conn.cursor() as cursor:
+                cursor.execute(query, (candidate,))
+                result = cursor.fetchone()
+
+            engine = result["engineid"]
+            gameid = result["gameid"]
+            platform = result["platform"]
+            language = result["language"]
+
             for set_fileset in set_filesets:
                 fileset = id_to_fileset_dict[set_fileset]
                 category_text = "Drop set fileset - B"
@@ -962,7 +993,7 @@ def set_process(
                 fileset_description = (
                     fileset["description"] if "description" in fileset else ""
                 )
-                log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name}, Description: {fileset_description}"
+                log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name}, Description: {fileset_description}. Clashed with Fileset:{candidate} ({engine}:{gameid}-{platform}-{language})"
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
                 )
@@ -996,7 +1027,8 @@ def set_process(
     # Final log
     with conn.cursor() as cursor:
         cursor.execute(
-            f"SELECT COUNT(fileset) from transactions WHERE `transaction` = {transaction_id}"
+            "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
+            (transaction_id,),
         )
         fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
@@ -1037,7 +1069,7 @@ def set_perform_match(
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 auto_merged_filesets += 1
                 if not skiplog:
-                    log_matched_fileset(
+                    set_log_matched_fileset(
                         src,
                         fileset_id,
                         matched_fileset_id,
@@ -1087,7 +1119,7 @@ def set_perform_match(
                     set_populate_file(fileset, candidate_fileset, conn, detection)
                     auto_merged_filesets += 1
                     if not skiplog:
-                        log_matched_fileset(
+                        set_log_matched_fileset(
                             src,
                             fileset_id,
                             candidate_fileset,
@@ -1185,17 +1217,28 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             FROM candidate_fileset cf
             JOIN set_fileset sf ON cf.name = sf.name AND (cf.size = sf.size OR cf.size = -1)
             GROUP BY cf.fileset_id
-            )
-            SELECT mdf.fileset_id
+            ),
+            valid_matched_detection_files AS (
+            SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
             FROM matched_detection_files mdf
-            JOIN total_detection_files tdf ON mdf.fileset_id = tdf.fileset_id
-            WHERE mdf.match_files_count = tdf.detection_files_found
-            ORDER BY mdf.match_files_count DESC;
+            JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
+            WHERE tdf.detection_files_found = mdf.match_files_count
+            ),
+            max_match_count AS (
+                SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
+            )
+            SELECT vmdf.fileset_id
+            FROM valid_matched_detection_files vmdf
+            JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
+            JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
+            WHERE vmdf.valid_match_files_count = tdf.detection_files_found;
         """
+
         cursor.execute(
             query, (fileset_id, fileset["sourcefile"], transaction_id, fileset_id)
         )
         rows = cursor.fetchall()
+
         candidates = []
         if rows:
             for row in rows:
@@ -1216,11 +1259,26 @@ def process_fileset(
     version,
     source_status,
     user,
+    game_data_lookup,
 ):
     if detection:
         insert_game_data(fileset, conn)
-    elif src == "dat" and "romof" in fileset and fileset["romof"] in resources:
-        fileset["rom"] += resources[fileset["romof"]]["rom"]
+
+    # Ideally romof should be enough, but adding in case of an edge case
+    current_name = fileset.get("romof") or fileset.get("cloneof")
+
+    # Iteratively check for extra files if linked to multiple filesets
+    while current_name:
+        if current_name in resources:
+            fileset["rom"] += resources[current_name]["rom"]
+            break
+
+        elif current_name in game_data_lookup:
+            linked = game_data_lookup[current_name]
+            fileset["rom"] += linked.get("rom", [])
+            current_name = linked.get("romof") or linked.get("cloneof")
+        else:
+            break
 
     key = calc_key(fileset) if not detection else ""
     megakey = calc_megakey(fileset) if detection else ""
@@ -1633,6 +1691,17 @@ def insert_new_fileset(
 def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
     category_text = f"Matched from {src}"
     log_text = f"Matched Fileset:{fileset_id}. State {state}."
+    log_last = create_log(
+        escape_string(category_text), user, escape_string(log_text), conn
+    )
+    update_history(fileset_last, fileset_id, conn, log_last)
+
+
+def set_log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
+    category_text = f"Matched from {src}"
+    log_text = (
+        f"Matched Fileset:{fileset_last} with Fileset:{fileset_id}. State {state}."
+    )
     log_last = create_log(
         escape_string(category_text), user, escape_string(log_text), conn
     )
