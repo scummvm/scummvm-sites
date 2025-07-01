@@ -1240,14 +1240,18 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             matched_detection_files AS (
             SELECT cf.fileset_id, COUNT(*) AS match_files_count
             FROM candidate_fileset cf
-            JOIN set_fileset sf ON cf.name = sf.name AND (cf.size = sf.size OR cf.size = -1)
+            JOIN set_fileset sf ON ( (
+                cf.name = sf.name
+                OR
+                REGEXP_REPLACE(cf.name, '^.*[\\\\/]', '') = REGEXP_REPLACE(sf.name, '^.*[\\\\/]', '')
+            ) AND (cf.size = sf.size OR cf.size = -1) )
             GROUP BY cf.fileset_id
             ),
             valid_matched_detection_files AS (
             SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
             FROM matched_detection_files mdf
             JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
-            WHERE tdf.detection_files_found = mdf.match_files_count
+            WHERE tdf.detection_files_found <= mdf.match_files_count
             ),
             max_match_count AS (
                 SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
@@ -1256,7 +1260,6 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             FROM valid_matched_detection_files vmdf
             JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
             JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
-            WHERE vmdf.valid_match_files_count = tdf.detection_files_found;
         """
 
         cursor.execute(
@@ -1619,13 +1622,16 @@ def populate_file(fileset, fileset_id, conn, detection):
 
 def set_populate_file(fileset, fileset_id, conn, detection):
     """
-    TODO
+    Updates the old fileset in case of a match. Further deletes the newly created fileset which is not needed anymore.
     """
     with conn.cursor() as cursor:
-        cursor.execute(f"SELECT id, name FROM file WHERE fileset = {fileset_id}")
+        # Extracting the filename from the filepath.
+        cursor.execute(
+            f"SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = {fileset_id}"
+        )
         target_files = cursor.fetchall()
         candidate_files = {
-            target_file["name"].lower(): target_file["id"]
+            target_file["name"].lower(): [target_file["id"], target_file["size"]]
             for target_file in target_files
         }
 
@@ -1634,7 +1640,15 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                 continue
             checksize, checktype, checksum = get_checksum_props("md5", file["md5"])
 
-            if file["name"].lower() not in candidate_files:
+            filename = os.path.basename(normalised_path(file["name"]))
+
+            if filename.lower() not in candidate_files or (
+                filename.lower() in candidate_files
+                and (
+                    candidate_files[filename.lower()][1] != -1
+                    and candidate_files[filename.lower()][1] != file["size"]
+                )
+            ):
                 name = normalised_path(file["name"])
                 values = [name]
 
@@ -1658,11 +1672,18 @@ def set_populate_file(fileset, fileset_id, conn, detection):
             else:
                 query = """
                     UPDATE file
-                    SET size = %s
+                    SET size = %s,
+                    name = %s
                     WHERE id = %s
                 """
+                # Filtering was by filename, but we are still updating the file with the original filepath.
                 cursor.execute(
-                    query, (file["size"], candidate_files[file["name"].lower()])
+                    query,
+                    (
+                        file["size"],
+                        normalised_path(file["name"]),
+                        candidate_files[filename.lower()][0],
+                    ),
                 )
                 query = """
                     INSERT INTO filechecksum (file, checksize, checktype, checksum)
@@ -1671,7 +1692,7 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                 cursor.execute(
                     query,
                     (
-                        candidate_files[file["name"].lower()],
+                        candidate_files[filename.lower()][0],
                         checksize,
                         checktype,
                         checksum,
