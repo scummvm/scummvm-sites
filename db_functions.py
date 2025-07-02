@@ -546,7 +546,16 @@ def db_insert(data_arr, username=None, skiplog=False):
             username=username,
             skiplog=skiplog,
         ):
-            for file in fileset["rom"]:
+            # Some detection entries contain duplicate files.
+            unique_files = []
+            seen = set()
+            for file_dict in fileset["rom"]:
+                dict_tuple = tuple(sorted(file_dict.items()))
+                if dict_tuple not in seen:
+                    seen.add(dict_tuple)
+                    unique_files.append(file_dict)
+
+            for file in unique_files:
                 insert_file(file, detection, src, conn)
                 for key, value in file.items():
                     if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
