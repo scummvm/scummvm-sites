@@ -1644,6 +1644,8 @@ def set_populate_file(fileset, fileset_id, conn, detection):
             for target_file in target_files
         }
 
+        seen_detection_files = set()
+
         for file in fileset["rom"]:
             if "md5" not in file:
                 continue
@@ -1651,11 +1653,14 @@ def set_populate_file(fileset, fileset_id, conn, detection):
 
             filename = os.path.basename(normalised_path(file["name"]))
 
-            if filename.lower() not in candidate_files or (
-                filename.lower() in candidate_files
-                and (
-                    candidate_files[filename.lower()][1] != -1
-                    and candidate_files[filename.lower()][1] != file["size"]
+            if ((filename.lower(), file["size"]) in seen_detection_files) or (
+                filename.lower() not in candidate_files
+                or (
+                    filename.lower() in candidate_files
+                    and (
+                        candidate_files[filename.lower()][1] != -1
+                        and candidate_files[filename.lower()][1] != file["size"]
+                    )
                 )
             ):
                 name = normalised_path(file["name"])
@@ -1707,6 +1712,7 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                         checksum,
                     ),
                 )
+                seen_detection_files.add((filename.lower(), file["size"]))
 
 
 def insert_new_fileset(
