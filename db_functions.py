@@ -8,6 +8,7 @@ import os
 from pymysql.converters import escape_string
 from collections import defaultdict
 import re
+import copy
 
 SPECIAL_SYMBOLS = '/":*|\\?%<>\x7f'
 
@@ -912,7 +913,8 @@ def set_process(
     set_to_candidate_dict = defaultdict(list)
     id_to_fileset_dict = defaultdict(dict)
 
-    game_data_lookup = {fs["name"]: fs for fs in game_data}
+    # Deep copy to avoid changes in game_data in the loop affecting the lookup map.
+    game_data_lookup = {fs["name"]: copy.deepcopy(fs) for fs in game_data}
 
     for fileset in game_data:
         # Ideally romof should be enough, but adding in case of an edge case
