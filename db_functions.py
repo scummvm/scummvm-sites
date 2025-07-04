@@ -233,26 +233,34 @@ def insert_file(file, detection, src, conn):
         cursor.execute("SET @file_last = LAST_INSERT_ID()")
 
 
-def insert_filechecksum(file, checktype, conn):
+def insert_filechecksum(file, checktype, file_id, conn):
     if checktype not in file:
         return
 
     checksum = file[checktype]
     checksize, checktype, checksum = get_checksum_props(checktype, checksum)
 
-    query = f"INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (@file_last, '{checksize}', '{checktype}', '{checksum}')"
+    query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
     with conn.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (file_id, checksize, checktype, checksum))
+
+    add_all_equal_checksums(checksize, checktype, checksum, file_id, conn)
+
+
+def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
+    """
+    We can update all the checksums when file size is less than the checksum size type, as all checksums are equal in that case.
+    """
+    with conn.cursor() as cursor:
         if "md5" not in checktype:
             return
-
         size_name = "size"
         if checktype[-1] == "r":
             size_name += "-rd"
         if checktype[-1] == "s":
             size_name += "-d"
 
-        cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = @file_last")
+        cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = {file_id}")
         result = cursor.fetchone()
         if not result:
             return
@@ -281,9 +289,10 @@ def insert_filechecksum(file, checktype, conn):
                     checksum_size = exploded.pop()
                     checksum_type = "-".join(exploded)
 
-                    query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (@file_last, %s, %s, %s)"
-                    with conn.cursor() as cursor:
-                        cursor.execute(query, (checksum_size, checksum_type, checksum))
+                    query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
+                    cursor.execute(
+                        query, (file_id, checksum_size, checksum_type, checksum)
+                    )
 
 
 def delete_filesets(conn):
@@ -558,9 +567,13 @@ def db_insert(data_arr, username=None, skiplog=False):
 
             for file in unique_files:
                 insert_file(file, detection, src, conn)
+                file_id = None
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT @file_last AS file_id")
+                    file_id = cursor.fetchone()["file_id"]
                 for key, value in file.items():
                     if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
-                        insert_filechecksum(file, key, conn)
+                        insert_filechecksum(file, key, file_id, conn)
 
     if detection:
         conn.cursor().execute(
@@ -1070,7 +1083,6 @@ def set_perform_match(
     with conn.cursor() as cursor:
         if len(candidate_filesets) == 1:
             matched_fileset_id = candidate_filesets[0]
-
             cursor.execute(
                 "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
             )
@@ -1123,6 +1135,7 @@ def set_perform_match(
 
         elif len(candidate_filesets) > 1:
             found_match = False
+
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
@@ -1579,7 +1592,7 @@ def populate_file(fileset, fileset_id, conn, detection):
 
             for key, value in file.items():
                 if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
-                    insert_filechecksum(file, key, conn)
+                    insert_filechecksum(file, key, file_id, conn)
                     if value in target_files_dict and not file_exists:
                         cursor.execute(
                             f"SELECT detection_type FROM file WHERE id = {target_files_dict[value]['id']}"
@@ -1683,7 +1696,10 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                 cursor.execute("SET @file_last = LAST_INSERT_ID()")
                 cursor.execute("SELECT @file_last AS file_id")
 
-                insert_filechecksum(file, "md5", conn)
+                cursor.execute("SELECT @file_last AS file_id")
+                file_id = cursor.fetchone()["file_id"]
+
+                insert_filechecksum(file, "md5", file_id, conn)
 
             else:
                 query = """
@@ -1701,6 +1717,7 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                         candidate_files[filename.lower()][0],
                     ),
                 )
+
                 query = """
                     INSERT INTO filechecksum (file, checksize, checktype, checksum)
                     VALUES (%s, %s, %s, %s)
@@ -1713,6 +1730,14 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                         checktype,
                         checksum,
                     ),
+                )
+
+                add_all_equal_checksums(
+                    checksize,
+                    checktype,
+                    checksum,
+                    candidate_files[filename.lower()][0],
+                    conn,
                 )
                 seen_detection_files.add((filename.lower(), file["size"]))
 
@@ -1745,9 +1770,13 @@ def insert_new_fileset(
     if fileset_id:
         for file in fileset["rom"]:
             insert_file(file, detection, src, conn)
+            file_id = None
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT @file_last AS file_id")
+                file_id = cursor.fetchone()["file_id"]
             for key, value in file.items():
                 if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
-                    insert_filechecksum(file, key, conn)
+                    insert_filechecksum(file, key, file_id, conn)
     return (fileset_id, existing)
 
 
