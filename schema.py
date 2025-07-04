@@ -202,6 +202,10 @@ except Exception:
     cursor.execute(
         "ALTER TABLE file MODIFY COLUMN `size-r` BIGINT DEFAULT 0, MODIFY COLUMN `size-rd` BIGINT DEFAULT 0;"
     )
+try:
+    cursor.execute("ALTER TABLE log ADD COLUMN `text` varchar(1000);")
+except Exception:
+    cursor.execute("ALTER TABLE log MODIFY COLUMN `text` varchar(1000);")
 
 
 for index, definition in indices.items():
