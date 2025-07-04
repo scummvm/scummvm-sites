@@ -1028,6 +1028,12 @@ def set_process(
 
     for fileset_id, candidate_filesets in set_to_candidate_dict.items():
         fileset = id_to_fileset_dict[fileset_id]
+
+        # Filter by platform to reduce manual merge
+        candidate_filesets = set_filter_by_platform(
+            fileset["name"], candidate_filesets, conn
+        )
+
         (
             fully_matched_filesets,
             auto_merged_filesets,
@@ -1061,6 +1067,47 @@ def set_process(
         category_text = "Upload information"
         log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early (no candidate) - {dropped_early_no_candidate}. Filesets dropped early (mapping to single detection) - {dropped_early_single_candidate_multiple_sets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
+
+
+def set_filter_by_platform(gameid, candidate_filesets, conn):
+    """
+    Return - list(number) : list of fileset ids of filtered candidates.
+    The number of manual merges in case the file size is not present (equal to -1) are too high. So we try to filter by platform extracted from the gameId of the set.dat fileset. We may disable this feature later or keep it optional with a command line argument.
+    """
+    with conn.cursor() as cursor:
+        # e.g. sq2-coco3-1
+        possible_platform_names = gameid.split("-")[1:]
+
+        # Align platform names in set.dat and detection entries
+        for i, platform in enumerate(possible_platform_names):
+            if platform == "win":
+                possible_platform_names[i] = "windows"
+            elif platform == "mac":
+                possible_platform_names[i] = "macintosh"
+
+        filtered_candidate_fileset = []
+
+        for candidate_fileset_id in candidate_filesets:
+            query = """
+                SELECT g.platform
+                FROM fileset fs
+                JOIN game g ON g.id = fs.game
+                WHERE fs.id = %s
+            """
+            cursor.execute(query, (candidate_fileset_id,))
+            candidate_platform = cursor.fetchone()["platform"]
+            if candidate_platform in possible_platform_names:
+                filtered_candidate_fileset.append(candidate_fileset_id)
+
+        if len(filtered_candidate_fileset) != 0:
+            print(len(candidate_filesets), " ", len(filtered_candidate_fileset), "\n")
+
+        # If nothing was filtred, then it is likely, that platform information was not present, so we fallback to original list of candidates.
+        return (
+            candidate_filesets
+            if len(filtered_candidate_fileset) == 0
+            else filtered_candidate_fileset
+        )
 
 
 def set_perform_match(
