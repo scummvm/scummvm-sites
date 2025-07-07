@@ -965,9 +965,17 @@ def set_process(
         if existing:
             continue
 
-        candidate_filesets = set_filter_candidate_filesets(
-            fileset_id, fileset, transaction_id, conn
-        )
+        # Separating out the matching logic for glk engine
+        engine_name = fileset["sourcefile"].split("-")[0]
+
+        if engine_name == "glk":
+            candidate_filesets = set_glk_filter_candidate_filesets(
+                fileset_id, fileset, transaction_id, engine_name, conn
+            )
+        else:
+            candidate_filesets = set_filter_candidate_filesets(
+                fileset_id, fileset, transaction_id, conn
+            )
 
         # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
         if len(candidate_filesets) == 0:
@@ -1286,6 +1294,84 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
                     unmatched_files.append(fname)
 
         return (len(unmatched_files) == 0, unmatched_files)
+
+
+def set_glk_filter_candidate_filesets(
+    fileset_id, fileset, transaction_id, engine_name, conn
+):
+    """
+    Returns a list of candidate filesets for glk engines that can be merged
+    """
+    with conn.cursor() as cursor:
+        # Returns those filesets which have all detection files matching in the set fileset filtered by engine, file name and file size(if not -1) sorted in descending order of matches
+
+        query = """
+            WITH candidate_fileset AS ( 
+            SELECT fs.id AS fileset_id, f.size
+            FROM file f
+            JOIN fileset fs ON f.fileset = fs.id
+            JOIN game g ON g.id = fs.game
+            JOIN engine e ON e.id = g.engine
+            JOIN transactions t ON t.fileset = fs.id
+            WHERE fs.id != %s
+            AND e.engineid = %s
+            AND f.detection = 1
+            AND t.transaction != %s
+            AND (g.gameid = %s OR (g.gameid != %s AND g.gameid LIKE %s))
+            ),
+            total_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS detection_files_found
+            FROM candidate_fileset cf
+            GROUP BY fileset_id
+            ),
+            set_fileset AS (
+            SELECT size FROM file
+            WHERE fileset = %s
+            ),
+            matched_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS match_files_count
+            FROM candidate_fileset cf
+            JOIN set_fileset sf ON
+            cf.size = sf.size OR cf.size = 0
+            GROUP BY cf.fileset_id
+            ),
+            valid_matched_detection_files AS (
+            SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
+            FROM matched_detection_files mdf
+            JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
+            WHERE tdf.detection_files_found <= mdf.match_files_count
+            ),
+            max_match_count AS (
+                SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
+            )
+            SELECT vmdf.fileset_id
+            FROM valid_matched_detection_files vmdf
+            JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
+            JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
+        """
+
+        gameid_pattern = f"%{fileset['name']}%"
+
+        cursor.execute(
+            query,
+            (
+                fileset_id,
+                engine_name,
+                transaction_id,
+                fileset["name"],
+                fileset["name"],
+                gameid_pattern,
+                fileset_id,
+            ),
+        )
+        rows = cursor.fetchall()
+
+        candidates = []
+        if rows:
+            for row in rows:
+                candidates.append(row["fileset_id"])
+
+        return candidates
 
 
 def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
@@ -1715,6 +1801,13 @@ def set_populate_file(fileset, fileset_id, conn, detection):
             for target_file in target_files
         }
 
+        # For glk engines
+        candidate_file_size = {
+            target_file["size"]: target_file["id"] for target_file in target_files
+        }
+
+        engine_name = fileset["sourcefile"].split("-")[0]
+
         seen_detection_files = set()
 
         for file in fileset["rom"]:
@@ -1724,13 +1817,16 @@ def set_populate_file(fileset, fileset_id, conn, detection):
 
             filename = os.path.basename(normalised_path(file["name"]))
 
-            if ((filename.lower(), file["size"]) in seen_detection_files) or (
-                filename.lower() not in candidate_files
+            if (engine_name == "glk" and file["size"] not in candidate_file_size) and (
+                (filename.lower(), file["size"]) in seen_detection_files
                 or (
-                    filename.lower() in candidate_files
-                    and (
-                        candidate_files[filename.lower()][1] != -1
-                        and candidate_files[filename.lower()][1] != file["size"]
+                    filename.lower() not in candidate_files
+                    or (
+                        filename.lower() in candidate_files
+                        and (
+                            candidate_files[filename.lower()][1] != -1
+                            and candidate_files[filename.lower()][1] != file["size"]
+                        )
                     )
                 )
             ):
@@ -1764,13 +1860,16 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                     name = %s
                     WHERE id = %s
                 """
+
                 # Filtering was by filename, but we are still updating the file with the original filepath.
                 cursor.execute(
                     query,
                     (
                         file["size"],
                         normalised_path(file["name"]),
-                        candidate_files[filename.lower()][0],
+                        candidate_files[filename.lower()][0]
+                        if engine_name != "glk"
+                        else candidate_file_size[file["size"]],
                     ),
                 )
 
@@ -1781,7 +1880,9 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                 cursor.execute(
                     query,
                     (
-                        candidate_files[filename.lower()][0],
+                        candidate_files[filename.lower()][0]
+                        if engine_name != "glk"
+                        else candidate_file_size[file["size"]],
                         checksize,
                         checktype,
                         checksum,
@@ -1792,7 +1893,9 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                     checksize,
                     checktype,
                     checksum,
-                    candidate_files[filename.lower()][0],
+                    candidate_files[filename.lower()][0]
+                    if engine_name != "glk"
+                    else candidate_file_size[file["size"]],
                     conn,
                 )
                 seen_detection_files.add((filename.lower(), file["size"]))
