@@ -179,7 +179,7 @@ def is_appledouble(file_byte_stream):
     return True
 
 def macbin_get_resfork_data(file_byte_stream):
-    """ Returns the resource fork's data section as bytes of a macbinary file as well as its size """
+    """ Returns the resource fork's data section as bytes, data fork size (size), resource fork size (size-r) and data section of resource fork size (size-rd) of a macbinary file """
 
     if not file_byte_stream:
         return file_byte_stream
@@ -189,10 +189,10 @@ def macbin_get_resfork_data(file_byte_stream):
     (rsrclen,) = struct.unpack(">I", file_byte_stream[0x57:0x5B])
 
     resoure_fork_offset = 128 + datalen_padded
-    data_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+0 : resoure_fork_offset+4])
-    data_length = int.from_bytes(file_byte_stream[resoure_fork_offset+8 : resoure_fork_offset+12])
+    rd_offset = int.from_bytes(file_byte_stream[resoure_fork_offset+0 : resoure_fork_offset+4])
+    rd_length = int.from_bytes(file_byte_stream[resoure_fork_offset+8 : resoure_fork_offset+12])
 
-    return (file_byte_stream[resoure_fork_offset + data_offset: resoure_fork_offset + data_offset + data_length], data_length)
+    return (file_byte_stream[resoure_fork_offset + rd_offset: resoure_fork_offset + rd_offset + rd_length], datalen, rsrclen, rd_length)
 
 def macbin_get_datafork(file_byte_stream):
     if not file_byte_stream:
@@ -222,7 +222,7 @@ def is_appledouble(file_byte_stream):
     return True
 
 def appledouble_get_resfork_data(file_byte_stream):
-    """ Returns the resource fork's data section as bytes of an appledouble file as well as its size """
+    """ Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of an appledouble file"""
     
     entry_count = read_be_16(file_byte_stream[24:])
     for entry in range(entry_count):
@@ -233,13 +233,13 @@ def appledouble_get_resfork_data(file_byte_stream):
 
         if id == 2:
             resource_fork_stream = file_byte_stream[offset:offset+length]
-            data_offset = int.from_bytes(resource_fork_stream[0:4])
-            data_length = int.from_bytes(resource_fork_stream[8:12])
+            rd_offset = int.from_bytes(resource_fork_stream[0:4])
+            rd_length = int.from_bytes(resource_fork_stream[8:12])
 
-            return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
+            return (resource_fork_stream[rd_offset: rd_offset+rd_length], length, rd_length)
 
 def appledouble_get_datafork(filepath, fileinfo):
-    """ Returns data fork's content as bytes of appledouble file if found, otherwise empty byte string """
+    """ Returns data fork's content as bytes and size of data fork of an appledouble file."""
     try:
         index = filepath.index("__MACOSX")
     except ValueError:
@@ -253,50 +253,54 @@ def appledouble_get_datafork(filepath, fileinfo):
 
     try:
         with open(data_fork_path, "rb") as f:
-            return f.read()
+            data = f.read()
+            return (data, len(data))
     except (FileNotFoundError, IsADirectoryError):
         return b''
 
 def raw_rsrc_get_datafork(filepath):
-    """ Returns the data fork's content as bytes corresponding to raw rsrc file. """
+    """ Returns the data fork's content as bytes and size of the data fork corresponding to raw rsrc file. """
     try:
         with open(filepath[:-5]+".data", "rb") as f:
-            return f.read()
+            data = f.read()
+            return (data, len(data))
     except (FileNotFoundError, IsADirectoryError):
         return b''
 
 def raw_rsrc_get_resource_fork_data(filepath):
-    """ Returns the resource fork's data section as bytes of a raw rsrc file as well as its size """
+    """ Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of a raw rsrc file."""
     with open(filepath, "rb") as f:
         resource_fork_stream = f.read()
-        data_offset = int.from_bytes(resource_fork_stream[0:4])
-        data_length = int.from_bytes(resource_fork_stream[8:12])
+        resource_fork_len = len(resource_fork_stream)
+        rd_offset = int.from_bytes(resource_fork_stream[0:4])
+        rd_length = int.from_bytes(resource_fork_stream[8:12])
 
-        return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
+        return (resource_fork_stream[rd_offset: rd_offset+rd_length], resource_fork_len, rd_length)
 
 def actual_mac_fork_get_data_fork(filepath):
-    """ Returns the data fork's content as bytes if the actual mac fork exists """
+    """ Returns the data fork's content as bytes and its size if the actual mac fork exists """
     try:
         with open(filepath, "rb") as f:
-            return f.read()
+            data = f.read()
+            return (data, len(data))
     except (FileNotFoundError, IsADirectoryError):
         return b''
 
 def actual_mac_fork_get_resource_fork_data(filepath):
-    """ Returns the resource fork's data section as bytes of the actual mac fork as well as its size """
+    """ Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of the actual mac fork."""
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
     with open(resource_fork_path, "rb") as f:
         resource_fork_stream = f.read()
-        data_offset = int.from_bytes(resource_fork_stream[0:4])
-        data_length = int.from_bytes(resource_fork_stream[8:12])
+        resource_fork_len = len(resource_fork_stream)
+        rd_offset = int.from_bytes(resource_fork_stream[0:4])
+        rd_length = int.from_bytes(resource_fork_stream[8:12])
 
-        return (resource_fork_stream[data_offset: data_offset+data_length], data_length)
+        return (resource_fork_stream[rd_offset: rd_offset+rd_length], resource_fork_len, rd_length)
 
-def file_checksum(filepath, alg, size, file_info):
-    cur_file_size = 0
+def file_checksum(filepath, alg, custom_checksum_size, file_info):
     with open(filepath, "rb") as f:
         if file_info[0] == FileType.NON_MAC:
-            return (create_checksum_pairs(checksum(f, alg, size, filepath), alg, size), filesize(filepath))
+            return (create_checksum_pairs(checksum(f, alg, custom_checksum_size, filepath), alg, custom_checksum_size), filesize(filepath), 0, 0)
         
         # Processing mac files
         res = []
@@ -304,29 +308,33 @@ def file_checksum(filepath, alg, size, file_info):
         datafork = b''
         file_data = f.read()
 
+        size = 0
+        size_r = 0
+        size_rd = 0
+
         if file_info[0] == FileType.MAC_BINARY:
-            (resfork, cur_file_size) = macbin_get_resfork_data(file_data)
+            (resfork, size, size_r, size_rd) = macbin_get_resfork_data(file_data)
             datafork = macbin_get_datafork(file_data)
         elif file_info[0] in {FileType.APPLE_DOUBLE_DOT_, FileType.APPLE_DOUBLE_RSRC, FileType.APPLE_DOUBLE_MACOSX}:
-            (resfork, cur_file_size) = appledouble_get_resfork_data(file_data)
-            datafork = appledouble_get_datafork(filepath, file_info)
+            (resfork, size_r, size_rd) = appledouble_get_resfork_data(file_data)
+            (datafork, size) = appledouble_get_datafork(filepath, file_info)
         elif file_info[0] == FileType.RAW_RSRC:
-            (resfork, cur_file_size) = raw_rsrc_get_resource_fork_data(filepath)
-            datafork = raw_rsrc_get_datafork(filepath)
+            (resfork, size_r, size_rd) = raw_rsrc_get_resource_fork_data(filepath)
+            datafork, size = raw_rsrc_get_datafork(filepath)
         elif file_info[0] == FileType.ACTUAL_FORK_MAC:
-            (resfork, cur_file_size) = actual_mac_fork_get_resource_fork_data(filepath)
-            datafork = actual_mac_fork_get_data_fork(filepath)
+            (resfork, size_r, size_rd) = actual_mac_fork_get_resource_fork_data(filepath)
+            (datafork, size) = actual_mac_fork_get_data_fork(filepath)
 
-        hashes = checksum(resfork, alg, size, filepath)
+        hashes = checksum(resfork, alg, custom_checksum_size, filepath)
         prefix = 'r'
         if len(resfork):
-            res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+            res.extend(create_checksum_pairs(hashes, alg, custom_checksum_size, prefix))
 
-        hashes = checksum(datafork, alg, size, filepath)
+        hashes = checksum(datafork, alg, custom_checksum_size, filepath)
         prefix = 'd'
-        res.extend(create_checksum_pairs(hashes, alg, size, prefix))
+        res.extend(create_checksum_pairs(hashes, alg, custom_checksum_size, prefix))
 
-        return (res, cur_file_size)
+        return (res, size, size_r, size_rd)
 
 def create_checksum_pairs(hashes, alg, size, prefix=None):
     res = []
@@ -571,7 +579,8 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
     """
 
     filtered_file_map = defaultdict(str)
-    user_date = validate_date(limit_timestamps_date)
+    if limit_timestamp_date is not None:
+        user_date = validate_date(limit_timestamps_date)
     today = date.today()
 
     for filepath in files:
@@ -595,8 +604,8 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
-            for filename, (hashes, filesize, timestamp) in hash_of_dir.items():
-                data = f"name \"{filename}\" size {filesize} timestamp {timestamp}"
+            for filename, (hashes, size, size_r, size_rd, timestamp) in hash_of_dir.items():
+                data = f"name \"{filename}\" size {size} size-r {size_r} size-rd {size_rd} timestamp {timestamp}"
                 for key, value in hashes:
                     data += f" {key} {value}"
 
