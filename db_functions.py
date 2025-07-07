@@ -1034,6 +1034,16 @@ def set_process(
             fileset["name"], candidate_filesets, conn
         )
 
+        for candidate_fileset in candidate_filesets:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT id FROM fileset WHERE status = 'current' AND id = %s",
+                    (candidate_fileset),
+                )
+                result = cursor.fetchone()
+                if result:
+                    candidate_filesets.remove(candidate_fileset)
+
         (
             fully_matched_filesets,
             auto_merged_filesets,
@@ -1056,6 +1066,8 @@ def set_process(
 
     # Final log
     with conn.cursor() as cursor:
+        cursor.execute("UPDATE fileset SET status = 'partial' WHERE status = 'current'")
+
         cursor.execute(
             "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
             (transaction_id,),
@@ -1099,9 +1111,6 @@ def set_filter_by_platform(gameid, candidate_filesets, conn):
             if candidate_platform in possible_platform_names:
                 filtered_candidate_fileset.append(candidate_fileset_id)
 
-        if len(filtered_candidate_fileset) != 0:
-            print(len(candidate_filesets), " ", len(filtered_candidate_fileset), "\n")
-
         # If nothing was filtred, then it is likely, that platform information was not present, so we fallback to original list of candidates.
         return (
             candidate_filesets
@@ -1135,7 +1144,7 @@ def set_perform_match(
             )
             status = cursor.fetchone()["status"]
             if status == "detection":
-                update_fileset_status(cursor, matched_fileset_id, "partial")
+                update_fileset_status(cursor, matched_fileset_id, "current")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 auto_merged_filesets += 1
                 if not skiplog:
@@ -1186,7 +1195,7 @@ def set_perform_match(
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
-                    update_fileset_status(cursor, candidate_fileset, "partial")
+                    update_fileset_status(cursor, candidate_fileset, "current")
                     set_populate_file(fileset, candidate_fileset, conn, detection)
                     auto_merged_filesets += 1
                     if not skiplog:
