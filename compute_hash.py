@@ -4,6 +4,8 @@ import argparse
 import struct
 import sys
 from enum import Enum
+from datetime import datetime, date
+from collections import defaultdict
 
 class FileType(Enum):
     NON_MAC = "non_mac"
@@ -154,7 +156,6 @@ def is_actual_resource_fork_mac(filepath):
     """ Returns boolean, checking the actual mac fork if it exists. """
 
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
-    print(resource_fork_path)
     return os.path.exists(resource_fork_path)
 
 def is_appledouble(file_byte_stream):
@@ -505,7 +506,7 @@ def file_filter(files):
     for file in to_be_deleted:
         del files[file]
 
-def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
+def compute_hash_of_dirs(root_directory, depth, size=0, limit_timestamps_date=None, alg="md5"):
     """ Return dictionary containing checksums of all files in directory """
     res = []
 
@@ -518,9 +519,13 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
         for root, _, contents in os.walk(directory):
             files.extend([os.path.join(root, f) for f in contents])
 
+        # Filter out the files based on user input date - limit_timestamps_date
+        filtered_file_map = filter_files_by_timestamp(files, limit_timestamp_date)
+
         # Produce filetype and filename(name to be used in game entry) for each file
-        for filepath in files:
+        for filepath in filtered_file_map:
             file_collection[filepath] = file_classification(filepath)
+
 
         # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
         # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
@@ -538,10 +543,44 @@ def compute_hash_of_dirs(root_directory, depth, size=0, alg="md5"):
                 relative_dir = os.path.dirname(os.path.dirname(relative_path))
                 relative_path = os.path.join(relative_dir, base_name) 
 
-            hash_of_dir[relative_path] = file_checksum(file_path, alg, size, file_info)
+            hash_of_dir[relative_path] = file_checksum(file_path, alg, size, file_info) + (filtered_file_map[file_path],)
 
         res.append(hash_of_dir)
     return res
+
+
+def validate_date(date_str):
+    """
+    Confirms if the user provided timestamp is in a valid format.
+    Returns the date as a datetime object.
+    """
+    formats = ["%Y-%m-%d", "%Y-%m", "%Y"]
+    for fmt in formats:
+        try:
+            return datetime.strptime(date_str, fmt).date()
+        except ValueError:
+            continue
+    raise ValueError("Invalid date format. Use YYYY, YYYY-MM, or YYYY-MM-DD")
+
+
+def filter_files_by_timestamp(files, limit_timestamps_date):
+    """
+    Removes the files those were modified after a certain timestamp provided by the user.
+    The files those were modified today are kept.
+    Returns filtered map with filepath and its modification time
+    """
+
+    filtered_file_map = defaultdict(str)
+    user_date = validate_date(limit_timestamps_date)
+    today = date.today()
+
+    for filepath in files:
+        mtime = datetime.fromtimestamp(os.path.getmtime(filepath)).date()
+        if limit_timestamps_date is None or (limit_timestamps_date is not None and (mtime <= user_date or mtime == today)):
+            filtered_file_map[filepath] = str(mtime)
+
+    return filtered_file_map
+
 
 def create_dat_file(hash_of_dirs, path, checksum_size=0):
     with open(f"{os.path.basename(path)}.dat", "w") as file:
@@ -556,8 +595,8 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
-            for filename, (hashes, filesize) in hash_of_dir.items():
-                data = f"name \"{filename}\" size {filesize}"
+            for filename, (hashes, filesize, timestamp) in hash_of_dir.items():
+                data = f"name \"{filename}\" size {filesize} timestamp {timestamp}"
                 for key, value in hashes:
                     data += f" {key} {value}"
 
@@ -579,10 +618,13 @@ parser.add_argument("--depth",
                     help="Depth from root to game directories")
 parser.add_argument("--size",
                     help="Use first n bytes of file to calculate checksum")
+parser.add_argument("--limit-timestamps",
+                    help="Format - YYYY-MM-DD or YYYY-MM or YYYY. Filters out the files those were modified after the given timestamp. Note that if the modification time is today, it would not be filtered out.")
 args = parser.parse_args()
 path = os.path.abspath(args.directory) if args.directory else os.getcwd()
 depth = int(args.depth) if args.depth else 0
 checksum_size = int(args.size) if args.size else 0
+limit_timestamp_date = str(args.limit_timestamps) if args.limit_timestamps else None
 
 create_dat_file(compute_hash_of_dirs(
-    path, depth, checksum_size), path, checksum_size)
+    path, depth, checksum_size, limit_timestamp_date), path, checksum_size)
