@@ -32,6 +32,24 @@ def db_connect():
     return conn
 
 
+def db_connect_root():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    config_path = os.path.join(base_dir, "mysql_config.json")
+    with open(config_path) as f:
+        mysql_cred = json.load(f)
+
+    conn = pymysql.connect(
+        host=mysql_cred["servername"],
+        user=mysql_cred["username"],
+        password=mysql_cred["password"],
+        charset="utf8mb4",
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True,
+    )
+
+    return (conn, mysql_cred["dbname"])
+
+
 def get_checksum_props(checkcode, checksum):
     checksize = 0
     checktype = checkcode

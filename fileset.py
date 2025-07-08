@@ -23,8 +23,10 @@ from db_functions import (
     user_integrity_check,
     db_connect,
     create_log,
+    db_connect_root,
 )
 from collections import defaultdict
+from schema import init_database
 
 app = Flask(__name__)
 
@@ -79,21 +81,13 @@ def index():
 @app.route("/clear_database", methods=["POST"])
 def clear_database():
     try:
-        conn = db_connect()
+        (conn, db_name) = db_connect_root()
         with conn.cursor() as cursor:
-            cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
-            cursor.execute("TRUNCATE TABLE filechecksum")
-            cursor.execute("TRUNCATE TABLE history")
-            cursor.execute("TRUNCATE TABLE transactions")
-            cursor.execute("TRUNCATE TABLE queue")
-            cursor.execute("TRUNCATE TABLE file")
-            cursor.execute("TRUNCATE TABLE fileset")
-            cursor.execute("TRUNCATE TABLE game")
-            cursor.execute("TRUNCATE TABLE engine")
-            cursor.execute("TRUNCATE TABLE log")
-            cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+            cursor.execute(f"DROP DATABASE IF EXISTS {db_name}")
             conn.commit()
-            print("DATABASE CLEARED")
+            print("DATABASE DROPPED")
+        init_database()
+        print("DATABASE INITIALISED")
     except Exception as e:
         print(f"Error clearing database: {e}")
     finally:
