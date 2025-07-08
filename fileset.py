@@ -32,21 +32,6 @@ app = Flask(__name__)
 
 secret_key = os.urandom(24)
 
-base_dir = os.path.dirname(os.path.abspath(__file__))
-config_path = os.path.join(base_dir, "mysql_config.json")
-with open(config_path) as f:
-    mysql_cred = json.load(f)
-
-conn = pymysql.connect(
-    host=mysql_cred["servername"],
-    user=mysql_cred["username"],
-    password=mysql_cred["password"],
-    db=mysql_cred["dbname"],
-    charset="utf8mb4",
-    cursorclass=pymysql.cursors.DictCursor,
-    autocommit=False,
-)
-
 
 @app.route("/")
 def index():
@@ -348,7 +333,7 @@ def fileset():
             html += "<th>Description</th>\n"
             html += "<th>Log Text</th>\n"
 
-            related_filesets = get_all_related_filesets(id, conn)
+            related_filesets = get_all_related_filesets(id, connection)
 
             cursor.execute(
                 f"SELECT * FROM history WHERE fileset IN ({','.join(map(str, related_filesets))}) OR oldfileset IN ({','.join(map(str, related_filesets))})"
@@ -971,9 +956,12 @@ def validate():
         del json_response["files"]
         json_response["status"] = "no_metadata"
 
-        fileset_id = user_insert_fileset(json_object, ip, conn)
+        conn = db_connect()
+        try:
+            fileset_id = user_insert_fileset(json_object, ip, conn)
+        finally:
+            conn.close()
         json_response["fileset"] = fileset_id
-        print(f"Response: {json_response}")
         return jsonify(json_response)
 
     matched_map = {}
