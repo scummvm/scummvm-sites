@@ -1052,6 +1052,8 @@ def set_process(
                 del set_to_candidate_dict[set_fileset]
                 del id_to_fileset_dict[set_fileset]
 
+    manual_merge_map = defaultdict(list)
+
     for fileset_id, candidate_filesets in set_to_candidate_dict.items():
         fileset = id_to_fileset_dict[fileset_id]
 
@@ -1059,16 +1061,6 @@ def set_process(
         candidate_filesets = set_filter_by_platform(
             fileset["name"], candidate_filesets, conn
         )
-
-        for candidate_fileset in candidate_filesets:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    "SELECT id FROM fileset WHERE status = 'current' AND id = %s",
-                    (candidate_fileset),
-                )
-                result = cursor.fetchone()
-                if result:
-                    candidate_filesets.remove(candidate_fileset)
 
         (
             fully_matched_filesets,
@@ -1086,14 +1078,31 @@ def set_process(
             auto_merged_filesets,
             manual_merged_filesets,
             mismatch_filesets,
+            manual_merge_map,
+            set_to_candidate_dict,
             conn,
             skiplog,
         )
 
+    # print(manual_merge_map)
+
+    for fileset_id, candidates in manual_merge_map.items():
+        category_text = "Manual Merge Required"
+        log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
+        manual_merged_filesets += 1
+        # print(candidates)
+        add_manual_merge(
+            candidates,
+            fileset_id,
+            category_text,
+            log_text,
+            log_text,
+            user,
+            conn,
+        )
+
     # Final log
     with conn.cursor() as cursor:
-        cursor.execute("UPDATE fileset SET status = 'partial' WHERE status = 'current'")
-
         cursor.execute(
             "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
             (transaction_id,),
@@ -1156,6 +1165,8 @@ def set_perform_match(
     auto_merged_filesets,
     manual_merged_filesets,
     mismatch_filesets,
+    manual_merge_map,
+    set_to_candidate_dict,
     conn,
     skiplog,
 ):
@@ -1170,7 +1181,7 @@ def set_perform_match(
             )
             status = cursor.fetchone()["status"]
             if status == "detection":
-                update_fileset_status(cursor, matched_fileset_id, "current")
+                update_fileset_status(cursor, matched_fileset_id, "parital")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 auto_merged_filesets += 1
                 if not skiplog:
@@ -1183,6 +1194,9 @@ def set_perform_match(
                         conn,
                     )
                 delete_original_fileset(fileset_id, conn)
+                remove_manual_merge_if_size_mismatch(
+                    matched_fileset_id, manual_merge_map, set_to_candidate_dict, conn
+                )
             elif status == "partial" or status == "full":
                 (is_match, unmatched_files) = is_full_checksum_match(
                     matched_fileset_id, fileset, conn
@@ -1221,7 +1235,7 @@ def set_perform_match(
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
-                    update_fileset_status(cursor, candidate_fileset, "current")
+                    update_fileset_status(cursor, candidate_fileset, "partial")
                     set_populate_file(fileset, candidate_fileset, conn, detection)
                     auto_merged_filesets += 1
                     if not skiplog:
@@ -1234,22 +1248,14 @@ def set_perform_match(
                             conn,
                         )
                     delete_original_fileset(fileset_id, conn)
+                    remove_manual_merge_if_size_mismatch(
+                        candidate_fileset, manual_merge_map, set_to_candidate_dict, conn
+                    )
                     found_match = True
                     break
 
             if not found_match:
-                category_text = "Manual Merge Required"
-                log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
-                manual_merged_filesets += 1
-                add_manual_merge(
-                    candidate_filesets,
-                    fileset_id,
-                    category_text,
-                    log_text,
-                    log_text,
-                    user,
-                    conn,
-                )
+                manual_merge_map[fileset_id] = candidate_filesets
 
     return (
         fully_matched_filesets,
@@ -1257,6 +1263,98 @@ def set_perform_match(
         manual_merged_filesets,
         mismatch_filesets,
     )
+
+
+def remove_manual_merge_if_size_mismatch(
+    child_fileset, manual_merge_map, set_to_candidate_dict, conn
+):
+    with conn.cursor() as cursor:
+        query = """
+            SELECT f.name, f.size 
+            FROM fileset fs
+            JOIN file f ON f.fileset = fs.id
+            WHERE fs.id = %s
+            AND f.detection = 1
+        """
+        cursor.execute(query, (child_fileset,))
+        files = cursor.fetchall()
+
+        for parent_fileset, child_list in manual_merge_map.items():
+            if child_fileset not in child_list:
+                continue
+
+            for file in files:
+                if file["size"] == -1:
+                    continue
+
+                query = """
+                    SELECT f.id
+                    FROM fileset fs
+                    JOIN file f ON f.fileset = fs.id
+                    WHERE fs.id = %s
+                    AND f.name = %s
+                    AND f.size = %s
+                """
+                cursor.execute(query, (parent_fileset, file["name"], file["size"]))
+                result = cursor.fetchall()
+
+                if not result:
+                    remove_manual_merge(
+                        child_fileset,
+                        parent_fileset,
+                        manual_merge_map,
+                        set_to_candidate_dict,
+                        conn,
+                    )
+                    break
+
+        for parent_fileset, child_list in set_to_candidate_dict.items():
+            if child_fileset not in child_list:
+                continue
+
+            for file in files:
+                if file["size"] == -1:
+                    continue
+
+                query = """
+                    SELECT f.id
+                    FROM fileset fs
+                    JOIN file f ON f.fileset = fs.id
+                    WHERE fs.id = %s
+                    AND f.name = %s
+                    AND f.size = %s
+                """
+                cursor.execute(query, (parent_fileset, file["name"], file["size"]))
+                result = cursor.fetchall()
+
+                if not result:
+                    remove_manual_merge(
+                        child_fileset,
+                        parent_fileset,
+                        manual_merge_map,
+                        set_to_candidate_dict,
+                        conn,
+                    )
+                    break
+
+
+def remove_manual_merge(
+    child_fileset, parent_fileset, manual_merge_map, set_to_candidate_dict, conn
+):
+    if parent_fileset in manual_merge_map:
+        if child_fileset in manual_merge_map[parent_fileset]:
+            manual_merge_map[parent_fileset].remove(child_fileset)
+    if parent_fileset in set_to_candidate_dict:
+        if child_fileset in set_to_candidate_dict[parent_fileset]:
+            set_to_candidate_dict[parent_fileset].remove(child_fileset)
+
+    with conn.cursor() as cursor:
+        query = """
+                DELETE FROM possible_merges
+                WHERE child_fileset = %s
+                AND parent_fileset = %s
+            """
+        cursor.execute(query, (child_fileset, parent_fileset))
 
 
 def add_manual_merge(
@@ -1835,15 +1933,18 @@ def set_populate_file(fileset, fileset_id, conn, detection):
 
             filename = os.path.basename(normalised_path(file["name"]))
 
-            if (engine_name == "glk" and file["size"] not in candidate_file_size) and (
-                (filename.lower(), file["size"]) in seen_detection_files
-                or (
-                    filename.lower() not in candidate_files
+            if (engine_name == "glk" and file["size"] not in candidate_file_size) or (
+                engine_name != "glk"
+                and (
+                    (filename.lower(), file["size"]) in seen_detection_files
                     or (
-                        filename.lower() in candidate_files
-                        and (
-                            candidate_files[filename.lower()][1] != -1
-                            and candidate_files[filename.lower()][1] != file["size"]
+                        filename.lower() not in candidate_files
+                        or (
+                            filename.lower() in candidate_files
+                            and (
+                                candidate_files[filename.lower()][1] != -1
+                                and candidate_files[filename.lower()][1] != file["size"]
+                            )
                         )
                     )
                 )
