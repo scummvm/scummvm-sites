@@ -18,6 +18,8 @@ class FileType(Enum):
 
 script_version = "0.1"
 
+SPECIAL_SYMBOLS = '/":*|\\?%<>\x7f'
+
 # CRC table
 CRC16_XMODEM_TABLE = [
     0x0000, 0x1021, 0x2042, 0x3063, 0x4084, 0x50a5, 0x60c6, 0x70e7,
@@ -74,6 +76,83 @@ def get_dirs_at_depth(directory, depth):
         num_sep_this = root.count(os.path.sep)
         if depth == num_sep_this - num_sep:
             yield root
+
+
+def my_escape_string(s: str) -> str:
+    """
+    Escape strings
+
+    Escape the following:
+    - escape char: \x81
+    - unallowed filename chars: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
+    - control chars < 0x20
+    """
+    new_name = ""
+    for char in s:
+        if char == "\x81":
+            new_name += "\x81\x79"
+        elif char in SPECIAL_SYMBOLS or ord(char) < 0x20:
+            new_name += "\x81" + chr(0x80 + ord(char))
+        else:
+            new_name += char
+    return new_name
+
+
+def encode_punycode(orig):
+    """
+    Punyencode strings
+
+    - escape special characters and
+    - ensure filenames can't end in a space or dotif temp == None:
+    """
+    s = my_escape_string(orig)
+    encoded = s.encode("punycode").decode("ascii")
+    # punyencoding adds an '-' at the end when there are no special chars
+    # don't use it for comparing
+    compare = encoded
+    if encoded.endswith("-"):
+        compare = encoded[:-1]
+    if orig != compare or compare[-1] in " .":
+        return "xn--" + encoded
+    return orig
+
+
+def punycode_need_encode(orig):
+    """
+    A filename needs to be punyencoded when it:
+
+    - contains a char that should be escaped or
+    - ends with a dot or a space.
+    """
+    if len(orig) > 4 and orig[:4] == "xn--":
+        return False
+    if not all((0x20 <= ord(c) < 0x80) and c not in SPECIAL_SYMBOLS for c in orig):
+        return True
+    if orig[-1] in " .":
+        return True
+    return False
+
+
+def split_path_recursive(path):
+    parts = []
+    while True:
+        head, tail = os.path.split(path)
+        if tail:
+            parts.insert(0, tail)
+            path = head
+        else:
+            if head:
+                parts.insert(0, head)
+            break
+    return parts
+
+def encode_path_components(filepath):
+    """
+    Puny encodes all separate components of filepath
+    """
+    parts = split_path_recursive(filepath)
+    encoded_parts = [encode_punycode(p) if punycode_need_encode(p) else p for p in parts]
+    return os.path.join(*encoded_parts)
 
 def read_be_32(byte_stream, signed=False):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
@@ -202,25 +281,6 @@ def macbin_get_datafork(file_byte_stream):
     (datalen,) = struct.unpack(">I", file_byte_stream[0x53:0x57])
     return file_byte_stream[0x80: 0x80 + datalen]
 
-def is_appledouble(file_byte_stream):
-    """
-    Appledouble Structure -
-
-    Header:
-    +$00 / 4: signature (0x00 0x05 0x16 0x00)
-    +$04 / 4: version (0x00 0x01 0x00 0x00 (v1) -or- 0x00 0x02 0x00 0x00 (v2))
-    +$08 /16: home file system string (v1) -or- zeroes (v2)
-    +$18 / 2: number of entries
-
-    Entries:
-    +$00 / 4: entry ID (1-15)
-    +$04 / 4: offset to data from start of file
-    +$08 / 4: length of entry in bytes; may be zero
-    """
-    if (not file_byte_stream or read_be_32(file_byte_stream) != 0x00051607):
-        return False
-
-    return True
 
 def appledouble_get_resfork_data(file_byte_stream):
     """ Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of an appledouble file"""
@@ -672,6 +732,7 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
             for filename, (hashes, size, size_r, size_rd, timestamp) in hash_of_dir.items():
+                filename = encode_path_components(filename)
                 data = f"name \"{filename}\" size {size} size-r {size_r} size-rd {size_rd} timestamp {timestamp}"
                 for key, value in hashes:
                     data += f" {key} {value}"
