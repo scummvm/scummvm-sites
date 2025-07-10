@@ -42,6 +42,11 @@ def index():
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
+    <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+    <a href="{{ url_for('index') }}">
+        <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
+    </a>
+    </nav>
     <h1>Fileset Database</h1>
     <h2>Fileset Actions</h2>
     <ul>
@@ -138,6 +143,11 @@ def fileset():
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
             </head>
             <body>
+            <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+                <a href="{{{{ url_for('index') }}}}">
+                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
+                </a>
+            </nav>
             <h2><u>Fileset: {id}</u></h2>
             <table>
             """
@@ -466,6 +476,11 @@ def match_fileset_route(id):
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
             </head>
             <body>
+            <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+                <a href="{{{{ url_for('index') }}}}">
+                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
+                </a>
+            </nav>
             <h2>Matched Filesets for Fileset: {id}</h2>
             <table>
             <tr>
@@ -553,6 +568,11 @@ def merge_fileset(id):
                     <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
                 </head>
                 <body>
+                <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+                    <a href="{{{{ url_for('index') }}}}">
+                        <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
+                    </a>
+                </nav>
                 <h2>Search Results for '{search_query}'</h2>
                 <form method="POST">
                     <input type="text" name="search" placeholder="Search fileset">
@@ -587,6 +607,11 @@ def merge_fileset(id):
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
+    <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
+        </a>
+    </nav>
     <h2>Search Fileset to Merge</h2>
     <form method="POST">
         <input type="text" name="search" placeholder="Search fileset">
@@ -641,6 +666,11 @@ def possible_merge_filesets(id):
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
             </head>
             <body>
+            <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+                <a href="{{{{ url_for('index') }}}}">
+                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
+                </a>
+            </nav>
             <h2>Possible Merges for fileset-'{id}'</h2>
             <table>
             <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Details</th><th>Action</th></tr>
@@ -748,6 +778,11 @@ def confirm_merge(id):
                 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
             </head>
             <body>
+            <nav style="padding: 3px; border-bottom: 1px solid #ccc;">
+                <a href="{{ url_for('index') }}">
+                    <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
+                </a>
+            </nav>
             <h2>Confirm Merge</h2>
             <table border="1">
             <tr><th>Field</th><th>Source Fileset</th><th>Target Fileset</th></tr>
