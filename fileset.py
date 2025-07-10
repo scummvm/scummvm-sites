@@ -155,18 +155,32 @@ def fileset():
                 (id,),
             )
             row = cursor.fetchone()
-            print(row)
             if row:
                 id = row["fileset"]
-            cursor.execute(f"SELECT * FROM fileset WHERE id = {id}")
+            cursor.execute("SELECT status FROM fileset WHERE id = %s", (id,))
+            status = cursor.fetchone()["status"]
+
+            if status == "dat":
+                cursor.execute(
+                    """SELECT id, game, status, src, `key`, megakey, `delete`, timestamp, set_dat_metadata FROM fileset WHERE id = %s""",
+                    (id,),
+                )
+            else:
+                cursor.execute(
+                    """SELECT id, game, status, src, `key`, megakey, `delete`, timestamp, detection_size, user_count FROM fileset WHERE id = %s""",
+                    (id,),
+                )
+
             result = cursor.fetchone()
-            print(result)
             html += "<h3>Fileset details</h3>"
             html += "<table>\n"
             if result["game"]:
-                cursor.execute(
-                    f"SELECT game.name as 'game name', engineid, gameid, extra, platform, language FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = {id}"
-                )
+                if status == "dat":
+                    query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language, fileset.set_dat_metadata FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
+                else:
+                    query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
+                print(query)
+                cursor.execute(query, (id,))
                 result = {**result, **cursor.fetchone()}
             else:
                 # result.pop('key', None)
