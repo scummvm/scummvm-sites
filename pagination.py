@@ -141,6 +141,11 @@ def create_page(
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
+    <nav style="padding: 3px; margin-bottom: 20px; border-bottom: 1px solid #ccc;">
+        <a href="{{ url_for('index') }}">
+            <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
+        </a>
+    </nav>
 <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
 <table>
 """
