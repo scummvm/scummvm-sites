@@ -4,7 +4,7 @@ import argparse
 import struct
 import sys
 from enum import Enum
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from collections import defaultdict
 
 class FileType(Enum):
@@ -75,9 +75,10 @@ def get_dirs_at_depth(directory, depth):
         if depth == num_sep_this - num_sep:
             yield root
 
-def read_be_32(byte_stream):
+def read_be_32(byte_stream, signed=False):
     """ Return unsigned integer of size_in_bits, assuming the data is big-endian """
-    (uint,) = struct.unpack(">I", byte_stream[:32//8])
+    format = ">i" if signed else ">I"
+    (uint,) = struct.unpack(format, byte_stream[:32//8])
     return uint
 
 def read_be_16(byte_stream):
@@ -534,7 +535,6 @@ def compute_hash_of_dirs(root_directory, depth, size=0, limit_timestamps_date=No
         for filepath in filtered_file_map:
             file_collection[filepath] = file_classification(filepath)
 
-
         # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
         # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
         file_filter(file_collection)
@@ -555,6 +555,70 @@ def compute_hash_of_dirs(root_directory, depth, size=0, limit_timestamps_date=No
 
         res.append(hash_of_dir)
     return res
+
+
+def extract_macbin_mtime(file_byte_stream):
+    """
+    Returns modification time of macbinary file from the header.
+    Doc - +$5f / 4: modification date/time.
+    Doc - Timestamps are unsigned 32-bit values indicating the time in seconds since midnight on Jan 1, 1904, in local time.
+    """
+    macbin_epoch = datetime(1904, 1, 1)
+    header = file_byte_stream[:128]
+    macbin_seconds = read_be_32(header[0x5f:])
+    return (macbin_epoch + timedelta(seconds=macbin_seconds)).date()
+
+
+def extract_mtime_appledouble(file_byte_stream):
+    """
+    Returns modification time of appledouble file.
+    Doc 1 - The File Dates Info entry (ID=8) consists of the file creation, modification, backup
+    and access times (see Figure 2-1), stored as a signed number of seconds before
+    or after 12:00 a.m. (midnight), January 1, 2000 Greenwich Mean Time (GMT)
+
+    Doc 2 -
+    struct ASFileDates  /* entry ID 8, file dates info */
+   {
+       sint32 create; /* file creation date/time */
+       sint32 modify; /* last modification date/time */
+       sint32 backup; /* last backup date/time */
+       sint32 access; /* last access date/time */
+   }; /* ASFileDates */
+    """
+    entry_count = read_be_16(file_byte_stream[24:])
+    for entry in range(entry_count):
+        start_index = 26 + entry*12
+        id = read_be_32(file_byte_stream[start_index:])
+        offset = read_be_32(file_byte_stream[start_index+4:])
+        length = read_be_32(file_byte_stream[start_index+8:])
+
+        if id == 8:
+            date_info_data = file_byte_stream[offset:offset + length]
+            if len(date_info_data) < 16:
+                raise ValueError("FileDatesInfo block is too short.")
+            appledouble_epoch = datetime(2000, 1, 1)
+            modify_seconds = read_be_32(date_info_data[4:8], signed=True)
+            return (appledouble_epoch + timedelta(seconds=modify_seconds)).date()
+
+    return None
+
+
+def macfile_timestamp(filepath):
+    """
+    Returns the modification times for the mac file from their finderinfo.
+    If the file is not a macfile, it returns None
+    """
+    with open(filepath, "rb") as f:
+        data = f.read()
+        # Macbinary
+        if is_macbin(filepath):
+            return extract_macbin_mtime(data)
+
+        # Appledouble
+        if is_appledouble_rsrc(filepath) or is_appledouble_in_dot_(filepath) or is_appledouble_in_macosx(filepath):
+            return extract_mtime_appledouble(data)
+
+    return None
 
 
 def validate_date(date_str):
@@ -579,12 +643,15 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
     """
 
     filtered_file_map = defaultdict(str)
+
     if limit_timestamp_date is not None:
         user_date = validate_date(limit_timestamps_date)
     today = date.today()
 
     for filepath in files:
-        mtime = datetime.fromtimestamp(os.path.getmtime(filepath)).date()
+        mtime = macfile_timestamp(filepath)
+        if mtime is None:
+            mtime = datetime.fromtimestamp(os.path.getmtime(filepath)).date()
         if limit_timestamps_date is None or (limit_timestamps_date is not None and (mtime <= user_date or mtime == today)):
             filtered_file_map[filepath] = str(mtime)
 
