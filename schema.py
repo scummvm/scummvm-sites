@@ -209,6 +209,15 @@ def init_database():
     except Exception:
         cursor.execute("ALTER TABLE log MODIFY COLUMN `text` varchar(5000);")
 
+    try:
+        cursor.execute(
+            "ALTER TABLE fileset ADD COLUMN set_dat_metadata varchar(5000) DEFAULT 'UTF-8';"
+        )
+    except Exception:
+        cursor.execute(
+            "ALTER TABLE fileset MODIFY COLUMN set_dat_metadata varchar(5000) DEFAULT 'UTF-8';"
+        )
+
     for index, definition in indices.items():
         try:
             cursor.execute(definition)

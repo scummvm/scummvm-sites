@@ -107,6 +107,7 @@ def insert_fileset(
     transaction,
     log_text,
     conn,
+    set_dat_metadata="",
     ip="",
     username=None,
     skiplog=None,
@@ -162,7 +163,7 @@ def insert_fileset(
         return (existing_entry, True)
 
     # $game and $key should not be parsed as a mysql string, hence no quotes
-    query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`) VALUES ({game}, '{status}', '{src}', {key}, {megakey}, FROM_UNIXTIME(@fileset_time_last))"
+    query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`, set_dat_metadata) VALUES ({game}, '{status}', '{src}', {key}, {megakey}, FROM_UNIXTIME(@fileset_time_last), '{escape_string(set_dat_metadata)}')"
     fileset_id = -1
     with conn.cursor() as cursor:
         cursor.execute(query)
@@ -968,6 +969,11 @@ def set_process(
         megakey = ""
         log_text = f"State {source_status}."
 
+        set_dat_metadata = ""
+        for meta in fileset:
+            if meta != "rom":
+                set_dat_metadata += meta + " = " + fileset[meta] + "  ,  "
+
         (fileset_id, existing) = insert_new_fileset(
             fileset,
             conn,
@@ -978,8 +984,10 @@ def set_process(
             transaction_id,
             log_text,
             user,
+            set_dat_metadata=set_dat_metadata,
             skiplog=skiplog,
         )
+
         if existing:
             continue
 
@@ -2030,6 +2038,7 @@ def insert_new_fileset(
     transaction_id,
     log_text,
     user,
+    set_dat_metadata="",
     ip="",
     skiplog=False,
 ):
@@ -2042,6 +2051,7 @@ def insert_new_fileset(
         log_text,
         conn,
         username=user,
+        set_dat_metadata=set_dat_metadata,
         ip=ip,
         skiplog=skiplog,
     )
