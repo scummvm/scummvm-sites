@@ -902,6 +902,21 @@ def match_fileset(data_arr, username=None, skiplog=False):
             user,
             skiplog,
         )
+    elif src == "scan":
+        scan_process(
+            game_data,
+            resources,
+            detection,
+            src,
+            conn,
+            transaction_id,
+            filepath,
+            author,
+            version,
+            source_status,
+            user,
+            skiplog,
+        )
     else:
         game_data_lookup = {fs["name"]: fs for fs in game_data}
         for fileset in game_data:
@@ -922,6 +937,628 @@ def match_fileset(data_arr, username=None, skiplog=False):
         finalize_fileset_insertion(
             conn, transaction_id, src, filepath, author, version, source_status, user
         )
+
+
+def scan_process(
+    game_data,
+    resources,
+    detection,
+    src,
+    conn,
+    transaction_id,
+    filepath,
+    author,
+    version,
+    source_status,
+    user,
+    skiplog,
+):
+    """
+    Entry point for processing logic for scan.dat.
+    First Pass - Update all files with matching checksum and file size.
+    Second Pass - Filter candidate with matching with filename, filesize and filechecksum
+                - Perform matching.
+    """
+
+    manual_merged_filesets = 0
+    automatic_merged_filesets = 0
+    match_with_full_fileset = 0
+    mismatch_with_full_fileset = 0
+    dropped_early_no_candidate = 0
+    manual_merged_with_detection = 0
+    filesets_with_missing_files = 0
+
+    id_to_fileset_mapping = defaultdict(dict)
+
+    for fileset in game_data:
+        key = calc_key(fileset)
+        megakey = ""
+        log_text = f"State {source_status}."
+
+        (fileset_id, existing) = insert_new_fileset(
+            fileset,
+            conn,
+            detection,
+            src,
+            key,
+            megakey,
+            transaction_id,
+            log_text,
+            user,
+            skiplog=skiplog,
+        )
+        if existing:
+            continue
+
+        id_to_fileset_mapping[fileset_id] = fileset
+
+        # set of filesets whose files got updated
+        filesets_check_for_full = set()
+
+        for rom in fileset["rom"]:
+            scan_update_files(rom, filesets_check_for_full, transaction_id, conn)
+
+    for fileset_id, fileset in id_to_fileset_mapping.items():
+        candidate_filesets = scan_filter_candidate_filesets(
+            fileset_id, fileset, transaction_id, conn
+        )
+
+        if len(candidate_filesets) == 0:
+            category_text = "Drop fileset - No Candidates"
+            fileset_name = fileset["name"] if "name" in fileset else ""
+            fileset_description = (
+                fileset["description"] if "description" in fileset else ""
+            )
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            create_log(
+                escape_string(category_text), user, escape_string(log_text), conn
+            )
+            dropped_early_no_candidate += 1
+            delete_original_fileset(fileset_id, conn)
+            continue
+
+        (
+            automatic_merged_filesets,
+            manual_merged_filesets,
+            match_with_full_fileset,
+            mismatch_with_full_fileset,
+            manual_merged_with_detection,
+            filesets_with_missing_files,
+        ) = scan_perform_match(
+            fileset,
+            src,
+            user,
+            fileset_id,
+            detection,
+            candidate_filesets,
+            automatic_merged_filesets,
+            manual_merged_filesets,
+            match_with_full_fileset,
+            mismatch_with_full_fileset,
+            manual_merged_with_detection,
+            filesets_with_missing_files,
+            conn,
+            skiplog,
+        )
+
+    # Final log
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
+            (transaction_id,),
+        )
+        fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
+        category_text = f"Uploaded from {src}"
+        log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
+        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        category_text = "Upload information"
+        log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
+        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+
+
+def scan_update_files(rom, filesets_check_for_full, transaction_id, conn):
+    """
+    Updates all the checksums for the files matching by a checksum and size.
+    """
+    with conn.cursor() as cursor:
+        checksums = defaultdict(str)
+        for key in rom:
+            if key not in ["name", "size", "size-r", "size-rd", "modification-time"]:
+                checksums[key] = rom[key]
+
+        files_to_update = set()
+
+        for _, checksum in checksums.items():
+            query = """
+                SELECT f.id as file_id, fs.id as fileset_id
+                FROM file f
+                JOIN filechecksum fc ON fc.file = f.id
+                JOIN fileset fs ON fs.id = f.fileset
+                JOIN transactions t ON t.fileset = fs.id
+                WHERE fc.checksum = %s
+                AND f.size = %s
+                AND f.`size-r` = %s
+                AND f.`size-rd` = %s
+                AND t.transaction != %s
+            """
+            size = rom["size"] if "size" in rom else 0
+            size_r = rom["size-r"] if "size-r" in rom else 0
+            size_rd = rom["size-rd"] if "size-rd" in rom else 0
+            cursor.execute(query, (checksum, size, size_r, size_rd, transaction_id))
+            result = cursor.fetchall()
+            if result:
+                for file in result:
+                    filesets_check_for_full.add(file["fileset_id"])
+                    files_to_update.add(file["file_id"])
+
+        for file_id in files_to_update:
+            query = """
+                DELETE FROM filechecksum
+                WHERE file = %s
+            """
+            cursor.execute(query, (file_id,))
+            for check, checksum in checksums.items():
+                checksize, checktype, checksum = get_checksum_props(check, checksum)
+                query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
+                cursor.execute(query, (file_id, checksize, checktype, checksum))
+
+        conn.commit()
+
+
+def scan_perform_match(
+    fileset,
+    src,
+    user,
+    fileset_id,
+    detection,
+    candidate_filesets,
+    automatic_merged_filesets,
+    manual_merged_filesets,
+    match_with_full_fileset,
+    mismatch_with_full_fileset,
+    manual_merged_with_detection,
+    filesets_with_missing_files,
+    conn,
+    skiplog,
+):
+    """
+    Performs matching for scan.dat.
+    If single candidate for match:
+        detection -> Copy all the files and checksums from scan.
+        partial -> Copy all the files and checksums from scan.
+        full -> Drop the scan fileset. But show the differences in file if any.
+    If more than one candidate for match:
+        Put them for manual merge.
+    """
+    with conn.cursor() as cursor:
+        if len(candidate_filesets) == 1:
+            matched_fileset_id = candidate_filesets[0]
+            cursor.execute(
+                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
+            )
+            status = cursor.fetchone()["status"]
+            # Partial filesets can be turned full directly, as the files have already been updated.
+            # But the files that had missing size were not updated, so we need to check.
+            if status == "partial":
+                # Partial filesets contain all the files, so does the scanned filesets, so this case should not ideally happen.
+                if total_files(matched_fileset_id, conn) > total_fileset_files(fileset):
+                    category_text = "Missing files"
+                    log_text = f"Missing files in Fileset:{fileset_id}. Try manual merge with Fileset:{matched_fileset_id}."
+                    add_manual_merge(
+                        candidate_filesets,
+                        fileset_id,
+                        category_text,
+                        log_text,
+                        user,
+                        conn,
+                        log_text,
+                    )
+                    filesets_with_missing_files += 1
+
+                else:
+                    update_all_files(fileset, matched_fileset_id, False, conn)
+                    update_fileset_status(cursor, matched_fileset_id, "full")
+                    if not skiplog:
+                        log_matched_fileset(
+                            src,
+                            fileset_id,
+                            matched_fileset_id,
+                            "full",
+                            user,
+                            conn,
+                        )
+                    delete_original_fileset(fileset_id, conn)
+                    automatic_merged_filesets += 1
+
+            # Detection filests can be turned full if the number of files are equal,
+            # otherwise we do manual merge to remove extra files.
+            elif status == "detection":
+                if total_fileset_files(fileset) == total_files(
+                    matched_fileset_id, conn, detection_only=True
+                ):
+                    update_all_files(fileset, matched_fileset_id, True, conn)
+                    update_fileset_status(cursor, matched_fileset_id, "full")
+                    if not skiplog:
+                        log_matched_fileset(
+                            src,
+                            fileset_id,
+                            matched_fileset_id,
+                            "full",
+                            user,
+                            conn,
+                        )
+                        delete_original_fileset(fileset_id, conn)
+                        automatic_merged_filesets += 1
+
+                else:
+                    category_text = "Manual Merge - Detection found"
+                    log_text = f"Matched with detection. Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}."
+                    add_manual_merge(
+                        candidate_filesets,
+                        fileset_id,
+                        category_text,
+                        log_text,
+                        user,
+                        conn,
+                        log_text,
+                    )
+                    manual_merged_with_detection += 1
+
+            # Drop the fileset, note down the file differences
+            elif status == "full":
+                (unmatched_candidate_files, unmatched_scan_files) = get_unmatched_files(
+                    matched_fileset_id, fileset, conn
+                )
+                fully_matched = (
+                    True
+                    if len(unmatched_candidate_files) == 0
+                    and len(unmatched_scan_files) == 0
+                    else False
+                )
+                if fully_matched:
+                    match_with_full_fileset += 1
+                else:
+                    mismatch_with_full_fileset += 1
+                log_scan_match_with_full(
+                    fileset_id,
+                    matched_fileset_id,
+                    unmatched_candidate_files,
+                    unmatched_scan_files,
+                    fully_matched,
+                    user,
+                    conn,
+                )
+                delete_original_fileset(fileset_id, conn)
+
+        elif len(candidate_filesets) > 1:
+            category_text = "Manual Merge - Multiple Candidates"
+            log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
+            manual_merged_filesets += 1
+            add_manual_merge(
+                candidate_filesets,
+                fileset_id,
+                category_text,
+                log_text,
+                user,
+                conn,
+                log_text,
+            )
+
+    return (
+        automatic_merged_filesets,
+        manual_merged_filesets,
+        match_with_full_fileset,
+        mismatch_with_full_fileset,
+        manual_merged_with_detection,
+        filesets_with_missing_files,
+    )
+
+
+def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn):
+    """
+    Updates all the files, if they were missed out earlier due to missing size.
+    """
+    with conn.cursor() as cursor:
+        # Extracting the filename from the filepath.
+        cursor.execute(
+            f"SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = {candidate_fileset_id}"
+        )
+        target_files = cursor.fetchall()
+        candidate_files = {
+            target_file["id"]: target_file["name"].lower()
+            for target_file in target_files
+        }
+
+        scan_checksums = set()
+        scan_names_by_checksum = defaultdict(str)
+        same_filename_count = defaultdict(int)
+
+        filename_to_filepath_map = defaultdict(str)
+        filepath_to_checksum_map = defaultdict(dict)
+        filepath_to_sizes_map = defaultdict(dict)
+
+        for file in fileset["rom"]:
+            base_name = os.path.basename(normalised_path(file["name"])).lower()
+            checksums = defaultdict(str)
+            sizes = defaultdict(int)
+            for key in file:
+                if key.startswith("md5"):
+                    scan_checksums.add((file[key], base_name))
+                    scan_names_by_checksum[(file[key], base_name)] = file["name"]
+                    checksums[key] = file[key]
+                if key.startswith("size"):
+                    sizes[key] = file[key]
+
+            filepath_to_sizes_map[file["name"]] = sizes
+            filepath_to_checksum_map[file["name"]] = checksums
+            same_filename_count[base_name] += 1
+            filename_to_filepath_map[base_name] = file["name"]
+
+        checksums = defaultdict(dict)
+        filepath = ""
+
+        for file_id, file_name in candidate_files.items():
+            file_name = file_name.lower()
+            # Match by filename
+            if same_filename_count[file_name] == 1:
+                filepath = filename_to_filepath_map[file_name]
+                checksums = filepath_to_checksum_map[filepath]
+
+            # If same filename occurs multiple times, fallback to checksum based match
+            else:
+                cursor.execute(
+                    "SELECT checksum FROM filechecksum WHERE file = %s", (file_id,)
+                )
+                checksum_rows = cursor.fetchall()
+                for row in checksum_rows:
+                    checksum = row["checksum"]
+                    if (checksum, file_name) in scan_checksums:
+                        filepath = scan_names_by_checksum[(checksum, file_name)]
+                        checksums = filepath_to_checksum_map[filepath]
+
+            # Delete older checksums
+            query = """
+                DELETE FROM filechecksum
+                WHERE file = %s
+            """
+            cursor.execute(query, (file_id,))
+            # Update the checksums
+            for key, checksum in checksums.items():
+                checksize, checktype, checksum = get_checksum_props(key, checksum)
+                query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
+                cursor.execute(query, (file_id, checksize, checktype, checksum))
+
+            # Also updates the sizes, do not update the name if fileset not in detection state
+            query = """
+                UPDATE file
+                SET size = %s,
+                `size-r` = %s,
+                `size-rd` = %s
+            """
+            sizes = filepath_to_sizes_map[filepath]
+            print(sizes)
+            if is_candidate_detection:
+                query += ",name = %s WHERE id = %s"
+                params = (
+                    sizes["size"],
+                    sizes["size-r"],
+                    sizes["size-rd"],
+                    normalised_path(filepath),
+                    file_id,
+                )
+            else:
+                query += "WHERE id = %s"
+                params = (sizes["size"], sizes["size-r"], sizes["size-rd"], file_id)
+            cursor.execute(query, params)
+
+
+def total_files(fileset_id, conn, detection_only=False):
+    """
+    Returns the total number of files (only detection files if detection_only set to true) present in the given fileset from the database.
+    """
+    with conn.cursor() as cursor:
+        query = """
+            SELECT COUNT(*) AS count
+            FROM file f
+            JOIN fileset fs ON fs.id = f.fileset
+        """
+        if detection_only:
+            query += """
+                WHERE f.detection = 1
+                AND fs.id = %s
+            """
+        else:
+            query += "WHERE fs.id = %s"
+        cursor.execute(query, (fileset_id,))
+        return cursor.fetchone()["count"]
+
+
+def total_fileset_files(fileset):
+    """
+    Returns the number of files present in the fileset
+    """
+    return len(fileset["rom"])
+
+
+def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
+    """
+    Returns a list of candidate filesets that can be merged
+    """
+    with conn.cursor() as cursor:
+        # Returns those filesets which have all detection files matching in the scan fileset filtered by file name and file size(if not -1).
+
+        query = """
+            WITH candidate_fileset AS (
+            SELECT fs.id AS fileset_id, f.name, f.size,
+            f.`size-r` AS size_r, f.`size-rd` AS size_rd
+            FROM file f
+            JOIN fileset fs ON f.fileset = fs.id
+            JOIN game g ON g.id = fs.game
+            JOIN transactions t ON t.fileset = fs.id
+            WHERE f.detection = 1
+            AND t.transaction != %s
+            ),
+            total_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS detection_files_found
+            FROM candidate_fileset cf
+            GROUP BY fileset_id
+            ),
+            set_fileset AS (
+            SELECT name, size,
+            `size-r` AS size_r, `size-rd` AS size_rd
+            FROM file
+            WHERE fileset = %s
+            ),
+            matched_detection_files AS (
+            SELECT cf.fileset_id, COUNT(*) AS match_files_count
+            FROM candidate_fileset cf
+            JOIN set_fileset sf ON ( (
+                cf.name = sf.name
+                OR
+                REGEXP_REPLACE(cf.name, '^.*[\\\\/]', '') = REGEXP_REPLACE(sf.name, '^.*[\\\\/]', '')
+            ) AND (cf.size = sf.size OR cf.size = -1)
+            AND (cf.size_r = sf.size_r)
+            AND (cf.size_rd = sf.size_rd))
+            GROUP BY cf.fileset_id
+            ),
+            valid_matched_detection_files AS (
+            SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
+            FROM matched_detection_files mdf
+            JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
+            WHERE tdf.detection_files_found <= mdf.match_files_count
+            ),
+            max_match_count AS (
+                SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
+            )
+            SELECT vmdf.fileset_id
+            FROM valid_matched_detection_files vmdf
+            JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
+            JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
+        """
+
+        cursor.execute(query, (transaction_id, fileset_id))
+        rows = cursor.fetchall()
+
+        candidates = []
+        if rows:
+            for row in rows:
+                candidates.append(row["fileset_id"])
+
+        for candidate in candidates:
+            if not is_full_detection_checksum_match(candidate, fileset, conn):
+                candidates.remove(candidate)
+
+        return candidates
+
+
+def get_unmatched_files(candidate_fileset, fileset, conn):
+    """
+    Checks if all checksums from candidate_fileset match scan file checksums.
+    Returns:
+    unmatched_candidate_files: candidate files whose checksums weren't found in scan
+    unmatched_scan_files: scan files whose checksums weren't matched by candidate
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT id, name FROM file WHERE fileset = %s", (candidate_fileset,)
+        )
+        candidate_file_rows = cursor.fetchall()
+        candidate_files = {row["id"]: row["name"] for row in candidate_file_rows}
+
+        scan_checksums = set()
+        scan_names_by_checksum = {}
+
+        for file in fileset["rom"]:
+            base_name = os.path.basename(normalised_path(file["name"])).lower()
+            for key in file:
+                if key.startswith("md5"):
+                    scan_checksums.add((file[key], base_name))
+                    scan_names_by_checksum[(file[key], base_name)] = file["name"]
+
+        unmatched_candidate_files = []
+        matched_scan_pairs = set()
+
+        for file_id, file_name in candidate_files.items():
+            cursor.execute(
+                "SELECT checksum FROM filechecksum WHERE file = %s", (file_id,)
+            )
+            checksum_rows = cursor.fetchall()
+
+            base_name = os.path.basename(file_name).lower()
+            match_found = False
+
+            for row in checksum_rows:
+                checksum = row["checksum"]
+                if (checksum, base_name) in scan_checksums:
+                    matched_scan_pairs.add((checksum, base_name))
+                    match_found = True
+
+            if not match_found:
+                unmatched_candidate_files.append(file_name)
+
+        unmatched_scan_files = {
+            scan_names_by_checksum[key]
+            for key in scan_checksums
+            if key not in matched_scan_pairs
+        }
+        unmatched_scan_files = list(unmatched_scan_files)
+
+        return (unmatched_candidate_files, unmatched_scan_files)
+
+
+def is_full_detection_checksum_match(candidate_fileset, fileset, conn):
+    """
+    Return type - Boolean
+    Checks if all the detection files in the candidate fileset have corresponding checksums matching with scan.
+
+    scan -	rom ( name "AFM Read Me!_2" size 8576 size-r 1 size-rd 0 modification-time 1993-05-12 md5 dsd16ccea050db521a678a1cdc33794c md5-5000 008e76ec3ae58d0add637ea7aa299a2a md5-t-5000 118e76ec3ae58d0add637ea7aa299a2c md5-1048576 37d16ccea050db521a678a1cdc33794c)
+    """
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT id, name FROM file WHERE detection=1 AND fileset = %s",
+            (candidate_fileset,),
+        )
+        target_files = cursor.fetchall()
+        candidate_files = {
+            target_file["id"]: target_file["name"] for target_file in target_files
+        }
+
+        # set of (checksum, filename)
+        scan_checksums = set()
+        for file in fileset["rom"]:
+            for key in file:
+                if key.startswith("md5"):
+                    name = os.path.basename(normalised_path(file["name"]))
+                    scan_checksums.add((file[key], name.lower()))
+
+        for detection_file_id, detection_file_name in candidate_files.items():
+            query = """
+                    SELECT fc.checksum, fc.checksize, fc.checktype
+                    FROM filechecksum fc
+                    WHERE fc.file = %s
+                """
+            cursor.execute(query, (detection_file_id,))
+            checksums_info = cursor.fetchall()
+            match_found = False
+            if checksums_info:
+                for checksum_info in checksums_info:
+                    checksum = checksum_info["checksum"]
+                    if (
+                        checksum,
+                        os.path.basename(detection_file_name.lower()),
+                    ) not in scan_checksums:
+                        match_found = True
+                        break
+
+            if match_found:
+                return False
+
+        return True
+
+
+# -------------------------------------------------------------------------------------------------------
+# Set.dat processing below
+# -------------------------------------------------------------------------------------------------------
 
 
 def set_process(
@@ -2083,6 +2720,27 @@ def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
         escape_string(category_text), user, escape_string(log_text), conn
     )
     update_history(fileset_last, fileset_id, conn, log_last)
+
+
+def log_scan_match_with_full(
+    fileset_last,
+    candidate_id,
+    unmatched_candidate_files,
+    unmatched_scan_files,
+    fully_matched,
+    user,
+    conn,
+):
+    category_text = "Mismatch with Full set"
+    if fully_matched:
+        category_text = "Existing as Full set."
+    log_text = f"""Files mismatched with Full Fileset:{candidate_id}. Unmatched Files in scan fileset = {len(unmatched_scan_files)}. Unmatched Files in full fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {", ".join(scan_file for scan_file in unmatched_scan_files)}, List of unmatched files full fileset : {", ".join(scan_file for scan_file in unmatched_candidate_files)}"""
+    if fully_matched:
+        log_text = (
+            f"Fileset matched completely with Full Fileset:{candidate_id}. Dropping."
+        )
+    print(log_text)
+    create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
 def finalize_fileset_insertion(
