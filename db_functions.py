@@ -546,13 +546,19 @@ def db_insert(data_arr, username=None, skiplog=False):
         megakey = calc_megakey(fileset)
 
         if detection:
-            engine_name = fileset["engine"]
-            engineid = fileset["sourcefile"]
-            gameid = fileset["name"]
-            title = fileset["title"]
-            extra = fileset["extra"]
-            platform = fileset["platform"]
-            lang = fileset["language"]
+            try:
+                engine_name = fileset.get("engine", "")
+                engineid = fileset["sourcefile"]
+                gameid = fileset["name"]
+                title = fileset.get("title", "")
+                extra = fileset.get("extra", "")
+                platform = fileset.get("platform", "")
+                lang = fileset.get("language", "")
+            except KeyError as e:
+                print(
+                    f"Missing key in header: {e} for {fileset.get('name', '')}-{fileset.get('language', '')}-{fileset.get('platform', '')}"
+                )
+                return
 
             with conn.cursor() as cursor:
                 query = """
