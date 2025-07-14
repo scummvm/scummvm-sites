@@ -132,25 +132,11 @@ def punycode_need_encode(orig):
         return True
     return False
 
-
-def split_path_recursive(path):
-    parts = []
-    while True:
-        head, tail = os.path.split(path)
-        if tail:
-            parts.insert(0, tail)
-            path = head
-        else:
-            if head:
-                parts.insert(0, head)
-            break
-    return parts
-
 def encode_path_components(filepath):
     """
     Puny encodes all separate components of filepath
     """
-    parts = split_path_recursive(filepath)
+    parts = [i for i in filepath.split(os.sep) if i ]
     encoded_parts = [encode_punycode(p) if punycode_need_encode(p) else p for p in parts]
     return os.path.join(*encoded_parts)
 
@@ -733,7 +719,7 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
             file.write("game (\n")
             for filename, (hashes, size, size_r, size_rd, timestamp) in hash_of_dir.items():
                 filename = encode_path_components(filename)
-                data = f"name \"{filename}\" size {size} size-r {size_r} size-rd {size_rd} timestamp {timestamp}"
+                data = f"name '{filename}' size {size} size-r {size_r} size-rd {size_rd} modification-time {timestamp}"
                 for key, value in hashes:
                     data += f" {key} {value}"
 
