@@ -234,13 +234,16 @@ def insert_file(file, detection, src, conn):
     values.append(file["size-r"] if "size-r" in file else "0")
     values.append(file["size-rd"] if "size-rd" in file else "0")
 
+    modification_time = file["modification-time"] if "modification-time" in file else ""
+    values.append(modification_time)
+
     values.extend([checksum, detection, detection_type])
 
     # Parameterised Query
     placeholders = (
-        ["%s"] * (len(values[:5])) + ["@fileset_last"] + ["%s"] * 2 + ["NOW()"]
+        ["%s"] * (len(values[:6])) + ["@fileset_last"] + ["%s"] * 2 + ["NOW()"]
     )
-    query = f"INSERT INTO file ( name, size, `size-r`, `size-rd`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ({', '.join(placeholders)})"
+    query = f"INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ({', '.join(placeholders)})"
 
     with conn.cursor() as cursor:
         cursor.execute(query, values)

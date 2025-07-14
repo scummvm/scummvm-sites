@@ -33,6 +33,9 @@ def map_checksum_data(content_string):
         elif tokens[i] == "size-rd":
             current_rom["size-rd"] = int(tokens[i + 1])
             i += 2
+        elif tokens[i] == "modification-time":
+            current_rom["modification-time"] = tokens[i + 1]
+            i += 2
         else:
             checksum_key = tokens[i]
             checksum_value = tokens[i + 1] if len(tokens) >= 6 else "0"

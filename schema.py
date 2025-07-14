@@ -244,6 +244,22 @@ def init_database():
         "ALTER TABLE log MODIFY COLUMN `text` VARCHAR(5000);",
     )
 
+    migrate_column(
+        cursor,
+        "fileset",
+        "set_dat_metadata",
+        "ALTER TABLE fileset ADD COLUMN set_dat_metadata VARCHAR(5000) DEFAULT '';",
+        "ALTER TABLE fileset MODIFY COLUMN set_dat_metadata VARCHAR(5000) DEFAULT '';",
+    )
+
+    migrate_column(
+        cursor,
+        "file",
+        "modification-time",
+        "ALTER TABLE file ADD COLUMN `modification-time` VARCHAR(100) DEFAULT '';",
+        "ALTER TABLE file MODIFY COLUMN `modification-time` VARCHAR(100) DEFAULT '';",
+    )
+
     for index, definition in indices.items():
         try:
             cursor.execute(definition)

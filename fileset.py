@@ -189,7 +189,6 @@ def fileset():
                     query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language, fileset.set_dat_metadata FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
                 else:
                     query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
-                print(query)
                 cursor.execute(query, (id,))
                 result = {**result, **cursor.fetchone()}
             else:
@@ -240,6 +239,7 @@ def fileset():
                 "detection",
                 "detection_type",
                 "timestamp",
+                "modification-time",
             ]
 
             if sort:
@@ -250,13 +250,10 @@ def fileset():
                     if "desc" in sort:
                         order += " DESC"
 
-            columns_to_select = "file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`"
+            columns_to_select = "file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`, `modification-time`"
             columns_to_select += ", ".join(md5_columns)
-            print(
-                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
-            )
             cursor.execute(
-                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp` FROM file WHERE fileset = {id} {order}"
+                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`, `modification-time` FROM file WHERE fileset = {id} {order}"
             )
             result = cursor.fetchall()
 
