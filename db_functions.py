@@ -9,11 +9,13 @@ from pymysql.converters import escape_string
 from collections import defaultdict
 import re
 import copy
+import sys
 
 SPECIAL_SYMBOLS = '/":*|\\?%<>\x7f'
 
 
 def db_connect():
+    console_log("Connecting to the Database.")
     base_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_dir, "mysql_config.json")
     with open(config_path) as f:
@@ -28,7 +30,7 @@ def db_connect():
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=False,
     )
-
+    console_log(f"Connected to Database - {mysql_cred['dbname']}")
     return conn
 
 
@@ -526,12 +528,17 @@ def db_insert(data_arr, username=None, skiplog=False):
         transaction_id = temp + 1
 
     category_text = f"Uploaded from {src}"
-    log_text = f"Started loading DAT file, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Transaction: {transaction_id}"
+    log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Transaction: {transaction_id}"
 
     user = f"cli:{getpass.getuser()}" if username is None else username
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
+    console_log(log_text)
+    console_log_total_filesets(filepath)
+
+    fileset_count = 1
     for fileset in game_data:
+        console_log_detection(fileset_count)
         key = calc_key(fileset)
         megakey = calc_megakey(fileset)
 
@@ -555,7 +562,7 @@ def db_insert(data_arr, username=None, skiplog=False):
                 if existing_entry is not None:
                     log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
                     create_log("Warning", user, escape_string(log_text), conn)
-                    print(log_text)
+                    console_log(log_text)
                     continue
 
             insert_game(
@@ -594,6 +601,8 @@ def db_insert(data_arr, username=None, skiplog=False):
                     if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
                         insert_filechecksum(file, key, file_id, conn)
 
+        fileset_count += 1
+
     if detection:
         conn.cursor().execute(
             "UPDATE fileset SET status = 'obsolete' WHERE `timestamp` != FROM_UNIXTIME(@fileset_time_last) AND status = 'detection'"
@@ -607,6 +616,7 @@ def db_insert(data_arr, username=None, skiplog=False):
         fileset_insertion_count = cur.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
+        console_log(log_text)
     except Exception as e:
         print("Inserting failed:", e)
     else:
@@ -871,8 +881,9 @@ def match_fileset(data_arr, username=None, skiplog=False):
         transaction_id = transaction_id + 1 if transaction_id else 1
 
     category_text = f"Uploaded from {src}"
-    log_text = f"Started loading DAT file, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Transaction: {transaction_id}"
-
+    log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Transaction: {transaction_id}"
+    console_log(log_text)
+    console_log_total_filesets(filepath)
     user = f"cli:{getpass.getuser()}" if username is None else username
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
@@ -941,6 +952,9 @@ def set_process(
     mismatch_filesets = 0
     dropped_early_no_candidate = 0
     dropped_early_single_candidate_multiple_sets = 0
+
+    fileset_count = 0
+
     # A mapping from set filesets to candidate filesets list
     set_to_candidate_dict = defaultdict(list)
     id_to_fileset_dict = defaultdict(dict)
@@ -995,12 +1009,12 @@ def set_process(
         engine_name = fileset["sourcefile"].split("-")[0]
 
         if engine_name == "glk":
-            candidate_filesets = set_glk_filter_candidate_filesets(
-                fileset_id, fileset, transaction_id, engine_name, conn
+            (candidate_filesets, fileset_count) = set_glk_filter_candidate_filesets(
+                fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
             )
         else:
-            candidate_filesets = set_filter_candidate_filesets(
-                fileset_id, fileset, transaction_id, conn
+            (candidate_filesets, fileset_count) = set_filter_candidate_filesets(
+                fileset_id, fileset, fileset_count, transaction_id, conn
             )
 
         # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
@@ -1016,9 +1030,17 @@ def set_process(
             )
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
-
         id_to_fileset_dict[fileset_id] = fileset
         set_to_candidate_dict[fileset_id].extend(candidate_filesets)
+
+    console_message = "Candidate filtering finished."
+    console_log(console_message)
+    console_message = (
+        f"{dropped_early_no_candidate} Filesets Dropped - No candidates found."
+    )
+    console_log(console_message)
+    console_message = "Looking for duplicates..."
+    console_log(console_message)
 
     # Remove all such filesets, which have many to one mapping with a single candidate, those are extra variants.
     value_to_keys = defaultdict(list)
@@ -1052,6 +1074,7 @@ def set_process(
                     fileset["description"] if "description" in fileset else ""
                 )
                 log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name}, Description: {fileset_description}. Clashed with Fileset:{candidate} ({engine}:{gameid}-{platform}-{language})"
+                console_log(log_text)
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
                 )
@@ -1062,7 +1085,9 @@ def set_process(
 
     manual_merge_map = defaultdict(list)
 
+    match_count = 1
     for fileset_id, candidate_filesets in set_to_candidate_dict.items():
+        console_log_matching(match_count)
         fileset = id_to_fileset_dict[fileset_id]
 
         # Filter by platform to reduce manual merge
@@ -1092,21 +1117,15 @@ def set_process(
             skiplog,
         )
 
-    # print(manual_merge_map)
+        match_count += 1
+    console_log("Matching performed.")
 
     for fileset_id, candidates in manual_merge_map.items():
         category_text = "Manual Merge Required"
         log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
         manual_merged_filesets += 1
-        # print(candidates)
         add_manual_merge(
-            candidates,
-            fileset_id,
-            category_text,
-            log_text,
-            log_text,
-            user,
-            conn,
+            candidates, fileset_id, category_text, log_text, user, conn, log_text
         )
 
     # Final log
@@ -1121,6 +1140,7 @@ def set_process(
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
         category_text = "Upload information"
         log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early (no candidate) - {dropped_early_no_candidate}. Filesets dropped early (mapping to single detection) - {dropped_early_single_candidate_multiple_sets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
+        console_log(log_text)
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
@@ -1225,14 +1245,13 @@ def set_perform_match(
                 else:
                     category_text = "Mismatch"
                     log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge."
-                    print_text = f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
+                    # print_text = f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
                     mismatch_filesets += 1
                     add_manual_merge(
                         [matched_fileset_id],
                         fileset_id,
                         category_text,
                         log_text,
-                        print_text,
                         user,
                         conn,
                     )
@@ -1340,7 +1359,7 @@ def remove_manual_merge(
 
 
 def add_manual_merge(
-    child_filesets, parent_fileset, category_text, log_text, print_text, user, conn
+    child_filesets, parent_fileset, category_text, log_text, user, conn, print_text=None
 ):
     """
     Adds the manual merge entries to a table called possible_merges.
@@ -1356,7 +1375,8 @@ def add_manual_merge(
             cursor.execute(query, (child_fileset, parent_fileset))
 
     create_log(escape_string(category_text), user, escape_string(log_text), conn)
-    print(print_text)
+    if print_text:
+        print(print_text)
 
 
 def is_full_checksum_match(candidate_fileset, fileset, conn):
@@ -1395,14 +1415,15 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
 
 
 def set_glk_filter_candidate_filesets(
-    fileset_id, fileset, transaction_id, engine_name, conn
+    fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
 ):
     """
     Returns a list of candidate filesets for glk engines that can be merged
     """
     with conn.cursor() as cursor:
         # Returns those filesets which have all detection files matching in the set fileset filtered by engine, file name and file size(if not -1) sorted in descending order of matches
-
+        fileset_count += 1
+        console_log_candidate_filtering(fileset_count)
         query = """
             WITH candidate_fileset AS ( 
             SELECT fs.id AS fileset_id, f.size
@@ -1469,16 +1490,19 @@ def set_glk_filter_candidate_filesets(
             for row in rows:
                 candidates.append(row["fileset_id"])
 
-        return candidates
+        return (candidates, fileset_count)
 
 
-def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
+def set_filter_candidate_filesets(
+    fileset_id, fileset, fileset_count, transaction_id, conn
+):
     """
     Returns a list of candidate filesets that can be merged
     """
     with conn.cursor() as cursor:
         # Returns those filesets which have all detection files matching in the set fileset filtered by engine, file name and file size(if not -1) sorted in descending order of matches
-
+        fileset_count += 1
+        console_log_candidate_filtering(fileset_count)
         query = """
             WITH candidate_fileset AS ( 
             SELECT fs.id AS fileset_id, f.name, f.size
@@ -1536,7 +1560,7 @@ def set_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             for row in rows:
                 candidates.append(row["fileset_id"])
 
-        return candidates
+        return (candidates, fileset_count)
 
 
 def process_fileset(
@@ -2265,3 +2289,33 @@ def add_usercount(fileset, conn):
             cursor.execute(
                 f"UPDATE fileset SET status = 'ReadyForReview' WHERE id = {fileset}"
             )
+
+
+def console_log(message):
+    sys.stdout.write(" " * 50 + "\r")
+    sys.stdout.flush()
+    print(message)
+
+
+def console_log_candidate_filtering(fileset_count):
+    sys.stdout.write(f"Filtering Candidates - Fileset {fileset_count}\r")
+    sys.stdout.flush()
+
+
+def console_log_matching(fileset_count):
+    sys.stdout.write(f"Performing Match - Fileset {fileset_count}\r")
+    sys.stdout.flush()
+
+
+def console_log_detection(fileset_count):
+    sys.stdout.write(f"Processing - Fileset {fileset_count}\r")
+    sys.stdout.flush()
+
+
+def console_log_total_filesets(file_path):
+    count = 0
+    with open(file_path, "r") as f:
+        for line in f:
+            if line.strip().startswith("game ("):
+                count += 1
+    print(f"Total filesets present - {count}.")
