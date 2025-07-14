@@ -164,59 +164,85 @@ def init_database():
         "file_fileset_detection": "CREATE INDEX file_fileset_detection ON file (fileset, detection)",
     }
 
-    try:
-        cursor.execute("ALTER TABLE file ADD COLUMN detection_type VARCHAR(20);")
-    except Exception:
-        # if aleady exists, change the length of the column
-        cursor.execute("ALTER TABLE file MODIFY COLUMN detection_type VARCHAR(20);")
+    def migrate_column(cursor, table_name, column_name, add_sql, modify_sql):
+        query = """
+            SELECT COUNT(*) AS count
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE table_name = %s AND column_name = %s
+        """
+        cursor.execute(query, (table_name, column_name))
+        exists = cursor.fetchone()["count"] > 0
 
-    try:
-        cursor.execute("ALTER TABLE file ADD COLUMN `timestamp` TIMESTAMP NOT NULL;")
-    except Exception:
-        # if aleady exists, change the length of the column
-        cursor.execute("ALTER TABLE file MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL;")
+        if exists:
+            print(f"Modifying column '{column_name}' in table '{table_name}'")
+            cursor.execute(modify_sql)
+        else:
+            print(f"Adding column '{column_name}' to table '{table_name}'")
+            cursor.execute(add_sql)
 
-    try:
-        cursor.execute("ALTER TABLE fileset ADD COLUMN `user_count` INT;")
-    except Exception:
-        # if aleady exists, change the length of the column
-        cursor.execute("ALTER TABLE fileset MODIFY COLUMN `user_count` INT;")
+    migrate_column(
+        cursor,
+        "file",
+        "detection_type",
+        "ALTER TABLE file ADD COLUMN detection_type VARCHAR(20);",
+        "ALTER TABLE file MODIFY COLUMN detection_type VARCHAR(20);",
+    )
 
-    try:
-        cursor.execute("ALTER TABLE file ADD COLUMN punycode_name VARCHAR(200);")
-    except Exception:
-        cursor.execute("ALTER TABLE file MODIFY COLUMN punycode_name VARCHAR(200);")
+    migrate_column(
+        cursor,
+        "file",
+        "timestamp",
+        "ALTER TABLE file ADD COLUMN `timestamp` TIMESTAMP NOT NULL;",
+        "ALTER TABLE file MODIFY COLUMN `timestamp` TIMESTAMP NOT NULL;",
+    )
 
-    try:
-        cursor.execute(
-            "ALTER TABLE file ADD COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';"
-        )
-    except Exception:
-        cursor.execute(
-            "ALTER TABLE file MODIFY COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';"
-        )
+    migrate_column(
+        cursor,
+        "fileset",
+        "user_count",
+        "ALTER TABLE fileset ADD COLUMN `user_count` INT;",
+        "ALTER TABLE fileset MODIFY COLUMN `user_count` INT;",
+    )
 
-    try:
-        cursor.execute(
-            "ALTER TABLE file ADD COLUMN `size-r` BIGINT DEFAULT 0, ADD COLUMN `size-rd` BIGINT DEFAULT 0;"
-        )
-    except Exception:
-        cursor.execute(
-            "ALTER TABLE file MODIFY COLUMN `size-r` BIGINT DEFAULT 0, MODIFY COLUMN `size-rd` BIGINT DEFAULT 0;"
-        )
-    try:
-        cursor.execute("ALTER TABLE log ADD COLUMN `text` varchar(5000);")
-    except Exception:
-        cursor.execute("ALTER TABLE log MODIFY COLUMN `text` varchar(5000);")
+    migrate_column(
+        cursor,
+        "file",
+        "punycode_name",
+        "ALTER TABLE file ADD COLUMN punycode_name VARCHAR(200);",
+        "ALTER TABLE file MODIFY COLUMN punycode_name VARCHAR(200);",
+    )
 
-    try:
-        cursor.execute(
-            "ALTER TABLE fileset ADD COLUMN set_dat_metadata varchar(5000) DEFAULT 'UTF-8';"
-        )
-    except Exception:
-        cursor.execute(
-            "ALTER TABLE fileset MODIFY COLUMN set_dat_metadata varchar(5000) DEFAULT 'UTF-8';"
-        )
+    migrate_column(
+        cursor,
+        "file",
+        "encoding_type",
+        "ALTER TABLE file ADD COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';",
+        "ALTER TABLE file MODIFY COLUMN encoding_type VARCHAR(20) DEFAULT 'UTF-8';",
+    )
+
+    migrate_column(
+        cursor,
+        "file",
+        "size-r",
+        "ALTER TABLE file ADD COLUMN `size-r` BIGINT DEFAULT 0;",
+        "ALTER TABLE file MODIFY COLUMN `size-r` BIGINT DEFAULT 0;",
+    )
+
+    migrate_column(
+        cursor,
+        "file",
+        "size-rd",
+        "ALTER TABLE file ADD COLUMN `size-rd` BIGINT DEFAULT 0;",
+        "ALTER TABLE file MODIFY COLUMN `size-rd` BIGINT DEFAULT 0;",
+    )
+
+    migrate_column(
+        cursor,
+        "log",
+        "text",
+        "ALTER TABLE log ADD COLUMN `text` VARCHAR(5000);",
+        "ALTER TABLE log MODIFY COLUMN `text` VARCHAR(5000);",
+    )
 
     for index, definition in indices.items():
         try:
