@@ -1179,7 +1179,7 @@ def set_perform_match(
     skiplog,
 ):
     """
-    TODO
+    "Performs matching for set.dat"
     """
     with conn.cursor() as cursor:
         if len(candidate_filesets) == 1:
@@ -1189,11 +1189,11 @@ def set_perform_match(
             )
             status = cursor.fetchone()["status"]
             if status == "detection":
-                update_fileset_status(cursor, matched_fileset_id, "parital")
+                update_fileset_status(cursor, matched_fileset_id, "partial")
                 set_populate_file(fileset, matched_fileset_id, conn, detection)
                 auto_merged_filesets += 1
                 if not skiplog:
-                    set_log_matched_fileset(
+                    log_matched_fileset(
                         src,
                         fileset_id,
                         matched_fileset_id,
@@ -1247,7 +1247,7 @@ def set_perform_match(
                     set_populate_file(fileset, candidate_fileset, conn, detection)
                     auto_merged_filesets += 1
                     if not skiplog:
-                        set_log_matched_fileset(
+                        log_matched_fileset(
                             src,
                             fileset_id,
                             candidate_fileset,
@@ -1287,63 +1287,37 @@ def remove_manual_merge_if_size_mismatch(
         cursor.execute(query, (child_fileset,))
         files = cursor.fetchall()
 
-        for parent_fileset, child_list in manual_merge_map.items():
-            if child_fileset not in child_list:
-                continue
-
-            for file in files:
-                if file["size"] == -1:
+        for possible_removals in [manual_merge_map, set_to_candidate_dict]:
+            for parent_fileset, child_list in possible_removals.items():
+                if child_fileset not in child_list:
                     continue
 
-                query = """
-                    SELECT f.id
-                    FROM fileset fs
-                    JOIN file f ON f.fileset = fs.id
-                    WHERE fs.id = %s
-                    AND f.name = %s
-                    AND f.size = %s
-                """
-                cursor.execute(query, (parent_fileset, file["name"], file["size"]))
-                result = cursor.fetchall()
+                for file in files:
+                    if file["size"] == -1:
+                        continue
 
-                if not result:
-                    remove_manual_merge(
-                        child_fileset,
-                        parent_fileset,
-                        manual_merge_map,
-                        set_to_candidate_dict,
-                        conn,
-                    )
-                    break
+                    query = """
+                        SELECT fs.id
+                        FROM fileset fs
+                        JOIN file f ON f.fileset = fs.id
+                        WHERE fs.id = %s
+                        AND REGEXP_REPLACE(f.name, '^.*[\\\\/]', '') = %s
+                        AND f.size = %s
+                        LIMIT 1
+                    """
+                    filename = os.path.basename(normalised_path(file["name"]))
+                    cursor.execute(query, (parent_fileset, filename, file["size"]))
+                    result = cursor.fetchall()
 
-        for parent_fileset, child_list in set_to_candidate_dict.items():
-            if child_fileset not in child_list:
-                continue
-
-            for file in files:
-                if file["size"] == -1:
-                    continue
-
-                query = """
-                    SELECT f.id
-                    FROM fileset fs
-                    JOIN file f ON f.fileset = fs.id
-                    WHERE fs.id = %s
-                    AND f.name = %s
-                    AND f.size = %s
-                """
-                cursor.execute(query, (parent_fileset, file["name"], file["size"]))
-                result = cursor.fetchall()
-
-                if not result:
-                    remove_manual_merge(
-                        child_fileset,
-                        parent_fileset,
-                        manual_merge_map,
-                        set_to_candidate_dict,
-                        conn,
-                    )
-                    break
+                    if not result:
+                        remove_manual_merge(
+                            child_fileset,
+                            parent_fileset,
+                            manual_merge_map,
+                            set_to_candidate_dict,
+                            conn,
+                        )
+                        break
 
 
 def remove_manual_merge(
@@ -2063,21 +2037,20 @@ def insert_new_fileset(
                 cursor.execute("SELECT @file_last AS file_id")
                 file_id = cursor.fetchone()["file_id"]
             for key, value in file.items():
-                if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
+                if key not in [
+                    "name",
+                    "size",
+                    "size-r",
+                    "size-rd",
+                    "sha1",
+                    "crc",
+                    "modification-time",
+                ]:
                     insert_filechecksum(file, key, file_id, conn)
     return (fileset_id, existing)
 
 
 def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
-    category_text = f"Matched from {src}"
-    log_text = f"Matched Fileset:{fileset_id}. State {state}."
-    log_last = create_log(
-        escape_string(category_text), user, escape_string(log_text), conn
-    )
-    update_history(fileset_last, fileset_id, conn, log_last)
-
-
-def set_log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
     category_text = f"Matched from {src}"
     log_text = (
         f"Matched Fileset:{fileset_last} with Fileset:{fileset_id}. State {state}."
