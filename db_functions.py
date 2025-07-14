@@ -281,8 +281,6 @@ def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
         size_name = "size"
         if checktype[-1] == "r":
             size_name += "-rd"
-        if checktype[-1] == "s":
-            size_name += "-d"
 
         cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = {file_id}")
         result = cursor.fetchone()
@@ -1345,7 +1343,6 @@ def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn
                 `size-rd` = %s
             """
             sizes = filepath_to_sizes_map[filepath]
-            print(sizes)
             if is_candidate_detection:
                 query += ",name = %s WHERE id = %s"
                 params = (
@@ -1462,10 +1459,10 @@ def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
 
 def get_unmatched_files(candidate_fileset, fileset, conn):
     """
-    Checks if all checksums from candidate_fileset match scan file checksums.
+    Checks if all checksums from candidate_fileset match dat file checksums.
     Returns:
     unmatched_candidate_files: candidate files whose checksums weren't found in scan
-    unmatched_scan_files: scan files whose checksums weren't matched by candidate
+    unmatched_dat_files: dat files whose checksums weren't matched by candidate
     """
     with conn.cursor() as cursor:
         cursor.execute(
@@ -1474,18 +1471,18 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
         candidate_file_rows = cursor.fetchall()
         candidate_files = {row["id"]: row["name"] for row in candidate_file_rows}
 
-        scan_checksums = set()
-        scan_names_by_checksum = {}
+        dat_checksums = set()
+        dat_names_by_checksum = {}
 
         for file in fileset["rom"]:
             base_name = os.path.basename(normalised_path(file["name"])).lower()
             for key in file:
                 if key.startswith("md5"):
-                    scan_checksums.add((file[key], base_name))
-                    scan_names_by_checksum[(file[key], base_name)] = file["name"]
+                    dat_checksums.add((file[key], base_name))
+                    dat_names_by_checksum[(file[key], base_name)] = file["name"]
 
         unmatched_candidate_files = []
-        matched_scan_pairs = set()
+        matched_dat_pairs = set()
 
         for file_id, file_name in candidate_files.items():
             cursor.execute(
@@ -1498,21 +1495,21 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
 
             for row in checksum_rows:
                 checksum = row["checksum"]
-                if (checksum, base_name) in scan_checksums:
-                    matched_scan_pairs.add((checksum, base_name))
+                if (checksum, base_name) in dat_checksums:
+                    matched_dat_pairs.add((checksum, base_name))
                     match_found = True
 
             if not match_found:
                 unmatched_candidate_files.append(file_name)
 
-        unmatched_scan_files = {
-            scan_names_by_checksum[key]
-            for key in scan_checksums
-            if key not in matched_scan_pairs
+        unmatched_dat_files = {
+            dat_names_by_checksum[key]
+            for key in dat_checksums
+            if key not in matched_dat_pairs
         }
-        unmatched_scan_files = list(unmatched_scan_files)
+        unmatched_dat_files = list(unmatched_dat_files)
 
-        return (unmatched_candidate_files, unmatched_scan_files)
+        return (unmatched_candidate_files, unmatched_dat_files)
 
 
 def is_full_detection_checksum_match(candidate_fileset, fileset, conn):
@@ -1524,7 +1521,7 @@ def is_full_detection_checksum_match(candidate_fileset, fileset, conn):
     """
     with conn.cursor() as cursor:
         cursor.execute(
-            "SELECT id, name FROM file WHERE detection=1 AND fileset = %s",
+            "SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name FROM file WHERE detection=1 AND fileset = %s",
             (candidate_fileset,),
         )
         target_files = cursor.fetchall()
@@ -1682,7 +1679,7 @@ def set_process(
     console_message = "Candidate filtering finished."
     console_log(console_message)
     console_message = (
-        f"{dropped_early_no_candidate} Filesets Dropped - No candidates found."
+        f"{dropped_early_no_candidate} Filesets Dropped for No candidates."
     )
     console_log(console_message)
     console_message = "Looking for duplicates..."
@@ -1872,8 +1869,14 @@ def set_perform_match(
                     matched_fileset_id, manual_merge_map, set_to_candidate_dict, conn
                 )
             elif status == "partial" or status == "full":
-                (is_match, unmatched_files) = is_full_checksum_match(
+                (unmatched_candidate_files, unmatched_dat_files) = get_unmatched_files(
                     matched_fileset_id, fileset, conn
+                )
+                is_match = (
+                    True
+                    if len(unmatched_candidate_files) == 0
+                    and len(unmatched_dat_files) == 0
+                    else False
                 )
                 if is_match:
                     category_text = "Already present"
@@ -1890,7 +1893,8 @@ def set_perform_match(
 
                 else:
                     category_text = "Mismatch"
-                    log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge."
+                    log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge. Unmatched Files in set.dat fileset = {len(unmatched_dat_files)} Unmatched Files in candidate fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {', '.join(scan_file for scan_file in unmatched_dat_files)}, List of unmatched files full fileset : {', '.join(scan_file for scan_file in unmatched_candidate_files)}"
+                    console_log(log_text)
                     # print_text = f"Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}. Unmatched files: {len(unmatched_files)}."
                     mismatch_filesets += 1
                     add_manual_merge(
@@ -1904,7 +1908,6 @@ def set_perform_match(
 
         elif len(candidate_filesets) > 1:
             found_match = False
-
             for candidate_fileset in candidate_filesets:
                 (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
                 if is_match:
