@@ -977,7 +977,9 @@ def scan_process(
 
     id_to_fileset_mapping = defaultdict(dict)
 
+    fileset_count = 0
     for fileset in game_data:
+        console_log_file_update(fileset_count)
         key = calc_key(fileset)
         megakey = ""
         log_text = f"State {source_status}."
@@ -1003,9 +1005,12 @@ def scan_process(
         filesets_check_for_full = set()
 
         for rom in fileset["rom"]:
-            scan_update_files(rom, filesets_check_for_full, transaction_id, conn)
+            pre_update_files(rom, filesets_check_for_full, transaction_id, conn)
+        fileset_count += 1
 
+    fileset_count = 0
     for fileset_id, fileset in id_to_fileset_mapping.items():
+        console_log_matching(fileset_count)
         candidate_filesets = scan_filter_candidate_filesets(
             fileset_id, fileset, transaction_id, conn
         )
@@ -1047,6 +1052,7 @@ def scan_process(
             conn,
             skiplog,
         )
+        fileset_count += 1
 
     # Final log
     with conn.cursor() as cursor:
@@ -1063,7 +1069,7 @@ def scan_process(
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
-def scan_update_files(rom, filesets_check_for_full, transaction_id, conn):
+def pre_update_files(rom, filesets_check_for_full, transaction_id, conn):
     """
     Updates all the checksums for the files matching by a checksum and size.
     """
@@ -1074,6 +1080,9 @@ def scan_update_files(rom, filesets_check_for_full, transaction_id, conn):
                 checksums[key] = rom[key]
 
         files_to_update = set()
+        size = rom["size"] if "size" in rom else 0
+        size_r = rom["size-r"] if "size-r" in rom else 0
+        size_rd = rom["size-rd"] if "size-rd" in rom else 0
 
         for _, checksum in checksums.items():
             query = """
@@ -1088,9 +1097,7 @@ def scan_update_files(rom, filesets_check_for_full, transaction_id, conn):
                 AND f.`size-rd` = %s
                 AND t.transaction != %s
             """
-            size = rom["size"] if "size" in rom else 0
-            size_r = rom["size-r"] if "size-r" in rom else 0
-            size_rd = rom["size-rd"] if "size-rd" in rom else 0
+
             cursor.execute(query, (checksum, size, size_r, size_rd, transaction_id))
             result = cursor.fetchall()
             if result:
@@ -1104,12 +1111,20 @@ def scan_update_files(rom, filesets_check_for_full, transaction_id, conn):
                 WHERE file = %s
             """
             cursor.execute(query, (file_id,))
+            # Update checksums
             for check, checksum in checksums.items():
                 checksize, checktype, checksum = get_checksum_props(check, checksum)
                 query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
                 cursor.execute(query, (file_id, checksize, checktype, checksum))
-
-        conn.commit()
+            # Update sizes
+            query = """
+                UPDATE file
+                SET size = %s,
+                `size-r` = %s,
+                `size-rd` = %s,
+                WHERE id = %s
+            """
+            cursor.execute(query, size, size_r, size_rd, file_id)
 
 
 def scan_perform_match(
@@ -1907,31 +1922,7 @@ def set_perform_match(
                     )
 
         elif len(candidate_filesets) > 1:
-            found_match = False
-            for candidate_fileset in candidate_filesets:
-                (is_match, _) = is_full_checksum_match(candidate_fileset, fileset, conn)
-                if is_match:
-                    update_fileset_status(cursor, candidate_fileset, "partial")
-                    set_populate_file(fileset, candidate_fileset, conn, detection)
-                    auto_merged_filesets += 1
-                    if not skiplog:
-                        log_matched_fileset(
-                            src,
-                            fileset_id,
-                            candidate_fileset,
-                            "partial",
-                            user,
-                            conn,
-                        )
-                    delete_original_fileset(fileset_id, conn)
-                    remove_manual_merge_if_size_mismatch(
-                        candidate_fileset, manual_merge_map, set_to_candidate_dict, conn
-                    )
-                    found_match = True
-                    break
-
-            if not found_match:
-                manual_merge_map[fileset_id] = candidate_filesets
+            manual_merge_map[fileset_id] = candidate_filesets
 
     return (
         fully_matched_filesets,
@@ -2160,8 +2151,7 @@ def set_filter_candidate_filesets(
             JOIN game g ON g.id = fs.game
             JOIN engine e ON e.id = g.engine
             JOIN transactions t ON t.fileset = fs.id
-            WHERE fs.id != %s
-            AND e.engineid = %s
+            WHERE e.engineid = %s
             AND f.detection = 1
             AND t.transaction != %s
             ),
@@ -2199,9 +2189,7 @@ def set_filter_candidate_filesets(
             JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
         """
 
-        cursor.execute(
-            query, (fileset_id, fileset["sourcefile"], transaction_id, fileset_id)
-        )
+        cursor.execute(query, (fileset["sourcefile"], transaction_id, fileset_id))
         rows = cursor.fetchall()
 
         candidates = []
@@ -2209,7 +2197,74 @@ def set_filter_candidate_filesets(
             for row in rows:
                 candidates.append(row["fileset_id"])
 
+        matched_candidates = []
+
+        candidates = [
+            candidate
+            for candidate in candidates
+            if is_candidate_by_checksize(candidate, fileset, conn)
+        ]
+
+        for candidate in candidates:
+            if is_full_detection_checksum_match(candidate, fileset, conn):
+                matched_candidates.append(candidate)
+
+        if len(matched_candidates) != 0:
+            candidates = matched_candidates
+
         return (candidates, fileset_count)
+
+
+def is_candidate_by_checksize(candidate, fileset, conn):
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE detection=1 AND fileset = %s",
+            (candidate,),
+        )
+        target_files = cursor.fetchall()
+        candidate_files = {
+            target_file["id"]: [target_file["name"], target_file["size"]]
+            for target_file in target_files
+        }
+
+        # set of (checksum, filename)
+        scan_checksums = set()
+        for file in fileset["rom"]:
+            for key in file:
+                if key.startswith("md5"):
+                    name = os.path.basename(normalised_path(file["name"]))
+                    scan_checksums.add((file[key], name.lower()))
+
+        for detection_file_id, [
+            detection_file_name,
+            detection_file_size,
+        ] in candidate_files.items():
+            query = """
+                        SELECT fc.checksum, fc.checksize, fc.checktype
+                        FROM filechecksum fc
+                        WHERE fc.file = %s
+                    """
+            cursor.execute(query, (detection_file_id,))
+            checksums_info = cursor.fetchall()
+            if checksums_info:
+                for checksum_info in checksums_info:
+                    checksum = checksum_info["checksum"]
+                    checksize = checksum_info["checksize"]
+                    if checksize == "1M":
+                        checksize = 1048576
+                    if (
+                        (
+                            checksum,
+                            os.path.basename(detection_file_name.lower()),
+                        )
+                        not in scan_checksums
+                        and detection_file_size <= int(checksize)
+                        and detection_file_size != -1
+                    ):
+                        continue
+                    else:
+                        return True
+        return False
 
 
 def process_fileset(
@@ -2969,6 +3024,11 @@ def console_log(message):
 
 def console_log_candidate_filtering(fileset_count):
     sys.stdout.write(f"Filtering Candidates - Fileset {fileset_count}\r")
+    sys.stdout.flush()
+
+
+def console_log_file_update(fileset_count):
+    sys.stdout.write(f"Updating files - Fileset {fileset_count}\r")
     sys.stdout.flush()
 
 
