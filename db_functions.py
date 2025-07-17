@@ -79,24 +79,26 @@ def insert_game(engine_name, engineid, title, gameid, extra, platform, lang, con
     # Set @engine_last if engine already present in table
     exists = False
     with conn.cursor() as cursor:
-        cursor.execute(f"SELECT id FROM engine WHERE engineid = '{engineid}'")
+        cursor.execute("SELECT id FROM engine WHERE engineid = %s", (engineid,))
         res = cursor.fetchone()
         if res is not None:
             exists = True
-            cursor.execute(f"SET @engine_last = '{res['id']}'")
+            cursor.execute("SET @engine_last = %s", (res["id"],))
 
     # Insert into table if not present
     if not exists:
         with conn.cursor() as cursor:
             cursor.execute(
-                f"INSERT INTO engine (name, engineid) VALUES ('{escape_string(engine_name)}', '{engineid}')"
+                "INSERT INTO engine (name, engineid) VALUES (%s, %s)",
+                (engine_name, engineid),
             )
             cursor.execute("SET @engine_last = LAST_INSERT_ID()")
 
     # Insert into game
     with conn.cursor() as cursor:
         cursor.execute(
-            f"INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES ('{escape_string(title)}', @engine_last, '{gameid}', '{escape_string(extra)}', '{platform}', '{lang}')"
+            "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, @engine_last, %s, %s, %s, %s)",
+            (title, gameid, extra, platform, lang),
         )
         cursor.execute("SET @game_last = LAST_INSERT_ID()")
 
@@ -116,8 +118,8 @@ def insert_fileset(
 ):
     status = "detection" if detection else src
     game = "NULL"
-    key = "NULL" if key == "" else f"'{key}'"
-    megakey = "NULL" if megakey == "" else f"'{megakey}'"
+    key = "NULL" if key == "" else key
+    megakey = "NULL" if megakey == "" else megakey
 
     if detection:
         status = "detection"
@@ -129,24 +131,27 @@ def insert_fileset(
     # Check if key/megakey already exists, if so, skip insertion (no quotes on purpose)
     if detection:
         with conn.cursor() as cursor:
-            cursor.execute(f"SELECT id FROM fileset WHERE megakey = {megakey}")
+            cursor.execute("SELECT id FROM fileset WHERE megakey = %s", (megakey,))
 
             existing_entry = cursor.fetchone()
     else:
         with conn.cursor() as cursor:
-            cursor.execute(f"SELECT id FROM fileset WHERE `key` = {key}")
+            cursor.execute("SELECT id FROM fileset WHERE `key` = %s", (key,))
 
             existing_entry = cursor.fetchone()
 
     if existing_entry is not None:
         existing_entry = existing_entry["id"]
         with conn.cursor() as cursor:
-            cursor.execute(f"SET @fileset_last = {existing_entry}")
-            cursor.execute(f"DELETE FROM file WHERE fileset = {existing_entry}")
+            cursor.execute("SET @fileset_last = %s", (existing_entry,))
+            cursor.execute("DELETE FROM file WHERE fileset = %s", (existing_entry,))
             cursor.execute(
-                f"UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last) WHERE id = {existing_entry}"
+                "UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last) WHERE id = %s",
+                (existing_entry,),
             )
-            cursor.execute(f"SELECT status FROM fileset WHERE id = {existing_entry}")
+            cursor.execute(
+                "SELECT status FROM fileset WHERE id = %s", (existing_entry,)
+            )
             status = cursor.fetchone()["status"]
         if status == "user":
             add_usercount(existing_entry, conn)
@@ -162,10 +167,10 @@ def insert_fileset(
         return (existing_entry, True)
 
     # $game and $key should not be parsed as a mysql string, hence no quotes
-    query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`, set_dat_metadata) VALUES ({game}, '{status}', '{src}', {key}, {megakey}, FROM_UNIXTIME(@fileset_time_last), '{escape_string(set_dat_metadata)}')"
+    query = f"INSERT INTO fileset (game, status, src, `key`, megakey, `timestamp`, set_dat_metadata) VALUES ({game}, %s, %s, %s, %s, FROM_UNIXTIME(@fileset_time_last), %s)"
     fileset_id = -1
     with conn.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (status, src, key, megakey, set_dat_metadata))
         fileset_id = cursor.lastrowid
         cursor.execute("SET @fileset_last = LAST_INSERT_ID()")
 
@@ -188,7 +193,8 @@ def insert_fileset(
         update_history(0, fileset_last, conn)
     with conn.cursor() as cursor:
         cursor.execute(
-            f"INSERT INTO transactions (`transaction`, fileset) VALUES ({transaction}, {fileset_last})"
+            "INSERT INTO transactions (`transaction`, fileset) VALUES (%s, %s)",
+            (transaction, fileset_last),
         )
 
     return (fileset_id, False)
@@ -230,17 +236,11 @@ def insert_file(file, detection, src, conn):
     values.append(file["size"] if "size" in file else "0")
     values.append(file["size-r"] if "size-r" in file else "0")
     values.append(file["size-rd"] if "size-rd" in file else "0")
-
-    modification_time = file["modification-time"] if "modification-time" in file else ""
-    values.append(modification_time)
-
+    values.append(file["modification-time"] if "modification-time" in file else "")
     values.extend([checksum, detection, detection_type])
 
     # Parameterised Query
-    placeholders = (
-        ["%s"] * (len(values[:6])) + ["@fileset_last"] + ["%s"] * 2 + ["NOW()"]
-    )
-    query = f"INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ({', '.join(placeholders)})"
+    query = "INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES (%s, %s, %s, %s, %s, %s, @fileset_last, %s, %s, NOW())"
 
     with conn.cursor() as cursor:
         cursor.execute(query, values)
@@ -248,7 +248,8 @@ def insert_file(file, detection, src, conn):
     if detection:
         with conn.cursor() as cursor:
             cursor.execute(
-                f"UPDATE fileset SET detection_size = {checksize} WHERE id = @fileset_last AND detection_size IS NULL"
+                "UPDATE fileset SET detection_size = %s WHERE id = @fileset_last AND detection_size IS NULL",
+                (checksize,),
             )
     with conn.cursor() as cursor:
         cursor.execute("SET @file_last = LAST_INSERT_ID()")
@@ -279,7 +280,7 @@ def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
         if checktype[-1] == "r":
             size_name += "-rd"
 
-        cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = {file_id}")
+        cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = %s", (file_id,))
         result = cursor.fetchone()
         if not result:
             return
@@ -375,9 +376,10 @@ def punycode_need_encode(orig):
 
 def create_log(category, user, text, conn):
     query = f"INSERT INTO log (`timestamp`, category, user, `text`) VALUES (FROM_UNIXTIME({int(time.time())}), '{escape_string(category)}', '{escape_string(user)}', '{escape_string(text)}')"
+    query = "INSERT INTO log (`timestamp`, category, user, `text`) VALUES (FROM_UNIXTIME(%s), %s, %s, %s)"
     with conn.cursor() as cursor:
         try:
-            cursor.execute(query)
+            cursor.execute(query, (int(time.time()), category, user, text))
             conn.commit()
         except Exception as e:
             conn.rollback()
@@ -390,10 +392,12 @@ def create_log(category, user, text, conn):
 
 
 def update_history(source_id, target_id, conn, log_last=None):
-    query = f"INSERT INTO history (`timestamp`, fileset, oldfileset, log) VALUES (NOW(), {target_id}, {source_id}, {log_last if log_last is not None else 0})"
+    query = "INSERT INTO history (`timestamp`, fileset, oldfileset, log) VALUES (NOW(), %s, %s, %s)"
     with conn.cursor() as cursor:
         try:
-            cursor.execute(query)
+            cursor.execute(
+                query, (target_id, source_id, log_last if log_last is not None else 0)
+            )
             conn.commit()
         except Exception as e:
             conn.rollback()
@@ -418,7 +422,8 @@ def get_all_related_filesets(fileset_id, conn, visited=None):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                f"SELECT fileset, oldfileset FROM history WHERE fileset = {fileset_id} OR oldfileset = {fileset_id}"
+                "SELECT fileset, oldfileset FROM history WHERE fileset = %s OR oldfileset = %s",
+                (fileset_id, fileset_id),
             )
             history_records = cursor.fetchall()
 
@@ -516,7 +521,7 @@ def db_insert(data_arr, username=None, skiplog=False):
     detection = src == "scummvm"
     status = "detection" if detection else src
 
-    conn.cursor().execute(f"SET @fileset_time_last = {int(time.time())}")
+    conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
 
     with conn.cursor() as cursor:
         cursor.execute("SELECT MAX(`transaction`) FROM transactions")
@@ -611,7 +616,8 @@ def db_insert(data_arr, username=None, skiplog=False):
 
     try:
         cur.execute(
-            f"SELECT COUNT(fileset) from transactions WHERE `transaction` = {transaction_id}"
+            "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
+            (transaction_id,),
         )
         fileset_insertion_count = cur.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
@@ -627,11 +633,13 @@ def db_insert(data_arr, username=None, skiplog=False):
 def compare_filesets(id1, id2, conn):
     with conn.cursor() as cursor:
         cursor.execute(
-            f"SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = '{id1}'"
+            "SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = %s",
+            (id1,),
         )
         fileset1 = cursor.fetchall()
         cursor.execute(
-            f"SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = '{id2}'"
+            "SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = %s",
+            (id2,),
         )
         fileset2 = cursor.fetchall()
 
@@ -665,9 +673,9 @@ def find_matching_game(game_files):
     for file in game_files:
         checksum = file[1]
 
-        query = f"SELECT file.fileset as file_fileset FROM filechecksum JOIN file ON filechecksum.file = file.id WHERE filechecksum.checksum = '{checksum}' AND file.detection = TRUE"
+        query = "SELECT file.fileset as file_fileset FROM filechecksum JOIN file ON filechecksum.file = file.id WHERE filechecksum.checksum = %s AND file.detection = TRUE"
         with conn.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(query, (checksum,))
             records = cursor.fetchall()
 
         # If file is not part of detection entries, skip it
@@ -682,7 +690,8 @@ def find_matching_game(game_files):
     for key, value in Counter(matching_filesets).items():
         with conn.cursor() as cursor:
             cursor.execute(
-                f"SELECT COUNT(file.id) FROM file JOIN fileset ON file.fileset = fileset.id WHERE fileset.id = '{key}'"
+                "SELECT COUNT(file.id) FROM file JOIN fileset ON file.fileset = fileset.id WHERE fileset.id = %s",
+                (key,),
             )
             count_files_in_fileset = cursor.fetchone()["COUNT(file.id)"]
 
@@ -693,7 +702,8 @@ def find_matching_game(game_files):
 
         with conn.cursor() as cursor:
             cursor.execute(
-                f"SELECT engineid, game.id, gameid, platform, language, `key`, src, fileset.id as fileset FROM game JOIN fileset ON fileset.game = game.id JOIN engine ON engine.id = game.engine WHERE fileset.id = '{key}'"
+                "SELECT engineid, game.id, gameid, platform, language, `key`, src, fileset.id as fileset FROM game JOIN fileset ON fileset.game = game.id JOIN engine ON engine.id = game.engine WHERE fileset.id = %s",
+                (key,),
             )
             records = cursor.fetchall()
 
@@ -717,7 +727,7 @@ def find_matching_game(game_files):
     if compare_filesets(matching_games[0]["fileset"], game_files[0][0], conn):
         with conn.cursor() as cursor:
             cursor.execute(
-                f"UPDATE fileset SET `delete` = TRUE WHERE id = {game_files[0][0]}"
+                "UPDATE fileset SET `delete` = TRUE WHERE id = %s", (game_files[0][0],)
             )
         return []
 
@@ -730,7 +740,8 @@ def merge_filesets(detection_id, dat_id):
     try:
         with conn.cursor() as cursor:
             cursor.execute(
-                f"SELECT DISTINCT(filechecksum.checksum), checksize, checktype FROM filechecksum JOIN file on file.id = filechecksum.file WHERE fileset = '{detection_id}'"
+                "SELECT DISTINCT(filechecksum.checksum), checksize, checktype FROM filechecksum JOIN file on file.id = filechecksum.file WHERE fileset = %s'",
+                (detection_id,),
             )
             detection_files = cursor.fetchall()
 
@@ -740,22 +751,26 @@ def merge_filesets(detection_id, dat_id):
                 checktype = file[2]
 
                 cursor.execute(
-                    f"DELETE FROM file WHERE checksum = '{checksum}' AND fileset = {detection_id} LIMIT 1"
+                    "DELETE FROM file WHERE checksum = %s AND fileset = %s LIMIT 1",
+                    (checksum, detection_id),
                 )
                 cursor.execute(
-                    f"UPDATE file JOIN filechecksum ON filechecksum.file = file.id SET detection = TRUE, checksize = {checksize}, checktype = '{checktype}' WHERE fileset = '{dat_id}' AND filechecksum.checksum = '{checksum}'"
+                    "UPDATE file JOIN filechecksum ON filechecksum.file = file.id SET detection = TRUE, checksize = %s, checktype = %s WHERE fileset = %s AND filechecksum.checksum = %s",
+                    (checksize, checktype, dat_id, checksum),
                 )
 
             cursor.execute(
-                f"INSERT INTO history (`timestamp`, fileset, oldfileset) VALUES (FROM_UNIXTIME({int(time.time())}), {dat_id}, {detection_id})"
+                "INSERT INTO history (`timestamp`, fileset, oldfileset) VALUES (FROM_UNIXTIME(%s), %s, %s)",
+                (int(time.time()), dat_id, detection_id),
             )
             cursor.execute("SELECT LAST_INSERT_ID()")
             history_last = cursor.fetchone()["LAST_INSERT_ID()"]
 
             cursor.execute(
-                f"UPDATE history SET fileset = {dat_id} WHERE fileset = {detection_id}"
+                "UPDATE history SET fileset = %s WHERE fileset = %s",
+                (dat_id, detection_id),
             )
-            cursor.execute(f"DELETE FROM fileset WHERE id = {detection_id}")
+            cursor.execute("DELETE FROM fileset WHERE id = %s", (detection_id,))
 
         conn.commit()
     except Exception as e:
@@ -812,11 +827,13 @@ def populate_matching_games():
         log_text = f"Matched game {matched_game['engineid']}:\n{matched_game['gameid']}-{matched_game['platform']}-{matched_game['language']}\nvariant {matched_game['key']}. State {status}. Fileset:{fileset[0][0]}."
 
         # Updating the fileset.game value to be $matched_game["id"]
-        query = f"UPDATE fileset SET game = {matched_game['id']}, status = '{status}', `key` = '{matched_game['key']}' WHERE id = {fileset[0][0]}"
+        query = "UPDATE fileset SET game = %s, status = %s, `key` = %s WHERE id = %s"
 
         history_last = merge_filesets(matched_game["fileset"], fileset[0][0])
 
-        if cursor.execute(query):
+        if cursor.execute(
+            query, (matched_game["id"], status, matched_game["key"], fileset[0][0])
+        ):
             user = f"cli:{getpass.getuser()}"
 
             create_log(
@@ -835,7 +852,7 @@ def populate_matching_games():
 
             # Add log id to the history table
             cursor.execute(
-                f"UPDATE history SET log = {log_last} WHERE id = {history_last}"
+                "UPDATE history SET log = %s WHERE id = %s", (log_last, history_last)
             )
 
         try:
@@ -873,7 +890,7 @@ def match_fileset(data_arr, username=None, skiplog=False):
     detection = src == "scummvm"
     source_status = "detection" if detection else src
 
-    conn.cursor().execute(f"SET @fileset_time_last = {int(time.time())}")
+    conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
 
     with conn.cursor() as cursor:
         cursor.execute("SELECT MAX(`transaction`) FROM transactions")
@@ -1280,7 +1297,8 @@ def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn
     with conn.cursor() as cursor:
         # Extracting the filename from the filepath.
         cursor.execute(
-            f"SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = {candidate_fileset_id}"
+            "SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = %s",
+            (candidate_fileset_id,),
         )
         target_files = cursor.fetchall()
         candidate_files = {
@@ -2417,13 +2435,13 @@ def find_matching_filesets(fileset, conn, status):
                     checksize, checktype, checksum = get_checksum_props(
                         checktype, checksum
                     )
-                    query = f"""SELECT DISTINCT fs.id AS fileset_id
+                    query = """SELECT DISTINCT fs.id AS fileset_id
                                 FROM fileset fs
                                 JOIN file f ON fs.id = f.fileset
                                 JOIN filechecksum fc ON f.id = fc.file
-                                WHERE fc.checksum = '{checksum}' AND fc.checktype = '{checktype}'
-                                AND fs.status IN ({state})"""
-                    cursor.execute(query)
+                                WHERE fc.checksum = %s AND fc.checktype = %s
+                                AND fs.status IN (%s)"""
+                    cursor.execute(query, (checksum, checktype, state))
                     records = cursor.fetchall()
                     if records:
                         for record in records:
@@ -2446,16 +2464,16 @@ def matching_set(fileset, conn):
                     checksum = checksum.split(":")[1]
                 size = file["size"]
 
-                query = f"""
+                query = """
                     SELECT DISTINCT fs.id AS fileset_id
                     FROM fileset fs
                     JOIN file f ON fs.id = f.fileset
                     JOIN filechecksum fc ON f.id = fc.file
-                    WHERE fc.checksum = '{checksum}' AND fc.checktype LIKE 'md5%'
-                    AND fc.checksize > {size}
+                    WHERE fc.checksum = %s AND fc.checktype LIKE 'md5%'
+                    AND fc.checksize > %s
                     AND fs.status = 'detection'
                 """
-                cursor.execute(query)
+                cursor.execute(query, (checksum, size))
                 records = cursor.fetchall()
                 if records:
                     for record in records:
@@ -2485,11 +2503,12 @@ def handle_matched_filesets(
             if is_full_matched:
                 break
             cursor.execute(
-                f"SELECT status FROM fileset WHERE id = {matched_fileset_id}"
+                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
             )
             status = cursor.fetchone()["status"]
             cursor.execute(
-                f"SELECT COUNT(file.id) FROM file WHERE fileset = {matched_fileset_id}"
+                "SELECT COUNT(file.id) FROM file WHERE fileset = %s",
+                (matched_fileset_id,),
             )
             count = cursor.fetchone()["COUNT(file.id)"]
 
@@ -2535,28 +2554,31 @@ def handle_matched_filesets(
 
 def delete_original_fileset(fileset_id, conn):
     with conn.cursor() as cursor:
-        cursor.execute(f"DELETE FROM file WHERE fileset = {fileset_id}")
-        cursor.execute(f"DELETE FROM fileset WHERE id = {fileset_id}")
+        cursor.execute("DELETE FROM file WHERE fileset = %s", (fileset_id,))
+        cursor.execute("DELETE FROM fileset WHERE id = %s", (fileset_id,))
     conn.commit()
 
 
 def update_fileset_status(cursor, fileset_id, status):
-    cursor.execute(f"""
+    cursor.execute(
+        """
         UPDATE fileset SET 
-            status = '{status}', 
-            `timestamp` = FROM_UNIXTIME({int(time.time())})
-        WHERE id = {fileset_id}
-    """)
+            status = %s, 
+            `timestamp` = FROM_UNIXTIME(%s)
+        WHERE id = %s
+    """,
+        (status, int(time.time()), fileset_id),
+    )
 
 
 def populate_file(fileset, fileset_id, conn, detection):
     with conn.cursor() as cursor:
-        cursor.execute(f"SELECT * FROM file WHERE fileset = {fileset_id}")
+        cursor.execute("SELECT * FROM file WHERE fileset = %s", (fileset_id,))
         target_files = cursor.fetchall()
         target_files_dict = {}
         for target_file in target_files:
             cursor.execute(
-                f"SELECT * FROM filechecksum WHERE file = {target_file['id']}"
+                "SELECT * FROM filechecksum WHERE file = %s", (target_file["id"],)
             )
             target_checksums = cursor.fetchall()
             for checksum in target_checksums:
@@ -2681,7 +2703,8 @@ def set_populate_file(fileset, fileset_id, conn, detection):
     with conn.cursor() as cursor:
         # Extracting the filename from the filepath.
         cursor.execute(
-            f"SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = {fileset_id}"
+            "SELECT id, REGEXP_REPLACE(name, '^.*[\\\\/]', '') AS name, size FROM file WHERE fileset = %s",
+            (fileset_id,),
         )
         target_files = cursor.fetchall()
         candidate_files = {
@@ -2723,23 +2746,17 @@ def set_populate_file(fileset, fileset_id, conn, detection):
             ):
                 name = normalised_path(file["name"])
                 values = [name]
-
                 values.append(file["size"] if "size" in file else "0")
                 values.append(file["size-r"] if "size-r" in file else "0")
                 values.append(file["size-rd"] if "size-rd" in file else "0")
-
                 values.extend([checksum, fileset_id, detection, "None"])
 
-                placeholders = (
-                    ["%s"] * (len(values[:5])) + ["%s"] + ["%s"] * 2 + ["NOW()"]
-                )
-                query = f"INSERT INTO file ( name, size, `size-r`, `size-rd`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ({', '.join(placeholders)})"
+                query = "INSERT INTO file ( name, size, `size-r`, `size-rd`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES ( %s, %s, %s, %s, %s, %s, %s, %s, NOW())"
 
                 cursor.execute(query, values)
                 cursor.execute("SET @file_last = LAST_INSERT_ID()")
                 cursor.execute("SELECT @file_last AS file_id")
 
-                cursor.execute("SELECT @file_last AS file_id")
                 file_id = cursor.fetchone()["file_id"]
 
                 insert_filechecksum(file, "md5", file_id, conn)
@@ -2877,7 +2894,8 @@ def finalize_fileset_insertion(
 ):
     with conn.cursor() as cursor:
         cursor.execute(
-            f"SELECT COUNT(fileset) from transactions WHERE `transaction` = {transaction_id}"
+            "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
+            (transaction_id,),
         )
         fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
@@ -2915,7 +2933,7 @@ def user_integrity_check(data, ip, game_metadata=None):
         print(f"Failed to connect to database: {e}")
         return
 
-    conn.cursor().execute(f"SET @fileset_time_last = {int(time.time())}")
+    conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
 
     try:
         with conn.cursor() as cursor:
@@ -2940,12 +2958,13 @@ def user_integrity_check(data, ip, game_metadata=None):
             missing_set = set()
 
             for fileset_id in matched_map.keys():
-                cursor.execute(f"SELECT * FROM file WHERE fileset = {fileset_id}")
+                cursor.execute("SELECT * FROM file WHERE fileset = %s", (fileset_id,))
                 target_files = cursor.fetchall()
                 target_files_dict = {}
                 for target_file in target_files:
                     cursor.execute(
-                        f"SELECT * FROM filechecksum WHERE file = {target_file['id']}"
+                        "SELECT * FROM filechecksum WHERE file = %s",
+                        (target_file["id"],),
                     )
                     target_checksums = cursor.fetchall()
                     for checksum in target_checksums:
@@ -3025,12 +3044,13 @@ def user_integrity_check(data, ip, game_metadata=None):
             most_matched = matched_list[0]
             matched_fileset_id, matched_count = most_matched[0], most_matched[1]
             cursor.execute(
-                f"SELECT status FROM fileset WHERE id = {matched_fileset_id}"
+                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
             )
             status = cursor.fetchone()["status"]
 
             cursor.execute(
-                f"SELECT COUNT(file.id) FROM file WHERE fileset = {matched_fileset_id}"
+                "SELECT COUNT(file.id) FROM file WHERE fileset = %s",
+                (matched_fileset_id,),
             )
             count = cursor.fetchone()["COUNT(file.id)"]
             if status == "full" and count == matched_count:
@@ -3068,13 +3088,14 @@ def user_integrity_check(data, ip, game_metadata=None):
 def add_usercount(fileset, conn):
     with conn.cursor() as cursor:
         cursor.execute(
-            f"UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = {fileset}"
+            "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
+            (fileset,),
         )
-        cursor.execute(f"SELECT user_count from fileset WHERE id = {fileset}")
+        cursor.execute("SELECT user_count from fileset WHERE id = %s", (fileset,))
         count = cursor.fetchone()["user_count"]
         if count >= 3:
             cursor.execute(
-                f"UPDATE fileset SET status = 'ReadyForReview' WHERE id = {fileset}"
+                "UPDATE fileset SET status = 'ReadyForReview' WHERE id = %s", (fileset,)
             )
 
 
