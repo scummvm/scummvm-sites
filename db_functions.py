@@ -1659,14 +1659,9 @@ def set_process(
         # Separating out the matching logic for glk engine
         engine_name = fileset["sourcefile"].split("-")[0]
 
-        if engine_name == "glk":
-            (candidate_filesets, fileset_count) = set_glk_filter_candidate_filesets(
-                fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
-            )
-        else:
-            (candidate_filesets, fileset_count) = set_filter_candidate_filesets(
-                fileset_id, fileset, fileset_count, transaction_id, conn
-            )
+        (candidate_filesets, fileset_count) = set_filter_candidate_filesets(
+            fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
+        )
 
         # Mac files in set.dat are not represented properly and they won't find a candidate fileset for a match, so we can drop them.
         if len(candidate_filesets) == 0:
@@ -2071,93 +2066,16 @@ def is_full_checksum_match(candidate_fileset, fileset, conn):
         return (len(unmatched_files) == 0, unmatched_files)
 
 
-def set_glk_filter_candidate_filesets(
-    fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
-):
-    """
-    Returns a list of candidate filesets for glk engines that can be merged
-    """
-    with conn.cursor() as cursor:
-        # Returns those filesets which have all detection files matching in the set fileset filtered by engine, file name and file size(if not -1) sorted in descending order of matches
-        fileset_count += 1
-        console_log_candidate_filtering(fileset_count)
-        query = """
-            WITH candidate_fileset AS ( 
-            SELECT fs.id AS fileset_id, f.size
-            FROM file f
-            JOIN fileset fs ON f.fileset = fs.id
-            JOIN game g ON g.id = fs.game
-            JOIN engine e ON e.id = g.engine
-            JOIN transactions t ON t.fileset = fs.id
-            WHERE fs.id != %s
-            AND e.engineid = %s
-            AND f.detection = 1
-            AND t.transaction != %s
-            AND (g.gameid = %s OR (g.gameid != %s AND g.gameid LIKE %s))
-            ),
-            total_detection_files AS (
-            SELECT cf.fileset_id, COUNT(*) AS detection_files_found
-            FROM candidate_fileset cf
-            GROUP BY fileset_id
-            ),
-            set_fileset AS (
-            SELECT size FROM file
-            WHERE fileset = %s
-            ),
-            matched_detection_files AS (
-            SELECT cf.fileset_id, COUNT(*) AS match_files_count
-            FROM candidate_fileset cf
-            JOIN set_fileset sf ON
-            cf.size = sf.size OR cf.size = 0
-            GROUP BY cf.fileset_id
-            ),
-            valid_matched_detection_files AS (
-            SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
-            FROM matched_detection_files mdf
-            JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
-            WHERE tdf.detection_files_found <= mdf.match_files_count
-            ),
-            max_match_count AS (
-                SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
-            )
-            SELECT vmdf.fileset_id
-            FROM valid_matched_detection_files vmdf
-            JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
-            JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
-        """
-
-        gameid_pattern = f"%{fileset['name']}%"
-
-        cursor.execute(
-            query,
-            (
-                fileset_id,
-                engine_name,
-                transaction_id,
-                fileset["name"],
-                fileset["name"],
-                gameid_pattern,
-                fileset_id,
-            ),
-        )
-        rows = cursor.fetchall()
-
-        candidates = []
-        if rows:
-            for row in rows:
-                candidates.append(row["fileset_id"])
-
-        return (candidates, fileset_count)
-
-
 def set_filter_candidate_filesets(
-    fileset_id, fileset, fileset_count, transaction_id, conn
+    fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
 ):
     """
     Returns a list of candidate filesets that can be merged.
     Performs early filtering in SQL (by engine, name, size) and then
     applies checksum filtering and max-match filtering in Python.
+    In case of glk engines, filtering is not by name, rather gameid is used.
     """
+    is_glk = engine_name == "glk"
     with conn.cursor() as cursor:
         fileset_count += 1
         console_log_candidate_filtering(fileset_count)
@@ -2174,7 +2092,21 @@ def set_filter_candidate_filesets(
             AND f.detection = 1
             AND t.transaction != %s
         """
-        cursor.execute(query, (fileset["sourcefile"], transaction_id))
+        if is_glk:
+            query += " AND (g.gameid = %s OR (g.gameid != %s AND g.gameid LIKE %s))"
+            gameid_pattern = f"%{fileset['name']}%"
+            cursor.execute(
+                query,
+                (
+                    engine_name,
+                    transaction_id,
+                    fileset["name"],
+                    fileset["name"],
+                    gameid_pattern,
+                ),
+            )
+        else:
+            cursor.execute(query, (fileset["sourcefile"], transaction_id))
         raw_candidates = cursor.fetchall()
 
     # fileset id to detection files map
@@ -2184,7 +2116,7 @@ def set_filter_candidate_filesets(
         candidate_map[row["fileset_id"]].append(
             {
                 "file_id": row["file_id"],
-                "name": row["name"],
+                "name": os.path.basename(normalised_path(row["name"])).lower(),
                 "size": row["size"],
             }
         )
@@ -2193,14 +2125,17 @@ def set_filter_candidate_filesets(
 
     set_checksums = set()
     set_file_name_size = set()
+    set_glk_file_size = set()
     for file in fileset["rom"]:
+        name = os.path.basename(normalised_path(file["name"]))
         for key in file:
             if key.startswith("md5"):
-                name = os.path.basename(normalised_path(file["name"]))
                 set_checksums.add((file[key], name.lower(), int(file["size"])))
                 set_checksums.add((file[key], name.lower(), -1))
         set_file_name_size.add((name.lower(), -1))
         set_file_name_size.add((name.lower(), int(file["size"])))
+        if is_glk:
+            set_glk_file_size.add(int(file["size"]))
 
     # Filter candidates by detection filename and file size (including -1) and increase matched file count
     # if filesize = -1,
@@ -2213,6 +2148,8 @@ def set_filter_candidate_filesets(
             for f in files:
                 filename = os.path.basename(f["name"]).lower()
                 filesize = f["size"]
+                if is_glk and (filesize in set_glk_file_size or filesize == 0):
+                    count += 1
                 if (filename, filesize) in set_file_name_size:
                     if filesize == -1:
                         count += 1
