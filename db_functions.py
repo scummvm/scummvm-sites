@@ -1059,6 +1059,7 @@ def scan_process(
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
         category_text = "Upload information"
         log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
+        console_log(log_text)
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
 
@@ -1115,9 +1116,12 @@ def pre_update_files(rom, filesets_check_for_full, transaction_id, conn):
                 SET size = %s,
                 `size-r` = %s,
                 `size-rd` = %s,
+                name = %s
                 WHERE id = %s
             """
-            cursor.execute(query, size, size_r, size_rd, file_id)
+            cursor.execute(
+                query, (size, size_r, size_rd, normalised_path(rom["name"]), file_id)
+            )
 
 
 def scan_perform_match(
@@ -1396,73 +1400,146 @@ def total_fileset_files(fileset):
 
 def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
     """
-    Returns a list of candidate filesets that can be merged
+    Returns a list of candidate filesets that can be merged.
+    Performs early filtering in SQL (by name, size) and then
+    applies checksum filtering and max-match filtering in Python.
     """
     with conn.cursor() as cursor:
-        # Returns those filesets which have all detection files matching in the scan fileset filtered by file name and file size(if not -1).
-
+        # Fetching detection filename and all sizes (size, size-r, size-rd) from database
         query = """
-            WITH candidate_fileset AS (
-            SELECT fs.id AS fileset_id, f.name, f.size,
+            SELECT fs.id AS fileset_id, f.id as file_id, f.name, f.size,
             f.`size-r` AS size_r, f.`size-rd` AS size_rd
             FROM file f
             JOIN fileset fs ON f.fileset = fs.id
             JOIN game g ON g.id = fs.game
+            JOIN engine e ON e.id = g.engine
             JOIN transactions t ON t.fileset = fs.id
             WHERE f.detection = 1
             AND t.transaction != %s
-            ),
-            total_detection_files AS (
-            SELECT cf.fileset_id, COUNT(*) AS detection_files_found
-            FROM candidate_fileset cf
-            GROUP BY fileset_id
-            ),
-            set_fileset AS (
-            SELECT name, size,
-            `size-r` AS size_r, `size-rd` AS size_rd
-            FROM file
-            WHERE fileset = %s
-            ),
-            matched_detection_files AS (
-            SELECT cf.fileset_id, COUNT(*) AS match_files_count
-            FROM candidate_fileset cf
-            JOIN set_fileset sf ON ( (
-                cf.name = sf.name
-                OR
-                REGEXP_REPLACE(cf.name, '^.*[\\\\/]', '') = REGEXP_REPLACE(sf.name, '^.*[\\\\/]', '')
-            ) AND (cf.size = sf.size OR cf.size = -1)
-            AND (cf.size_r = sf.size_r)
-            AND (cf.size_rd = sf.size_rd))
-            GROUP BY cf.fileset_id
-            ),
-            valid_matched_detection_files AS (
-            SELECT mdf.fileset_id, mdf.match_files_count AS valid_match_files_count
-            FROM matched_detection_files mdf
-            JOIN total_detection_files tdf ON tdf.fileset_id = mdf.fileset_id
-            WHERE tdf.detection_files_found <= mdf.match_files_count
-            ),
-            max_match_count AS (
-                SELECT MAX(valid_match_files_count) AS max_count FROM valid_matched_detection_files
-            )
-            SELECT vmdf.fileset_id
-            FROM valid_matched_detection_files vmdf
-            JOIN total_detection_files tdf ON vmdf.fileset_id = tdf.fileset_id
-            JOIN max_match_count mmc ON vmdf.valid_match_files_count = mmc.max_count
         """
+        cursor.execute(query, (transaction_id,))
+        raw_candidates = cursor.fetchall()
 
-        cursor.execute(query, (transaction_id, fileset_id))
-        rows = cursor.fetchall()
+    # fileset id to detection files map
+    candidate_map = defaultdict(list)
+    total_detection_files_map = defaultdict(int)
+    for row in raw_candidates:
+        candidate_map[row["fileset_id"]].append(
+            {
+                "file_id": row["file_id"],
+                "name": os.path.basename(normalised_path(row["name"])).lower(),
+                "size": row["size"],
+                "size-r": row["size_r"],
+                "size-rd": row["size_rd"],
+            }
+        )
+    for id, files in candidate_map.items():
+        total_detection_files_map[id] = len(files)
 
-        candidates = []
-        if rows:
-            for row in rows:
-                candidates.append(row["fileset_id"])
+    set_checksums = set()
+    set_file_name_size = set()
+    for file in fileset["rom"]:
+        name = os.path.basename(normalised_path(file["name"]))
+        for key in file:
+            if key.startswith("md5"):
+                set_checksums.add(
+                    (
+                        file[key],
+                        name.lower(),
+                        int(file["size"]),
+                        int(file["size-r"]),
+                        int(file["size-rd"]),
+                    )
+                )
+                set_checksums.add(
+                    (
+                        file[key],
+                        name.lower(),
+                        -1,
+                        int(file["size-r"]),
+                        int(file["size-rd"]),
+                    )
+                )
+        set_file_name_size.add(
+            (name.lower(), -1, int(file["size-r"]), int(file["size-rd"]))
+        )
+        set_file_name_size.add(
+            (name.lower(), int(file["size"]), int(file["size-r"]), int(file["size-rd"]))
+        )
 
-        for candidate in candidates:
-            if not is_full_detection_checksum_match(candidate, fileset, conn):
-                candidates.remove(candidate)
+    # Filter candidates by detection filename and file size (including -1) and increase matched file count
+    # if filesize = -1,
+    # elif filesize <= checksize and checksum matches,
+    # elif filesize > checksize.
+    match_counts = {}
+    for fileset_id, files in candidate_map.items():
+        count = 0
+        with conn.cursor() as cursor:
+            for f in files:
+                filename = os.path.basename(f["name"]).lower()
+                size = f["size"]
+                size_r = f["size-r"]
+                size_rd = f["size-rd"]
+                if (filename, size, size_r, size_rd) in set_file_name_size:
+                    if size == -1:
+                        count += 1
+                    else:
+                        cursor.execute(
+                            """
+                            SELECT checksum, checksize, checktype
+                            FROM filechecksum
+                            WHERE file = %s
+                        """,
+                            (f["file_id"],),
+                        )
+                        checksums = cursor.fetchall()
+                        not_inc_count = False
+                        for c in checksums:
+                            filesize = size
+                            checksum = c["checksum"]
+                            checksize = c["checksize"]
+                            checktype = c["checktype"]
+                            # Macfiles handling
+                            if checktype in ["md5-r", "md5-rt"]:
+                                filesize = size_rd
 
-        return candidates
+                            if checksize == "1M":
+                                checksize = 1048576
+                            elif checksize == "0":
+                                checksize = filesize
+                            if filesize <= int(checksize):
+                                if (
+                                    checksum,
+                                    filename,
+                                    size,
+                                    size_r,
+                                    size_rd,
+                                ) in set_checksums:
+                                    count += 1
+                                not_inc_count = True
+                                # if it was a true match, checksum should be present
+                                break
+                        if not not_inc_count:
+                            count += 1
+        if count > 0 and total_detection_files_map[fileset_id] <= count:
+            match_counts[fileset_id] = count
+
+    # Filter only entries with maximum number of matched files
+    if not match_counts:
+        return []
+
+    max_match = max(match_counts.values())
+    candidates = [fid for fid, count in match_counts.items() if count == max_match]
+
+    matched_candidates = []
+    for candidate in candidates:
+        if is_full_detection_checksum_match(candidate, fileset, conn):
+            matched_candidates.append(candidate)
+
+    if len(matched_candidates) != 0:
+        candidates = matched_candidates
+
+    return candidates
 
 
 def get_unmatched_files(candidate_fileset, fileset, conn):
