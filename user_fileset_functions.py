@@ -39,10 +39,10 @@ def file_json_to_array(file_json_object):
 
 
 def user_insert_queue(user_fileset, conn):
-    query = f"INSERT INTO queue (time, notes, fileset, ticketid, userid, commit) VALUES ({int(time.time())}, NULL, @fileset_last, NULL, NULL, NULL)"
+    query = "INSERT INTO queue (time, notes, fileset, ticketid, userid, commit) VALUES (%s, NULL, @fileset_last, NULL, NULL, NULL)"
 
     with conn.cursor() as cursor:
-        cursor.execute(query)
+        cursor.execute(query, (int(time.time()),))
         conn.commit()
 
 
@@ -55,7 +55,7 @@ def user_insert_fileset(user_fileset, ip, conn):
         cursor.execute("SELECT MAX(`transaction`) FROM transactions")
         transaction_id = cursor.fetchone()["MAX(`transaction`)"] + 1
         log_text = "from user submitted files"
-        cursor.execute("SET @fileset_time_last = %s", (int(time.time())))
+        cursor.execute("SET @fileset_time_last = %s", (int(time.time()),))
         if insert_fileset(
             src, detection, key, megakey, transaction_id, log_text, conn, ip
         ):
@@ -79,7 +79,8 @@ def match_and_merge_user_filesets(id):
 
     with conn.cursor() as cursor:
         cursor.execute(
-            f"SELECT fileset.id, filechecksum.checksum, src, status FROM fileset JOIN file ON file.fileset = fileset.id JOIN filechecksum ON file.id = filechecksum.file WHERE status = 'user' AND fileset.id = {id}"
+            "SELECT fileset.id, filechecksum.checksum, src, status FROM fileset JOIN file ON file.fileset = fileset.id JOIN filechecksum ON file.id = filechecksum.file WHERE status = 'user' AND fileset.id = %s",
+            (id,),
         )
         unmatched_files = cursor.fetchall()
 
@@ -110,11 +111,13 @@ def match_and_merge_user_filesets(id):
         log_text = f"Matched game {matched_game['engineid']}:\n{matched_game['gameid']}-{matched_game['platform']}-{matched_game['language']}\nvariant {matched_game['key']}. State {status}. Fileset:{fileset[0][0]}."
 
         # Updating the fileset.game value to be $matched_game["id"]
-        query = f"UPDATE fileset SET game = {matched_game['id']}, status = '{status}', `key` = '{matched_game['key']}' WHERE id = {fileset[0][0]}"
+        query = "UPDATE fileset SET game = %s, status = %s, `key` = %s WHERE id = %s"
 
         history_last = merge_filesets(matched_game["fileset"], fileset[0][0])
 
-        if cursor.execute(query):
+        if cursor.execute(
+            query, (matched_game["id"], status, matched_game["key"], fileset[0][0])
+        ):
             user = f"cli:{getpass.getuser()}"
 
             # Merge log
@@ -136,7 +139,7 @@ def match_and_merge_user_filesets(id):
 
             # Add log id to the history table
             cursor.execute(
-                f"UPDATE history SET log = {log_last} WHERE id = {history_last}"
+                "UPDATE history SET log = %s WHERE id = %s", (log_last, history_last)
             )
 
         if not conn.commit():

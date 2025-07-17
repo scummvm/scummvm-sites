@@ -7,26 +7,30 @@ import pymysql
 import json
 import os
 
+
 def truncate_all_tables(conn):
+    # fmt: off
     tables = ["filechecksum", "queue", "history", "transactions", "file", "fileset", "game", "engine", "log"]
     cursor = conn.cursor()
-    
+    # fmt: on
+
     # Disable foreign key checks
     cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-    
+
     for table in tables:
         try:
-            cursor.execute(f"TRUNCATE TABLE `{table}`")
+            cursor.execute("TRUNCATE TABLE %s", (table,))
             print(f"Table '{table}' truncated successfully")
         except pymysql.Error as err:
             print(f"Error truncating table '{table}': {err}")
-    
+
     # Enable foreign key checks
     cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
 
+
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, 'mysql_config.json')
+    config_path = os.path.join(base_dir, "mysql_config.json")
     with open(config_path) as f:
         mysql_cred = json.load(f)
 
@@ -41,9 +45,9 @@ if __name__ == "__main__":
         user=username,
         password=password,
         db=dbname,  # Specify the database to use
-        charset='utf8mb4',
+        charset="utf8mb4",
         cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True
+        autocommit=True,
     )
 
     # Check connection

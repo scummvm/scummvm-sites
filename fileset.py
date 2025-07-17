@@ -15,7 +15,6 @@ from user_fileset_functions import (
 )
 from pagination import create_page
 import difflib
-from pymysql.converters import escape_string
 from db_functions import (
     find_matching_filesets,
     get_all_related_filesets,
@@ -123,15 +122,18 @@ def fileset():
             id = max(min_id, min(id, max_id))
 
             # Check if the id exists in the fileset table
-            cursor.execute(f"SELECT id FROM fileset WHERE id = {id}")
+            cursor.execute("SELECT id FROM fileset WHERE id = %s", (id,))
             if cursor.rowcount == 0:
                 # If the id doesn't exist, get a new id from the history table
-                cursor.execute(f"SELECT fileset FROM history WHERE oldfileset = {id}")
+                cursor.execute(
+                    "SELECT fileset FROM history WHERE oldfileset = %s", (id,)
+                )
                 id = cursor.fetchone()["fileset"]
 
             # Get the history for the current id
             cursor.execute(
-                f"SELECT `timestamp`, oldfileset, log FROM history WHERE fileset = {id} ORDER BY `timestamp`"
+                "SELECT `timestamp`, oldfileset, log FROM history WHERE fileset = %s ORDER BY `timestamp`",
+                (id,),
             )
             history = cursor.fetchall()
 
@@ -253,7 +255,8 @@ def fileset():
             columns_to_select = "file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`, `modification-time`"
             columns_to_select += ", ".join(md5_columns)
             cursor.execute(
-                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`, `modification-time` FROM file WHERE fileset = {id} {order}"
+                f"SELECT file.id, name, size, `size-r`, `size-rd`, checksum, detection, detection_type, `timestamp`, `modification-time` FROM file WHERE fileset = %s {order}",
+                (id,),
             )
             result = cursor.fetchall()
 
@@ -263,7 +266,8 @@ def fileset():
             if widetable == "full":
                 file_ids = [file["id"] for file in result]
                 cursor.execute(
-                    f"SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN ({','.join(map(str, file_ids))})"
+                    "SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN (%s)",
+                    (",".join(map(str, file_ids)),),
                 )
                 checksums = cursor.fetchall()
 
@@ -330,7 +334,8 @@ def fileset():
 
             if "delete" in request.form:
                 cursor.execute(
-                    f"UPDATE fileset SET `delete` = TRUE WHERE id = {request.form['delete']}"
+                    "UPDATE fileset SET `delete` = TRUE WHERE id = %s",
+                    (request.form["delete"],),
                 )
                 connection.commit()
                 html += "<p id='delete-confirm'>Fileset marked for deletion</p>"
@@ -341,7 +346,8 @@ def fileset():
 
             # Generate the HTML for the fileset history
             cursor.execute(
-                f"SELECT `timestamp`, category, `text`, id FROM log WHERE `text` REGEXP 'Fileset:{id}' ORDER BY `timestamp` DESC, id DESC"
+                "SELECT `timestamp`, category, `text`, id FROM log WHERE `text` REGEXP 'Fileset:%s' ORDER BY `timestamp` DESC, id DESC",
+                (id,),
             )
             # cursor.execute(f"SELECT `timestamp`, fileset, oldfileset FROM history WHERE fileset = {id} ORDER BY `timestamp` DESC")
 
@@ -357,14 +363,19 @@ def fileset():
             related_filesets = get_all_related_filesets(id, connection)
 
             cursor.execute(
-                f"SELECT * FROM history WHERE fileset IN ({','.join(map(str, related_filesets))}) OR oldfileset IN ({','.join(map(str, related_filesets))})"
+                "SELECT * FROM history WHERE fileset IN (%s) OR oldfileset IN (%s)",
+                (
+                    ",".join(map(str, related_filesets)),
+                    ",".join(map(str, related_filesets)),
+                ),
             )
             history = cursor.fetchall()
             print(f"History: {history}")
 
             for h in history:
                 cursor.execute(
-                    f"SELECT `timestamp`, category, `text`, id FROM log WHERE `text` LIKE 'Fileset:{h['oldfileset']}' ORDER BY `timestamp` DESC, id DESC"
+                    "SELECT `timestamp`, category, `text`, id FROM log WHERE `text` LIKE 'Fileset:%s' ORDER BY `timestamp` DESC, id DESC",
+                    (h["oldfileset"],),
                 )
                 logs = cursor.fetchall()
                 print(f"Logs: {logs}")
@@ -378,7 +389,9 @@ def fileset():
                     html += f"<td>Created fileset <a href='fileset?id={h['fileset']}'>Fileset {h['fileset']}</a></td>\n"
                     # html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a></td>\n"
                     if h["log"]:
-                        cursor.execute(f"SELECT `text` FROM log WHERE id = {h['log']}")
+                        cursor.execute(
+                            "SELECT `text` FROM log WHERE id = %s", (h["log"],)
+                        )
                         log_text = cursor.fetchone()["text"]
                         log_text = convert_log_text_to_links(log_text)
                         html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a>: {log_text}</td>\n"
@@ -393,7 +406,7 @@ def fileset():
                 html += f"<td><a href='fileset?id={h['oldfileset']}'>Fileset {h['oldfileset']}</a> merged into fileset <a href='fileset?id={h['fileset']}'>Fileset {h['fileset']}</a></td>\n"
                 # html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a></td>\n"
                 if h["log"]:
-                    cursor.execute(f"SELECT `text` FROM log WHERE id = {h['log']}")
+                    cursor.execute("SELECT `text` FROM log WHERE id = %s", (h["log"],))
                     log_text = cursor.fetchone()["text"]
                     log_text = convert_log_text_to_links(log_text)
                     html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a>: {log_text}</td>\n"
@@ -425,21 +438,23 @@ def match_fileset_route(id):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM fileset WHERE id = {id}")
+            cursor.execute("SELECT * FROM fileset WHERE id = %s", (id,))
             fileset = cursor.fetchone()
             fileset["rom"] = []
             if not fileset:
                 return f"No fileset found with id {id}", 404
 
             cursor.execute(
-                f"SELECT file.id, name, size, checksum, detection, detection_type FROM file WHERE fileset = {id}"
+                "SELECT file.id, name, size, checksum, detection, detection_type FROM file WHERE fileset = %s",
+                (id,),
             )
             result = cursor.fetchall()
             file_ids = {}
             for file in result:
                 file_ids[file["id"]] = (file["name"], file["size"])
             cursor.execute(
-                f"SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN ({','.join(map(str, file_ids.keys()))})"
+                "SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN (%s)",
+                (",".join(map(str, file_ids.keys())),),
             )
 
             files = cursor.fetchall()
@@ -491,7 +506,7 @@ def match_fileset_route(id):
                 if fileset_id == id:
                     continue
                 cursor.execute(
-                    f"SELECT COUNT(file.id) FROM file WHERE fileset = {fileset_id}"
+                    "SELECT COUNT(file.id) FROM file WHERE fileset = %s", (fileset_id,)
                 )
                 count = cursor.fetchone()["COUNT(file.id)"]
                 html += f"""
@@ -717,7 +732,8 @@ def confirm_merge(id):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"""
+            cursor.execute(
+                """
                 SELECT 
                     fs.*, 
                     g.name AS game_name, 
@@ -730,11 +746,14 @@ def confirm_merge(id):
                 LEFT JOIN 
                     game g ON fs.game = g.id
                 WHERE 
-                    fs.id = {id}
-            """)
+                    fs.id = %s
+            """,
+                (id,),
+            )
             source_fileset = cursor.fetchone()
             print(source_fileset)
-            cursor.execute(f"""
+            cursor.execute(
+                """
                 SELECT 
                     fs.*, 
                     g.name AS game_name, 
@@ -747,8 +766,10 @@ def confirm_merge(id):
                 LEFT JOIN 
                     game g ON fs.game = g.id
                 WHERE 
-                    fs.id = {target_id}
-            """)
+                    fs.id = %s
+            """,
+                (target_id,),
+            )
 
             def highlight_differences(source, target):
                 diff = difflib.ndiff(source, target)
@@ -846,63 +867,101 @@ def execute_merge(id, source=None, target=None):
 
     try:
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM fileset WHERE id = {source_id}")
+            cursor.execute("SELECT * FROM fileset WHERE id = %s", (source_id,))
             source_fileset = cursor.fetchone()
-            cursor.execute(f"SELECT * FROM fileset WHERE id = {target_id}")
+            cursor.execute("SELECT * FROM fileset WHERE id = %s", (target_id,))
 
             if source_fileset["status"] == "detection":
-                cursor.execute(f"""
+                cursor.execute(
+                    """
                 UPDATE fileset SET
-                    game = '{source_fileset["game"]}',
-                    status = '{source_fileset["status"]}',
-                    `key` = '{source_fileset["key"]}',
-                    megakey = '{source_fileset["megakey"]}',
-                    `timestamp` = '{source_fileset["timestamp"]}'
-                WHERE id = {target_id}
-                """)
+                    game = %s
+                    status = %s,
+                    `key` = %s,
+                    megakey = %s,
+                    `timestamp` = %s
+                WHERE id = %s
+                """,
+                    (
+                        source_fileset["game"],
+                        source_fileset["status"],
+                        source_fileset["key"],
+                        source_fileset["megakey"],
+                        source_fileset["timestamp"],
+                        target_id,
+                    ),
+                )
 
-                cursor.execute(f"DELETE FROM file WHERE fileset = {target_id}")
+                cursor.execute("DELETE FROM file WHERE fileset = %s", (target_id,))
 
-                cursor.execute(f"SELECT * FROM file WHERE fileset = {source_id}")
+                cursor.execute("SELECT * FROM file WHERE fileset = %s", (source_id,))
                 source_files = cursor.fetchall()
 
                 for file in source_files:
-                    cursor.execute(f"""
+                    cursor.execute(
+                        """
                     INSERT INTO file (name, size, checksum, fileset, detection, `timestamp`)
-                    VALUES ('{escape_string(file["name"]).lower()}', '{file["size"]}', '{file["checksum"]}', {target_id}, {file["detection"]}, NOW())
-                    """)
+                    VALUES (%s, %s, %s, %s, %s, NOW())
+                    """,
+                        (
+                            file["name"].lower(),
+                            file["size"],
+                            file["checksum"],
+                            target_id,
+                            file["detection"],
+                        ),
+                    )
 
                     cursor.execute("SELECT LAST_INSERT_ID() as file_id")
                     new_file_id = cursor.fetchone()["file_id"]
 
                     cursor.execute(
-                        f"SELECT * FROM filechecksum WHERE file = {file['id']}"
+                        "SELECT * FROM filechecksum WHERE file = %s", (file["id"],)
                     )
                     file_checksums = cursor.fetchall()
 
                     for checksum in file_checksums:
-                        cursor.execute(f"""
+                        cursor.execute(
+                            """
                         INSERT INTO filechecksum (file, checksize, checktype, checksum)
-                        VALUES ({new_file_id}, '{checksum["checksize"]}', '{checksum["checktype"]}', '{checksum["checksum"]}')
-                        """)
+                        VALUES (%s, %s, %s, %s)
+                        """,
+                            (
+                                new_file_id,
+                                checksum["checksize"],
+                                checksum["checktype"],
+                                checksum["checksum"],
+                            ),
+                        )
             elif source_fileset["status"] in ["scan", "dat"]:
-                cursor.execute(f"""
+                cursor.execute(
+                    """
                 UPDATE fileset SET
-                    status = '{source_fileset["status"] if source_fileset["status"] != "dat" else "partial"}',
-                    `key` = '{source_fileset["key"]}',
-                    `timestamp` = '{source_fileset["timestamp"]}'
-                WHERE id = {target_id}
-                """)
-                cursor.execute(f"SELECT * FROM file WHERE fileset = {source_id}")
+                    status = %s,
+                    `key` = %s,
+                    `timestamp` = %s
+                WHERE id = %s
+                """,
+                    (
+                        source_fileset["status"]
+                        if source_fileset["status"] != "dat"
+                        else "partial",
+                        source_fileset["key"],
+                        source_fileset["timestamp"],
+                        target_id,
+                    ),
+                )
+                cursor.execute("SELECT * FROM file WHERE fileset = %s", (source_id,))
                 source_files = cursor.fetchall()
 
-                cursor.execute(f"SELECT * FROM file WHERE fileset = {target_id}")
+                cursor.execute("SELECT * FROM file WHERE fileset = %s", (target_id,))
                 target_files = cursor.fetchall()
 
                 target_files_dict = {}
                 for target_file in target_files:
                     cursor.execute(
-                        f"SELECT * FROM filechecksum WHERE file = {target_file['id']}"
+                        "SELECT * FROM filechecksum WHERE file = %s",
+                        (target_file["id"],),
                     )
                     target_checksums = cursor.fetchall()
                     for checksum in target_checksums:
@@ -910,7 +969,8 @@ def execute_merge(id, source=None, target=None):
 
                 for source_file in source_files:
                     cursor.execute(
-                        f"SELECT * FROM filechecksum WHERE file = {source_file['id']}"
+                        "SELECT * FROM filechecksum WHERE file = %s",
+                        (source_file["id"],),
                     )
                     source_checksums = cursor.fetchall()
                     file_exists = False
@@ -921,13 +981,22 @@ def execute_merge(id, source=None, target=None):
                             source_file["detection"] = target_file["detection"]
 
                             cursor.execute(
-                                f"DELETE FROM file WHERE id = {target_file['id']}"
+                                "DELETE FROM file WHERE id = %s", (target_file["id"],)
                             )
                             file_exists = True
                             break
                     print(file_exists)
-                    cursor.execute(f"""INSERT INTO file (name, size, checksum, fileset, detection, `timestamp`) VALUES (
-                        '{source_file["name"]}', '{source_file["size"]}', '{source_file["checksum"]}', {target_id}, {source_file["detection"]}, NOW())""")
+                    cursor.execute(
+                        """INSERT INTO file (name, size, checksum, fileset, detection, `timestamp`) VALUES (
+                        %s, %s, %s, %s, %s, NOW())""",
+                        (
+                            source_file["name"],
+                            source_file["size"],
+                            source_file["checksum"],
+                            target_id,
+                            source_file["detection"],
+                        ),
+                    )
                     new_file_id = cursor.lastrowid
                     for checksum in source_checksums:
                         # TODO: Handle the string
@@ -942,10 +1011,13 @@ def execute_merge(id, source=None, target=None):
                             ),
                         )
 
-            cursor.execute(f"""
+            cursor.execute(
+                """
             INSERT INTO history (`timestamp`, fileset, oldfileset)
-            VALUES (NOW(), {target_id}, {source_id})
-            """)
+            VALUES (NOW(), %s, %s)
+            """,
+                (target_id, source_id),
+            )
 
             connection.commit()
 
@@ -960,8 +1032,8 @@ def mark_as_full(id):
     try:
         conn = db_connect()
         with conn.cursor() as cursor:
-            update_query = f"UPDATE fileset SET status = 'full' WHERE id = {id}"
-            cursor.execute(update_query)
+            update_query = "UPDATE fileset SET status = 'full' WHERE id = %s"
+            cursor.execute(update_query, (id,))
             create_log("Manual from Web", "Dev", f"Marked Fileset:{id} as full", conn)
             conn.commit()
     except Exception as e:
@@ -1181,8 +1253,10 @@ def delete_files(id):
         connection = db_connect()
         with connection.cursor() as cursor:
             # SQL statements to delete related records
-            cursor.execute(f"DELETE FROM filechecksum WHERE file IN ({ids_to_delete})")
-            cursor.execute(f"DELETE FROM file WHERE id IN ({ids_to_delete})")
+            cursor.execute(
+                "DELETE FROM filechecksum WHERE file IN (%s)", (ids_to_delete,)
+            )
+            cursor.execute("DELETE FROM file WHERE id IN (%s)", (ids_to_delete,))
 
             # Commit the deletions
             connection.commit()
