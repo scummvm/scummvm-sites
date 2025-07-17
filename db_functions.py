@@ -1693,7 +1693,7 @@ def set_process(
     console_message = "Looking for duplicates..."
     console_log(console_message)
 
-    # Remove all such filesets, which have many to one mapping with a single candidate, those are extra variants.
+    # Remove all such filesets, which have many to one mapping with a single candidate, just merge one of them.
     value_to_keys = defaultdict(list)
     for set_fileset, candidates in set_to_candidate_dict.items():
         if len(candidates) == 1:
@@ -1717,7 +1717,12 @@ def set_process(
             platform = result["platform"]
             language = result["language"]
 
+            # Skip the first entry, let it merge and drop others
+            skip = True
             for set_fileset in set_filesets:
+                if skip:
+                    skip = False
+                    continue
                 fileset = id_to_fileset_dict[set_fileset]
                 category_text = "Drop fileset - Duplicates"
                 fileset_name = fileset["name"] if "name" in fileset else ""
@@ -1742,9 +1747,9 @@ def set_process(
         fileset = id_to_fileset_dict[fileset_id]
 
         # Filter by platform to reduce manual merge
-        candidate_filesets = set_filter_by_platform(
-            fileset["name"], candidate_filesets, conn
-        )
+        # candidate_filesets = set_filter_by_platform(
+        #     fileset["name"], candidate_filesets, conn
+        # )
 
         (
             fully_matched_filesets,
@@ -1771,16 +1776,35 @@ def set_process(
         match_count += 1
     console_log("Matching performed.")
 
-    for fileset_id, candidates in manual_merge_map.items():
-        category_text = "Manual Merge Required"
-        log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
-        manual_merged_filesets += 1
-        add_manual_merge(
-            candidates, fileset_id, category_text, log_text, user, conn, log_text
-        )
-
-    # Final log
     with conn.cursor() as cursor:
+        for fileset_id, candidates in manual_merge_map.items():
+            if len(candidates) == 0:
+                category_text = "Drop fileset - No Candidates"
+                fileset = id_to_fileset_dict[fileset_id]
+                fileset_name = fileset["name"] if "name" in fileset else ""
+                fileset_description = (
+                    fileset["description"] if "description" in fileset else ""
+                )
+                log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+                create_log(
+                    escape_string(category_text), user, escape_string(log_text), conn
+                )
+                dropped_early_no_candidate += 1
+                delete_original_fileset(fileset_id, conn)
+            else:
+                category_text = "Manual Merge Required"
+                log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
+                manual_merged_filesets += 1
+                add_manual_merge(
+                    candidates,
+                    fileset_id,
+                    category_text,
+                    log_text,
+                    user,
+                    conn,
+                    log_text,
+                )
+
         cursor.execute(
             "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
             (transaction_id,),
