@@ -146,9 +146,6 @@ def insert_fileset(
             cursor.execute(
                 f"UPDATE fileset SET `timestamp` = FROM_UNIXTIME(@fileset_time_last) WHERE id = {existing_entry}"
             )
-            cursor.execute(
-                f"UPDATE fileset SET status = 'detection' WHERE id = {existing_entry} AND status = 'obsolete'"
-            )
             cursor.execute(f"SELECT status FROM fileset WHERE id = {existing_entry}")
             status = cursor.fetchone()["status"]
         if status == "user":
@@ -610,10 +607,6 @@ def db_insert(data_arr, username=None, skiplog=False):
 
         fileset_count += 1
 
-    if detection:
-        conn.cursor().execute(
-            "UPDATE fileset SET status = 'obsolete' WHERE `timestamp` != FROM_UNIXTIME(@fileset_time_last) AND status = 'detection'"
-        )
     cur = conn.cursor()
 
     try:
