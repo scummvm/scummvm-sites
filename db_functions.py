@@ -131,16 +131,18 @@ def insert_fileset(
     # Check if key/megakey already exists, if so, skip insertion (no quotes on purpose)
     if detection:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT id FROM fileset WHERE megakey = %s", (megakey,))
+            cursor.execute(
+                "SELECT id, status FROM fileset WHERE megakey = %s", (megakey,)
+            )
 
             existing_entry = cursor.fetchone()
     else:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT id FROM fileset WHERE `key` = %s", (key,))
+            cursor.execute("SELECT id, status FROM fileset WHERE `key` = %s", (key,))
 
             existing_entry = cursor.fetchone()
 
-    if existing_entry is not None:
+    if (existing_entry is not None) and (status == existing_entry["status"]):
         existing_entry = existing_entry["id"]
         with conn.cursor() as cursor:
             cursor.execute("SET @fileset_last = %s", (existing_entry,))
