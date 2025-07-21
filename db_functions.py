@@ -1707,6 +1707,8 @@ def set_process(
     set_to_candidate_dict = defaultdict(list)
     id_to_fileset_dict = defaultdict(dict)
 
+    no_candidate_logs = []
+
     # Deep copy to avoid changes in game_data in the loop affecting the lookup map.
     game_data_lookup = {fs["name"]: copy.deepcopy(fs) for fs in game_data}
 
@@ -1755,7 +1757,6 @@ def set_process(
 
         # Separating out the matching logic for glk engine
         engine_name = fileset["sourcefile"].split("-")[0]
-
         (candidate_filesets, fileset_count) = set_filter_candidate_filesets(
             fileset_id, fileset, fileset_count, transaction_id, engine_name, conn
         )
@@ -1768,19 +1769,26 @@ def set_process(
                 fileset["description"] if "description" in fileset else ""
             )
             log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            console_log_text = f"Early fileset drop as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            no_candidate_logs.append(console_log_text)
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
+            continue
         id_to_fileset_dict[fileset_id] = fileset
         set_to_candidate_dict[fileset_id].extend(candidate_filesets)
 
-    console_message = "Candidate filtering finished."
-    console_log(console_message)
+    for console_log_text in no_candidate_logs:
+        console_log(console_log_text)
+    no_candidate_logs = []
+
     console_message = (
-        f"{dropped_early_no_candidate} Filesets Dropped for No candidates."
+        f"{dropped_early_no_candidate} Filesets Dropped Early for having no candidates."
     )
+    console_log(console_message)
+    console_message = "Candidate filtering finished."
     console_log(console_message)
     console_message = "Looking for duplicates..."
     console_log(console_message)
@@ -1848,6 +1856,7 @@ def set_process(
             auto_merged_filesets,
             manual_merged_filesets,
             mismatch_filesets,
+            dropped_early_no_candidate,
         ) = set_perform_match(
             fileset,
             src,
@@ -1861,12 +1870,17 @@ def set_process(
             mismatch_filesets,
             manual_merge_map,
             set_to_candidate_dict,
+            dropped_early_no_candidate,
+            no_candidate_logs,
             conn,
             skiplog,
         )
-
         match_count += 1
+
     console_log("Matching performed.")
+
+    for console_log_text in no_candidate_logs:
+        console_log(console_log_text)
 
     with conn.cursor() as cursor:
         for fileset_id, candidates in manual_merge_map.items():
@@ -1878,15 +1892,17 @@ def set_process(
                     fileset["description"] if "description" in fileset else ""
                 )
                 log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+                console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name}, Description: {fileset_description}."
+                console_log(console_log_text)
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
                 )
                 dropped_early_no_candidate += 1
+                manual_merged_filesets -= 1
                 delete_original_fileset(fileset_id, conn)
             else:
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
-                manual_merged_filesets += 1
                 add_manual_merge(
                     candidates,
                     fileset_id,
@@ -1962,14 +1978,30 @@ def set_perform_match(
     mismatch_filesets,
     manual_merge_map,
     set_to_candidate_dict,
+    dropped_early_no_candidate,
+    no_candidate_logs,
     conn,
     skiplog,
 ):
     """
-    "Performs matching for set.dat"
+    Performs matching for set.dat
     """
     with conn.cursor() as cursor:
-        if len(candidate_filesets) == 1:
+        if len(candidate_filesets) == 0:
+            category_text = "Drop fileset - No Candidates"
+            fileset_name = fileset["name"] if "name" in fileset else ""
+            fileset_description = (
+                fileset["description"] if "description" in fileset else ""
+            )
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name}, Description: {fileset_description}."
+            no_candidate_logs.append(console_log_text)
+            create_log(
+                escape_string(category_text), user, escape_string(log_text), conn
+            )
+            dropped_early_no_candidate += 1
+            delete_original_fileset(fileset_id, conn)
+        elif len(candidate_filesets) == 1:
             matched_fileset_id = candidate_filesets[0]
             cursor.execute(
                 "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
@@ -2032,12 +2064,14 @@ def set_perform_match(
 
         elif len(candidate_filesets) > 1:
             manual_merge_map[fileset_id] = candidate_filesets
+            manual_merged_filesets += 1
 
     return (
         fully_matched_filesets,
         auto_merged_filesets,
         manual_merged_filesets,
         mismatch_filesets,
+        dropped_early_no_candidate,
     )
 
 
@@ -2247,6 +2281,7 @@ def set_filter_candidate_filesets(
                 filesize = f["size"]
                 if is_glk and (filesize in set_glk_file_size or filesize == 0):
                     count += 1
+                    continue
                 if (filename, filesize) in set_file_name_size:
                     if filesize == -1:
                         count += 1
