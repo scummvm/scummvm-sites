@@ -183,10 +183,10 @@ def insert_fileset(
 
     log_text = f"Created Fileset:{fileset_last}, {log_text}"
     if src == "user":
-        log_text = f"Created Fileset:{fileset_last}, from user: IP {ip}, {log_text}"
+        log_text = f"Created Fileset:{fileset_last}, from user: IP {ip}."
 
     user = f"cli:{getpass.getuser()}" if username is None else username
-    if not skiplog:
+    if not skiplog and detection:
         log_last = create_log(
             escape_string(category_text), user, escape_string(log_text), conn
         )
@@ -1033,7 +1033,7 @@ def scan_process(
             fileset_description = (
                 fileset["description"] if "description" in fileset else ""
             )
-            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
             )
@@ -1169,6 +1169,8 @@ def scan_perform_match(
         Put them for manual merge.
     """
     with conn.cursor() as cursor:
+        fileset_name = fileset["name"] if "name" in fileset else ""
+        fileset_description = fileset["description"] if "description" in fileset else ""
         if len(candidate_filesets) == 1:
             matched_fileset_id = candidate_filesets[0]
             cursor.execute(
@@ -1180,6 +1182,15 @@ def scan_perform_match(
             if status == "partial":
                 # Partial filesets contain all the files, so does the scanned filesets, so this case should not ideally happen.
                 if total_files(matched_fileset_id, conn) > total_fileset_files(fileset):
+                    log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+                    category_text = "Uploaded from scan."
+                    create_log(
+                        escape_string(category_text),
+                        user,
+                        escape_string(log_text),
+                        conn,
+                    )
+                    console_log(log_text)
                     category_text = "Missing files"
                     log_text = f"Missing files in Fileset:{fileset_id}. Try manual merge with Fileset:{matched_fileset_id}."
                     add_manual_merge(
@@ -1229,6 +1240,15 @@ def scan_perform_match(
                         automatic_merged_filesets += 1
 
                 else:
+                    log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+                    category_text = "Uploaded from scan."
+                    create_log(
+                        escape_string(category_text),
+                        user,
+                        escape_string(log_text),
+                        conn,
+                    )
+                    console_log(log_text)
                     category_text = "Manual Merge - Detection found"
                     log_text = f"Matched with detection. Merge Fileset:{fileset_id} manually with Fileset:{matched_fileset_id}."
                     add_manual_merge(
@@ -1269,6 +1289,12 @@ def scan_perform_match(
                 delete_original_fileset(fileset_id, conn)
 
         elif len(candidate_filesets) > 1:
+            log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+            category_text = "Uploaded from scan."
+            create_log(
+                escape_string(category_text), user, escape_string(log_text), conn
+            )
+            console_log(log_text)
             category_text = "Manual Merge - Multiple Candidates"
             log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
             manual_merged_filesets += 1
@@ -1768,8 +1794,8 @@ def set_process(
             fileset_description = (
                 fileset["description"] if "description" in fileset else ""
             )
-            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
-            console_log_text = f"Early fileset drop as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
+            console_log_text = f"Early fileset drop as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             no_candidate_logs.append(console_log_text)
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
@@ -1829,7 +1855,7 @@ def set_process(
                 fileset_description = (
                     fileset["description"] if "description" in fileset else ""
                 )
-                log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name}, Description: {fileset_description}. Clashed with Fileset:{candidate} ({engine}:{gameid}-{platform}-{language})"
+                log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name} Description: {fileset_description}. Clashed with Fileset:{candidate} ({engine}:{gameid}-{platform}-{language})"
                 console_log(log_text)
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
@@ -1884,15 +1910,15 @@ def set_process(
 
     with conn.cursor() as cursor:
         for fileset_id, candidates in manual_merge_map.items():
+            fileset = id_to_fileset_dict[fileset_id]
+            fileset_name = fileset["name"] if "name" in fileset else ""
+            fileset_description = (
+                fileset["description"] if "description" in fileset else ""
+            )
             if len(candidates) == 0:
                 category_text = "Drop fileset - No Candidates"
-                fileset = id_to_fileset_dict[fileset_id]
-                fileset_name = fileset["name"] if "name" in fileset else ""
-                fileset_description = (
-                    fileset["description"] if "description" in fileset else ""
-                )
-                log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
-                console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name}, Description: {fileset_description}."
+                log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
+                console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name} Description: {fileset_description}."
                 console_log(console_log_text)
                 create_log(
                     escape_string(category_text), user, escape_string(log_text), conn
@@ -1901,6 +1927,12 @@ def set_process(
                 manual_merged_filesets -= 1
                 delete_original_fileset(fileset_id, conn)
             else:
+                log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+                category_text = "Uploaded from dat."
+                create_log(
+                    escape_string(category_text), user, escape_string(log_text), conn
+                )
+                console_log(log_text)
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
                 add_manual_merge(
@@ -1987,14 +2019,12 @@ def set_perform_match(
     Performs matching for set.dat
     """
     with conn.cursor() as cursor:
+        fileset_name = fileset["name"] if "name" in fileset else ""
+        fileset_description = fileset["description"] if "description" in fileset else ""
         if len(candidate_filesets) == 0:
             category_text = "Drop fileset - No Candidates"
-            fileset_name = fileset["name"] if "name" in fileset else ""
-            fileset_description = (
-                fileset["description"] if "description" in fileset else ""
-            )
-            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name}, Description: {fileset_description}."
-            console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name}, Description: {fileset_description}."
+            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
+            console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name} Description: {fileset_description}."
             no_candidate_logs.append(console_log_text)
             create_log(
                 escape_string(category_text), user, escape_string(log_text), conn
@@ -2048,6 +2078,15 @@ def set_perform_match(
                     delete_original_fileset(fileset_id, conn)
 
                 else:
+                    log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+                    category_text = "Uploaded from dat."
+                    create_log(
+                        escape_string(category_text),
+                        user,
+                        escape_string(log_text),
+                        conn,
+                    )
+                    console_log(log_text)
                     category_text = "Mismatch"
                     log_text = f"Fileset:{fileset_id} mismatched with Fileset:{matched_fileset_id} with status:{status}. Try manual merge. Unmatched Files in set.dat fileset = {len(unmatched_dat_files)} Unmatched Files in candidate fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {', '.join(scan_file for scan_file in unmatched_dat_files)}, List of unmatched files full fileset : {', '.join(scan_file for scan_file in unmatched_candidate_files)}"
                     console_log(log_text)
