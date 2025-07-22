@@ -19,7 +19,7 @@ def truncate_all_tables(conn):
 
     for table in tables:
         try:
-            cursor.execute("TRUNCATE TABLE %s", (table,))
+            cursor.execute(f"TRUNCATE TABLE `{table}`")
             print(f"Table '{table}' truncated successfully")
         except pymysql.Error as err:
             print(f"Error truncating table '{table}': {err}")

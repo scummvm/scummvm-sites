@@ -266,8 +266,7 @@ def fileset():
             if widetable == "full":
                 file_ids = [file["id"] for file in result]
                 cursor.execute(
-                    "SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN (%s)",
-                    (",".join(map(str, file_ids)),),
+                    f"SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN ({','.join(map(str, file_ids))})"
                 )
                 checksums = cursor.fetchall()
 
