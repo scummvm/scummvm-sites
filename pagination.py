@@ -74,7 +74,11 @@ def create_page(
 
             # Handle multiple tables
             from_query = records_table
-            tables_list = list(tables)
+            join_order = ["game", "engine"]
+            tables_list = sorted(
+                list(tables),
+                key=lambda t: join_order.index(t) if t in join_order else 99,
+            )
             if records_table not in tables_list or len(tables_list) > 1:
                 for table in tables_list:
                     if table == records_table:
