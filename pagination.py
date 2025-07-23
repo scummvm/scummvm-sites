@@ -241,8 +241,8 @@ def create_page(
                 html += f"<input type='hidden' name='{key}' value='{value}'>"
         html += "<div class='pagination'>"
         if page > 1:
-            html += f"<a href='{filename}?{vars}'>❮❮</a>"
-            html += f"<a href='{filename}?page={page - 1}&{vars}'>❮</a>"
+            html += f"<a href='{filename}?{vars}'>1</a>"
+            html += f"<a href='{filename}?page={page - 1}&{vars}'>Prev</a>"
         if page - 2 > 1:
             html += "<div class='more'>...</div>"
         for i in range(page - 2, page + 3):
@@ -256,8 +256,10 @@ def create_page(
         if page + 2 < num_of_pages:
             html += "<div class='more'>...</div>"
         if page < num_of_pages:
-            html += f"<a href='{filename}?page={page + 1}&{vars}'>❯</a>"
-            html += f"<a href='{filename}?page={num_of_pages}&{vars}'>❯❯</a>"
+            html += f"<a href='{filename}?page={page + 1}&{vars}'>Next</a>"
+            html += (
+                f"<a href='{filename}?page={num_of_pages}&{vars}'>{num_of_pages}</a>"
+            )
         html += "<input type='text' name='page' placeholder='Page No'>"
         html += "<input type='submit' value='Submit'>"
         html += "</div></form>"
