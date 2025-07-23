@@ -118,6 +118,11 @@ def fileset():
             cursor.execute("SELECT MAX(id) FROM fileset")
             max_id = cursor.fetchone()["MAX(id)"]
 
+            if id > max_id:
+                return redirect(f"/fileset?id={max_id}")
+            if id < min_id:
+                return redirect(f"/fileset?id={min_id}")
+
             # Ensure the id is between the minimum and maximum id
             id = max(min_id, min(id, max_id))
 
