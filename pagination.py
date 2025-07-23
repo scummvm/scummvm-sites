@@ -101,8 +101,6 @@ def create_page(
 
         num_of_pages = (num_of_results + results_per_page - 1) // results_per_page
         print(f"Num of results: {num_of_results}, Num of pages: {num_of_pages}")
-        if num_of_results == 0:
-            return "No results for given filters"
 
         page = int(request.args.get("page", 1))
         page = max(1, min(page, num_of_pages))
@@ -118,11 +116,12 @@ def create_page(
                 value = pymysql.converters.escape_string(value)
                 if value == "":
                     value = ".*"
-                condition += (
-                    f" AND {filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
-                    if condition != "WHERE "
-                    else f"{filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
-                )
+                field = f"{filters[key]}.{'id' if key == 'fileset' else key}"
+                if value == ".*":
+                    clause = f"({field} IS NULL OR {field} REGEXP '{value}')"
+                else:
+                    clause = f"{field} REGEXP '{value}'"
+                condition += f" AND {clause}" if condition != "WHERE " else clause
 
             if condition == "WHERE ":
                 condition = ""
@@ -149,39 +148,32 @@ def create_page(
 <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
 <table style="margin-top: 80px;">
 """
-    if not results:
-        return "No results for given filters"
-    if results:
-        if filters:
-            if records_table != "log":
-                html += "<tr class='filter'><td></td><td></td>"
-            else:
-                html += "<tr class='filter'><td></td>"
-
-            for key in results[0].keys():
-                if key not in filters:
-                    html += "<td class='filter'></td>"
-                    continue
-                filter_value = request.args.get(key, "")
-                html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
-            html += "</tr><tr class='filter'><td></td><td></td><td class='filter'><input type='submit' value='Submit'></td></tr>"
-
-        html += "<th>#</th>"
+    if filters:
         if records_table != "log":
-            html += "<th>Fileset ID</th>"
-        for key in results[0].keys():
-            if key in ["fileset", "fileset_id"]:
-                continue
-            vars = "&".join(
-                [f"{k}={v}" for k, v in request.args.items() if k != "sort"]
-            )
-            sort = request.args.get("sort", "")
-            if sort == key:
-                vars += f"&sort={key}-desc"
-            else:
-                vars += f"&sort={key}"
-            html += f"<th><a href='{filename}?{vars}'>{key}</a></th>"
+            html += "<tr class='filter'><td></td><td></td>"
+        else:
+            html += "<tr class='filter'><td></td>"
 
+        for key in filters.keys():
+            filter_value = request.args.get(key, "")
+            html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
+        html += "</tr><tr class='filter'><td></td><td></td><td class='filter'><input type='submit' value='Submit'></td></tr>"
+
+    html += "<th>#</th>"
+    if records_table != "log":
+        html += "<th>Fileset ID</th>"
+    for key in filters.keys():
+        if key in ["fileset", "fileset_id"]:
+            continue
+        vars = "&".join([f"{k}={v}" for k, v in request.args.items() if k != "sort"])
+        sort = request.args.get("sort", "")
+        if sort == key:
+            vars += f"&sort={key}-desc"
+        else:
+            vars += f"&sort={key}"
+        html += f"<th><a href='{filename}?{vars}'>{key}</a></th>"
+
+    if results:
         counter = offset + 1
         for row in results:
             if counter == offset + 1:  # If it is the first run of the loop
@@ -232,6 +224,8 @@ def create_page(
             counter += 1
 
     html += "</table></form>"
+    if not results:
+        html += "<h1>No results for given filters</h1>"
 
     # Pagination
     vars = "&".join([f"{k}={v}" for k, v in request.args.items() if k != "page"])

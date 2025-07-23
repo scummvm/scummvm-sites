@@ -1229,10 +1229,10 @@ def fileset_search():
     order = "ORDER BY fileset.id"
     filters = {
         "fileset": "fileset",
-        "gameid": "game",
         "extra": "game",
         "platform": "game",
         "language": "game",
+        "gameid": "game",
         "megakey": "fileset",
         "status": "fileset",
         "transaction": "transactions",
