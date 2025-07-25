@@ -8,6 +8,7 @@ from flask import (
 )
 import pymysql.cursors
 import json
+import html as html_lib
 import os
 from user_fileset_functions import (
     user_insert_fileset,
@@ -16,13 +17,14 @@ from user_fileset_functions import (
 from pagination import create_page
 import difflib
 from db_functions import (
-    find_matching_filesets,
     get_all_related_filesets,
     convert_log_text_to_links,
     user_integrity_check,
     db_connect,
     create_log,
     db_connect_root,
+    get_checksum_props,
+    delete_original_fileset,
 )
 from collections import defaultdict
 from schema import init_database
@@ -159,8 +161,7 @@ def fileset():
             <table>
             """
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Manual Merge</button>"
-            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/match'\">Match and Merge</button>"
-            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/possible_merge'\">Possible Merges</button>"
+            # html += f"<button type='button' onclick=\"location.href='/fileset/{id}/possible_merge'\">Possible Merges</button>"
             html += f"""
                     <form action="/fileset/{id}/mark_full" method="post" style="display:inline;">
                         <button type='submit'>Mark as full</button>
@@ -334,7 +335,6 @@ def fileset():
             # Generate the HTML for the developer actions
             html += "<h3>Developer Actions</h3>"
             html += f"<button id='delete-button' type='button' onclick='delete_id({id})'>Mark Fileset for Deletion</button>"
-            html += f"<button id='match-button' type='button' onclick='match_id({id})'>Match and Merge Fileset</button>"
 
             if "delete" in request.form:
                 cursor.execute(
@@ -419,121 +419,46 @@ def fileset():
                 html += "</tr>\n"
 
             html += "</table>\n"
-            return render_template_string(html)
-    finally:
-        connection.close()
 
-
-@app.route("/fileset/<int:id>/match", methods=["GET"])
-def match_fileset_route(id):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    connection = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
-
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT * FROM fileset WHERE id = %s", (id,))
-            fileset = cursor.fetchone()
-            fileset["rom"] = []
-            if not fileset:
-                return f"No fileset found with id {id}", 404
-
-            cursor.execute(
-                "SELECT file.id, name, size, checksum, detection, detection_type FROM file WHERE fileset = %s",
-                (id,),
-            )
-            result = cursor.fetchall()
-            file_ids = {}
-            for file in result:
-                file_ids[file["id"]] = (file["name"], file["size"])
-            cursor.execute(
-                "SELECT file, checksum, checksize, checktype FROM filechecksum WHERE file IN (%s)",
-                (",".join(map(str, file_ids.keys())),),
-            )
-
-            files = cursor.fetchall()
-            checksum_dict = defaultdict(
-                lambda: {"name": "", "size": 0, "checksums": {}}
-            )
-
-            for i in files:
-                file_id = i["file"]
-                file_name, file_size = file_ids[file_id]
-                checksum_dict[file_name]["name"] = file_name
-                checksum_dict[file_name]["size"] = file_size
-                checksum_key = (
-                    f"{i['checktype']}-{i['checksize']}"
-                    if i["checksize"] != 0
-                    else i["checktype"]
-                )
-                checksum_dict[file_name]["checksums"][checksum_key] = i["checksum"]
-
-            fileset["rom"] = [
-                {"name": value["name"], "size": value["size"], **value["checksums"]}
-                for value in checksum_dict.values()
-            ]
-
-            matched_map = find_matching_filesets(fileset, connection, fileset["status"])
-
-            html = f"""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
-            </head>
-            <body>
-            <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-                <a href="{{{{ url_for('index') }}}}">
-                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
-                </a>
-            </nav>
-            <h2 style="margin-top: 80px;">Matched Filesets for Fileset: {id}</h2>
-            <table>
-            <tr>
-                <th>Fileset ID</th>
-                <th>Match Count</th>
-                <th>Actions</th>
-            </tr>
+            # Manual merge final candidates
+            query = """
+                SELECT
+                    fs.*,
+                    g.name AS game_name,
+                    g.engine AS game_engine,
+                    g.platform AS game_platform,
+                    g.language AS game_language,
+                    g.extra AS extra
+                FROM
+                    fileset fs
+                LEFT JOIN
+                    game g ON fs.game = g.id
+                JOIN
+                    possible_merges pm ON pm.child_fileset = fs.id
+                WHERE pm.parent_fileset = %s
             """
-
-            for fileset_id, match_count in matched_map.items():
-                if fileset_id == id:
-                    continue
-                cursor.execute(
-                    "SELECT COUNT(file.id) FROM file WHERE fileset = %s", (fileset_id,)
-                )
-                count = cursor.fetchone()["COUNT(file.id)"]
-                html += f"""
-                <tr>
-                    <td>{fileset_id}</td>
-                    <td>{len(match_count)} / {count}</td>
-                    <td><a href="/fileset?id={fileset_id}">View Details</a></td>
-                    <td>
-                        <form method="POST" action="/fileset/{id}/merge/confirm">
-                            <input type="hidden" name="source_id" value="{id}">
-                            <input type="hidden" name="target_id" value="{fileset_id}">
-                            <input type="submit" value="Merge">
-                        </form>
-                    </td>
-                    <td>
-                        <form method="GET" action="/fileset?id={id}">
-                            <input type="submit" value="Cancel">
-                        </form>
-                    </td>
-                </tr>
+            cursor.execute(query, (id,))
+            results = cursor.fetchall()
+            if results:
+                html += """
+                    <h3 style="margin-top: 30px;">Possible Merges</h3>
+                    <table>
+                    <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Details</th><th>Action</th></tr>
                 """
+                for result in results:
+                    html += f"""
+                    <tr>
+                        <td>{result["id"]}</td>
+                        <td>{result["game_name"]}</td>
+                        <td>{result["game_platform"]}</td>
+                        <td>{result["game_language"]}</td>
+                        <td>{result["extra"]}</td>
+                        <td><a href="/fileset?id={result["id"]}">View Details</a></td>
+                        <td><a href="/fileset/{id}/merge/confirm?target_id={result["id"]}">Merge</a></td>
+                    </tr>
+                    """
+                html += "</table>\n"
 
-            html += "</table></body></html>"
             return render_template_string(html)
     finally:
         connection.close()
@@ -755,7 +680,18 @@ def confirm_merge(id):
                 (id,),
             )
             source_fileset = cursor.fetchone()
-            print(source_fileset)
+
+            # Select all files
+            file_query = """
+                SELECT f.name, f.size, f.`size-r`, f.`size-rd`, 
+                fc.checksum, fc.checksize, fc.checktype, f.detection
+                FROM file f
+                JOIN filechecksum fc ON fc.file = f.id
+                WHERE f.fileset = %s
+            """
+            cursor.execute(file_query, (id,))
+            source_files = cursor.fetchall()
+
             cursor.execute(
                 """
                 SELECT 
@@ -774,6 +710,9 @@ def confirm_merge(id):
             """,
                 (target_id,),
             )
+            target_fileset = cursor.fetchone()
+            cursor.execute(file_query, (target_id,))
+            target_files = cursor.fetchall()
 
             def highlight_differences(source, target):
                 diff = difflib.ndiff(source, target)
@@ -806,11 +745,10 @@ def confirm_merge(id):
                 </a>
             </nav>
             <h2 style="margin-top: 80px;">Confirm Merge</h2>
+            <form id="confirm_merge_form">
             <table border="1">
-            <tr><th>Field</th><th>Source Fileset</th><th>Target Fileset</th></tr>
+            <tr><th style="width: 50px;">Field</th><th style="width: 1000px;">Source Fileset</th><th style="width: 1000px;">Target Fileset</th></tr>
             """
-
-            target_fileset = cursor.fetchone()
 
             for column in source_fileset.keys():
                 source_value = str(source_fileset[column])
@@ -826,16 +764,141 @@ def confirm_merge(id):
                 else:
                     html += f"<tr><td>{column}</td><td>{source_value}</td><td>{target_value}</td></tr>"
 
+            # Files
+            source_files_map = defaultdict(dict)
+            target_files_map = defaultdict(dict)
+            detection_files_set = set()
+
+            if source_files:
+                for file in source_files:
+                    checksize = file["checksize"]
+                    if checksize != "1048576" and file["checksize"] == "1M":
+                        checksize = "1048576"
+                    if checksize != "1048576" and int(file["checksize"]) == 0:
+                        checksize = "full"
+                    check = file["checktype"] + "-" + checksize
+                    source_files_map[file["name"].lower()][check] = file["checksum"]
+                    source_files_map[file["name"].lower()]["size"] = file["size"]
+                    source_files_map[file["name"].lower()]["size-r"] = file["size-r"]
+                    source_files_map[file["name"].lower()]["size-rd"] = file["size-rd"]
+
+            if target_files:
+                for file in target_files:
+                    checksize = file["checksize"]
+                    if checksize != "1048576" and file["checksize"] == "1M":
+                        checksize = "1048576"
+                    if checksize != "1048576" and int(file["checksize"]) == 0:
+                        checksize = "full"
+                    check = file["checktype"] + "-" + checksize
+                    target_files_map[file["name"].lower()][check] = file["checksum"]
+                    target_files_map[file["name"].lower()]["size"] = file["size"]
+                    target_files_map[file["name"].lower()]["size-r"] = file["size-r"]
+                    target_files_map[file["name"].lower()]["size-rd"] = file["size-rd"]
+                    print(file)
+                    if file["detection"] == 1:
+                        detection_files_set.add(file["name"].lower())
+
+            print(detection_files_set)
+
+            all_filenames = sorted(
+                set(source_files_map.keys()) | set(target_files_map.keys())
+            )
+            html += "<tr><th>Files</th></tr>"
+            for filename in all_filenames:
+                source_dict = source_files_map.get(filename, {})
+                target_dict = target_files_map.get(filename, {})
+
+                html += f"<tr><th>{filename}</th><th>Source File</th><th>Target File</th></tr>"
+
+                keys = sorted(set(source_dict.keys()) | set(target_dict.keys()))
+
+                for key in keys:
+                    source_value = str(source_dict.get(key, ""))
+                    target_value = str(target_dict.get(key, ""))
+
+                    source_checked = "checked" if key in source_dict else ""
+                    source_checksum = source_files_map[filename.lower()].get(key, "")
+                    target_checksum = target_files_map[filename.lower()].get(key, "")
+
+                    source_val = html_lib.escape(
+                        json.dumps(
+                            {
+                                "side": "source",
+                                "filename": filename,
+                                "prop": key,
+                                "value": source_checksum,
+                                "detection": "0",
+                            }
+                        )
+                    )
+                    if filename in detection_files_set:
+                        target_val = html_lib.escape(
+                            json.dumps(
+                                {
+                                    "side": "target",
+                                    "filename": filename,
+                                    "prop": key,
+                                    "value": target_checksum,
+                                    "detection": "1",
+                                }
+                            )
+                        )
+                    else:
+                        target_val = html_lib.escape(
+                            json.dumps(
+                                {
+                                    "side": "target",
+                                    "filename": filename,
+                                    "prop": key,
+                                    "value": target_checksum,
+                                    "detection": "0",
+                                }
+                            )
+                        )
+
+                    if source_value != target_value:
+                        source_highlighted, target_highlighted = highlight_differences(
+                            source_value, target_value
+                        )
+
+                        html += f"""
+                        <tr>
+                            <td>{key}</td>
+                            <td>
+                                <input type="checkbox" name="options[]" value="{source_val}" {source_checked}>
+                                {source_highlighted}
+                            </td>
+                            <td>
+                                <input type="checkbox" name="options[]" value="{target_val}">
+                                {target_highlighted}
+                            </td>
+                        </tr>
+                        """
+                    else:
+                        html += f"""
+                        <tr>
+                            <td>{key}</td>
+                            <td>
+                                <input type="checkbox" name="options[]" value="{source_val}" {source_checked}>
+                                {source_value}
+                            </td>
+                            <td>
+                                <input type="checkbox" name="options[]" value="{target_val}">
+                                {target_value}
+                            </td>
+                        </tr>
+                        """
+
             html += """
             </table>
-            <form method="POST" action="{{ url_for('execute_merge', id=id) }}">
                 <input type="hidden" name="source_id" value="{{ source_fileset['id'] }}">
                 <input type="hidden" name="target_id" value="{{ target_fileset['id'] }}">
-                <input type="submit" value="Confirm Merge">
+                <button type="submit">Confirm Merge</button>
             </form>
             <form action="{{ url_for('fileset', id=id) }}">
                 <input type="submit" value="Cancel">
             </form>
+            <script src="{{ url_for('static', filename='js/confirm_merge_form_handler.js') }}"></script>
             </body>
             </html>
             """
@@ -851,9 +914,11 @@ def confirm_merge(id):
 
 
 @app.route("/fileset/<int:id>/merge/execute", methods=["POST"])
-def execute_merge(id, source=None, target=None):
-    source_id = request.form["source_id"] if not source else source
-    target_id = request.form["target_id"] if not target else target
+def execute_merge(id):
+    data = request.get_json()
+    source_id = data.get("source_id")
+    target_id = data.get("target_id")
+    options = data.get("options")
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_dir, "mysql_config.json")
@@ -875,145 +940,136 @@ def execute_merge(id, source=None, target=None):
             source_fileset = cursor.fetchone()
             cursor.execute("SELECT * FROM fileset WHERE id = %s", (target_id,))
 
-            if source_fileset["status"] == "detection":
+            if source_fileset["status"] == "dat":
                 cursor.execute(
                     """
-                UPDATE fileset SET
-                    game = %s
+                    UPDATE fileset SET
                     status = %s,
                     `key` = %s,
-                    megakey = %s,
                     `timestamp` = %s
-                WHERE id = %s
+                    WHERE id = %s
                 """,
                     (
-                        source_fileset["game"],
-                        source_fileset["status"],
+                        "partial",
                         source_fileset["key"],
-                        source_fileset["megakey"],
                         source_fileset["timestamp"],
                         target_id,
                     ),
                 )
 
-                cursor.execute("DELETE FROM file WHERE fileset = %s", (target_id,))
+                source_filenames = set()
+                change_fileset_id = set()
+                file_details_map = defaultdict(dict)
 
-                cursor.execute("SELECT * FROM file WHERE fileset = %s", (source_id,))
-                source_files = cursor.fetchall()
+                for file in options:
+                    filename = file["filename"].lower()
+                    if "detection" not in file_details_map[filename]:
+                        file_details_map[filename]["detection"] = file["detection"]
+                        file_details_map[filename]["detection_type"] = file["prop"]
+                    elif (
+                        "detection" in file_details_map[filename]
+                        and file_details_map[filename]["detection"] != "1"
+                    ):
+                        file_details_map[filename]["detection"] = file["detection"]
+                        file_details_map[filename]["detection_type"] = file["prop"]
+                    if file["prop"].startswith("md5"):
+                        if "checksums" not in file_details_map[filename]:
+                            file_details_map[filename]["checksums"] = []
+                        file_details_map[filename]["checksums"].append(
+                            {"check": file["prop"], "value": file["value"]}
+                        )
+                    if file["side"] == "source":
+                        source_filenames.add(filename)
 
-                for file in source_files:
-                    cursor.execute(
+                # Delete older checksums
+                for file in options:
+                    filename = file["filename"].lower()
+                    if file["side"] == "source":
+                        cursor.execute(
+                            """SELECT f.id as file_id FROM file f
+                                       JOIN fileset fs ON fs.id = f.fileset 
+                                       WHERE f.name = %s
+                                       AND fs.id = %s""",
+                            (filename, source_id),
+                        )
+                        file_id = cursor.fetchone()["file_id"]
+                        query = """
+                            DELETE FROM filechecksum
+                            WHERE file = %s
                         """
-                    INSERT INTO file (name, size, checksum, fileset, detection, `timestamp`)
-                    VALUES (%s, %s, %s, %s, %s, NOW())
-                    """,
-                        (
-                            file["name"].lower(),
-                            file["size"],
-                            file["checksum"],
-                            target_id,
-                            file["detection"],
-                        ),
-                    )
-
-                    cursor.execute("SELECT LAST_INSERT_ID() as file_id")
-                    new_file_id = cursor.fetchone()["file_id"]
-
-                    cursor.execute(
-                        "SELECT * FROM filechecksum WHERE file = %s", (file["id"],)
-                    )
-                    file_checksums = cursor.fetchall()
-
-                    for checksum in file_checksums:
-                        cursor.execute(
-                            """
-                        INSERT INTO filechecksum (file, checksize, checktype, checksum)
-                        VALUES (%s, %s, %s, %s)
-                        """,
-                            (
-                                new_file_id,
-                                checksum["checksize"],
-                                checksum["checktype"],
-                                checksum["checksum"],
-                            ),
-                        )
-            elif source_fileset["status"] in ["scan", "dat"]:
-                cursor.execute(
-                    """
-                UPDATE fileset SET
-                    status = %s,
-                    `key` = %s,
-                    `timestamp` = %s
-                WHERE id = %s
-                """,
-                    (
-                        source_fileset["status"]
-                        if source_fileset["status"] != "dat"
-                        else "partial",
-                        source_fileset["key"],
-                        source_fileset["timestamp"],
-                        target_id,
-                    ),
-                )
-                cursor.execute("SELECT * FROM file WHERE fileset = %s", (source_id,))
-                source_files = cursor.fetchall()
-
-                cursor.execute("SELECT * FROM file WHERE fileset = %s", (target_id,))
-                target_files = cursor.fetchall()
-
-                target_files_dict = {}
-                for target_file in target_files:
-                    cursor.execute(
-                        "SELECT * FROM filechecksum WHERE file = %s",
-                        (target_file["id"],),
-                    )
-                    target_checksums = cursor.fetchall()
-                    for checksum in target_checksums:
-                        target_files_dict[checksum["checksum"]] = target_file
-
-                for source_file in source_files:
-                    cursor.execute(
-                        "SELECT * FROM filechecksum WHERE file = %s",
-                        (source_file["id"],),
-                    )
-                    source_checksums = cursor.fetchall()
-                    file_exists = False
-                    for checksum in source_checksums:
-                        print(checksum["checksum"])
-                        if checksum["checksum"] in target_files_dict.keys():
-                            target_file = target_files_dict[checksum["checksum"]]
-                            source_file["detection"] = target_file["detection"]
-
+                        cursor.execute(query, (file_id,))
+                    else:
+                        if filename not in source_filenames:
                             cursor.execute(
-                                "DELETE FROM file WHERE id = %s", (target_file["id"],)
+                                """SELECT f.id as file_id FROM file f
+                            JOIN fileset fs ON fs.id = f.fileset 
+                            WHERE f.name = %s
+                            AND fs.id = %s""",
+                                (filename, target_id),
                             )
-                            file_exists = True
-                            break
-                    print(file_exists)
-                    cursor.execute(
-                        """INSERT INTO file (name, size, checksum, fileset, detection, `timestamp`) VALUES (
-                        %s, %s, %s, %s, %s, NOW())""",
-                        (
-                            source_file["name"],
-                            source_file["size"],
-                            source_file["checksum"],
-                            target_id,
-                            source_file["detection"],
-                        ),
-                    )
-                    new_file_id = cursor.lastrowid
-                    for checksum in source_checksums:
-                        # TODO: Handle the string
+                            target_file_id = cursor.fetchone()["file_id"]
+                            change_fileset_id.add(target_file_id)
 
+                for filename, details in file_details_map.items():
+                    cursor.execute(
+                        """SELECT f.id as file_id FROM file f
+                                    JOIN fileset fs ON fs.id = f.fileset 
+                                    WHERE f.name = %s
+                                    AND fs.id = %s""",
+                        (filename, source_id),
+                    )
+                    source_file_id = cursor.fetchone()["file_id"]
+                    detection = (
+                        details["detection"] == "1" if "detection" in details else False
+                    )
+                    if detection:
+                        query = """
+                            UPDATE file 
+                            SET detection = 1,
+                            detection_type = %s
+                            WHERE id = %s
+                        """
                         cursor.execute(
-                            "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)",
+                            query,
                             (
-                                new_file_id,
-                                checksum["checksize"],
-                                f"{checksum['checktype']}-{checksum['checksize']}",
-                                checksum["checksum"],
+                                details["detection_type"],
+                                source_file_id,
                             ),
                         )
+                        cursor.execute(
+                            """SELECT f.id as file_id FROM file f
+                                    JOIN fileset fs ON fs.id = f.fileset 
+                                    WHERE f.name = %s
+                                    AND fs.id = %s""",
+                            (filename, target_id),
+                        )
+                        target_file_id = cursor.fetchone()["file_id"]
+                        cursor.execute(
+                            "DELETE FROM file WHERE id = %s", (target_file_id,)
+                        )
+                    for c in details["checksums"]:
+                        checksum = c["value"]
+                        check = c["check"]
+                        checksize, checktype, checksum = get_checksum_props(
+                            check, checksum
+                        )
+                        query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
+                        cursor.execute(
+                            query, (source_file_id, checksize, checktype, checksum)
+                        )
+
+                    cursor.execute(
+                        "UPDATE file SET fileset = %s WHERE id = %s",
+                        (target_id, source_file_id),
+                    )
+
+                # for target_file_id in change_fileset_id:
+                #     query = """
+                #         UPDATE file
+                #         SET fileset = %s
+                #         WHERE id = %s
+                #     """
+                #     cursor.execute(query, (source_id, target_file_id))
 
             cursor.execute(
                 """
@@ -1022,6 +1078,17 @@ def execute_merge(id, source=None, target=None):
             """,
                 (target_id, source_id),
             )
+
+            delete_original_fileset(source_id, connection)
+            category_text = "Manually Merged"
+            log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id}."
+            create_log(category_text, "Moderator", log_text, connection)
+
+            query = """
+                DELETE FROM possible_merges
+                WHERE parent_fileset = %s
+            """
+            cursor.execute(query, (source_id,))
 
             connection.commit()
 
