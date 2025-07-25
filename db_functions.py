@@ -218,6 +218,11 @@ def insert_file(file, detection, src, conn):
     if "md5" in file:
         checksum = file["md5"]
         checksum = checksum.split(":")[1] if ":" in checksum else checksum
+        tag = checksum.split(":")[0] if ":" in checksum else ""
+        checktype = "md5"
+        if tag != "":
+            checktype += "-" + tag
+        checksize = 0
     else:
         for key, value in file.items():
             if "md5" in key:
