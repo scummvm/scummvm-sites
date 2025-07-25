@@ -2846,7 +2846,8 @@ def set_populate_file(fileset, fileset_id, conn, detection):
                 query = """
                     UPDATE file
                     SET size = %s,
-                    name = %s
+                    name = %s,
+                    `timestamp` = NOW()
                     WHERE id = %s
                 """
 
