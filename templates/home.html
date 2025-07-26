@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .title {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            gap: 50px;
+        }
+
+        .fileset_database {
+            margin-top: 10vh;
+            text-align: center;
+            background-color: #ffffff;
+            color: #000000;
+            border-radius: 5px;
+            padding: 10px;
+            font-size: 100px
+        }
+
+        .dev {
+            background-color: #fafeff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-left: auto;
+        }
+
+        button {
+            background-color: #d9534f;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background-color: #c9302c;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        h3 {
+            color: #000000;
+        }
+
+        @media (max-width: 768px) {
+            .fileset_database {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fileset_database {
+                font-size: 32px;
+            }
+
+            nav {
+                padding: 10px;
+            }
+
+            .nav-buttons a {
+                margin-bottom: 5px;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs') }}">Logs</a>
+        </div>
+        <div class="dev">
+            <form action="{{ url_for('clear_database') }}" method="POST">
+                <button type="submit">Clear Database</button>
+            </form>
+        </div>
+    </nav>
+    <div class="title">
+        <div class="fileset_database">Fileset Database</div>
+    </div>
+</body>
+
+</html>

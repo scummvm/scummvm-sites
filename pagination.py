@@ -144,10 +144,18 @@ def create_page(
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
-    <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-        <a href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
-        </a>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs') }}">Logs</a>
+        </div>
     </nav>
 <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
 <table style="margin-top: 80px;">
