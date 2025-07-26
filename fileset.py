@@ -10,10 +10,6 @@ import pymysql.cursors
 import json
 import html as html_lib
 import os
-from user_fileset_functions import (
-    user_insert_fileset,
-    match_and_merge_user_filesets,
-)
 from pagination import create_page
 import difflib
 from db_functions import (
@@ -343,10 +339,6 @@ def fileset():
                 )
                 connection.commit()
                 html += "<p id='delete-confirm'>Fileset marked for deletion</p>"
-
-            if "match" in request.form:
-                match_and_merge_user_filesets(request.form["match"])
-                return redirect(url_for("fileset", id=request.form["match"]))
 
             # Generate the HTML for the fileset history
             cursor.execute(
@@ -1134,28 +1126,24 @@ def validate():
 
     json_response = {"error": error_codes["success"], "files": []}
 
-    if not game_metadata:
-        if not json_object.get("files"):
-            json_response["error"] = error_codes["empty"]
-            del json_response["files"]
-            json_response["status"] = "empty_fileset"
-            return jsonify(json_response)
+    # if not game_metadata:
+    #     if not json_object.get("files"):
+    #         json_response["error"] = error_codes["empty"]
+    #         del json_response["files"]
+    #         json_response["status"] = "empty_fileset"
+    #         return jsonify(json_response)
 
-        json_response["error"] = error_codes["no_metadata"]
-        del json_response["files"]
-        json_response["status"] = "no_metadata"
+    #     json_response["error"] = error_codes["no_metadata"]
+    #     del json_response["files"]
+    #     json_response["status"] = "no_metadata"
 
-        conn = db_connect()
-        try:
-            fileset_id = user_insert_fileset(json_object, ip, conn)
-        finally:
-            conn.close()
-        json_response["fileset"] = fileset_id
-        return jsonify(json_response)
-
-    matched_map = {}
-    missing_map = {}
-    extra_map = {}
+    #     conn = db_connect()
+    #     try:
+    #         fileset_id = user_insert_fileset(json_object, ip, conn)
+    #     finally:
+    #         conn.close()
+    #     json_response["fileset"] = fileset_id
+    #     return jsonify(json_response)
 
     file_object = json_object["files"]
     if not file_object:
