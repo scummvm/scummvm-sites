@@ -161,9 +161,7 @@ def insert_fileset(
         log_text = f"Updated Fileset:{existing_entry}, {log_text}"
         user = f"cli:{getpass.getuser()}" if username is None else username
         if not skiplog:
-            log_last = create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            log_last = create_log(category_text, user, log_text, conn)
             update_history(existing_entry, existing_entry, conn, log_last)
 
         return (existing_entry, True)
@@ -187,9 +185,7 @@ def insert_fileset(
 
     user = f"cli:{getpass.getuser()}" if username is None else username
     if not skiplog and detection:
-        log_last = create_log(
-            escape_string(category_text), user, escape_string(log_text), conn
-        )
+        log_last = create_log(category_text, user, log_text, conn)
         update_history(fileset_last, fileset_last, conn, log_last)
     else:
         update_history(0, fileset_last, conn)
@@ -539,7 +535,7 @@ def db_insert(data_arr, username=None, skiplog=False):
         log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Transaction: {transaction_id}"
 
         user = f"cli:{getpass.getuser()}" if username is None else username
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
 
         console_log(log_text)
         console_log_total_filesets(filepath)
@@ -573,7 +569,7 @@ def db_insert(data_arr, username=None, skiplog=False):
                 existing_entry = cursor.fetchone()
                 if existing_entry is not None:
                     log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
-                    create_log("Warning", user, escape_string(log_text), conn)
+                    create_log("Warning", user, log_text, conn)
                     console_log(log_text)
                     continue
 
@@ -637,9 +633,7 @@ def db_insert(data_arr, username=None, skiplog=False):
             print("Inserting failed:", e)
         else:
             user = f"cli:{getpass.getuser()}" if username is None else username
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
 
         conn.commit()
     except Exception as e:
@@ -858,16 +852,12 @@ def populate_matching_games():
             create_log(
                 "Fileset merge",
                 user,
-                escape_string(
-                    f"Merged Fileset:{matched_game['fileset']} and Fileset:{fileset[0][0]}"
-                ),
+                f"Merged Fileset:{matched_game['fileset']} and Fileset:{fileset[0][0]}",
                 conn,
             )
 
             # Matching log
-            log_last = create_log(
-                escape_string(conn, category_text), user, escape_string(conn, log_text)
-            )
+            log_last = create_log(conn, category_text, user, conn, log_text)
 
             # Add log id to the history table
             cursor.execute(
@@ -921,7 +911,7 @@ def match_fileset(data_arr, username=None, skiplog=False):
         console_log(log_text)
         console_log_total_filesets(filepath)
         user = f"cli:{getpass.getuser()}" if username is None else username
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
 
         if src == "dat":
             set_process(
@@ -1064,9 +1054,7 @@ def scan_process(
                 fileset["description"] if "description" in fileset else ""
             )
             log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
             continue
@@ -1105,11 +1093,11 @@ def scan_process(
         fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
         category_text = "Upload information"
         log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
         console_log(log_text)
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
 
 
 def pre_update_files(rom, filesets_check_for_full, transaction_id, conn):
@@ -1215,9 +1203,9 @@ def scan_perform_match(
                     log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
                     category_text = "Uploaded from scan."
                     create_log(
-                        escape_string(category_text),
+                        category_text,
                         user,
-                        escape_string(log_text),
+                        log_text,
                         conn,
                     )
                     console_log(log_text)
@@ -1273,9 +1261,9 @@ def scan_perform_match(
                     log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
                     category_text = "Uploaded from scan."
                     create_log(
-                        escape_string(category_text),
+                        category_text,
                         user,
-                        escape_string(log_text),
+                        log_text,
                         conn,
                     )
                     console_log(log_text)
@@ -1321,9 +1309,7 @@ def scan_perform_match(
         elif len(candidate_filesets) > 1:
             log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
             category_text = "Uploaded from scan."
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
             console_log(log_text)
             category_text = "Manual Merge - Multiple Candidates"
             log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidate_filesets)}."
@@ -1827,9 +1813,7 @@ def set_process(
             log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             console_log_text = f"Early fileset drop as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             no_candidate_logs.append(console_log_text)
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
             continue
@@ -1887,9 +1871,7 @@ def set_process(
                 )
                 log_text = f"Drop fileset, multiple filesets mapping to single detection. Name: {fileset_name} Description: {fileset_description}. Clashed with Fileset:{candidate} ({engine}:{gameid}-{platform}-{language})"
                 console_log(log_text)
-                create_log(
-                    escape_string(category_text), user, escape_string(log_text), conn
-                )
+                create_log(category_text, user, log_text, conn)
                 dropped_early_single_candidate_multiple_sets += 1
                 delete_original_fileset(set_fileset, conn)
                 del set_to_candidate_dict[set_fileset]
@@ -1950,18 +1932,14 @@ def set_process(
                 log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
                 console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name} Description: {fileset_description}."
                 console_log(console_log_text)
-                create_log(
-                    escape_string(category_text), user, escape_string(log_text), conn
-                )
+                create_log(category_text, user, log_text, conn)
                 dropped_early_no_candidate += 1
                 manual_merged_filesets -= 1
                 delete_original_fileset(fileset_id, conn)
             else:
                 log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
                 category_text = "Uploaded from dat."
-                create_log(
-                    escape_string(category_text), user, escape_string(log_text), conn
-                )
+                create_log(category_text, user, log_text, conn)
                 console_log(log_text)
                 category_text = "Manual Merge Required"
                 log_text = f"Merge Fileset:{fileset_id} manually. Possible matches are: {', '.join(f'Fileset:{id}' for id in candidates)}."
@@ -1982,11 +1960,11 @@ def set_process(
         fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
         category_text = "Upload information"
         log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {auto_merged_filesets}. Filesets dropped early (no candidate) - {dropped_early_no_candidate}. Filesets dropped early (mapping to single detection) - {dropped_early_single_candidate_multiple_sets}. Filesets requiring manual merge: {manual_merged_filesets}. Partial/Full filesets already present: {fully_matched_filesets}. Partial/Full filesets with mismatch {mismatch_filesets}."
         console_log(log_text)
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
 
 
 def set_filter_by_platform(gameid, candidate_filesets, conn):
@@ -2056,9 +2034,7 @@ def set_perform_match(
             log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             console_log_text = f"Fileset dropped as no candidates anymore. Name: {fileset_name} Description: {fileset_description}."
             no_candidate_logs.append(console_log_text)
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
         elif len(candidate_filesets) == 1:
@@ -2098,9 +2074,9 @@ def set_perform_match(
                     category_text = "Already present"
                     log_text = f"Already present as - Fileset:{matched_fileset_id}. Deleting Fileset:{fileset_id}"
                     log_last = create_log(
-                        escape_string(category_text),
+                        category_text,
                         user,
-                        escape_string(log_text),
+                        log_text,
                         conn,
                     )
                     update_history(fileset_id, matched_fileset_id, conn, log_last)
@@ -2111,9 +2087,9 @@ def set_perform_match(
                     log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
                     category_text = "Uploaded from dat."
                     create_log(
-                        escape_string(category_text),
+                        category_text,
                         user,
-                        escape_string(log_text),
+                        log_text,
                         conn,
                     )
                     console_log(log_text)
@@ -2226,7 +2202,7 @@ def add_manual_merge(
                 """
             cursor.execute(query, (child_fileset, parent_fileset))
 
-    create_log(escape_string(category_text), user, escape_string(log_text), conn)
+    create_log(category_text, user, log_text, conn)
     if print_text:
         print(print_text)
 
@@ -2968,9 +2944,7 @@ def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
     log_text = (
         f"Matched Fileset:{fileset_last} with Fileset:{fileset_id}. State {state}."
     )
-    log_last = create_log(
-        escape_string(category_text), user, escape_string(log_text), conn
-    )
+    log_last = create_log(category_text, user, log_text, conn)
     update_history(fileset_last, fileset_id, conn, log_last)
 
 
@@ -2992,7 +2966,7 @@ def log_scan_match_with_full(
             f"Fileset matched completely with Full Fileset:{candidate_id}. Dropping."
         )
     print(log_text)
-    create_log(escape_string(category_text), user, escape_string(log_text), conn)
+    create_log(category_text, user, log_text, conn)
 
 
 def finalize_fileset_insertion(
@@ -3007,9 +2981,7 @@ def finalize_fileset_insertion(
         category_text = f"Uploaded from {src}"
         if src != "user":
             log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
 
 
 def user_integrity_check(data, ip, game_metadata=None):
@@ -3051,9 +3023,7 @@ def user_integrity_check(data, ip, game_metadata=None):
 
             user = f"cli:{getpass.getuser()}"
 
-            create_log(
-                escape_string(category_text), user, escape_string(log_text), conn
-            )
+            create_log(category_text, user, log_text, conn)
 
             matched_map = find_matching_filesets(data, conn, src)
 
@@ -3186,7 +3156,7 @@ def user_integrity_check(data, ip, game_metadata=None):
     finally:
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading file, State {source_status}. Transaction: {transaction_id}"
-        create_log(escape_string(category_text), user, escape_string(log_text), conn)
+        create_log(category_text, user, log_text, conn)
         # conn.close()
     return matched_map, missing_map, extra_map
 
