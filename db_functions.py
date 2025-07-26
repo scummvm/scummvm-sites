@@ -519,14 +519,19 @@ def db_insert(data_arr, username=None, skiplog=False):
     try:
         author = header["author"]
         version = header["version"]
+        if author != "scummvm":
+            raise ValueError(
+                f"Author needs to be scummvm for seeding. Incorrect author: {author}"
+            )
+    except ValueError as ve:
+        raise ve
     except KeyError as e:
         print(f"Missing key in header: {e}")
         return
 
-    src = "dat" if author not in ["scan", "scummvm"] else author
-
-    detection = src == "scummvm"
-    status = "detection" if detection else src
+    src = author
+    detection = True
+    status = "detection"
 
     conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
 
@@ -552,38 +557,35 @@ def db_insert(data_arr, username=None, skiplog=False):
         key = calc_key(fileset)
         megakey = calc_megakey(fileset)
 
-        if detection:
-            try:
-                engine_name = fileset.get("engine", "")
-                engineid = fileset["sourcefile"]
-                gameid = fileset["name"]
-                title = fileset.get("title", "")
-                extra = fileset.get("extra", "")
-                platform = fileset.get("platform", "")
-                lang = fileset.get("language", "")
-            except KeyError as e:
-                print(
-                    f"Missing key in header: {e} for {fileset.get('name', '')}-{fileset.get('language', '')}-{fileset.get('platform', '')}"
-                )
-                return
-
-            with conn.cursor() as cursor:
-                query = """
-                    SELECT id
-                    FROM fileset
-                    WHERE `key` = %s
-                """
-                cursor.execute(query, (key,))
-                existing_entry = cursor.fetchone()
-                if existing_entry is not None:
-                    log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
-                    create_log("Warning", user, escape_string(log_text), conn)
-                    console_log(log_text)
-                    continue
-
-            insert_game(
-                engine_name, engineid, title, gameid, extra, platform, lang, conn
+        try:
+            engine_name = fileset.get("engine", "")
+            engineid = fileset["sourcefile"]
+            gameid = fileset["name"]
+            title = fileset.get("title", "")
+            extra = fileset.get("extra", "")
+            platform = fileset.get("platform", "")
+            lang = fileset.get("language", "")
+        except KeyError as e:
+            print(
+                f"Missing key in header: {e} for {fileset.get('name', '')}-{fileset.get('language', '')}-{fileset.get('platform', '')}"
             )
+            return
+
+        with conn.cursor() as cursor:
+            query = """
+                SELECT id
+                FROM fileset
+                WHERE `key` = %s
+            """
+            cursor.execute(query, (key,))
+            existing_entry = cursor.fetchone()
+            if existing_entry is not None:
+                log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
+                create_log("Warning", user, escape_string(log_text), conn)
+                console_log(log_text)
+                continue
+
+        insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)
 
         log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
 
@@ -894,8 +896,8 @@ def match_fileset(data_arr, username=None, skiplog=False):
         return
 
     src = "dat" if author not in ["scan", "scummvm"] else author
-    detection = src == "scummvm"
-    source_status = "detection" if detection else src
+    detection = False
+    source_status = src
 
     conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
 
