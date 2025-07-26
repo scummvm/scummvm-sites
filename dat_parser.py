@@ -1,5 +1,6 @@
 import re
 import os
+import sys
 from db_functions import db_insert, match_fileset
 import argparse
 
@@ -79,21 +80,40 @@ def match_outermost_brackets(input):
     depth = 0
     inside_quotes = False
     cur_index = 0
+    line_number = 1
+    index_line = 1
 
-    for i in range(len(input)):
-        char = input[i]
+    for i, char in enumerate(input):
+        if char == "\n":
+            line_number += 1
+            inside_quotes = False
 
-        if char == "(" and not inside_quotes:
+        if char == '"' and input[i - 1] != "\\":
+            inside_quotes = not inside_quotes
+
+        elif char == "(" and not inside_quotes:
             if depth == 0:
+                if "rom" in input[i - 4 : i]:
+                    raise ValueError(
+                        f"Missing an opening '(' for the game. Look near line {line_number}."
+                    )
+                index_line = line_number
                 cur_index = i
             depth += 1
+
         elif char == ")" and not inside_quotes:
+            if depth == 0:
+                print(f"Warning: unmatched ')' at line {line_number}")
+                continue
             depth -= 1
             if depth == 0:
                 match = input[cur_index : i + 1]
                 matches.append((match, cur_index))
-        elif char == '"' and input[i - 1] != "\\":
-            inside_quotes = not inside_quotes
+
+    if depth != 0:
+        raise ValueError(
+            f"Unmatched '(' starting at line {index_line}: possibly an unclosed block."
+        )
 
     return matches
 
@@ -104,61 +124,102 @@ def parse_dat(dat_filepath):
     associated arrays
     """
     if not os.path.isfile(dat_filepath):
-        print("File not readable")
-        return
+        print(f"Error: File does not exist or is unreadable: {dat_filepath}.")
+        return None
 
-    with open(dat_filepath, "r", encoding="utf-8") as dat_file:
-        content = dat_file.read()
+    try:
+        with open(dat_filepath, "r", encoding="utf-8") as dat_file:
+            content = dat_file.read()
+    except (IOError, UnicodeDecodeError) as e:
+        print(f"Error: Failed to read file {dat_filepath}: {e}")
+        return None
 
     header = {}
     game_data = []
     resources = {}
 
-    matches = match_outermost_brackets(content)
-    # print(matches)
+    try:
+        matches = match_outermost_brackets(content)
+    except Exception as e:
+        print(f"Error: Failed to parse outer brackets in {dat_filepath}: {e}")
+        return None
     if matches:
         for data_segment in matches:
-            if (
-                "clrmamepro" in content[data_segment[1] - 11 : data_segment[1]]
-                or "scummvm" in content[data_segment[1] - 8 : data_segment[1]]
-            ):
-                header = map_key_values(data_segment[0], header)
-            elif "game" in content[data_segment[1] - 5 : data_segment[1]]:
-                temp = {}
-                temp = map_key_values(data_segment[0], temp)
-                game_data.append(temp)
-            elif "resource" in content[data_segment[1] - 9 : data_segment[1]]:
-                temp = {}
-                temp = map_key_values(data_segment[0], temp)
-                resources[temp["name"]] = temp
-    # print(header, game_data, resources, dat_filepath)
+            try:
+                if (
+                    "clrmamepro" in content[data_segment[1] - 11 : data_segment[1]]
+                    or "scummvm" in content[data_segment[1] - 8 : data_segment[1]]
+                ):
+                    header = map_key_values(data_segment[0], header)
+                elif "game" in content[data_segment[1] - 5 : data_segment[1]]:
+                    temp = {}
+                    temp = map_key_values(data_segment[0], temp)
+                    game_data.append(temp)
+                elif "resource" in content[data_segment[1] - 9 : data_segment[1]]:
+                    temp = {}
+                    temp = map_key_values(data_segment[0], temp)
+                    resources[temp["name"]] = temp
+            except Exception as e:
+                print(f"Error: Failed to parse a data_segment: {e}")
+                return None
+
     return header, game_data, resources, dat_filepath
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Process DAT files and interact with the database."
-    )
-    parser.add_argument(
-        "--upload", nargs="+", help="Upload DAT file(s) to the database"
-    )
-    parser.add_argument(
-        "--match", nargs="+", help="Populate matching games in the database"
-    )
-    parser.add_argument("--user", help="Username for database")
-    parser.add_argument("-r", help="Recurse through directories", action="store_true")
-    parser.add_argument("--skiplog", help="Skip logging dups", action="store_true")
+    try:
+        parser = argparse.ArgumentParser(
+            description="Process DAT files and interact with the database."
+        )
+        parser.add_argument(
+            "--upload", nargs="+", help="Upload DAT file(s) to the database"
+        )
+        parser.add_argument(
+            "--match", nargs="+", help="Populate matching games in the database"
+        )
+        parser.add_argument("--user", help="Username for database")
+        parser.add_argument(
+            "-r", help="Recurse through directories", action="store_true"
+        )
+        parser.add_argument("--skiplog", help="Skip logging dups", action="store_true")
 
-    args = parser.parse_args()
+        args = parser.parse_args()
 
-    if args.upload:
-        for filepath in args.upload:
-            db_insert(parse_dat(filepath), args.user, args.skiplog)
+        if not args.upload and not args.match:
+            print("Error: No action specified. Use --upload or --match")
+            parser.print_help()
+            sys.exit(1)
 
-    if args.match:
-        for filepath in args.match:
-            # print(parse_dat(filepath)[2])
-            match_fileset(parse_dat(filepath), args.user, args.skiplog)
+        if args.upload:
+            for filepath in args.upload:
+                try:
+                    parsed_data = parse_dat(filepath)
+                    if parsed_data is not None:
+                        db_insert(parsed_data, args.user, args.skiplog)
+                    else:
+                        print(f"Error: Failed to parse file for upload: {filepath}")
+                except Exception as e:
+                    print(f"Error uploading {filepath}: {e}")
+                    continue
+
+        if args.match:
+            for filepath in args.match:
+                try:
+                    parsed_data = parse_dat(filepath)
+                    if parsed_data[0] is not None:
+                        match_fileset(parsed_data, args.user, args.skiplog)
+                    else:
+                        print(f"Error: Failed to parse file for matching: {filepath}")
+                except Exception as e:
+                    print(f"Error matching {filepath}: {e}")
+                    continue
+
+    except KeyboardInterrupt:
+        print("Operation cancelled by user")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Error: Unexpected error in main: {e}")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
