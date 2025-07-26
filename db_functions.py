@@ -382,19 +382,14 @@ def punycode_need_encode(orig):
 
 
 def create_log(category, user, text, conn):
-    query = f"INSERT INTO log (`timestamp`, category, user, `text`) VALUES (FROM_UNIXTIME({int(time.time())}), '{escape_string(category)}', '{escape_string(user)}', '{escape_string(text)}')"
-    query = "INSERT INTO log (`timestamp`, category, user, `text`) VALUES (FROM_UNIXTIME(%s), %s, %s, %s)"
     with conn.cursor() as cursor:
         try:
+            query = "INSERT INTO log (`timestamp`, category, user, `text`) VALUES (FROM_UNIXTIME(%s), %s, %s, %s)"
             cursor.execute(query, (int(time.time()), category, user, text))
-            conn.commit()
-        except Exception as e:
-            conn.rollback()
-            print(f"Creating log failed: {e}")
-            log_last = None
-        else:
             cursor.execute("SELECT LAST_INSERT_ID()")
             log_last = cursor.fetchone()["LAST_INSERT_ID()"]
+        except Exception as e:
+            raise RuntimeError("Log creation failed") from e
     return log_last
 
 
@@ -405,9 +400,7 @@ def update_history(source_id, target_id, conn, log_last=None):
             cursor.execute(
                 query, (target_id, source_id, log_last if log_last is not None else 0)
             )
-            conn.commit()
         except Exception as e:
-            conn.rollback()
             print(f"Creating log failed: {e}")
             log_last = None
         else:
@@ -523,120 +516,137 @@ def db_insert(data_arr, username=None, skiplog=False):
             raise ValueError(
                 f"Author needs to be scummvm for seeding. Incorrect author: {author}"
             )
-    except ValueError as ve:
-        raise ve
     except KeyError as e:
         print(f"Missing key in header: {e}")
         return
 
-    src = author
-    detection = True
-    status = "detection"
-
-    conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
-
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT MAX(`transaction`) FROM transactions")
-        temp = cursor.fetchone()["MAX(`transaction`)"]
-        if temp is None:
-            temp = 0
-        transaction_id = temp + 1
-
-    category_text = f"Uploaded from {src}"
-    log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Transaction: {transaction_id}"
-
-    user = f"cli:{getpass.getuser()}" if username is None else username
-    create_log(escape_string(category_text), user, escape_string(log_text), conn)
-
-    console_log(log_text)
-    console_log_total_filesets(filepath)
-
-    fileset_count = 1
-    for fileset in game_data:
-        console_log_detection(fileset_count)
-        key = calc_key(fileset)
-        megakey = calc_megakey(fileset)
-
-        try:
-            engine_name = fileset.get("engine", "")
-            engineid = fileset["sourcefile"]
-            gameid = fileset["name"]
-            title = fileset.get("title", "")
-            extra = fileset.get("extra", "")
-            platform = fileset.get("platform", "")
-            lang = fileset.get("language", "")
-        except KeyError as e:
-            print(
-                f"Missing key in header: {e} for {fileset.get('name', '')}-{fileset.get('language', '')}-{fileset.get('platform', '')}"
-            )
-            return
+    try:
+        src = author
+        detection = True
+        status = "detection"
 
         with conn.cursor() as cursor:
-            query = """
-                SELECT id
-                FROM fileset
-                WHERE `key` = %s
-            """
-            cursor.execute(query, (key,))
-            existing_entry = cursor.fetchone()
-            if existing_entry is not None:
-                log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
-                create_log("Warning", user, escape_string(log_text), conn)
-                console_log(log_text)
-                continue
+            cursor.execute("SET @fileset_time_last = %s", (int(time.time()),))
 
-        insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT MAX(`transaction`) FROM transactions")
+            temp = cursor.fetchone()["MAX(`transaction`)"]
+            if temp is None:
+                temp = 0
+            transaction_id = temp + 1
 
-        log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
-
-        if insert_fileset(
-            src,
-            detection,
-            key,
-            megakey,
-            transaction_id,
-            log_text,
-            conn,
-            username=username,
-            skiplog=skiplog,
-        ):
-            # Some detection entries contain duplicate files.
-            unique_files = []
-            seen = set()
-            for file_dict in fileset["rom"]:
-                dict_tuple = tuple(sorted(file_dict.items()))
-                if dict_tuple not in seen:
-                    seen.add(dict_tuple)
-                    unique_files.append(file_dict)
-
-            for file in unique_files:
-                insert_file(file, detection, src, conn)
-                file_id = None
-                with conn.cursor() as cursor:
-                    cursor.execute("SELECT @file_last AS file_id")
-                    file_id = cursor.fetchone()["file_id"]
-                for key, value in file.items():
-                    if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
-                        insert_filechecksum(file, key, file_id, conn)
-
-        fileset_count += 1
-
-    cur = conn.cursor()
-
-    try:
-        cur.execute(
-            "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
-            (transaction_id,),
-        )
-        fileset_insertion_count = cur.fetchone()["COUNT(fileset)"]
         category_text = f"Uploaded from {src}"
-        log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
-        console_log(log_text)
-    except Exception as e:
-        print("Inserting failed:", e)
-    else:
+        log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Transaction: {transaction_id}"
+
         user = f"cli:{getpass.getuser()}" if username is None else username
         create_log(escape_string(category_text), user, escape_string(log_text), conn)
+
+        console_log(log_text)
+        console_log_total_filesets(filepath)
+
+        fileset_count = 1
+        for fileset in game_data:
+            console_log_detection(fileset_count)
+            key = calc_key(fileset)
+            megakey = calc_megakey(fileset)
+
+            try:
+                engine_name = fileset.get("engine", "")
+                engineid = fileset["sourcefile"]
+                gameid = fileset["name"]
+                title = fileset.get("title", "")
+                extra = fileset.get("extra", "")
+                platform = fileset.get("platform", "")
+                lang = fileset.get("language", "")
+            except KeyError as e:
+                raise RuntimeError(
+                    f"Missing key in header: {e} for {fileset.get('name', '')}-{fileset.get('language', '')}-{fileset.get('platform', '')}"
+                )
+
+            with conn.cursor() as cursor:
+                query = """
+                    SELECT id
+                    FROM fileset
+                    WHERE `key` = %s
+                """
+                cursor.execute(query, (key,))
+                existing_entry = cursor.fetchone()
+                if existing_entry is not None:
+                    log_text = f"Skipping Entry as similar entry already exsits - Fileset:{existing_entry['id']}. Skpped entry details - engineid = {engineid}, gameid = {gameid}, platform = {platform}, language = {lang}"
+                    create_log("Warning", user, escape_string(log_text), conn)
+                    console_log(log_text)
+                    continue
+
+            insert_game(
+                engine_name, engineid, title, gameid, extra, platform, lang, conn
+            )
+
+            log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
+
+            if insert_fileset(
+                src,
+                detection,
+                key,
+                megakey,
+                transaction_id,
+                log_text,
+                conn,
+                username=username,
+                skiplog=skiplog,
+            ):
+                # Some detection entries contain duplicate files.
+                unique_files = []
+                seen = set()
+                for file_dict in fileset["rom"]:
+                    dict_tuple = tuple(sorted(file_dict.items()))
+                    if dict_tuple not in seen:
+                        seen.add(dict_tuple)
+                        unique_files.append(file_dict)
+
+                for file in unique_files:
+                    insert_file(file, detection, src, conn)
+                    file_id = None
+                    with conn.cursor() as cursor:
+                        cursor.execute("SELECT @file_last AS file_id")
+                        file_id = cursor.fetchone()["file_id"]
+                    for key, value in file.items():
+                        if key not in [
+                            "name",
+                            "size",
+                            "size-r",
+                            "size-rd",
+                            "sha1",
+                            "crc",
+                        ]:
+                            insert_filechecksum(file, key, file_id, conn)
+
+            fileset_count += 1
+
+        cur = conn.cursor()
+
+        try:
+            cur.execute(
+                "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
+                (transaction_id,),
+            )
+            fileset_insertion_count = cur.fetchone()["COUNT(fileset)"]
+            category_text = f"Uploaded from {src}"
+            log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
+            console_log(log_text)
+        except Exception as e:
+            print("Inserting failed:", e)
+        else:
+            user = f"cli:{getpass.getuser()}" if username is None else username
+            create_log(
+                escape_string(category_text), user, escape_string(log_text), conn
+            )
+
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Transaction failed: {e}")
+    finally:
+        conn.close()
 
 
 def compare_filesets(id1, id2, conn):
@@ -895,59 +905,27 @@ def match_fileset(data_arr, username=None, skiplog=False):
         print(f"Missing key in header: {e}")
         return
 
-    src = "dat" if author not in ["scan", "scummvm"] else author
-    detection = False
-    source_status = src
+    try:
+        src = "dat" if author not in ["scan", "scummvm"] else author
+        detection = False
+        source_status = src
 
-    conn.cursor().execute("SET @fileset_time_last = %s", (int(time.time()),))
+        with conn.cursor() as cursor:
+            cursor.execute("SET @fileset_time_last = %s", (int(time.time()),))
+            cursor.execute("SELECT MAX(`transaction`) FROM transactions")
+            transaction_id = cursor.fetchone()["MAX(`transaction`)"]
+            transaction_id = transaction_id + 1 if transaction_id else 1
 
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT MAX(`transaction`) FROM transactions")
-        transaction_id = cursor.fetchone()["MAX(`transaction`)"]
-        transaction_id = transaction_id + 1 if transaction_id else 1
+        category_text = f"Uploaded from {src}"
+        log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Transaction: {transaction_id}"
+        console_log(log_text)
+        console_log_total_filesets(filepath)
+        user = f"cli:{getpass.getuser()}" if username is None else username
+        create_log(escape_string(category_text), user, escape_string(log_text), conn)
 
-    category_text = f"Uploaded from {src}"
-    log_text = f"Started loading DAT file {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Transaction: {transaction_id}"
-    console_log(log_text)
-    console_log_total_filesets(filepath)
-    user = f"cli:{getpass.getuser()}" if username is None else username
-    create_log(escape_string(category_text), user, escape_string(log_text), conn)
-
-    if src == "dat":
-        set_process(
-            game_data,
-            resources,
-            detection,
-            src,
-            conn,
-            transaction_id,
-            filepath,
-            author,
-            version,
-            source_status,
-            user,
-            skiplog,
-        )
-    elif src == "scan":
-        scan_process(
-            game_data,
-            resources,
-            detection,
-            src,
-            conn,
-            transaction_id,
-            filepath,
-            author,
-            version,
-            source_status,
-            user,
-            skiplog,
-        )
-    else:
-        game_data_lookup = {fs["name"]: fs for fs in game_data}
-        for fileset in game_data:
-            process_fileset(
-                fileset,
+        if src == "dat":
+            set_process(
+                game_data,
                 resources,
                 detection,
                 src,
@@ -958,11 +936,56 @@ def match_fileset(data_arr, username=None, skiplog=False):
                 version,
                 source_status,
                 user,
-                game_data_lookup,
+                skiplog,
             )
-        finalize_fileset_insertion(
-            conn, transaction_id, src, filepath, author, version, source_status, user
-        )
+        elif src == "scan":
+            scan_process(
+                game_data,
+                resources,
+                detection,
+                src,
+                conn,
+                transaction_id,
+                filepath,
+                author,
+                version,
+                source_status,
+                user,
+                skiplog,
+            )
+        else:
+            game_data_lookup = {fs["name"]: fs for fs in game_data}
+            for fileset in game_data:
+                process_fileset(
+                    fileset,
+                    resources,
+                    detection,
+                    src,
+                    conn,
+                    transaction_id,
+                    filepath,
+                    author,
+                    version,
+                    source_status,
+                    user,
+                    game_data_lookup,
+                )
+            finalize_fileset_insertion(
+                conn,
+                transaction_id,
+                src,
+                filepath,
+                author,
+                version,
+                source_status,
+                user,
+            )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Transaction failed: {e}")
+    finally:
+        conn.close()
 
 
 def scan_process(
@@ -2639,7 +2662,6 @@ def delete_original_fileset(fileset_id, conn):
     with conn.cursor() as cursor:
         cursor.execute("DELETE FROM file WHERE fileset = %s", (fileset_id,))
         cursor.execute("DELETE FROM fileset WHERE id = %s", (fileset_id,))
-    conn.commit()
 
 
 def update_fileset_status(cursor, fileset_id, status):
