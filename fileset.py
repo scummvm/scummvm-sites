@@ -5,6 +5,7 @@ from flask import (
     url_for,
     render_template_string,
     jsonify,
+    render_template,
 )
 import pymysql.cursors
 import json
@@ -32,37 +33,12 @@ secret_key = os.urandom(24)
 
 @app.route("/")
 def index():
-    html = """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-    </head>
-    <body>
-    <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-    <a href="{{ url_for('index') }}">
-        <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
-    </a>
-    </nav>
-    <h1 style="margin-top: 80px;">Fileset Database</h1>
-    <h2>Fileset Actions</h2>
-    <ul>
-        <li><a href="{{ url_for('fileset') }}">Fileset</a></li>
-        <li><a href="{{ url_for('user_games_list') }}">User Games List</a></li>
-        <li><a href="{{ url_for('ready_for_review') }}">Ready for review</a></li>
-        <li><a href="{{ url_for('fileset_search') }}">Fileset Search</a></li>
-    </ul>
-    <h2>Logs</h2>
-    <ul>
-        <li><a href="{{ url_for('logs') }}">Logs</a></li>
-    </ul>
-    <form action="{{ url_for('clear_database') }}" method="POST"> 
-        <button style="margin:100px 0 0 0; background-color:red"  type="submit"> Clear Database </button>
-    </form>
-    </body>
-    </html>
-    """
-    return render_template_string(html)
+    return redirect(url_for("logs"))
+
+
+@app.route("/home")
+def home():
+    return render_template("home.html")
 
 
 @app.route("/clear_database", methods=["POST"])
@@ -148,10 +124,18 @@ def fileset():
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
             </head>
             <body>
-            <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-                <a href="{{{{ url_for('index') }}}}">
-                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
-                </a>
+            <nav>
+                <div class="logo">
+                    <a href="{{{{ url_for('home') }}}}">
+                        <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo">
+                    </a>
+                </div>
+                <div class="nav-buttons">
+                    <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
+                    <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
+                    <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                    <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                </div>
             </nav>
             <h2 style="margin-top: 80px;"><u>Fileset: {id}</u></h2>
             <table>
@@ -501,10 +485,18 @@ def merge_fileset(id):
                     <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
                 </head>
                 <body>
-                <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-                    <a href="{{{{ url_for('index') }}}}">
-                        <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
-                    </a>
+                <nav>
+                    <div class="logo">
+                        <a href="{{{{ url_for('home') }}}}">
+                            <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo">
+                        </a>
+                    </div>
+                    <div class="nav-buttons">
+                        <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
+                        <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
+                        <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                        <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                    </div>
                 </nav>
                 <h2 style="margin-top: 80px;">Search Results for '{search_query}'</h2>
                 <form method="POST">
@@ -540,10 +532,18 @@ def merge_fileset(id):
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
     </head>
     <body>
-    <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-        <a href="{{ url_for('index') }}">
-            <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
-        </a>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs') }}">Logs</a>
+        </div>
     </nav>
     <h2 style="margin-top: 80px;">Search Fileset to Merge</h2>
     <form method="POST">
@@ -599,10 +599,18 @@ def possible_merge_filesets(id):
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
             </head>
             <body>
-            <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-                <a href="{{{{ url_for('index') }}}}">
-                    <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo" style="height:60px; vertical-align:middle;">
-                </a>
+            <nav>
+                <div class="logo">
+                    <a href="{{{{ url_for('home') }}}}">
+                        <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo">
+                    </a>
+                </div>
+                <div class="nav-buttons">
+                    <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
+                    <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
+                    <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                    <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                </div>
             </nav>
             <h2 style="margin-top: 80px;">Possible Merges for fileset-'{id}'</h2>
             <table>
@@ -731,10 +739,18 @@ def confirm_merge(id):
                 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
             </head>
             <body>
-            <nav style="position: fixed; top: 0; left: 0; right: 0; background: white; padding: 3px; border-bottom: 1px solid #ccc;">
-                <a href="{{ url_for('index') }}">
-                    <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo" style="height:60px; vertical-align:middle;">
-                </a>
+            <nav>
+                <div class="logo">
+                    <a href="{{ url_for('home') }}">
+                        <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+                    </a>
+                </div>
+                <div class="nav-buttons">
+                    <a href="{{ url_for('user_games_list') }}">User Games List</a>
+                    <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+                    <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+                    <a href="{{ url_for('logs') }}">Logs</a>
+                </div>
             </nav>
             <h2 style="margin-top: 80px;">Confirm Merge</h2>
             <form id="confirm_merge_form">

@@ -3,18 +3,34 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-td, th {
+td,
+th {
   padding-inline: 5px;
 }
 
-tr:nth-child(even) {background-color: #f2f2f2;}
-tr {background-color: white;}
+tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
 
-tr:hover {background-color: #ddd;}
-tr.games_list:hover {cursor: pointer;}
+tr {
+  background-color: white;
+}
 
-tr.filter:hover {background-color:inherit;}
-td.filter {text-align: center;}
+tr:hover {
+  background-color: #ddd;
+}
+
+tr.games_list:hover {
+  cursor: pointer;
+}
+
+tr.filter:hover {
+  background-color: inherit;
+}
+
+td.filter {
+  text-align: center;
+}
 
 th {
   padding-top: 5px;
@@ -26,7 +42,38 @@ th {
 
 th a {
   color: white;
-  text-decoration: none; /* no underline */
+  text-decoration: none;
+  /* no underline */
+}
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  border-bottom: 1px solid #ccc;
+  background-color: white;
+  display: flex;
+  padding: 0px 20px 0px 20px;
+  align-items: center;
+  flex-wrap: wrap;
+  z-index: 1000;
+}
+
+.nav-buttons a {
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  margin-left: 10px;
+}
+
+/* .nav-buttons a:hover {
+  box-shadow: 0 4px 12px rgba(39, 145, 232, 0.4);
+} */
+
+.logo img {
+  height: 75px;
+  vertical-align: middle;
 }
 
 button {
@@ -39,8 +86,11 @@ button {
 }
 
 button:hover {
-  background-color: #29afe0;
+  background-color: #1f7fc4;
+  color: #f2f2f2;
+  box-shadow: 0 4px 12px rgba(39, 145, 232, 0.4);
 }
+
 button:active {
   background-color: #1a95c2;
 }
@@ -55,13 +105,17 @@ input[type=submit] {
 }
 
 input[type=submit]:hover {
-  background-color: #29afe0;
+  background-color: #1f7fc4;
+  color: #f2f2f2;
+  box-shadow: 0 4px 12px rgba(39, 145, 232, 0.4);
 }
+
 input[type=submit]:active {
   background-color: #1a95c2;
 }
 
-input[type=text], select {
+input[type=text],
+select {
   width: 25%;
   height: 38px;
   padding: 6px 12px;
