@@ -1,17 +1,13 @@
 import pymysql
 import json
-from collections import Counter
 import getpass
 import time
 import hashlib
 import os
-from pymysql.converters import escape_string
 from collections import defaultdict
 import re
 import copy
 import sys
-
-SPECIAL_SYMBOLS = '/":*|\\?%<>\x7f'
 
 
 def db_connect():
@@ -324,59 +320,6 @@ def delete_filesets(conn):
         cursor.execute(query)
 
 
-def my_escape_string(s: str) -> str:
-    """
-    Escape strings
-
-    Escape the following:
-    - escape char: \x81
-    - unallowed filename chars: https://en.wikipedia.org/wiki/Filename#Reserved_characters_and_words
-    - control chars < 0x20
-    """
-    new_name = ""
-    for char in s:
-        if char == "\x81":
-            new_name += "\x81\x79"
-        elif char in SPECIAL_SYMBOLS or ord(char) < 0x20:
-            new_name += "\x81" + chr(0x80 + ord(char))
-        else:
-            new_name += char
-    return new_name
-
-
-def encode_punycode(orig):
-    """
-    Punyencode strings
-
-    - escape special characters and
-    - ensure filenames can't end in a space or dotif temp == None:
-    """
-    s = my_escape_string(orig)
-    encoded = s.encode("punycode").decode("ascii")
-    # punyencoding adds an '-' at the end when there are no special chars
-    # don't use it for comparing
-    compare = encoded
-    if encoded.endswith("-"):
-        compare = encoded[:-1]
-    if orig != compare or compare[-1] in " .":
-        return "xn--" + encoded
-    return orig
-
-
-def punycode_need_encode(orig):
-    """
-    A filename needs to be punyencoded when it:
-
-    - contains a char that should be escaped or
-    - ends with a dot or a space.
-    """
-    if not all((0x20 <= ord(c) < 0x80) and c not in SPECIAL_SYMBOLS for c in orig):
-        return True
-    if orig[-1] in " .":
-        return True
-    return False
-
-
 def create_log(category, user, text, conn):
     with conn.cursor() as cursor:
         try:
@@ -643,233 +586,6 @@ def db_insert(data_arr, username=None, skiplog=False):
         conn.close()
 
 
-def compare_filesets(id1, id2, conn):
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = %s",
-            (id1,),
-        )
-        fileset1 = cursor.fetchall()
-        cursor.execute(
-            "SELECT name, size, `size-r`, `size-rd`, checksum FROM file WHERE fileset = %s",
-            (id2,),
-        )
-        fileset2 = cursor.fetchall()
-
-    # Sort filesets on checksum
-    fileset1.sort(key=lambda x: x[2])
-    fileset2.sort(key=lambda x: x[2])
-
-    if len(fileset1) != len(fileset2):
-        return False
-
-    for i in range(len(fileset1)):
-        # If checksums do not match
-        if fileset1[i][2] != fileset2[i][2]:
-            return False
-
-    return True
-
-
-def status_to_match(status):
-    order = ["detection", "dat", "scan", "partialmatch", "fullmatch", "user"]
-    return order[: order.index(status)]
-
-
-def find_matching_game(game_files):
-    matching_games = []  # All matching games
-    matching_filesets = []  # All filesets containing one file from game_files
-    matches_count = 0  # Number of files with a matching detection entry
-
-    conn = db_connect()
-
-    for file in game_files:
-        checksum = file[1]
-
-        query = "SELECT file.fileset as file_fileset FROM filechecksum JOIN file ON filechecksum.file = file.id WHERE filechecksum.checksum = %s AND file.detection = TRUE"
-        with conn.cursor() as cursor:
-            cursor.execute(query, (checksum,))
-            records = cursor.fetchall()
-
-        # If file is not part of detection entries, skip it
-        if len(records) == 0:
-            continue
-
-        matches_count += 1
-        for record in records:
-            matching_filesets.append(record[0])
-
-    # Check if there is a fileset_id that is present in all results
-    for key, value in Counter(matching_filesets).items():
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT COUNT(file.id) FROM file JOIN fileset ON file.fileset = fileset.id WHERE fileset.id = %s",
-                (key,),
-            )
-            count_files_in_fileset = cursor.fetchone()["COUNT(file.id)"]
-
-        # We use < instead of != since one file may have more than one entry in the fileset
-        # We see this in Drascula English version, where one entry is duplicated
-        if value < matches_count or value < count_files_in_fileset:
-            continue
-
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT engineid, game.id, gameid, platform, language, `key`, src, fileset.id as fileset FROM game JOIN fileset ON fileset.game = game.id JOIN engine ON engine.id = game.engine WHERE fileset.id = %s",
-                (key,),
-            )
-            records = cursor.fetchall()
-
-        matching_games.append(records[0])
-
-    if len(matching_games) != 1:
-        return matching_games
-
-    # Check the current fileset priority with that of the match
-    with conn.cursor() as cursor:
-        cursor.execute(
-            f"SELECT id FROM fileset, ({query}) AS res WHERE id = file_fileset AND status IN ({', '.join(['%s'] * len(game_files[3]))})",
-            status_to_match(game_files[3]),
-        )
-        records = cursor.fetchall()
-
-    # If priority order is correct
-    if len(records) != 0:
-        return matching_games
-
-    if compare_filesets(matching_games[0]["fileset"], game_files[0][0], conn):
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "UPDATE fileset SET `delete` = TRUE WHERE id = %s", (game_files[0][0],)
-            )
-        return []
-
-    return matching_games
-
-
-def merge_filesets(detection_id, dat_id):
-    conn = db_connect()
-
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT DISTINCT(filechecksum.checksum), checksize, checktype FROM filechecksum JOIN file on file.id = filechecksum.file WHERE fileset = %s'",
-                (detection_id,),
-            )
-            detection_files = cursor.fetchall()
-
-            for file in detection_files:
-                checksum = file[0]
-                checksize = file[1]
-                checktype = file[2]
-
-                cursor.execute(
-                    "DELETE FROM file WHERE checksum = %s AND fileset = %s LIMIT 1",
-                    (checksum, detection_id),
-                )
-                cursor.execute(
-                    "UPDATE file JOIN filechecksum ON filechecksum.file = file.id SET detection = TRUE, checksize = %s, checktype = %s WHERE fileset = %s AND filechecksum.checksum = %s",
-                    (checksize, checktype, dat_id, checksum),
-                )
-
-            cursor.execute(
-                "INSERT INTO history (`timestamp`, fileset, oldfileset) VALUES (FROM_UNIXTIME(%s), %s, %s)",
-                (int(time.time()), dat_id, detection_id),
-            )
-            cursor.execute("SELECT LAST_INSERT_ID()")
-            history_last = cursor.fetchone()["LAST_INSERT_ID()"]
-
-            cursor.execute(
-                "UPDATE history SET fileset = %s WHERE fileset = %s",
-                (dat_id, detection_id),
-            )
-            cursor.execute("DELETE FROM fileset WHERE id = %s", (detection_id,))
-
-        conn.commit()
-    except Exception as e:
-        conn.rollback()
-        print(f"Error merging filesets: {e}")
-    finally:
-        # conn.close()
-        pass
-
-    return history_last
-
-
-def populate_matching_games():
-    conn = db_connect()
-
-    # Getting unmatched filesets
-    unmatched_filesets = []
-
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "SELECT fileset.id, filechecksum.checksum, src, status FROM fileset JOIN file ON file.fileset = fileset.id JOIN filechecksum ON file.id = filechecksum.file WHERE fileset.game IS NULL AND status != 'user'"
-        )
-        unmatched_files = cursor.fetchall()
-
-    # Splitting them into different filesets
-    i = 0
-    while i < len(unmatched_files):
-        cur_fileset = unmatched_files[i][0]
-        temp = []
-        while i < len(unmatched_files) and cur_fileset == unmatched_files[i][0]:
-            temp.append(unmatched_files[i])
-            i += 1
-        unmatched_filesets.append(temp)
-
-    for fileset in unmatched_filesets:
-        matching_games = find_matching_game(fileset)
-
-        if len(matching_games) != 1:  # If there is no match/non-unique match
-            continue
-
-        matched_game = matching_games[0]
-
-        # Update status depending on $matched_game["src"] (dat -> partialmatch, scan -> fullmatch)
-        status = fileset[0][2]
-        if fileset[0][2] == "dat":
-            status = "partialmatch"
-        elif fileset[0][2] == "scan":
-            status = "fullmatch"
-
-        # Convert NULL values to string with value NULL for printing
-        matched_game = {k: "NULL" if v is None else v for k, v in matched_game.items()}
-
-        category_text = f"Matched from {fileset[0][2]}"
-        log_text = f"Matched game {matched_game['engineid']}:\n{matched_game['gameid']}-{matched_game['platform']}-{matched_game['language']}\nvariant {matched_game['key']}. State {status}. Fileset:{fileset[0][0]}."
-
-        # Updating the fileset.game value to be $matched_game["id"]
-        query = "UPDATE fileset SET game = %s, status = %s, `key` = %s WHERE id = %s"
-
-        history_last = merge_filesets(matched_game["fileset"], fileset[0][0])
-
-        if cursor.execute(
-            query, (matched_game["id"], status, matched_game["key"], fileset[0][0])
-        ):
-            user = f"cli:{getpass.getuser()}"
-
-            create_log(
-                "Fileset merge",
-                user,
-                f"Merged Fileset:{matched_game['fileset']} and Fileset:{fileset[0][0]}",
-                conn,
-            )
-
-            # Matching log
-            log_last = create_log(conn, category_text, user, conn, log_text)
-
-            # Add log id to the history table
-            cursor.execute(
-                "UPDATE history SET log = %s WHERE id = %s", (log_last, history_last)
-            )
-
-        try:
-            conn.commit()
-        except Exception:
-            print("Updating matched games failed")
-
-
 def match_fileset(data_arr, username=None, skiplog=False):
     """
     data_arr -> tuple : (header, game_data, resources, filepath).
@@ -942,33 +658,6 @@ def match_fileset(data_arr, username=None, skiplog=False):
                 source_status,
                 user,
                 skiplog,
-            )
-        else:
-            game_data_lookup = {fs["name"]: fs for fs in game_data}
-            for fileset in game_data:
-                process_fileset(
-                    fileset,
-                    resources,
-                    detection,
-                    src,
-                    conn,
-                    transaction_id,
-                    filepath,
-                    author,
-                    version,
-                    source_status,
-                    user,
-                    game_data_lookup,
-                )
-            finalize_fileset_insertion(
-                conn,
-                transaction_id,
-                src,
-                filepath,
-                author,
-                version,
-                source_status,
-                user,
             )
         conn.commit()
     except Exception as e:
@@ -2429,78 +2118,6 @@ def is_candidate_by_checksize(candidate, fileset, conn):
         return False
 
 
-def process_fileset(
-    fileset,
-    resources,
-    detection,
-    src,
-    conn,
-    transaction_id,
-    filepath,
-    author,
-    version,
-    source_status,
-    user,
-    game_data_lookup,
-):
-    if detection:
-        insert_game_data(fileset, conn)
-
-    # Ideally romof should be enough, but adding in case of an edge case
-    current_name = fileset.get("romof") or fileset.get("cloneof")
-
-    # Iteratively check for extra files if linked to multiple filesets
-    while current_name:
-        if current_name in resources:
-            fileset["rom"] += resources[current_name]["rom"]
-            break
-
-        elif current_name in game_data_lookup:
-            linked = game_data_lookup[current_name]
-            fileset["rom"] += linked.get("rom", [])
-            current_name = linked.get("romof") or linked.get("cloneof")
-        else:
-            break
-
-    key = calc_key(fileset) if not detection else ""
-    megakey = calc_megakey(fileset) if detection else ""
-    log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}."
-    if src != "dat":
-        matched_map = find_matching_filesets(fileset, conn, src)
-    else:
-        matched_map = matching_set(fileset, conn)
-
-    (fileset_id, _) = insert_new_fileset(
-        fileset, conn, detection, src, key, megakey, transaction_id, log_text, user
-    )
-
-    if matched_map:
-        handle_matched_filesets(
-            fileset_id,
-            matched_map,
-            fileset,
-            conn,
-            detection,
-            src,
-            key,
-            megakey,
-            transaction_id,
-            log_text,
-            user,
-        )
-
-
-def insert_game_data(fileset, conn):
-    engine_name = fileset["engine"]
-    engineid = fileset["sourcefile"]
-    gameid = fileset["name"]
-    title = fileset["title"]
-    extra = fileset["extra"]
-    platform = fileset["platform"]
-    lang = fileset["language"]
-    insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)
-
-
 def find_matching_filesets(fileset, conn, status):
     matched_map = defaultdict(list)
     if status != "user":
@@ -2535,105 +2152,6 @@ def find_matching_filesets(fileset, conn, status):
     return matched_map
 
 
-def matching_set(fileset, conn):
-    matched_map = defaultdict(list)
-    with conn.cursor() as cursor:
-        for file in fileset["rom"]:
-            matched_set = set()
-            if "md5" in file:
-                checksum = file["md5"]
-                if ":" in checksum:
-                    checksum = checksum.split(":")[1]
-                size = file["size"]
-
-                query = """
-                    SELECT DISTINCT fs.id AS fileset_id
-                    FROM fileset fs
-                    JOIN file f ON fs.id = f.fileset
-                    JOIN filechecksum fc ON f.id = fc.file
-                    WHERE fc.checksum = %s AND fc.checktype LIKE 'md5%'
-                    AND fc.checksize > %s
-                    AND fs.status = 'detection'
-                """
-                cursor.execute(query, (checksum, size))
-                records = cursor.fetchall()
-                if records:
-                    for record in records:
-                        matched_set.add(record["fileset_id"])
-            for id in matched_set:
-                matched_map[id].append(file)
-    return matched_map
-
-
-def handle_matched_filesets(
-    fileset_last,
-    matched_map,
-    fileset,
-    conn,
-    detection,
-    src,
-    key,
-    megakey,
-    transaction_id,
-    log_text,
-    user,
-):
-    matched_list = sorted(matched_map.items(), key=lambda x: len(x[1]), reverse=True)
-    is_full_matched = False
-    with conn.cursor() as cursor:
-        for matched_fileset_id, matched_count in matched_list:
-            if is_full_matched:
-                break
-            cursor.execute(
-                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
-            )
-            status = cursor.fetchone()["status"]
-            cursor.execute(
-                "SELECT COUNT(file.id) FROM file WHERE fileset = %s",
-                (matched_fileset_id,),
-            )
-            count = cursor.fetchone()["COUNT(file.id)"]
-
-            if status in ["detection", "obsolete"] and count == len(matched_count):
-                is_full_matched = True
-                update_fileset_status(
-                    cursor, matched_fileset_id, "full" if src != "dat" else "partial"
-                )
-                populate_file(fileset, matched_fileset_id, conn, detection)
-                log_matched_fileset(
-                    src,
-                    fileset_last,
-                    matched_fileset_id,
-                    "full" if src != "dat" else "partial",
-                    user,
-                    conn,
-                )
-                delete_original_fileset(fileset_last, conn)
-            elif status == "full" and len(fileset["rom"]) == count:
-                is_full_matched = True
-                log_matched_fileset(
-                    src, fileset_last, matched_fileset_id, "full", user, conn
-                )
-                delete_original_fileset(fileset_last, conn)
-                return
-            elif (status == "partial") and count == len(matched_count):
-                is_full_matched = True
-                update_fileset_status(cursor, matched_fileset_id, "full")
-                populate_file(fileset, matched_fileset_id, conn, detection)
-                log_matched_fileset(
-                    src, fileset_last, matched_fileset_id, "full", user, conn
-                )
-                delete_original_fileset(fileset_last, conn)
-            elif status == "scan" and count == len(matched_count):
-                log_matched_fileset(
-                    src, fileset_last, matched_fileset_id, "full", user, conn
-                )
-            elif src == "dat":
-                log_matched_fileset(
-                    src, fileset_last, matched_fileset_id, "partial matched", user, conn
-                )
-
-
 def delete_original_fileset(fileset_id, conn):
     with conn.cursor() as cursor:
         cursor.execute("DELETE FROM file WHERE fileset = %s", (fileset_id,))
@@ -2650,131 +2168,6 @@ def update_fileset_status(cursor, fileset_id, status):
     """,
         (status, int(time.time()), fileset_id),
     )
-
-
-def populate_file(fileset, fileset_id, conn, detection):
-    with conn.cursor() as cursor:
-        cursor.execute("SELECT * FROM file WHERE fileset = %s", (fileset_id,))
-        target_files = cursor.fetchall()
-        target_files_dict = {}
-        for target_file in target_files:
-            cursor.execute(
-                "SELECT * FROM filechecksum WHERE file = %s", (target_file["id"],)
-            )
-            target_checksums = cursor.fetchall()
-            for checksum in target_checksums:
-                target_files_dict[checksum["checksum"]] = target_file
-                target_files_dict[target_file["id"]] = (
-                    f"{checksum['checktype']}-{checksum['checksize']}"
-                )
-        for file in fileset["rom"]:
-            file_exists = False
-            checksum = ""
-            checksize = 5000
-            checktype = "None"
-            if "md5" in file:
-                checksum = file["md5"]
-            else:
-                for key, value in file.items():
-                    if "md5" in key:
-                        checksize, checktype, checksum = get_checksum_props(key, value)
-                        break
-
-            if not detection:
-                checktype = "None"
-                detection = 0
-            detection_type = (
-                f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-            )
-
-            extended_file_size = True if "size-r" in file else False
-
-            name = normalised_path(file["name"])
-            escaped_name = escape_string(name)
-
-            columns = ["name", "size"]
-            values = [f"'{escaped_name}'", f"'{file['size']}'"]
-
-            if extended_file_size:
-                columns.extend(["`size-r`", "`size-rd`"])
-                values.extend([f"'{file['size-r']}'", f"'{file['size-rd']}'"])
-
-            columns.extend(
-                ["checksum", "fileset", "detection", "detection_type", "`timestamp`"]
-            )
-            values.extend(
-                [
-                    f"'{checksum}'",
-                    str(fileset_id),
-                    str(detection),
-                    f"'{detection_type}'",
-                    "NOW()",
-                ]
-            )
-
-            query = (
-                f"INSERT INTO file ({', '.join(columns)}) VALUES ({', '.join(values)})"
-            )
-            cursor.execute(query)
-            cursor.execute("SET @file_last = LAST_INSERT_ID()")
-            cursor.execute("SELECT @file_last AS file_id")
-
-            file_id = cursor.fetchone()["file_id"]
-            d_type = 0
-            previous_checksums = {}
-
-            for key, value in file.items():
-                if key not in ["name", "size", "size-r", "size-rd", "sha1", "crc"]:
-                    insert_filechecksum(file, key, file_id, conn)
-                    if value in target_files_dict and not file_exists:
-                        cursor.execute(
-                            f"SELECT detection_type FROM file WHERE id = {target_files_dict[value]['id']}"
-                        )
-                        d_type = cursor.fetchone()["detection_type"]
-                        file_exists = True
-                        cursor.execute(
-                            f"SELECT * FROM file WHERE fileset = {fileset_id}"
-                        )
-                        target_files = cursor.fetchall()
-                        for target_file in target_files:
-                            cursor.execute(
-                                f"SELECT * FROM filechecksum WHERE file = {target_file['id']}"
-                            )
-                            target_checksums = cursor.fetchall()
-                            for checksum in target_checksums:
-                                previous_checksums[
-                                    f"{checksum['checktype']}-{checksum['checksize']}"
-                                ] = checksum["checksum"]
-                        cursor.execute(
-                            f"DELETE FROM file WHERE id = {target_files_dict[value]['id']}"
-                        )
-
-            if file_exists:
-                cursor.execute(
-                    f"SELECT checktype, checksize FROM filechecksum WHERE file = {file_id}"
-                )
-                existing_checks = cursor.fetchall()
-                existing_checksum = []
-                for existing_check in existing_checks:
-                    existing_checksum.append(
-                        existing_check["checktype"] + "-" + existing_check["checksize"]
-                    )
-                for key, value in previous_checksums.items():
-                    if key not in existing_checksum:
-                        checksize, checktype, checksum = get_checksum_props(key, value)
-                        cursor.execute(
-                            "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)",
-                            (file_id, checksize, checktype, checksum),
-                        )
-
-                cursor.execute(f"UPDATE file SET detection = 1 WHERE id = {file_id}")
-                cursor.execute(
-                    f"UPDATE file SET detection_type = '{d_type}' WHERE id = {file_id}"
-                )
-            else:
-                cursor.execute(
-                    f"UPDATE file SET detection_type = 'None' WHERE id = {file_id}"
-                )
 
 
 def set_populate_file(fileset, fileset_id, conn, detection):
@@ -3133,11 +2526,11 @@ def user_integrity_check(data, ip, game_metadata=None):
                 log_matched_fileset(
                     src, matched_fileset_id, matched_fileset_id, "full", user, conn
                 )
-            elif status == "partial" and count == matched_count:
-                populate_file(data, matched_fileset_id, conn, None, src)
-                log_matched_fileset(
-                    src, matched_fileset_id, matched_fileset_id, "partial", user, conn
-                )
+            # elif status == "partial" and count == matched_count:
+            #     populate_file(data, matched_fileset_id, conn, None, src)
+            #     log_matched_fileset(
+            #         src, matched_fileset_id, matched_fileset_id, "partial", user, conn
+            #     )
             elif status == "user" and count == matched_count:
                 add_usercount(matched_fileset_id, conn)
                 log_matched_fileset(
