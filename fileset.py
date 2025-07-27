@@ -88,6 +88,16 @@ def fileset():
             # Get the id from the GET parameters, or use the minimum id if it's not provided
             id = request.args.get("id", default=min_id, type=int)
 
+            # Check if the id exists in the fileset table
+            cursor.execute("SELECT id FROM fileset WHERE id = %s", (id,))
+            if cursor.rowcount == 0:
+                # If the id doesn't exist, get a new id from the history table
+                cursor.execute(
+                    "SELECT fileset FROM history WHERE oldfileset = %s", (id,)
+                )
+                id = cursor.fetchone()["fileset"]
+                return redirect(f"/fileset?id={id}")
+
             # Get the maximum id from the fileset table
             cursor.execute("SELECT MAX(id) FROM fileset")
             max_id = cursor.fetchone()["MAX(id)"]
@@ -99,15 +109,6 @@ def fileset():
 
             # Ensure the id is between the minimum and maximum id
             id = max(min_id, min(id, max_id))
-
-            # Check if the id exists in the fileset table
-            cursor.execute("SELECT id FROM fileset WHERE id = %s", (id,))
-            if cursor.rowcount == 0:
-                # If the id doesn't exist, get a new id from the history table
-                cursor.execute(
-                    "SELECT fileset FROM history WHERE oldfileset = %s", (id,)
-                )
-                id = cursor.fetchone()["fileset"]
 
             # Get the history for the current id
             cursor.execute(
