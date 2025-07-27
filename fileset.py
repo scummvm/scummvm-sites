@@ -62,6 +62,7 @@ def clear_database():
 @app.route("/fileset", methods=["GET", "POST"])
 def fileset():
     id = request.args.get("id", default=1, type=int)
+    old_id = request.args.get("redirected_from", default=None, type=int)
     widetable = request.args.get("widetable", default="partial", type=str)
     # Load MySQL credentials from a JSON file
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,8 +96,9 @@ def fileset():
                 cursor.execute(
                     "SELECT fileset FROM history WHERE oldfileset = %s", (id,)
                 )
+                old_id = id
                 id = cursor.fetchone()["fileset"]
-                return redirect(f"/fileset?id={id}")
+                return redirect(f"/fileset?id={id}&redirected_from={old_id}")
 
             # Get the maximum id from the fileset table
             cursor.execute("SELECT MAX(id) FROM fileset")
@@ -141,6 +143,8 @@ def fileset():
             <h2 style="margin-top: 80px;"><u>Fileset: {id}</u></h2>
             <table>
             """
+            if old_id is not None:
+                html += f"""<h3><u>Redirected from Fileset: {old_id}</u></h3>"""
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Manual Merge</button>"
             # html += f"<button type='button' onclick=\"location.href='/fileset/{id}/possible_merge'\">Possible Merges</button>"
             html += f"""
