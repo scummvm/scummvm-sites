@@ -218,14 +218,6 @@ def create_page(
                     matches = re.findall(r"Fileset:(\d+)", value)
                     for fileset_id in matches:
                         fileset_text = f"Fileset:{fileset_id}"
-                        with conn.cursor() as cursor:
-                            cursor.execute(
-                                "SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset",
-                                (fileset_id,),
-                            )
-                            row = cursor.fetchone()
-                            if row:
-                                fileset_id = row["fileset"]
                         value = value.replace(
                             fileset_text,
                             f"<a href='fileset?id={fileset_id}'>{fileset_text}</a>",
