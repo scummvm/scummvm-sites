@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .content {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .title {
+            margin-top: 8vh;
+            text-align: center;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 10px;
+            font-size: 50px;
+            align-self: flex-start;
+            margin-left: 2vh;
+        }
+
+        .main {
+            height: 90vh;
+            width: 100vw;
+        }
+
+        .config-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .config-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .config-item label {
+            flex: 1;
+            margin-right: 15px;
+            font-weight: 500;
+        }
+
+        .current-value {
+            font-style: italic;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .config-item input,
+        .config-item select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            min-width: 120px;
+            margin-right: 2vw;
+        }
+
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border: 1px solid #c3e6cb;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .config {
+                font-size: 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .config {
+                font-size: 32px;
+            }
+
+            nav {
+                padding: 10px;
+            }
+
+            .nav-buttons a {
+                margin-bottom: 5px;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('config') }}">Config</a>
+        </div>
+    </nav>
+    <div class="content">
+        <h1 class="title">User Configurations</h1>
+        <div class="main">
+            <form method="POST" action="{{ url_for('config') }}">
+                <div class="config-section">
+                    <div class="config-item">
+                        <label for="items_per_page">Number of items per page:</label>
+                        <input type="number" name="items_per_page" id="items_per_page" value="{{ items_per_page }}"
+                            min="1">
+                        <div class="current-value">Current: {{ items_per_page }}</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px;">
+                        <button type="submit">Save Configuration</button>
+                    </div>
+            </form>
+        </div>
+    </div>
+    <script>
+        document.getElementById('items_per_page').addEventListener('input', function () {
+            const value = parseInt(this.value);
+            if (value < 1) this.value = 1;
+        });
+    </script>
+</body>
+
+</html>

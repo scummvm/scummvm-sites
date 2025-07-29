@@ -155,6 +155,7 @@ def create_page(
             <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
             <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
             <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('config') }}">Config</a>
         </div>
     </nav>
 <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
