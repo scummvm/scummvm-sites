@@ -6,7 +6,9 @@ from flask import (
     render_template_string,
     jsonify,
     render_template,
+    make_response,
 )
+
 import pymysql.cursors
 import json
 import html as html_lib
@@ -139,6 +141,7 @@ def fileset():
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                     <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
                     <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                    <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
             </nav>
             <h2 style="margin-top: 80px;"><u>Fileset: {id}</u></h2>
@@ -502,6 +505,7 @@ def merge_fileset(id):
                         <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                         <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
                         <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                        <a href="{{{{ url_for('config') }}}}">Config</a>
                     </div>
                 </nav>
                 <h2 style="margin-top: 80px;">Search Results for '{search_query}'</h2>
@@ -549,6 +553,7 @@ def merge_fileset(id):
             <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
             <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
             <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('config') }}">Config</a>
         </div>
     </nav>
     <h2 style="margin-top: 80px;">Search Fileset to Merge</h2>
@@ -616,6 +621,7 @@ def possible_merge_filesets(id):
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                     <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
                     <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                    <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
             </nav>
             <h2 style="margin-top: 80px;">Possible Merges for fileset-'{id}'</h2>
@@ -818,6 +824,7 @@ def confirm_merge(id):
                     <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
                     <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
                     <a href="{{ url_for('logs') }}">Logs</a>
+                    <a href="{{ url_for('config') }}">Config</a>
                 </div>
             </nav>
             <h2 style="margin-top: 80px;">Confirm Merge</h2>
@@ -1368,6 +1375,34 @@ def mark_as_full(id):
     return redirect(f"/fileset?id={id}")
 
 
+@app.route("/config", methods=["GET", "POST"])
+def config():
+    """
+    Stores the user configurations in the cookies
+    """
+    if request.method == "POST":
+        items_per_page = request.form.get("items_per_page", "25")
+
+        try:
+            items_per_page_int = int(items_per_page)
+            if items_per_page_int < 1:
+                items_per_page = "1"
+        except ValueError:
+            items_per_page = "25"
+
+        resp = make_response(redirect(url_for("config")))
+        resp.set_cookie("items_per_page", items_per_page, max_age=365 * 24 * 60 * 60)
+        return resp
+
+    items_per_page = int(request.cookies.get("items_per_page", "25"))
+
+    return render_template("config.html", items_per_page=items_per_page)
+
+
+def get_items_per_page():
+    return int(request.cookies.get("items_per_page", "25"))
+
+
 @app.route("/validate", methods=["POST"])
 def validate():
     error_codes = {
@@ -1506,8 +1541,19 @@ def games_list():
         "engine.id": "game.engine",
         "game.id": "fileset.game",
     }
+
+    items_per_page = get_items_per_page()
+
     return render_template_string(
-        create_page(filename, 25, records_table, select_query, order, filters, mapping)
+        create_page(
+            filename,
+            items_per_page,
+            records_table,
+            select_query,
+            order,
+            filters,
+            mapping,
+        )
     )
 
 
@@ -1524,8 +1570,11 @@ def logs():
         "user": "log",
         "text": "log",
     }
+    items_per_page = get_items_per_page()
     return render_template_string(
-        create_page(filename, 25, records_table, select_query, order, filters)
+        create_page(
+            filename, items_per_page, records_table, select_query, order, filters
+        )
     )
 
 
@@ -1558,8 +1607,17 @@ def fileset_search():
         "engine.id": "game.engine",
         "fileset.id": "transactions.fileset",
     }
+    items_per_page = get_items_per_page()
     return render_template_string(
-        create_page(filename, 25, records_table, select_query, order, filters, mapping)
+        create_page(
+            filename,
+            items_per_page,
+            records_table,
+            select_query,
+            order,
+            filters,
+            mapping,
+        )
     )
 
 
