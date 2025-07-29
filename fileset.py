@@ -667,8 +667,11 @@ def get_file_status(candidate_fileset, fileset, conn):
             (name, size, size_r, size_rd) = file
             base_name = os.path.basename(normalised_path(name)).lower()
             key = (size, size_r, size_rd, base_name)
+            key2 = (-1, size_r, size_rd, base_name)
             dat_sizes.add(key)
+            dat_sizes.add(key2)
             dat_names_by_sizes[key] = name
+            dat_names_by_sizes[key2] = name
 
         matched_files = []
 
@@ -1108,12 +1111,22 @@ def confirm_merge(id):
             </table>
                 <input type="hidden" name="source_id" value="{{ source_fileset['id'] }}">
                 <input type="hidden" name="target_id" value="{{ target_fileset['id'] }}">
-                <button type="submit">Confirm Merge</button>
+                <button id="confirm_merge_submit" type="submit">Confirm Merge</button>
             </form>
+            <div id="merging-status" style="display: none; font-weight: bold; margin-top: 10px;">
+                Merging... Please wait.
+            </div>
             <form action="{{ url_for('fileset', id=id) }}">
-                <input type="submit" value="Cancel">
+                <input id="confirm_merge_cancel" type="submit" value="Cancel">
             </form>
             <script src="{{ url_for('static', filename='js/confirm_merge_form_handler.js') }}"></script>
+            <script>
+            document.getElementById("confirm_merge_form").addEventListener("submit", function () {
+                document.getElementById("merging-status").style.display = "block";
+                document.getElementById("confirm_merge_submit").style.display = "none";
+                document.getElementById("confirm_merge_cancel").style.display = "none";
+            });
+            </script>
             <script>
             document.getElementById("toggle-unmatched").addEventListener("change", function() {
                 const rows = document.querySelectorAll("tr.unmatched");
