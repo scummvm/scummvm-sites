@@ -13,6 +13,7 @@ import pymysql.cursors
 import json
 import html as html_lib
 import os
+import getpass
 from pagination import create_page
 import difflib
 from db_functions import (
@@ -1340,7 +1341,8 @@ def execute_merge(id):
 
             delete_original_fileset(source_id, connection)
             category_text = "Manually Merged"
-            log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id}."
+            user = f"cli:{getpass.getuser()}"
+            log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id} by user: {user}."
             create_log(category_text, "Moderator", log_text, connection)
 
             query = """
