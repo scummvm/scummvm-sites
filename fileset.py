@@ -37,7 +37,7 @@ secret_key = os.urandom(24)
 
 @app.route("/")
 def index():
-    return redirect(url_for("logs"))
+    return redirect(url_for("logs", sort="id-desc"))
 
 
 @app.route("/home")
@@ -141,7 +141,7 @@ def fileset():
                     <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                     <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
-                    <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                    <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                     <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
             </nav>
@@ -505,7 +505,7 @@ def merge_fileset(id):
                         <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                         <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                         <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
-                        <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                        <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                         <a href="{{{{ url_for('config') }}}}">Config</a>
                     </div>
                 </nav>
@@ -553,7 +553,7 @@ def merge_fileset(id):
             <a href="{{ url_for('user_games_list') }}">User Games List</a>
             <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
             <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-            <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
             <a href="{{ url_for('config') }}">Config</a>
         </div>
     </nav>
@@ -621,7 +621,7 @@ def possible_merge_filesets(id):
                     <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
                     <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
-                    <a href="{{{{ url_for('logs') }}}}">Logs</a>
+                    <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                     <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
             </nav>
@@ -824,7 +824,7 @@ def confirm_merge(id):
                     <a href="{{ url_for('user_games_list') }}">User Games List</a>
                     <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
                     <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-                    <a href="{{ url_for('logs') }}">Logs</a>
+                    <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
                     <a href="{{ url_for('config') }}">Config</a>
                 </div>
             </nav>

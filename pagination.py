@@ -22,6 +22,30 @@ def get_join_columns(table1, table2, mapping):
     return "No primary-foreign key mapping provided. Filter is invalid"
 
 
+def build_search_condition(value, column):
+    phrases = re.findall(r'"([^"]+)"', value)
+    if phrases:
+        conditions = [f"{column} REGEXP '{re.escape(p)}'" for p in phrases]
+        return " AND ".join(conditions)
+
+    if "+" in value:
+        and_terms = value.split("+")
+        and_conditions = []
+        for term in and_terms:
+            or_terms = term.strip().split()
+            if len(or_terms) > 1:
+                or_cond = " OR ".join(
+                    [f"{column} REGEXP '{re.escape(t)}'" for t in or_terms if t]
+                )
+                and_conditions.append(f"({or_cond})")
+            else:
+                and_conditions.append(f"{column} REGEXP '{re.escape(term.strip())}'")
+        return " AND ".join(and_conditions)
+    else:
+        or_terms = value.split()
+        return " OR ".join([f"{column} REGEXP '{re.escape(t)}'" for t in or_terms if t])
+
+
 def create_page(
     filename,
     results_per_page,
@@ -46,62 +70,47 @@ def create_page(
     )
 
     with conn.cursor() as cursor:
-        # Handle sorting
-        sort = request.args.get("sort")
-        if sort:
-            column = sort.split("-")
-            order = f"ORDER BY {column[0]}"
-            if "desc" in sort:
-                order += " DESC"
+        tables = set()
+        where_clauses = []
 
-        if set(request.args.keys()).difference({"page", "sort"}):
-            condition = "WHERE "
-            tables = set()
-            for key, value in request.args.items():
-                if key in ["page", "sort"] or value == "":
+        for key, value in request.args.items():
+            if key in ("page", "sort") or value == "":
+                continue
+            tables.add(filters[key])
+            col = f"{filters[key]}.{'id' if key == 'fileset' else key}"
+            parsed = build_search_condition(value, col)
+            if parsed:
+                where_clauses.append(parsed)
+
+        condition = ""
+        if where_clauses:
+            condition = "WHERE " + " AND ".join(where_clauses)
+
+        from_query = records_table
+        join_order = ["game", "engine"]
+        tables_list = sorted(
+            list(tables), key=lambda t: join_order.index(t) if t in join_order else 99
+        )
+
+        if records_table not in tables_list or len(tables_list) > 1:
+            for t in tables_list:
+                if t == records_table:
                     continue
-                tables.add(filters[key])
-                if value == "":
-                    value = ".*"
-                condition += (
-                    f" AND {filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
-                    if condition != "WHERE "
-                    else f"{filters[key]}.{'id' if key == 'fileset' else key} REGEXP '{value}'"
-                )
-
-            if condition == "WHERE ":
-                condition = ""
-
-            # Handle multiple tables
-            from_query = records_table
-            join_order = ["game", "engine"]
-            tables_list = sorted(
-                list(tables),
-                key=lambda t: join_order.index(t) if t in join_order else 99,
-            )
-            if records_table not in tables_list or len(tables_list) > 1:
-                for table in tables_list:
-                    if table == records_table:
-                        continue
-                    if table == "engine":
-                        if "game" in tables:
-                            from_query += " JOIN engine ON engine.id = game.engine"
-                        else:
-                            from_query += " JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine"
+                if t == "engine":
+                    if "game" in tables:
+                        from_query += " JOIN engine ON engine.id = game.engine"
                     else:
-                        from_query += f" JOIN {table} ON {get_join_columns(records_table, table, mapping)}"
-            cursor.execute(
-                f"SELECT COUNT({records_table}.id) AS count FROM {from_query} {condition}"
-            )
-            num_of_results = cursor.fetchone()["count"]
+                        from_query += " JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine"
+                else:
+                    from_query += (
+                        f" JOIN {t} ON {get_join_columns(records_table, t, mapping)}"
+                    )
 
-        elif "JOIN" in records_table:
-            first_table = records_table.split(" ")[0]
-            cursor.execute(f"SELECT COUNT({first_table}.id) FROM {records_table}")
-            num_of_results = cursor.fetchone()[f"COUNT({first_table}.id)"]
-        else:
-            cursor.execute(f"SELECT COUNT(id) FROM {records_table}")
-            num_of_results = cursor.fetchone()["COUNT(id)"]
+        base_table = records_table.split(" ")[0]
+        cursor.execute(
+            f"SELECT COUNT({base_table}.id) AS count FROM {from_query} {condition}"
+        )
+        num_of_results = cursor.fetchone()["count"]
 
         num_of_pages = (num_of_results + results_per_page - 1) // results_per_page
         print(f"Num of results: {num_of_results}, Num of pages: {num_of_pages}")
@@ -110,29 +119,21 @@ def create_page(
         page = max(1, min(page, num_of_pages))
         offset = (page - 1) * results_per_page
 
-        # Fetch results
-        if set(request.args.keys()).difference({"page"}):
-            condition = "WHERE "
-            for key, value in request.args.items():
-                if key not in filters:
-                    continue
-
-                value = pymysql.converters.escape_string(value)
-                if value == "":
-                    value = ".*"
-                field = f"{filters[key]}.{'id' if key == 'fileset' else key}"
-                if value == ".*":
-                    clause = f"({field} IS NULL OR {field} REGEXP '{value}')"
-                else:
-                    clause = f"{field} REGEXP '{value}'"
-                condition += f" AND {clause}" if condition != "WHERE " else clause
-
-            if condition == "WHERE ":
-                condition = ""
-
-            query = f"{select_query} {condition} {order} LIMIT {results_per_page} OFFSET {offset}"
+        # Sort
+        order = ""
+        sort_param = request.args.get("sort")
+        if sort_param:
+            sort_parts = sort_param.split("-")
+            sort_col = sort_parts[0]
+            order = f"ORDER BY {sort_col}"
+            if "desc" in sort_param:
+                order += " DESC"
         else:
-            query = f"{select_query} {order} LIMIT {results_per_page} OFFSET {offset}"
+            if records_table == "log":
+                order = "ORDER BY `id` DESC"
+
+        # Fetch results
+        query = f"{select_query} {condition} {order} LIMIT {results_per_page} OFFSET {offset}"
         cursor.execute(query)
         results = cursor.fetchall()
 
@@ -154,7 +155,7 @@ def create_page(
             <a href="{{ url_for('user_games_list') }}">User Games List</a>
             <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
             <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-            <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
             <a href="{{ url_for('config') }}">Config</a>
         </div>
     </nav>
