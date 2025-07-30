@@ -1423,25 +1423,6 @@ def validate():
 
     json_response = {"error": error_codes["success"], "files": []}
 
-    # if not game_metadata:
-    #     if not json_object.get("files"):
-    #         json_response["error"] = error_codes["empty"]
-    #         del json_response["files"]
-    #         json_response["status"] = "empty_fileset"
-    #         return jsonify(json_response)
-
-    #     json_response["error"] = error_codes["no_metadata"]
-    #     del json_response["files"]
-    #     json_response["status"] = "no_metadata"
-
-    #     conn = db_connect()
-    #     try:
-    #         fileset_id = user_insert_fileset(json_object, ip, conn)
-    #     finally:
-    #         conn.close()
-    #     json_response["fileset"] = fileset_id
-    #     return jsonify(json_response)
-
     file_object = json_object["files"]
     if not file_object:
         json_response["error"] = error_codes["empty"]
@@ -1449,9 +1430,16 @@ def validate():
         return jsonify(json_response)
 
     try:
-        matched_map, missing_map, extra_map = user_integrity_check(
-            json_object, ip, game_metadata
-        )
+        # match_type - no_candidate or multiple or full
+        # fileset_id - new user fileset id : if match_type is no_candidate or multiple
+        #            - matched fileset id : if match_type if full
+        (
+            match_type,
+            fileset_id,
+            matched_user_files,
+            unmatched_full_files,
+            unmatched_user_files,
+        ) = user_integrity_check(json_object, ip, game_metadata)
     except Exception as e:
         json_response["error"] = -1
         json_response["status"] = "processing_error"
@@ -1459,49 +1447,40 @@ def validate():
         json_response["message"] = str(e)
         print(f"Response: {json_response}")
         return jsonify(json_response)
-    print(f"Matched: {matched_map}")
-    print(len(matched_map))
-    if len(matched_map) == 0:
-        json_response["error"] = error_codes["unknown"]
-        json_response["status"] = "unknown_fileset"
-        json_response["fileset"] = "unknown_fileset"
+
+    # If no candidate was filtered out
+    if match_type == "no_candidate":
+        json_response["error"] = -1
+        json_response["status"] = "new_fileset"
+        json_response["fileset"] = str(fileset_id)
+        json_response["message"] = ""
+        print(f"Response: {json_response}")
         return jsonify(json_response)
-    matched_map = list(
-        sorted(matched_map.items(), key=lambda x: len(x[1]), reverse=True)
-    )[0]
-    matched_id = matched_map[0]
-    # find the same id in the missing_map and extra_map
-    for fileset_id, count in missing_map.items():
-        if fileset_id == matched_id:
-            missing_map = (fileset_id, count)
-            break
 
-    for fileset_id, count in extra_map.items():
-        if fileset_id == matched_id:
-            extra_map = (fileset_id, count)
-            break
+    # If match was with multiple candidates
+    if match_type == "multiple":
+        json_response["error"] = -1
+        json_response["status"] = "possible_new_variant"
+        json_response["fileset"] = str(fileset_id)
+        json_response["message"] = ""
+        print(f"Response: {json_response}")
+        return jsonify(json_response)
 
-    for file in matched_map[1]:
-        for key, value in file.items():
-            if key == "name":
-                json_response["files"].append(
-                    {"status": "ok", "fileset_id": matched_id, "name": value}
-                )
-                break
-    for file in missing_map[1]:
-        for key, value in file.items():
-            if key == "name":
-                json_response["files"].append(
-                    {"status": "missing", "fileset_id": matched_id, "name": value}
-                )
-                break
-    for file in extra_map[1]:
-        for key, value in file.items():
-            if key == "name":
-                json_response["files"].append(
-                    {"status": "unknown_file", "fileset_id": matched_id, "name": value}
-                )
-                break
+    # If match was with full
+    for file in matched_user_files:
+        json_response["files"].append(
+            {"status": "ok", "fileset_id": fileset_id, "name": file}
+        )
+    for file in unmatched_full_files:
+        json_response["files"].append(
+            {"status": "missing/unmatched", "fileset_id": fileset_id, "name": file}
+        )
+
+    for file in unmatched_user_files:
+        json_response["files"].append(
+            {"status": "unknown_file", "fileset_id": fileset_id, "name": file}
+        )
+
     print(f"Response: {json_response}")
     return jsonify(json_response)
 
