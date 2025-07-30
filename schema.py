@@ -102,10 +102,9 @@ def init_database():
             CREATE TABLE IF NOT EXISTS queue (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 time TIMESTAMP NOT NULL,
-                notes varchar(300),
+                notes varchar(300) DEFAULT '',
                 fileset INT,
-                userid INT NOT NULL,
-                commit VARCHAR(64) NOT NULL,
+                ip VARCHAR(100) NOT NULL,
                 FOREIGN KEY (fileset) REFERENCES fileset(id)
             )
         """,

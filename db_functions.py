@@ -175,9 +175,19 @@ def insert_fileset(
         cursor.execute("SELECT @fileset_last")
         fileset_last = cursor.fetchone()["@fileset_last"]
 
-    log_text = f"Created Fileset:{fileset_last}, {log_text}"
-    if src == "user":
-        log_text = f"Created Fileset:{fileset_last}, from user: IP {ip}."
+        log_text = f"Created Fileset:{fileset_last}, {log_text}"
+        if src == "user":
+            query = """
+                INSERT INTO queue (time, fileset, ip)
+                VALUES (FROM_UNIXTIME(@fileset_time_last), %s, %s)
+            """
+            cursor.execute(query, (fileset_id, ip))
+            cursor.execute(
+                "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
+                (fileset_id,),
+            )
+            cursor.execute(query, (fileset_id, ip))
+            log_text = f"Created Fileset:{fileset_last}, from user: IP {ip}."
 
     user = f"cli:{getpass.getuser()}" if username is None else username
     if not skiplog and detection:
@@ -698,6 +708,9 @@ def scan_process(
 
     id_to_fileset_mapping = defaultdict(dict)
 
+    # set of filesets whose files got updated
+    filesets_check_for_full = set()
+
     fileset_count = 0
     for fileset in game_data:
         console_log_file_update(fileset_count)
@@ -722,18 +735,19 @@ def scan_process(
 
         id_to_fileset_mapping[fileset_id] = fileset
 
-        # set of filesets whose files got updated
-        filesets_check_for_full = set()
+        possible_full_filesets = set()
 
         for rom in fileset["rom"]:
-            pre_update_files(rom, filesets_check_for_full, transaction_id, conn)
+            pre_update_files(rom, transaction_id, conn, possible_full_filesets)
+
+        filesets_check_for_full.update(possible_full_filesets)
         fileset_count += 1
 
     fileset_count = 0
     for fileset_id, fileset in id_to_fileset_mapping.items():
         console_log_matching(fileset_count)
-        candidate_filesets = scan_filter_candidate_filesets(
-            fileset_id, fileset, transaction_id, conn
+        candidate_filesets = filter_candidate_filesets(
+            fileset["rom"], transaction_id, conn
         )
 
         if len(candidate_filesets) == 0:
@@ -773,6 +787,9 @@ def scan_process(
         )
         fileset_count += 1
 
+    # If any partial fileset turned full with pre file updates, turn it full
+    update_status_for_partial_filesets(list(filesets_check_for_full), conn)
+
     # Final log
     with conn.cursor() as cursor:
         cursor.execute(
@@ -789,10 +806,12 @@ def scan_process(
         create_log(category_text, user, log_text, conn)
 
 
-def pre_update_files(rom, filesets_check_for_full, transaction_id, conn):
+def pre_update_files(rom, transaction_id, conn, filesets_check_for_full=None):
     """
     Updates all the checksums for the files matching by a checksum and size.
     """
+    if filesets_check_for_full is None:
+        filesets_check_for_full = set()
     with conn.cursor() as cursor:
         checksums = defaultdict(str)
         for key in rom:
@@ -971,8 +990,8 @@ def scan_perform_match(
 
             # Drop the fileset, note down the file differences
             elif status == "full":
-                (unmatched_candidate_files, unmatched_scan_files) = get_unmatched_files(
-                    matched_fileset_id, fileset, conn
+                (_, unmatched_candidate_files, unmatched_scan_files) = (
+                    get_unmatched_files(matched_fileset_id, fileset, conn)
                 )
                 fully_matched = (
                     True
@@ -984,8 +1003,7 @@ def scan_perform_match(
                     match_with_full_fileset += 1
                 else:
                     mismatch_with_full_fileset += 1
-                log_scan_match_with_full(
-                    fileset_id,
+                log_match_with_full(
                     matched_fileset_id,
                     unmatched_candidate_files,
                     unmatched_scan_files,
@@ -1149,9 +1167,10 @@ def total_fileset_files(fileset):
     return len(fileset["rom"])
 
 
-def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
+def filter_candidate_filesets(roms, transaction_id, conn):
     """
     Returns a list of candidate filesets that can be merged.
+    For scan.dat and user.dat
     Performs early filtering in SQL (by name, size) and then
     applies checksum filtering and max-match filtering in Python.
     """
@@ -1179,9 +1198,9 @@ def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
             {
                 "file_id": row["file_id"],
                 "name": os.path.basename(normalised_path(row["name"])).lower(),
-                "size": row["size"],
-                "size-r": row["size_r"],
-                "size-rd": row["size_rd"],
+                "size": row["size"] if "size" in row else 0,
+                "size-r": row["size_r"] if "size-r" in row else 0,
+                "size-rd": row["size_rd"] if "size-rd" in row else 0,
             }
         )
     for id, files in candidate_map.items():
@@ -1189,7 +1208,7 @@ def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
 
     set_checksums = set()
     set_file_name_size = set()
-    for file in fileset["rom"]:
+    for file in roms:
         name = os.path.basename(normalised_path(file["name"]))
         for key in file:
             if key.startswith("md5"):
@@ -1284,7 +1303,7 @@ def scan_filter_candidate_filesets(fileset_id, fileset, transaction_id, conn):
 
     matched_candidates = []
     for candidate in candidates:
-        if is_full_detection_checksum_match(candidate, fileset, conn):
+        if is_full_detection_checksum_match(candidate, roms, conn):
             matched_candidates.append(candidate)
 
     if len(matched_candidates) != 0:
@@ -1343,12 +1362,17 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
             for key in dat_checksums
             if key not in matched_dat_pairs
         }
+        matched_dat_files = {
+            dat_names_by_checksum[key]
+            for key in dat_checksums
+            if key in matched_dat_pairs
+        }
         unmatched_dat_files = list(unmatched_dat_files)
 
-        return (unmatched_candidate_files, unmatched_dat_files)
+        return (matched_dat_files, unmatched_candidate_files, unmatched_dat_files)
 
 
-def is_full_detection_checksum_match(candidate_fileset, fileset, conn):
+def is_full_detection_checksum_match(candidate_fileset, files, conn):
     """
     Return type - Boolean
     Checks if all the detection files in the candidate fileset have corresponding checksums matching with scan.
@@ -1367,7 +1391,7 @@ def is_full_detection_checksum_match(candidate_fileset, fileset, conn):
 
         # set of (checksum, filename)
         scan_checksums = set()
-        for file in fileset["rom"]:
+        for file in files:
             for key in file:
                 if key.startswith("md5"):
                     name = os.path.basename(normalised_path(file["name"]))
@@ -1467,7 +1491,7 @@ def set_process(
         set_dat_metadata = ""
         for meta in fileset:
             if meta != "rom":
-                set_dat_metadata += meta + " = " + fileset[meta] + "  ,  "
+                set_dat_metadata += meta + ": " + fileset[meta] + "  "
 
         (fileset_id, existing) = insert_new_fileset(
             fileset,
@@ -1750,8 +1774,8 @@ def set_perform_match(
                     matched_fileset_id, manual_merge_map, set_to_candidate_dict, conn
                 )
             elif status == "partial" or status == "full":
-                (unmatched_candidate_files, unmatched_dat_files) = get_unmatched_files(
-                    matched_fileset_id, fileset, conn
+                (_, unmatched_candidate_files, unmatched_dat_files) = (
+                    get_unmatched_files(matched_fileset_id, fileset, conn)
                 )
                 is_match = (
                     True
@@ -1890,8 +1914,8 @@ def add_manual_merge(
                     (%s, %s)
                 """
             cursor.execute(query, (child_fileset, parent_fileset))
-
-    create_log(category_text, user, log_text, conn)
+    if category_text and log_text:
+        create_log(category_text, user, log_text, conn)
     if print_text:
         print(print_text)
 
@@ -2057,7 +2081,7 @@ def set_filter_candidate_filesets(
 
     matched_candidates = []
     for candidate in candidates:
-        if is_full_detection_checksum_match(candidate, fileset, conn):
+        if is_full_detection_checksum_match(candidate, fileset["rom"], conn):
             matched_candidates.append(candidate)
 
     if len(matched_candidates) != 0:
@@ -2341,8 +2365,7 @@ def log_matched_fileset(src, fileset_last, fileset_id, state, user, conn):
     update_history(fileset_last, fileset_id, conn, log_last)
 
 
-def log_scan_match_with_full(
-    fileset_last,
+def log_match_with_full(
     candidate_id,
     unmatched_candidate_files,
     unmatched_scan_files,
@@ -2362,6 +2385,22 @@ def log_scan_match_with_full(
     create_log(category_text, user, log_text, conn)
 
 
+def log_user_match_with_full(
+    candidate_id,
+    unmatched_full_files,
+    unmatched_user_files,
+    matched_user_files,
+    fully_matched,
+    user,
+    conn,
+):
+    category_text = "User fileset mismatch"
+    if fully_matched:
+        category_text = "User fileset matched"
+    log_text = f"""Candidate Full Fileset:{candidate_id}. Total matched user files = {len(matched_user_files)}. Missing/mismatch Files = {len(unmatched_full_files)}. Unknown Files = {len(unmatched_user_files)}. List of Missing/mismatch files : {", ".join(scan_file for scan_file in unmatched_full_files)}, List of unknown files : {", ".join(scan_file for scan_file in unmatched_user_files)}"""
+    create_log(category_text, user, log_text, conn)
+
+
 def finalize_fileset_insertion(
     conn, transaction_id, src, filepath, author, version, source_status, user
 ):
@@ -2377,6 +2416,90 @@ def finalize_fileset_insertion(
             create_log(category_text, user, log_text, conn)
 
 
+def user_perform_match(
+    fileset,
+    src,
+    user,
+    candidate_filesets,
+    game_metadata,
+    transaction_id,
+    conn,
+    ip,
+):
+    with conn.cursor() as cursor:
+        single_candidate_id = candidate_filesets[0]
+        cursor.execute(
+            "SELECT status FROM fileset WHERE id = %s", (single_candidate_id,)
+        )
+        status = cursor.fetchone()["status"]
+        if len(candidate_filesets) == 1 and status == "full":
+            if status == "full":
+                # Checks how many files match
+                (matched_dat_files, unmatched_full_files, unmatched_user_files) = (
+                    get_unmatched_files(single_candidate_id, fileset, conn)
+                )
+                return (
+                    "full",
+                    -1,
+                    single_candidate_id,
+                    matched_dat_files,
+                    unmatched_full_files,
+                    unmatched_user_files,
+                )
+        # Includes cases for
+        # - single candidate with detection or partial status
+        # - multiple candidates
+        else:
+            # Create a new fileset and add links to candidates
+            fileset_id = create_user_fileset(
+                fileset, game_metadata, src, transaction_id, user, conn, ip
+            )
+            if fileset_id != -1:
+                add_manual_merge(
+                    candidate_filesets,
+                    fileset_id,
+                    None,
+                    None,
+                    user,
+                    conn,
+                )
+            return ("multiple", fileset_id, -1, [], [], [])
+
+
+def create_user_fileset(fileset, game_metadata, src, transaction_id, user, conn, ip):
+    with conn.cursor() as cursor:
+        key = calc_key(fileset)
+        try:
+            engine_name = ""
+            engineid = game_metadata["engineid"]
+            title = ""
+            gameid = game_metadata["gameid"]
+            extra = game_metadata.get("extra", "")
+            platform = game_metadata.get("platform", "")
+            lang = game_metadata.get("language", "")
+        except KeyError as e:
+            print(f"Missing key in metadata: {e}")
+            return
+
+        (fileset_id, _) = insert_fileset(
+            src, False, key, None, transaction_id, None, conn, ip=ip
+        )
+
+        insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)
+        if fileset_id:
+            for file in fileset["rom"]:
+                insert_file(file, False, src, conn)
+                file_id = None
+                with conn.cursor() as cursor:
+                    cursor.execute("SELECT @file_last AS file_id")
+                    file_id = cursor.fetchone()["file_id"]
+                for key, value in file.items():
+                    if key not in ["name", "size", "size-r", "size-rd"]:
+                        insert_filechecksum(file, key, file_id, conn)
+
+        return fileset_id
+
+
 def user_integrity_check(data, ip, game_metadata=None):
     src = "user"
     source_status = src
@@ -2386,8 +2509,8 @@ def user_integrity_check(data, ip, game_metadata=None):
         new_file = {
             "name": file["name"],
             "size": file["size"],
-            "size-r": file["size-r"],
-            "size-rd": file["size-rd"],
+            "size-r": file["size-r"] if "size-r" in file else 0,
+            "size-rd": file["size-rd"] if "size-rd" in file else 0,
         }
         for checksum in file["checksums"]:
             checksum_type = checksum["type"]
@@ -2409,7 +2532,10 @@ def user_integrity_check(data, ip, game_metadata=None):
     try:
         with conn.cursor() as cursor:
             cursor.execute("SELECT MAX(`transaction`) FROM transactions")
-            transaction_id = cursor.fetchone()["MAX(`transaction`)"] + 1
+            transaction_id = cursor.fetchone()["MAX(`transaction`)"]
+            if transaction_id is None:
+                transaction_id = 0
+            transaction_id += 1
 
             category_text = f"Uploaded from {src}"
             log_text = f"Started loading file, State {source_status}. Transaction: {transaction_id}"
@@ -2418,128 +2544,117 @@ def user_integrity_check(data, ip, game_metadata=None):
 
             create_log(category_text, user, log_text, conn)
 
-            matched_map = find_matching_filesets(data, conn, src)
+            # Check if the key already exists in the db
+            query = """
+                SELECT id
+                FROM fileset
+                WHERE `key` = %s
+                AND (status = 'user' OR status = 'ReadyForReview')
+            """
+            cursor.execute(query, (key,))
+            existing_entry = cursor.fetchone()
+            if existing_entry is not None:
+                match_type = "no_candidate"
+                existing_fileset_id = existing_entry["id"]
+                add_usercount(existing_fileset_id, ip, conn)
+                conn.commit()
+                return (match_type, existing_fileset_id, [], [], [])
 
-            # show matched, missing, extra
-            extra_map = defaultdict(list)
-            missing_map = defaultdict(list)
-            extra_set = set()
-            missing_set = set()
+            candidate_filesets = filter_candidate_filesets(
+                data["rom"], transaction_id, conn
+            )
 
-            for fileset_id in matched_map.keys():
-                cursor.execute("SELECT * FROM file WHERE fileset = %s", (fileset_id,))
-                target_files = cursor.fetchall()
-                target_files_dict = {}
-                for target_file in target_files:
-                    cursor.execute(
-                        "SELECT * FROM filechecksum WHERE file = %s",
-                        (target_file["id"],),
-                    )
-                    target_checksums = cursor.fetchall()
-                    for checksum in target_checksums:
-                        target_files_dict[checksum["checksum"]] = target_file
-                        # target_files_dict[target_file['id']] = f"{checksum['checktype']}-{checksum['checksize']}"
-
-                # Collect all the checksums from data['files']
-                data_files_set = set()
-                for file in data["files"]:
-                    for checksum_info in file["checksums"]:
-                        checksum = checksum_info["checksum"]
-                        checktype = checksum_info["type"]
-                        checksize, checktype, checksum = get_checksum_props(
-                            checktype, checksum
-                        )
-                        data_files_set.add(checksum)
-
-                # Identify missing files
-                matched_names = set()
-                for checksum, target_file in target_files_dict.items():
-                    if checksum not in data_files_set:
-                        if target_file["name"] not in matched_names:
-                            missing_set.add(target_file["name"])
-                        else:
-                            missing_set.discard(target_file["name"])
-                    else:
-                        matched_names.add(target_file["name"])
-
-                for tar in missing_set:
-                    missing_map[fileset_id].append({"name": tar})
-
-                # Identify extra files
-                for file in data["files"]:
-                    file_exists = False
-                    for checksum_info in file["checksums"]:
-                        checksum = checksum_info["checksum"]
-                        checktype = checksum_info["type"]
-                        checksize, checktype, checksum = get_checksum_props(
-                            checktype, checksum
-                        )
-                        if checksum in target_files_dict and not file_exists:
-                            file_exists = True
-                    if not file_exists:
-                        extra_set.add(file["name"])
-
-                for extra in extra_set:
-                    extra_map[fileset_id].append({"name": extra})
-            if game_metadata:
-                platform = game_metadata["platform"]
-                lang = game_metadata["language"]
-                gameid = game_metadata["gameid"]
-                engineid = game_metadata["engineid"]
-                extra_info = game_metadata["extra"]
-                engine_name = " "
-                title = " "
-                insert_game(
-                    engine_name,
-                    engineid,
-                    title,
-                    gameid,
-                    extra_info,
-                    platform,
-                    lang,
+            if len(candidate_filesets) == 0:
+                (user_fileset_id, _) = insert_new_fileset(
+                    data,
                     conn,
+                    None,
+                    src,
+                    key,
+                    None,
+                    transaction_id,
+                    log_text,
+                    user,
+                    ip=ip,
                 )
+                match_type = "no_candidate"
+                category_text = "New User Fileset"
+                engineid = (
+                    game_metadata["engineid"] if "engineid" in game_metadata else ""
+                )
+                gameid = game_metadata["gameid"] if "gameid" in game_metadata else ""
+                platform = (
+                    game_metadata["platform"] if "platform" in game_metadata else ""
+                )
+                language = (
+                    game_metadata["language"] if "language" in game_metadata else ""
+                )
+                log_text = f"New User Fileset:{user_fileset_id} with no matching candidates. Engine: {engineid} Name: {gameid}-{platform}-{language}"
+                create_log(category_text, user, log_text, conn)
+                conn.commit()
+                return (match_type, user_fileset_id, [], [], [])
 
-            # handle different scenarios
-            if len(matched_map) == 0:
-                insert_new_fileset(
-                    data, conn, None, src, key, None, transaction_id, log_text, user, ip
-                )
-                return matched_map, missing_map, extra_map
-
-            matched_list = sorted(
-                matched_map.items(), key=lambda x: len(x[1]), reverse=True
-            )
-            most_matched = matched_list[0]
-            matched_fileset_id, matched_count = most_matched[0], most_matched[1]
-            cursor.execute(
-                "SELECT status FROM fileset WHERE id = %s", (matched_fileset_id,)
-            )
-            status = cursor.fetchone()["status"]
-
-            cursor.execute(
-                "SELECT COUNT(file.id) FROM file WHERE fileset = %s",
-                (matched_fileset_id,),
-            )
-            count = cursor.fetchone()["COUNT(file.id)"]
-            if status == "full" and count == matched_count:
-                log_matched_fileset(
-                    src, matched_fileset_id, matched_fileset_id, "full", user, conn
-                )
-            # elif status == "partial" and count == matched_count:
-            #     populate_file(data, matched_fileset_id, conn, None, src)
-            #     log_matched_fileset(
-            #         src, matched_fileset_id, matched_fileset_id, "partial", user, conn
-            #     )
-            elif status == "user" and count == matched_count:
-                add_usercount(matched_fileset_id, conn)
-                log_matched_fileset(
-                    src, matched_fileset_id, matched_fileset_id, "user", user, conn
-                )
             else:
-                insert_new_fileset(
-                    data, conn, None, src, key, None, transaction_id, log_text, user, ip
+                (
+                    match_type,
+                    user_fileset_id,
+                    matched_id,
+                    matched_user_files,
+                    unmatched_full_files,
+                    unmatched_user_files,
+                ) = user_perform_match(
+                    data,
+                    src,
+                    user,
+                    candidate_filesets,
+                    game_metadata,
+                    transaction_id,
+                    conn,
+                    ip,
                 )
+                if match_type == "multiple":
+                    # If multiple candidates matched, we will do manual review and ask user for more details.
+                    category_text = "User fileset - Multiple candidates"
+                    log_text = f"Possible new variant Fileset:{user_fileset_id} from user. Multiple filesets candidates {', '.join(f'Fileset:{id}' for id in candidate_filesets)}"
+                    create_log(
+                        category_text,
+                        user,
+                        log_text,
+                        conn,
+                    )
+                    conn.commit()
+                    return (
+                        match_type,
+                        user_fileset_id,
+                        matched_user_files,
+                        unmatched_full_files,
+                        unmatched_user_files,
+                    )
+                if match_type == "full":
+                    fully_matched = (
+                        True
+                        if len(unmatched_full_files) == 0
+                        and len(unmatched_user_files) == 0
+                        else False
+                    )
+                    log_user_match_with_full(
+                        matched_id,
+                        unmatched_full_files,
+                        unmatched_user_files,
+                        matched_user_files,
+                        fully_matched,
+                        user,
+                        conn,
+                    )
+                    conn.commit()
+                    return (
+                        match_type,
+                        matched_id,
+                        matched_user_files,
+                        unmatched_full_files,
+                        unmatched_user_files,
+                    )
+
             finalize_fileset_insertion(
                 conn, transaction_id, src, None, user, 0, source_status, user
             )
@@ -2550,22 +2665,91 @@ def user_integrity_check(data, ip, game_metadata=None):
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading file, State {source_status}. Transaction: {transaction_id}"
         create_log(category_text, user, log_text, conn)
-        # conn.close()
-    return matched_map, missing_map, extra_map
+        conn.close()
 
 
-def add_usercount(fileset, conn):
+def update_status_for_partial_filesets(fileset_list, conn):
+    """
+    Updates the status of the given filesets from partial to full, if all of their files have full checksums.
+    """
     with conn.cursor() as cursor:
-        cursor.execute(
-            "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
-            (fileset,),
-        )
-        cursor.execute("SELECT user_count from fileset WHERE id = %s", (fileset,))
-        count = cursor.fetchone()["user_count"]
-        if count >= 3:
+        for fileset_id in fileset_list:
+            cursor.execute("SELECT status FROM fileset WHERE id = %s", (fileset_id,))
+            result = cursor.fetchone()
+            status = result["status"]
+            if status == "partial":
+                query = """
+                    SELECT f.id as file_id
+                    FROM file f
+                    JOIN fileset fs ON fs.id = f.fileset
+                    WHERE fs.id = %s
+                """
+                cursor.execute(query, (fileset_id,))
+                result = cursor.fetchall()
+                not_complete = False
+                for file in result:
+                    file_id = file["file_id"]
+                    query = """
+                        SELECT COUNT(*) AS count
+                        FROM filechecksum fc
+                        WHERE fc.file = %s
+                    """
+                    cursor.execute(query, (file_id,))
+                    checksum_count = cursor.fetchone()["count"]
+                    if checksum_count != 4:
+                        not_complete = True
+                        break
+                if not not_complete:
+                    query = """
+                        UPDATE fileset
+                        SET status = 'full'
+                        WHERE id = %s
+                    """
+                    cursor.execute(query, fileset_id)
+
+
+def add_usercount(fileset, ip, conn):
+    with conn.cursor() as cursor:
+        query = """
+            SELECT COUNT(*) AS count FROM queue
+            WHERE fileset = %s
+            AND ip = %s
+            LIMIT 1
+        """
+        cursor.execute(query, (fileset, ip))
+        duplicate = True if cursor.fetchone()["count"] != 0 else False
+        print("dupe ", duplicate)
+        if not duplicate:
             cursor.execute(
-                "UPDATE fileset SET status = 'ReadyForReview' WHERE id = %s", (fileset,)
+                "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
+                (fileset,),
             )
+            query = """
+                INSERT INTO queue (time, fileset, ip)
+                VALUES (FROM_UNIXTIME(@fileset_time_last), %s, %s)
+            """
+            cursor.execute(query, (fileset, ip))
+            cursor.execute("SELECT user_count from fileset WHERE id = %s", (fileset,))
+            count = cursor.fetchone()["user_count"]
+            category_text = "Existing user fileset - different user."
+            log_text = f"User Fileset:{fileset} found. Match count: {count}."
+            create_log(category_text, ip, log_text, conn)
+            if count >= 3:
+                cursor.execute(
+                    "UPDATE fileset SET status = 'ReadyForReview' WHERE id = %s",
+                    (fileset,),
+                )
+                category_text = "Ready for Review"
+                log_text = (
+                    f"User Fileset:{fileset} ready for review. Match count: {count}."
+                )
+                create_log(category_text, ip, log_text, conn)
+        else:
+            cursor.execute("SELECT user_count from fileset WHERE id = %s", (fileset,))
+            count = cursor.fetchone()["user_count"]
+            category_text = "Existing user fileset - same user."
+            log_text = f"User Fileset:{fileset} exists. Match count: {count}."
+            create_log(category_text, ip, log_text, conn)
 
 
 def console_log(message):
