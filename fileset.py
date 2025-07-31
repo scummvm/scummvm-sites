@@ -1392,9 +1392,59 @@ def config():
     """
     Stores the user configurations in the cookies
     """
+
+    fileset_dashboard_widths_default = {
+        "fileset_serial_no": "5",
+        "fileset_id": "5",
+        "fileset_engineid": "10",
+        "fileset_gameid": "10",
+        "fileset_extra": "10",
+        "fileset_platform": "10",
+        "fileset_language": "10",
+        "fileset_status": "10",
+        "fileset_transaction": "30",
+    }
+    log_dashboard_widths_default = {
+        "log_serial_no": "4",
+        "log_id": "4",
+        "log_timestamp": "10",
+        "log_category": "15",
+        "log_user": "10",
+        "log_text": "57",
+    }
+    fileset_dashboard_widths = defaultdict(str)
+
+    fileset_fields = [
+        ("fileset_serial_no", "S. No."),
+        ("fileset_id", "fileset"),
+        ("fileset_engineid", "engineid"),
+        ("fileset_gameid", "gameid"),
+        ("fileset_extra", "extra"),
+        ("fileset_platform", "platform"),
+        ("fileset_language", "language"),
+        ("fileset_status", "status"),
+        ("fileset_transaction", "transaction"),
+    ]
+    log_fields = [
+        ("log_serial_no", "S. No."),
+        ("log_id", "id"),
+        ("log_timestamp", "timestamp"),
+        ("log_category", "category"),
+        ("log_text", "text"),
+    ]
+
     if request.method == "POST":
         filesets_per_page = request.form.get("filesets_per_page", "25")
         logs_per_page = request.form.get("logs_per_page", "25")
+
+        fileset_dashboard_widths = {
+            field: request.form.get(field, default)
+            for field, default in fileset_dashboard_widths_default.items()
+        }
+        log_dashboard_widths = {
+            field: request.form.get(field, default)
+            for field, default in log_dashboard_widths_default.items()
+        }
 
         try:
             filesets_per_page_int = int(filesets_per_page)
@@ -1403,6 +1453,12 @@ def config():
                 filesets_per_page = "1"
             if logs_per_page_int < 1:
                 logs_per_page_int = "1"
+            fileset_dashboard_widths = {
+                k: str(max(1, int(v))) for k, v in fileset_dashboard_widths.items()
+            }
+            log_dashboard_widths = {
+                k: str(max(1, int(v))) for k, v in log_dashboard_widths.items()
+            }
         except ValueError:
             filesets_per_page = "25"
             logs_per_page = "25"
@@ -1412,13 +1468,33 @@ def config():
             "filesets_per_page", filesets_per_page, max_age=365 * 24 * 60 * 60
         )
         resp.set_cookie("logs_per_page", logs_per_page, max_age=365 * 24 * 60 * 60)
+        for field, value in fileset_dashboard_widths.items():
+            resp.set_cookie(field, value, max_age=365 * 24 * 60 * 60)
+        for field, value in log_dashboard_widths.items():
+            resp.set_cookie(field, value, max_age=365 * 24 * 60 * 60)
+
         return resp
 
     filesets_per_page = int(request.cookies.get("filesets_per_page", "25"))
     logs_per_page = int(request.cookies.get("logs_per_page", "25"))
 
+    fileset_dashboard_widths = {
+        field: [int(request.cookies.get(field, default)), default]
+        for field, default in fileset_dashboard_widths_default.items()
+    }
+    log_dashboard_widths = {
+        field: [int(request.cookies.get(field, default)), default]
+        for field, default in log_dashboard_widths_default.items()
+    }
+
     return render_template(
-        "config.html", filesets_per_page=filesets_per_page, logs_per_page=logs_per_page
+        "config.html",
+        filesets_per_page=filesets_per_page,
+        logs_per_page=logs_per_page,
+        fileset_dashboard_widths=fileset_dashboard_widths,
+        fileset_fields=fileset_fields,
+        log_dashboard_widths=log_dashboard_widths,
+        log_fields=log_fields,
     )
 
 
@@ -1428,6 +1504,10 @@ def get_filesets_per_page():
 
 def get_logs_per_page():
     return int(request.cookies.get("logs_per_page", "25"))
+
+
+def get_width(name, default):
+    return int(request.cookies.get(name, default))
 
 
 @app.route("/validate", methods=["POST"])
@@ -1548,8 +1628,7 @@ def fileset_search():
     filename = "fileset_search"
     records_table = "fileset"
     select_query = """
-    SELECT fileset.id as fileset, extra, platform, language, game.gameid, megakey,
-    status, transaction, engineid
+    SELECT fileset.id as fileset, engineid, game.gameid, extra, platform, language, status, transaction
     FROM fileset
     LEFT JOIN game ON game.id = fileset.game
     LEFT JOIN engine ON engine.id = game.engine
@@ -1558,14 +1637,13 @@ def fileset_search():
     order = "ORDER BY fileset.id"
     filters = {
         "fileset": "fileset",
+        "engineid": "engine",
+        "gameid": "game",
         "extra": "game",
         "platform": "game",
         "language": "game",
-        "gameid": "game",
-        "megakey": "fileset",
         "status": "fileset",
         "transaction": "transactions",
-        "engineid": "engine",
     }
     mapping = {
         "game.id": "fileset.game",

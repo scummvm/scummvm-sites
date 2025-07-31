@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    </head>
+    <body>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
+            <a href="{{ url_for('config') }}">Config</a>
+        </div>
+    </nav>
