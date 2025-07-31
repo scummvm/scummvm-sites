@@ -129,6 +129,8 @@ def fileset():
             <html>
             <head>
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
+                <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
             </head>
             <body>
             <nav>
@@ -493,6 +495,8 @@ def merge_fileset(id):
                 <html>
                 <head>
                     <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
+                    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+                    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
                 </head>
                 <body>
                 <nav>
@@ -541,6 +545,8 @@ def merge_fileset(id):
     <html>
     <head>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
     </head>
     <body>
     <nav>
@@ -609,6 +615,8 @@ def possible_merge_filesets(id):
             <html>
             <head>
                 <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
+                <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
             </head>
             <body>
             <nav>
@@ -812,6 +820,8 @@ def confirm_merge(id):
             <html>
             <head>
                 <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+                <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+                <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
             </head>
             <body>
             <nav>
