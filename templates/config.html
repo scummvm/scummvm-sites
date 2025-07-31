@@ -23,7 +23,6 @@
             background-color: #ffffff;
             color: #000000;
             padding: 10px;
-            font-size: 50px;
             align-self: flex-start;
             margin-left: 2vh;
         }
@@ -35,51 +34,58 @@
 
         .config-section {
             margin-bottom: 30px;
-            padding: 20px;
+            padding: 25px;
+            padding-left: 50px;
+            padding-right: 50px;
             border: 1px solid #ddd;
             border-radius: 8px;
             background-color: #f9f9f9;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .config-item {
             display: flex;
-            align-items: center;
-            margin-bottom: 15px;
+            flex-direction: column;
+            margin-bottom: 20px;
+            gap: 10px;
         }
 
         .config-item label {
-            flex: 1;
-            margin-right: 15px;
             font-weight: 500;
+            font-size: 14px;
+            color: #333;
         }
 
         .current-value {
             font-style: italic;
             color: #666;
             font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .submit-section {
+            padding: 20px 0;
+            border-top: 1px solid #ddd;
+            margin-top: 20px;
         }
 
         .config-item input,
         .config-item select {
-            padding: 8px 12px;
+            padding: 10px 12px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 14px;
-            min-width: 120px;
-            margin-right: 2vw;
-        }
-
-        .success-message {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 10px;
-            border: 1px solid #c3e6cb;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            text-align: center;
+            width: 200px;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease;
         }
 
         @media (max-width: 768px) {
@@ -124,24 +130,39 @@
     <div class="content">
         <h1 class="title">User Configurations</h1>
         <div class="main">
-            <form method="POST" action="{{ url_for('config') }}">
+            <form class="config-form" method="POST" action="{{ url_for('config') }}">
                 <div class="config-section">
                     <div class="config-item">
-                        <label for="items_per_page">Number of items per page:</label>
-                        <input type="number" name="items_per_page" id="items_per_page" value="{{ items_per_page }}"
-                            min="1">
-                        <div class="current-value">Current: {{ items_per_page }}</div>
+                        <label for="filesets_per_page">Number of filesets per page:</label>
+                        <div class="input-container">
+                            <input type="number" name="filesets_per_page" id="filesets_per_page" value="{{ filesets_per_page }}"
+                                min="1">
+                            <div class="current-value">Default: 25</div>
+                        </div>
+                        <label for="logs_per_page">Number of logs per page:</label>
+                        <div class="input-container">
+                            <input type="number" name="logs_per_page" id="logs_per_page" value="{{ logs_per_page }}"
+                                min="1">
+                            <div class="current-value">Default: 25</div>
+                        </div>
                     </div>
-                    <div style="text-align: center; padding: 20px;">
+                    <div class="submit-section">
                         <button type="submit">Save Configuration</button>
                     </div>
+                </div>
             </form>
         </div>
     </div>
     <script>
-        document.getElementById('items_per_page').addEventListener('input', function () {
+        document.getElementById('filesets_per_page').addEventListener('input', function () {
             const value = parseInt(this.value);
             if (value < 1) this.value = 1;
+            if (value > 250) this.value = 250;
+        });
+        document.getElementById('logs_per_page').addEventListener('input', function () {
+            const value = parseInt(this.value);
+            if (value < 1) this.value = 1;
+            if (value > 250) this.value = 250;
         });
     </script>
 </body>

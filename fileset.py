@@ -1383,26 +1383,41 @@ def config():
     Stores the user configurations in the cookies
     """
     if request.method == "POST":
-        items_per_page = request.form.get("items_per_page", "25")
+        filesets_per_page = request.form.get("filesets_per_page", "25")
+        logs_per_page = request.form.get("logs_per_page", "25")
 
         try:
-            items_per_page_int = int(items_per_page)
-            if items_per_page_int < 1:
-                items_per_page = "1"
+            filesets_per_page_int = int(filesets_per_page)
+            logs_per_page_int = int(logs_per_page)
+            if filesets_per_page_int < 1:
+                filesets_per_page = "1"
+            if logs_per_page_int < 1:
+                logs_per_page_int = "1"
         except ValueError:
-            items_per_page = "25"
+            filesets_per_page = "25"
+            logs_per_page = "25"
 
         resp = make_response(redirect(url_for("config")))
-        resp.set_cookie("items_per_page", items_per_page, max_age=365 * 24 * 60 * 60)
+        resp.set_cookie(
+            "filesets_per_page", filesets_per_page, max_age=365 * 24 * 60 * 60
+        )
+        resp.set_cookie("logs_per_page", logs_per_page, max_age=365 * 24 * 60 * 60)
         return resp
 
-    items_per_page = int(request.cookies.get("items_per_page", "25"))
+    filesets_per_page = int(request.cookies.get("filesets_per_page", "25"))
+    logs_per_page = int(request.cookies.get("logs_per_page", "25"))
 
-    return render_template("config.html", items_per_page=items_per_page)
+    return render_template(
+        "config.html", filesets_per_page=filesets_per_page, logs_per_page=logs_per_page
+    )
 
 
-def get_items_per_page():
-    return int(request.cookies.get("items_per_page", "25"))
+def get_filesets_per_page():
+    return int(request.cookies.get("filesets_per_page", "25"))
+
+
+def get_logs_per_page():
+    return int(request.cookies.get("logs_per_page", "25"))
 
 
 @app.route("/validate", methods=["POST"])
@@ -1497,47 +1512,6 @@ def ready_for_review():
     return redirect(url)
 
 
-@app.route("/games_list")
-def games_list():
-    filename = "games_list"
-    records_table = "game"
-    select_query = """
-    SELECT engineid, gameid, extra, platform, language, game.name,
-    status, fileset.id as fileset
-    FROM game
-    JOIN engine ON engine.id = game.engine
-    JOIN fileset ON game.id = fileset.game
-    """
-    order = "ORDER BY gameid"
-    filters = {
-        "engineid": "engine",
-        "gameid": "game",
-        "extra": "game",
-        "platform": "game",
-        "language": "game",
-        "name": "game",
-        "status": "fileset",
-    }
-    mapping = {
-        "engine.id": "game.engine",
-        "game.id": "fileset.game",
-    }
-
-    items_per_page = get_items_per_page()
-
-    return render_template_string(
-        create_page(
-            filename,
-            items_per_page,
-            records_table,
-            select_query,
-            order,
-            filters,
-            mapping,
-        )
-    )
-
-
 @app.route("/logs")
 def logs():
     filename = "logs"
@@ -1551,10 +1525,10 @@ def logs():
         "user": "log",
         "text": "log",
     }
-    items_per_page = get_items_per_page()
+    logs_per_page = get_logs_per_page()
     return render_template_string(
         create_page(
-            filename, items_per_page, records_table, select_query, order, filters
+            filename, logs_per_page, records_table, select_query, order, filters
         )
     )
 
@@ -1588,11 +1562,11 @@ def fileset_search():
         "engine.id": "game.engine",
         "fileset.id": "transactions.fileset",
     }
-    items_per_page = get_items_per_page()
+    filesets_per_page = get_filesets_per_page()
     return render_template_string(
         create_page(
             filename,
-            items_per_page,
+            filesets_per_page,
             records_table,
             select_query,
             order,
