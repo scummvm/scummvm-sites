@@ -67,9 +67,9 @@ nav {
   margin-left: 10px;
 }
 
-/* .nav-buttons a:hover {
-  box-shadow: 0 4px 12px rgba(39, 145, 232, 0.4);
-} */
+.nav-buttons a:hover {
+  text-decoration: underline;
+}
 
 .logo img {
   height: 75px;
