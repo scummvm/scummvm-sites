@@ -1597,4 +1597,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(port=5001, debug=True, host="0.0.0.0")
+    app.run(debug=True, host="0.0.0.0")
