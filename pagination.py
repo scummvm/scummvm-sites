@@ -4,11 +4,8 @@ import json
 import re
 import os
 
-app = Flask(__name__)
 
-stylesheet = "style.css"
-jquery_file = "https://code.jquery.com/jquery-3.7.0.min.js"
-js_file = "js_functions.js"
+app = Flask(__name__)
 
 
 def get_join_columns(table1, table2, mapping):
@@ -137,50 +134,64 @@ def create_page(
         cursor.execute(query)
         results = cursor.fetchall()
 
+    # Initial html code including the navbar is stored in a separate html file.
+    html = ""
+    with open("templates/pagination/navbar.html", "r") as f:
+        html = f.read()
+
     # Generate HTML
-    html = """
-<!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-        <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    </head>
-    <body>
-    <nav>
-        <div class="logo">
-            <a href="{{ url_for('home') }}">
-                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
-            </a>
-        </div>
-        <div class="nav-buttons">
-            <a href="{{ url_for('user_games_list') }}">User Games List</a>
-            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-            <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
-            <a href="{{ url_for('config') }}">Config</a>
-        </div>
-    </nav>
-<form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
-<table style="margin-top: 80px;">
-"""
+    html += """
+        <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
+        <table class="fixed-table" style="margin-top: 80px;">
+    """
+
+    from fileset import get_width
+
+    if records_table == "fileset":
+        fileset_dashboard_widths_default = {
+            "fileset_serial_no": "5",
+            "fileset_id": "5",
+            "fileset_engineid": "10",
+            "fileset_gameid": "10",
+            "fileset_extra": "10",
+            "fileset_platform": "10",
+            "fileset_language": "10",
+            "fileset_status": "10",
+            "fileset_transaction": "30",
+        }
+        html += "<colgroup>"
+        for name, default in fileset_dashboard_widths_default.items():
+            width = get_width(name, default)
+            html += f"<col style='width: {width}%;'>"
+        html += "</colgroup>"
+    if records_table == "log":
+        log_dashboard_widths_default = {
+            "log_serial_no": "4",
+            "log_id": "4",
+            "log_timestamp": "10",
+            "log_category": "15",
+            "log_user": "10",
+            "log_text": "57",
+        }
+        html += "<colgroup>"
+        for name, default in log_dashboard_widths_default.items():
+            width = get_width(name, default)
+            html += f"<col style='width: {width}%;'>"
+        html += "</colgroup>"
+
     if filters:
         if records_table != "log":
-            html += "<tr class='filter'><td></td><td></td>"
+            html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
         else:
-            html += "<tr class='filter'><td></td>"
+            html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
 
         for key in filters.keys():
             filter_value = request.args.get(key, "")
             html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
-        html += "</tr><tr class='filter'><td></td><td></td><td class='filter'><input type='submit' value='Submit'></td></tr>"
+        html += "</tr>"
 
-    html += "<th>#</th>"
-    if records_table != "log":
-        html += "<th>Fileset ID</th>"
+    html += "<th>S. No.</th>"
     for key in filters.keys():
-        if key in ["fileset", "fileset_id"]:
-            continue
         vars = "&".join([f"{k}={v}" for k, v in request.args.items() if k != "sort"])
         sort = request.args.get("sort", "")
         if sort == key:
