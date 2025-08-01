@@ -204,14 +204,14 @@
         document.getElementById('{{ field_name }}').addEventListener('input', function () {
             const value = parseInt(this.value);
             if (value < 1) this.value = 1;
-            if (value > 50) this.value = 50;
+            if (value > 70) this.value = 70;
         });
         {% endfor %}
         {% for field_name, label in log_fields %}
         document.getElementById('{{ field_name }}').addEventListener('input', function () {
             const value = parseInt(this.value);
             if (value < 1) this.value = 1;
-            if (value > 50) this.value = 50;
+            if (value > 70) this.value = 70;
         });
         {% endfor %}
 
