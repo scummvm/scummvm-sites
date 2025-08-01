@@ -529,9 +529,7 @@ def db_insert(data_arr, username=None, skiplog=False):
             insert_game(
                 engine_name, engineid, title, gameid, extra, platform, lang, conn
             )
-
-            log_text = f"size {os.path.getsize(filepath)}, author {author}, version {version}. State {status}."
-
+            log_text = f"Engine Name - {engine_name}, Engine ID - {engineid}, Game ID - {gameid}, Title - {title}, Extra - {extra}, Platform - {platform}, Language - {lang}."
             if insert_fileset(
                 src,
                 detection,
