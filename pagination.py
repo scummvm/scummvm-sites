@@ -192,14 +192,23 @@ def create_page(
         html += "</tr>"
 
     html += "<th>S. No.</th>"
+    current_sort = request.args.get("sort", "")
+    sort_key, sort_dir = (current_sort.split("-") + ["asc"])[:2]
+
     for key in filters.keys():
-        vars = "&".join([f"{k}={v}" for k, v in request.args.items() if k != "sort"])
-        sort = request.args.get("sort", "")
-        if sort == key:
-            vars += f"&sort={key}-desc"
+        base_params = {k: v for k, v in request.args.items() if k != "sort"}
+
+        if key == sort_key:
+            next_sort_dir = "asc" if sort_dir == "desc" else "desc"
+            arrow = "▼" if sort_dir == "desc" else "▲"
+            sort_param = f"{key}-{next_sort_dir}"
         else:
-            vars += f"&sort={key}"
-        html += f"<th><a href='{filename}?{vars}'>{key}</a></th>"
+            arrow = ""
+            sort_param = f"{key}-asc"
+
+        base_params["sort"] = sort_param
+        query_string = "&".join(f"{k}={v}" for k, v in base_params.items())
+        html += f"<th><a href='{filename}?{query_string}'>{key} {arrow}</a></th>"
 
     if results:
         counter = offset + 1
