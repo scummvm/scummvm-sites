@@ -136,7 +136,8 @@ def create_page(
 
     # Initial html code including the navbar is stored in a separate html file.
     html = ""
-    with open("templates/pagination/navbar.html", "r") as f:
+    navbar_path = os.path.join(app.root_path, "static", "navbar.html.txt")
+    with open(navbar_path, "r") as f:
         html = f.read()
 
     # Generate HTML
