@@ -142,7 +142,7 @@ def fileset():
                 <div class="nav-buttons">
                     <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
-                    <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                    <a href="{{{{ url_for('fileset_search', sort='fileset-asc') }}}}">Fileset Search</a>
                     <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                     <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
@@ -508,7 +508,7 @@ def merge_fileset(id):
                     <div class="nav-buttons">
                         <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                         <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
-                        <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                        <a href="{{{{ url_for('fileset_search', sort='fileset-asc') }}}}">Fileset Search</a>
                         <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                         <a href="{{{{ url_for('config') }}}}">Config</a>
                     </div>
@@ -558,7 +558,7 @@ def merge_fileset(id):
         <div class="nav-buttons">
             <a href="{{ url_for('user_games_list') }}">User Games List</a>
             <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('fileset_search', sort='fileset-asc') }}">Fileset Search</a>
             <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
             <a href="{{ url_for('config') }}">Config</a>
         </div>
@@ -628,7 +628,7 @@ def possible_merge_filesets(id):
                 <div class="nav-buttons">
                     <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
                     <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
-                    <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
+                    <a href="{{{{ url_for('fileset_search', sort='fileset-asc') }}}}">Fileset Search</a>
                     <a href="{{{{ url_for('logs', sort='id-desc') }}}}">Logs</a>
                     <a href="{{{{ url_for('config') }}}}">Config</a>
                 </div>
@@ -833,7 +833,7 @@ def confirm_merge(id):
                 <div class="nav-buttons">
                     <a href="{{ url_for('user_games_list') }}">User Games List</a>
                     <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-                    <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+                    <a href="{{ url_for('fileset_search', sort='fileset-asc') }}">Fileset Search</a>
                     <a href="{{ url_for('logs', sort='id-desc') }}">Logs</a>
                     <a href="{{ url_for('config') }}">Config</a>
                 </div>
@@ -1628,11 +1628,13 @@ def fileset_search():
     filename = "fileset_search"
     records_table = "fileset"
     select_query = """
-    SELECT fileset.id as fileset, engineid, game.gameid, extra, platform, language, status, transaction
+    SELECT DISTINCT fileset.id as fileset, engineid, game.gameid, extra, platform, language, status, transaction
     FROM fileset
     LEFT JOIN game ON game.id = fileset.game
     LEFT JOIN engine ON engine.id = game.engine
     JOIN transactions ON fileset.id = transactions.fileset
+    JOIN file ON fileset.id = file.fileset
+    JOIN filechecksum ON file.id = filechecksum.file
     """
     order = "ORDER BY fileset.id"
     filters = {
@@ -1644,11 +1646,14 @@ def fileset_search():
         "language": "game",
         "status": "fileset",
         "transaction": "transactions",
+        "checksum": "filechecksum",
     }
     mapping = {
         "game.id": "fileset.game",
         "engine.id": "game.engine",
         "fileset.id": "transactions.fileset",
+        "file.fileset": "fileset.id",
+        "file.id": "filechecksum.file",
     }
     filesets_per_page = get_filesets_per_page()
     return render_template_string(

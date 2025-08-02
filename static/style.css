@@ -38,6 +38,8 @@ th {
   text-align: center;
   background-color: var(--primary-color);
   color: white;
+  height: 30px;
+  vertical-align: middle;
 }
 
 th a {

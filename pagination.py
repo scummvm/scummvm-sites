@@ -98,15 +98,18 @@ def create_page(
                         from_query += " JOIN engine ON engine.id = game.engine"
                     else:
                         from_query += " JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine"
+                if t == "filechecksum":
+                    from_query += " JOIN file ON file.fileset = fileset.id JOIN filechecksum ON file.id = filechecksum.file"
                 else:
                     from_query += (
                         f" JOIN {t} ON {get_join_columns(records_table, t, mapping)}"
                     )
 
         base_table = records_table.split(" ")[0]
-        cursor.execute(
-            f"SELECT COUNT({base_table}.id) AS count FROM {from_query} {condition}"
-        )
+        query = f"""
+            SELECT COUNT(DISTINCT {base_table}.id) AS count FROM {from_query} {condition}
+        """
+        cursor.execute(query)
         num_of_results = cursor.fetchone()["count"]
 
         num_of_pages = (num_of_results + results_per_page - 1) // results_per_page
@@ -128,6 +131,8 @@ def create_page(
         else:
             if records_table == "log":
                 order = "ORDER BY `id` DESC"
+            if records_table == "fileset":
+                order = "ORDER BY fileset ASC"
 
         # Fetch results
         query = f"{select_query} {condition} {order} LIMIT {results_per_page} OFFSET {offset}"
@@ -181,14 +186,17 @@ def create_page(
         html += "</colgroup>"
 
     if filters:
-        if records_table != "log":
-            html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
-        else:
-            html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
-
+        html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
         for key in filters.keys():
+            if key == "checksum":
+                continue
             filter_value = request.args.get(key, "")
-            html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
+            if key == "transaction":
+                html += f"<td style='display: flex;' class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/>"
+                filter_value = request.args.get("checksum", "")
+                html += f"<input type='text' class='filter' placeholder='checksum' name='checksum' value='{filter_value}'/></td>"
+            else:
+                html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
         html += "</tr>"
 
     html += "<th>S. No.</th>"
@@ -203,12 +211,13 @@ def create_page(
             arrow = "▼" if sort_dir == "desc" else "▲"
             sort_param = f"{key}-{next_sort_dir}"
         else:
-            arrow = ""
+            arrow = "⬍"
             sort_param = f"{key}-asc"
 
         base_params["sort"] = sort_param
         query_string = "&".join(f"{k}={v}" for k, v in base_params.items())
-        html += f"<th><a href='{filename}?{query_string}'>{key} {arrow}</a></th>"
+        if key != "checksum":
+            html += f"<th><a href='{filename}?{query_string}'>{key} {arrow}</a></th>"
 
     if results:
         counter = offset + 1
