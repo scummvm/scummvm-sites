@@ -4,6 +4,8 @@ import json
 import re
 import os
 
+from urllib.parse import urlencode
+
 
 app = Flask(__name__)
 
@@ -77,7 +79,7 @@ def create_page(
             col = f"{filters[key]}.{'id' if key == 'fileset' else key}"
             parsed = build_search_condition(value, col)
             if parsed:
-                where_clauses.append(parsed)
+                where_clauses.append("(" + parsed + ")")
 
         condition = ""
         if where_clauses:
@@ -265,9 +267,10 @@ def create_page(
     if not results:
         html += "<h1>No results for given filters</h1>"
 
-    # Pagination
-    vars = "&".join([f"{k}={v}" for k, v in request.args.items() if k != "page"])
+    # Encoding url variable again to url portable form
+    vars = urlencode({k: v for k, v in request.args.items() if k != "page"})
 
+    # Pagination
     if num_of_pages > 1:
         html += "<form method='GET'>"
         for key, value in request.args.items():
