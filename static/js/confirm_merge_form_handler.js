@@ -8,7 +8,8 @@ document.getElementById("confirm_merge_form").addEventListener("submit", async f
   const jsonData = {
     source_id: source_id,
     target_id: form.querySelector('input[name="target_id"]').value,
-    options: []
+    options: [],
+    matched_files: form.querySelector('input[name="matched_files"]').value
   };
   
   const checkedBoxes = form.querySelectorAll('input[name="options[]"]:checked');

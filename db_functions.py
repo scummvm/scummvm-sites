@@ -114,8 +114,6 @@ def insert_fileset(
 ):
     status = "detection" if detection else src
     game = "NULL"
-    key = "NULL" if key == "" else key
-    megakey = "NULL" if megakey == "" else megakey
 
     if detection:
         status = "detection"
@@ -212,7 +210,7 @@ def normalised_path(name):
     return "/".join(path_list)
 
 
-def insert_file(file, detection, src, conn):
+def insert_file(file, detection, src, conn, fileset_id=None):
     # Find full md5, or else use first checksum value
     checksum = ""
     checksize = 5000
@@ -249,18 +247,27 @@ def insert_file(file, detection, src, conn):
     values.extend([checksum, detection, detection_type])
 
     # Parameterised Query
-    query = "INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, fileset, detection, detection_type, `timestamp` ) VALUES (%s, %s, %s, %s, %s, %s, @fileset_last, %s, %s, NOW())"
-
     with conn.cursor() as cursor:
-        cursor.execute(query, values)
+        query = ""
+        if fileset_id is None:
+            query = "INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, detection, detection_type, `timestamp`, fileset ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), @fileset_last)"
+            cursor.execute(query, values)
+        else:
+            query = "INSERT INTO file ( name, size, `size-r`, `size-rd`, `modification-time`, checksum, detection, detection_type, `timestamp`, fileset ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
+            values.append(fileset_id)
+            cursor.execute(query, values)
 
-    if detection:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "UPDATE fileset SET detection_size = %s WHERE id = @fileset_last AND detection_size IS NULL",
-                (checksize,),
-            )
-    with conn.cursor() as cursor:
+        if detection:
+            if fileset_id is None:
+                cursor.execute(
+                    "UPDATE fileset SET detection_size = %s WHERE id = @fileset_last AND detection_size IS NULL",
+                    (checksize,),
+                )
+            else:
+                cursor.execute(
+                    "UPDATE fileset SET detection_size = %s WHERE id = %s AND detection_size IS NULL",
+                    (checksize, fileset_id),
+                )
         cursor.execute("SET @file_last = LAST_INSERT_ID()")
 
 
@@ -270,6 +277,8 @@ def insert_filechecksum(file, checktype, file_id, conn):
 
     checksum = file[checktype]
     checksize, checktype, checksum = get_checksum_props(checktype, checksum)
+    if checksize == "1048576":
+        checksize = "1M"
 
     query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
     with conn.cursor() as cursor:
@@ -2480,7 +2489,7 @@ def create_user_fileset(fileset, game_metadata, src, transaction_id, user, conn,
             return
 
         (fileset_id, _) = insert_fileset(
-            src, False, key, None, transaction_id, None, conn, ip=ip
+            src, False, key, "", transaction_id, None, conn, ip=ip
         )
 
         insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)

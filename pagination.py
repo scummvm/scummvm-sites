@@ -279,7 +279,7 @@ def create_page(
                             f"<a href='fileset?id={fileset_id}'>{fileset_text}</a>",
                         )
 
-                html += f"<td>{value}</td>\n"
+                html += f"<td>{'' if value is None else value}</td>\n"
             html += "</tr>\n"
             counter += 1
 
