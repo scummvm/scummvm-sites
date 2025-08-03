@@ -730,17 +730,20 @@ def confirm_merge(id):
             cursor.execute(
                 """
                 SELECT 
-                    fs.*, 
+                    fs.id, fs.status, fs.src, fs.`key`, fs.megakey,
+                    fs.timestamp, fs.detection_size, fs.set_dat_metadata,
                     g.name AS game_name, 
-                    g.engine AS game_engine, 
+                    e.name AS game_engine,
                     g.platform AS game_platform,
                     g.language AS game_language,
                     (SELECT COUNT(*) FROM file WHERE fileset = fs.id) AS file_count
-                FROM 
+                FROM
                     fileset fs
-                LEFT JOIN 
+                LEFT JOIN
                     game g ON fs.game = g.id
-                WHERE 
+                LEFT JOIN
+                    engine e ON g.engine = e.id
+                WHERE
                     fs.id = %s
             """,
                 (id,),
@@ -761,9 +764,10 @@ def confirm_merge(id):
             cursor.execute(
                 """
                 SELECT 
-                    fs.*, 
-                    g.name AS game_name, 
-                    g.engine AS game_engine, 
+                    fs.id, fs.status, fs.src, fs.`key`, fs.megakey,
+                    fs.timestamp, fs.detection_size, fs.set_dat_metadata,
+                    g.name AS game_name,
+                    e.name AS game_engine,
                     g.platform AS game_platform,
                     g.language AS game_language,
                     (SELECT COUNT(*) FROM file WHERE fileset = fs.id) AS file_count
@@ -771,6 +775,8 @@ def confirm_merge(id):
                     fileset fs
                 LEFT JOIN 
                     game g ON fs.game = g.id
+                LEFT JOIN
+                    engine e ON g.engine = e.id
                 WHERE 
                     fs.id = %s
             """,
@@ -844,6 +850,7 @@ def confirm_merge(id):
             <tr><th style="width: 50px;">Field</th><th style="width: 1000px;">Source Fileset</th><th style="width: 1000px;">Target Fileset</th></tr>
             """
 
+            # Fileset metadata
             for column in source_fileset.keys():
                 source_value = str(source_fileset[column])
                 target_value = str(target_fileset[column])
@@ -959,10 +966,8 @@ def confirm_merge(id):
                             }
                         )
                     )
-                    if (
-                        os.path.basename(matched_source_filename).lower()
-                        in detection_files_set
-                    ):
+
+                    if matched_source_filename.lower() in detection_files_set:
                         target_val = html_lib.escape(
                             json.dumps(
                                 {
