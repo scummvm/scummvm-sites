@@ -78,6 +78,20 @@ nav {
   vertical-align: middle;
 }
 
+.header-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-decoration: none;
+  color: inherit;
+  padding: 4px 8px;
+}
+
+.filter-icon {
+  height: auto;
+  margin-left: 8px;
+}
+
 button {
   color: white;
   padding: 6px 12px;

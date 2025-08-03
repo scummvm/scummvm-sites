@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, url_for
 import pymysql
 import json
 import re
@@ -143,7 +143,7 @@ def create_page(
 
     # Initial html code including the navbar is stored in a separate html file.
     html = ""
-    navbar_path = os.path.join(app.root_path, "static", "navbar.html.txt")
+    navbar_path = os.path.join(app.root_path, "static", "navbar_string.html")
     with open(navbar_path, "r") as f:
         html = f.read()
 
@@ -205,21 +205,41 @@ def create_page(
     current_sort = request.args.get("sort", "")
     sort_key, sort_dir = (current_sort.split("-") + ["asc"])[:2]
 
+    # Adding heading links with sorting
     for key in filters.keys():
         base_params = {k: v for k, v in request.args.items() if k != "sort"}
+        icon_path = "icons/filter/"
+        icon_name = ""
 
         if key == sort_key:
-            next_sort_dir = "asc" if sort_dir == "desc" else "desc"
-            arrow = "▼" if sort_dir == "desc" else "▲"
-            sort_param = f"{key}-{next_sort_dir}"
-        else:
-            arrow = "⬍"
-            sort_param = f"{key}-asc"
+            if sort_dir == "asc":
+                next_sort_dir = "desc"
+                icon_name = "arrow_drop_up.png"
+            elif sort_dir == "desc":
+                next_sort_dir = "default"
+                icon_name = "arrow_drop_down.png"
+            else:
+                next_sort_dir = "asc"
+                icon_name = "unfold_more.png"
 
-        base_params["sort"] = sort_param
+            if next_sort_dir != "default":
+                sort_param = f"{key}-{next_sort_dir}"
+                base_params["sort"] = sort_param
+        else:
+            icon_name = "unfold_more.png"
+            sort_param = f"{key}-asc"
+            base_params["sort"] = sort_param
+
         query_string = "&".join(f"{k}={v}" for k, v in base_params.items())
         if key != "checksum":
-            html += f"<th><a href='{filename}?{query_string}'>{key} {arrow}</a></th>"
+            icon_src = url_for("static", filename=icon_path + icon_name)
+            html += f"""<th>
+                <a href='{filename}?{query_string}' class="header-link">
+                    <span></span>
+                    <span class="key-text">{key}</span>
+                    <img class="filter-icon" src="{icon_src}" alt="asc" width="25">
+                </a>
+            </th>"""
 
     if results:
         counter = offset + 1
