@@ -23,9 +23,10 @@ from db_functions import (
     db_connect,
     create_log,
     db_connect_root,
-    get_checksum_props,
     delete_original_fileset,
     normalised_path,
+    insert_file,
+    insert_filechecksum,
 )
 from collections import defaultdict
 from schema import init_database
@@ -852,8 +853,16 @@ def confirm_merge(id):
 
             # Fileset metadata
             for column in source_fileset.keys():
-                source_value = str(source_fileset[column])
-                target_value = str(target_fileset[column])
+                source_value = (
+                    ""
+                    if str(source_fileset[column]) == "None"
+                    else str(source_fileset[column])
+                )
+                target_value = (
+                    ""
+                    if str(target_fileset[column]) == "None"
+                    else str(target_fileset[column])
+                )
                 if column == "id":
                     html += f"<tr><td>{column}</td><td><a href='/fileset?id={source_value}'>{source_value}</a></td><td><a href='/fileset?id={target_value}'>{target_value}</a></td></tr>"
                     continue
@@ -912,138 +921,55 @@ def confirm_merge(id):
                     if file["detection"] == 1:
                         detection_files_set.add(file["name"].lower())
 
-            html += """<tr><th>Files</th><td colspan='2'><label><input type="checkbox" id="toggle-unmatched"> Show Unmatched Files</label></td></tr>"""
+            html += """<tr><th>Files</th><td colspan='2'><label><input type="checkbox" id="toggle-common-files"> Show Only Common Files</label><label style='margin-left: 50px;' ><input type="checkbox" id="toggle-all-fields"> Show All Fields</label></td></tr>"""
 
             all_source_unmatched_filenames = sorted(set(source_files_map.keys()))
             all_target_unmatched_filenames = sorted(set(target_files_map.keys()))
 
-            for matched_target_filename, matched_source_filename in matched_files:
-                if matched_source_filename.lower() in all_source_unmatched_filenames:
-                    all_source_unmatched_filenames.remove(
-                        matched_source_filename.lower()
-                    )
-                if matched_target_filename.lower() in all_target_unmatched_filenames:
-                    all_target_unmatched_filenames.remove(
-                        matched_target_filename.lower()
-                    )
-                source_dict = source_files_map.get(matched_source_filename.lower(), {})
-                target_dict = target_files_map.get(matched_target_filename.lower(), {})
-
-                # html += f"""<tr><th>{matched_source_filename}</th><th>Source File</th><th>Target File</th></tr>"""
-
-                keys = sorted(set(source_dict.keys()) | set(target_dict.keys()))
-
-                group_id = f"group_{matched_source_filename.lower().replace('.', '_').replace('/', '_')}_{matched_target_filename.lower().replace('.', '_').replace('/', '_')}"
-                html += f"""<tr>
-                    <td colspan='3'>
-                        <label>
-                            <input type="checkbox" onclick="toggleGroup('{group_id}')">
-                            Show all fields for <strong>{matched_source_filename}</strong>
-                        </label>
-                    </td>
-                </tr>"""
-
-                for key in keys:
-                    source_value = str(source_dict.get(key, ""))
-                    target_value = str(target_dict.get(key, ""))
-
-                    source_checked = "checked" if key in source_dict else ""
-                    source_checksum = source_files_map[
-                        matched_source_filename.lower()
-                    ].get(key, "")
-                    target_checksum = target_files_map[
-                        matched_target_filename.lower()
-                    ].get(key, "")
-
-                    source_val = html_lib.escape(
-                        json.dumps(
-                            {
-                                "side": "source",
-                                "filename": matched_source_filename,
-                                "prop": key,
-                                "value": source_checksum,
-                                "detection": "0",
-                            }
-                        )
-                    )
-
-                    if matched_source_filename.lower() in detection_files_set:
-                        target_val = html_lib.escape(
-                            json.dumps(
-                                {
-                                    "side": "target",
-                                    "filename": matched_source_filename,
-                                    "prop": key,
-                                    "value": target_checksum,
-                                    "detection": "1",
-                                }
-                            )
-                        )
-                    else:
-                        target_val = html_lib.escape(
-                            json.dumps(
-                                {
-                                    "side": "target",
-                                    "filename": matched_target_filename,
-                                    "prop": key,
-                                    "value": target_checksum,
-                                    "detection": "0",
-                                }
-                            )
-                        )
-                    if source_value != target_value:
-                        source_highlighted, target_highlighted = highlight_differences(
-                            source_value, target_value
-                        )
-                        if key == "md5-full":
-                            html += f"""<tr>
-                                <td>{key}</td>
-                                <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_highlighted}</td>
-                                <td><input type="checkbox" name="options[]" value="{target_val}">{target_highlighted}</td>
-                            </tr>"""
-                        else:
-                            html += f"""<tbody class="toggle-details" id="{group_id}" style="display: none;">
-                                <tr>
-                                    <td>{key}</td>
-                                    <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_highlighted}</td>
-                                    <td><input type="checkbox" name="options[]" value="{target_val}">{target_highlighted}</td>
-                                </tr>
-                            </tbody>"""
-                    else:
-                        if key == "md5-full":
-                            html += f"""<tr>
-                                <td>{key}</td>
-                                <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_value}</td>
-                                <td><input type="checkbox" name="options[]" value="{target_val}">{target_value}</td>
-                            </tr>"""
-                        else:
-                            html += f"""<tbody class="toggle-details" id="{group_id}" style="display: none;">
-                                <tr>
-                                    <td>{key}</td>
-                                    <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_value}</td>
-                                    <td><input type="checkbox" name="options[]" value="{target_val}">{target_value}</td>
-                                </tr>
-                            </tbody>"""
-
-            all_unmatched_filenames = [
+            all_files = [
+                matched_files,
                 all_target_unmatched_filenames,
                 all_source_unmatched_filenames,
             ]
 
-            for unmatched_filenames in all_unmatched_filenames:
-                for filename in unmatched_filenames:
-                    source_dict = source_files_map.get(filename.lower(), {})
-                    target_dict = target_files_map.get(filename.lower(), {})
+            is_common_file = True
+            for file_category in all_files:
+                # For matched_files, files is a tuple of filename from source file and target file
+                # For unmatched_files, files is the filename of the files that was not common.
+                for files in file_category:
+                    if is_common_file:
+                        (target_filename, source_filename) = files
+
+                        # Also remove common files from source and target filenames set
+                        if source_filename.lower() in all_source_unmatched_filenames:
+                            all_source_unmatched_filenames.remove(
+                                source_filename.lower()
+                            )
+                        if target_filename.lower() in all_target_unmatched_filenames:
+                            all_target_unmatched_filenames.remove(
+                                target_filename.lower()
+                            )
+                    else:
+                        target_filename = files
+                        source_filename = files
+
+                    is_mac_file = False
+                    size = source_files_map[source_filename.lower()].get("size", "")
+                    size_rd = source_files_map[source_filename.lower()].get(
+                        "size-rd", ""
+                    )
+                    if size == "0" and size_rd != "0":
+                        is_mac_file = True
+
+                    source_dict = source_files_map.get(source_filename.lower(), {})
+                    target_dict = target_files_map.get(target_filename.lower(), {})
 
                     keys = sorted(set(source_dict.keys()) | set(target_dict.keys()))
-                    group_id = (
-                        f"group_{filename.lower().replace('.', '_').replace('/', '_')}"
-                    )
-                    html += f"""<tr class="unmatched" style='display: none;'>
+
+                    tr_class = "matched" if is_common_file else "unmatched"
+                    html += f"""<tr class="{tr_class}">
                         <td colspan='3'>
-                            <label>
-                                <input type="checkbox" onclick="toggleGroup('{group_id}')">
-                                Show all fields for <strong>{filename}</strong>
+                                <strong>{source_filename}</strong> {" - mac_file" if is_mac_file else ""}
                             </label>
                         </td>
                     </tr>"""
@@ -1053,82 +979,81 @@ def confirm_merge(id):
                         target_value = str(target_dict.get(key, ""))
 
                         source_checked = "checked" if key in source_dict else ""
-                        source_checksum = source_files_map[filename.lower()].get(
+                        source_checksum = source_files_map[source_filename.lower()].get(
                             key, ""
                         )
-                        target_checksum = target_files_map[filename.lower()].get(
+                        target_checksum = target_files_map[target_filename.lower()].get(
                             key, ""
                         )
 
-                        source_val = html_lib.escape(
-                            json.dumps(
-                                {
-                                    "side": "source",
-                                    "filename": filename,
-                                    "prop": key,
-                                    "value": source_checksum,
-                                    "detection": "0",
-                                }
-                            )
-                        )
-                        if filename.lower() in detection_files_set:
-                            target_val = html_lib.escape(
-                                json.dumps(
-                                    {
-                                        "side": "target",
-                                        "filename": filename,
-                                        "prop": key,
-                                        "value": target_checksum,
-                                        "detection": "1",
-                                    }
-                                )
-                            )
-                        else:
-                            target_val = html_lib.escape(
-                                json.dumps(
-                                    {
-                                        "side": "target",
-                                        "filename": filename,
-                                        "prop": key,
-                                        "value": target_checksum,
-                                        "detection": "0",
-                                    }
-                                )
-                            )
+                        vals = {}
 
+                        # Format the value for the checkbox input as an escaped HTML-safe JSON string
+                        for side, checksum in [
+                            ("source", source_checksum),
+                            ("target", target_checksum),
+                        ]:
+                            is_detection = "0"
+                            if (
+                                side == "target"
+                                and target_filename.lower() in detection_files_set
+                            ):
+                                is_detection = "1"
+
+                            vals[side] = html_lib.escape(
+                                json.dumps(
+                                    {
+                                        "side": side,
+                                        "filename": target_filename
+                                        if side == "target"
+                                        else source_filename,
+                                        "prop": key,
+                                        "value": checksum,
+                                        "detection": is_detection,
+                                    }
+                                )
+                            )
+                        source_val = vals["source"]
+                        target_val = vals["target"]
+
+                        # Update the source and target values with highlighted differences if any
                         if source_value != target_value:
-                            source_highlighted, target_highlighted = (
-                                highlight_differences(source_value, target_value)
+                            source_value, target_value = highlight_differences(
+                                source_value, target_value
                             )
-                            if key == "md5-full":
-                                html += f"""<tr class="unmatched" style='display: none;'">
-                                    <td>{key}</td>
-                                    <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_highlighted}</td>
-                                    <td><input type="checkbox" name="options[]" value="{target_val}">{target_highlighted}</td>
-                                </tr>"""
-                            else:
-                                html += f"""<tbody class="toggle-details" id="{group_id}"  style='display: none;'>
-                                    <tr>
-                                        <td>{key}</td>
-                                        <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_highlighted}</td>
-                                        <td><input type="checkbox" name="options[]" value="{target_val}">{target_highlighted}</td>
-                                    </tr>
-                                </tbody>"""
-                        else:
-                            if key == "md5-full":
-                                html += f"""<tr class="unmatched" style='display: none;'>
-                                    <td>{key}</td>
-                                    <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_value}</td>
-                                    <td><input type="checkbox" name="options[]" value="{target_val}">{target_value}</td>
-                                </tr>"""
-                            else:
-                                html += f"""<tbody class="toggle-details unmatched" id="{group_id}"  style='display: none;'>
-                                    <tr>
-                                        <td>{key}</td>
-                                        <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_value}</td>
-                                        <td><input type="checkbox" name="options[]" value="{target_val}">{target_value}</td>
-                                    </tr>
-                                </tbody>"""
+
+                        is_md5_full = key == "md5-full"
+                        is_size = key == "size"
+                        is_size_rd = key == "size_rd"
+
+                        class_1 = "other_field "
+                        if is_md5_full:
+                            class_1 = "main_field "
+                        # class_1 will be file_size in case of non-mac files otherwise file_size_rd
+                        if is_size:
+                            class_1 = "main_field "
+                        if is_mac_file and is_size_rd:
+                            class_1 = "main_field "
+                        class_2 = tr_class
+                        tag_class = class_1 + class_2
+                        default_display = ""
+                        if class_1 == "other_field ":
+                            default_display = "none"
+
+                        html += f"""<tr class="{tag_class}" style="display: {default_display};">
+                            <td>{key}</td>
+                            <td><input type="checkbox" name="options[]" value="{source_val}" {source_checked}>{source_value}</td>
+                            <td><input type="checkbox" name="options[]" value="{target_val}">{target_value}</td>
+                        </tr>"""
+
+                # Next file categories do not contain common files
+                is_common_file = False
+
+            matched_dict = {
+                target.lower(): source.lower() for (target, source) in matched_files
+            }
+            escaped_json = html_lib.escape(json.dumps(matched_dict))
+            html += f'<input type="hidden" name="matched_files" value="{escaped_json}">'
 
             html += """
             </table>
@@ -1143,28 +1068,13 @@ def confirm_merge(id):
                 <input id="confirm_merge_cancel" type="submit" value="Cancel">
             </form>
             <script src="{{ url_for('static', filename='js/confirm_merge_form_handler.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/update_merge_table_rows.js') }}"></script>
             <script>
             document.getElementById("confirm_merge_form").addEventListener("submit", function () {
                 document.getElementById("merging-status").style.display = "block";
                 document.getElementById("confirm_merge_submit").style.display = "none";
                 document.getElementById("confirm_merge_cancel").style.display = "none";
             });
-            </script>
-            <script>
-            document.getElementById("toggle-unmatched").addEventListener("change", function() {
-                const rows = document.querySelectorAll("tr.unmatched");
-                rows.forEach(row => {
-                    row.style.display = this.checked ? "" : "none";
-                });
-            });
-            </script>
-            <script>
-            function toggleGroup(groupId) {
-                const rows = document.querySelectorAll(`#${groupId}`);
-                rows.forEach(row => {
-                    row.style.display = (row.style.display === "none") ? "" : "none";
-                });
-            }
             </script>
             </body>
             </html>
@@ -1186,6 +1096,7 @@ def execute_merge(id):
     source_id = data.get("source_id")
     target_id = data.get("target_id")
     options = data.get("options")
+    matched_dict = json.loads(data.get("matched_files"))
 
     base_dir = os.path.dirname(os.path.abspath(__file__))
     config_path = os.path.join(base_dir, "mysql_config.json")
@@ -1205,146 +1116,67 @@ def execute_merge(id):
         with connection.cursor() as cursor:
             cursor.execute("SELECT * FROM fileset WHERE id = %s", (source_id,))
             source_fileset = cursor.fetchone()
-            cursor.execute("SELECT * FROM fileset WHERE id = %s", (target_id,))
 
+            status = "full"
             if source_fileset["status"] == "dat":
-                cursor.execute(
-                    """
-                    UPDATE fileset SET
-                    status = %s,
-                    `key` = %s,
-                    `timestamp` = %s
-                    WHERE id = %s
-                """,
-                    (
-                        "partial",
-                        source_fileset["key"],
-                        source_fileset["timestamp"],
-                        target_id,
-                    ),
+                status = "partial"
+            cursor.execute(
+                """
+                UPDATE fileset SET
+                status = %s,
+                `key` = %s,
+                `timestamp` = %s
+                WHERE id = %s
+            """,
+                (
+                    status,
+                    source_fileset["key"],
+                    source_fileset["timestamp"],
+                    target_id,
+                ),
+            )
+
+            file_details_map = defaultdict(dict)
+
+            for file in options:
+                filename = file["filename"].lower()
+                if filename in matched_dict:
+                    filename = matched_dict[filename]
+                file_details_map[filename]["name"] = filename
+                # If we have confirmed that given file is a detection file, then we continue
+                if "detection" not in file_details_map[filename] or (
+                    "detection" in file_details_map[filename]
+                    and file_details_map[filename]["detection"] != "1"
+                ):
+                    file_details_map[filename]["detection"] = file["detection"]
+                    file_details_map[filename]["detection_type"] = file["prop"]
+                if file["prop"].startswith("md5"):
+                    file_details_map[filename][file["prop"]] = file["value"]
+                if file["prop"].startswith("size"):
+                    file_details_map[filename][file["prop"]] = file["value"]
+
+            query = "DELETE FROM file WHERE fileset = %s"
+            cursor.execute(query, (target_id,))
+            query = "DELETE FROM fileset WHERE id = %s"
+            cursor.execute(query, (source_id,))
+
+            for filename, details in file_details_map.items():
+                detection = (
+                    details["detection"] == "1" if "detection" in details else False
                 )
-
-                source_filenames = set()
-                change_fileset_id = set()
-                file_details_map = defaultdict(dict)
-
-                for file in options:
-                    filename = file["filename"].lower()
-                    if "detection" not in file_details_map[filename]:
-                        file_details_map[filename]["detection"] = file["detection"]
-                        file_details_map[filename]["detection_type"] = file["prop"]
-                    elif (
-                        "detection" in file_details_map[filename]
-                        and file_details_map[filename]["detection"] != "1"
-                    ):
-                        file_details_map[filename]["detection"] = file["detection"]
-                        file_details_map[filename]["detection_type"] = file["prop"]
-                    if file["prop"].startswith("md5"):
-                        if "checksums" not in file_details_map[filename]:
-                            file_details_map[filename]["checksums"] = []
-                        file_details_map[filename]["checksums"].append(
-                            {"check": file["prop"], "value": file["value"]}
-                        )
-                    if file["side"] == "source":
-                        source_filenames.add(filename)
-
-                # Delete older checksums
-                for file in options:
-                    filename = file["filename"].lower()
-                    if file["side"] == "source":
-                        cursor.execute(
-                            """SELECT f.id as file_id FROM file f
-                                       JOIN fileset fs ON fs.id = f.fileset 
-                                       WHERE f.name = %s
-                                       AND fs.id = %s""",
-                            (filename, source_id),
-                        )
-                        file_id = cursor.fetchone()["file_id"]
-                        query = """
-                            DELETE FROM filechecksum
-                            WHERE file = %s
-                        """
-                        cursor.execute(query, (file_id,))
-                    else:
-                        if filename not in source_filenames:
-                            cursor.execute(
-                                """SELECT f.id as file_id FROM file f
-                            JOIN fileset fs ON fs.id = f.fileset 
-                            WHERE f.name = %s
-                            AND fs.id = %s""",
-                                (filename, target_id),
-                            )
-                            target_file_id = cursor.fetchone()["file_id"]
-                            change_fileset_id.add(target_file_id)
-
-                for filename, details in file_details_map.items():
-                    cursor.execute(
-                        """SELECT f.id as file_id FROM file f
-                                    JOIN fileset fs ON fs.id = f.fileset 
-                                    WHERE f.name = %s
-                                    AND fs.id = %s""",
-                        (filename, source_id),
-                    )
-                    source_file_id = cursor.fetchone()["file_id"]
-                    detection = (
-                        details["detection"] == "1" if "detection" in details else False
-                    )
-                    if detection:
-                        query = """
-                            UPDATE file 
-                            SET detection = 1,
-                            detection_type = %s
-                            WHERE id = %s
-                        """
-                        cursor.execute(
-                            query,
-                            (
-                                details["detection_type"],
-                                source_file_id,
-                            ),
-                        )
-                        filename = os.path.basename(filename).lower()
-                        cursor.execute(
-                            """SELECT f.id as file_id FROM file f
-                                    JOIN fileset fs ON fs.id = f.fileset 
-                                    WHERE REGEXP_REPLACE(f.name, '^.*[\\\\/]', '') = %s
-                                    AND fs.id = %s""",
-                            (filename, target_id),
-                        )
-                        target_file_id = cursor.fetchone()["file_id"]
-                        cursor.execute(
-                            "DELETE FROM file WHERE id = %s", (target_file_id,)
-                        )
-
-                    check = ""
-                    checksize = ""
-                    checktype = ""
-                    checksum = ""
-
-                    if "checksums" in details:
-                        for c in details["checksums"]:
-                            checksum = c["value"]
-                            check = c["check"]
-                            checksize, checktype, checksum = get_checksum_props(
-                                check, checksum
-                            )
-                            query = "INSERT INTO filechecksum (file, checksize, checktype, checksum) VALUES (%s, %s, %s, %s)"
-                            cursor.execute(
-                                query, (source_file_id, checksize, checktype, checksum)
-                            )
-
-                    cursor.execute(
-                        "UPDATE file SET fileset = %s WHERE id = %s",
-                        (target_id, source_file_id),
-                    )
-
-                # for target_file_id in change_fileset_id:
-                #     query = """
-                #         UPDATE file
-                #         SET fileset = %s
-                #         WHERE id = %s
-                #     """
-                #     cursor.execute(query, (source_id, target_file_id))
+                insert_file(details, detection, "", connection, target_id)
+                cursor.execute("SELECT @file_last AS file_id")
+                file_id = cursor.fetchone()["file_id"]
+                for key in details:
+                    if key not in [
+                        "name",
+                        "size",
+                        "size-r",
+                        "size-rd",
+                        "detection",
+                        "detection_type",
+                    ]:
+                        insert_filechecksum(details, key, file_id, connection)
 
             cursor.execute(
                 """
@@ -1695,4 +1527,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(debug=True, host="0.0.0.0")
+    app.run(port=5001, debug=True, host="0.0.0.0")
