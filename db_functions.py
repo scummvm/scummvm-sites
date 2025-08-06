@@ -59,7 +59,10 @@ def get_checksum_props(checkcode, checksum):
         # For type md5-t-5000
         if last == "1M" or last.isdigit():
             checksize = last
-        checktype = "-".join(exploded_checkcode)
+            checktype = "-".join(exploded_checkcode)
+        # For type md5-r, md5-d
+        else:
+            checktype = checkcode
 
     # Detection entries have checktypes as part of the checksum prefix
     if ":" in checksum:
@@ -431,6 +434,8 @@ def calc_key(fileset):
         for key, value in file.items():
             if key == "name":
                 value = value.lower()
+            if key == "modification-time":
+                continue
             key_string += ":" + str(value)
 
     key_string = key_string.strip(":")
@@ -712,6 +717,7 @@ def scan_process(
     dropped_early_no_candidate = 0
     manual_merged_with_detection = 0
     filesets_with_missing_files = 0
+    duplicate_or_existing_entry = 0
 
     id_to_fileset_mapping = defaultdict(dict)
 
@@ -738,6 +744,7 @@ def scan_process(
             skiplog=skiplog,
         )
         if existing:
+            duplicate_or_existing_entry += 1
             continue
 
         id_to_fileset_mapping[fileset_id] = fileset
@@ -752,11 +759,11 @@ def scan_process(
 
     fileset_count = 0
     for fileset_id, fileset in id_to_fileset_mapping.items():
+        fileset_count += 1
         console_log_matching(fileset_count)
         candidate_filesets = filter_candidate_filesets(
             fileset["rom"], transaction_id, conn
         )
-
         if len(candidate_filesets) == 0:
             category_text = "Drop fileset - No Candidates"
             fileset_name = fileset["name"] if "name" in fileset else ""
@@ -792,8 +799,6 @@ def scan_process(
             conn,
             skiplog,
         )
-        fileset_count += 1
-
     # If any partial fileset turned full with pre file updates, turn it full
     update_status_for_partial_filesets(list(filesets_check_for_full), conn)
 
@@ -803,12 +808,14 @@ def scan_process(
             "SELECT COUNT(fileset) from transactions WHERE `transaction` = %s",
             (transaction_id,),
         )
-        fileset_insertion_count = cursor.fetchone()["COUNT(fileset)"]
+        fileset_insertion_count = (
+            cursor.fetchone()["COUNT(fileset)"] + duplicate_or_existing_entry
+        )
         category_text = f"Uploaded from {src}"
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
         create_log(category_text, user, log_text, conn)
         category_text = "Upload information"
-        log_text = f"Number of filesets: {fileset_insertion_count}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
+        log_text = f"Number of filesets: {fileset_insertion_count}. Duplicate or existing filesets: {duplicate_or_existing_entry}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
         console_log(log_text)
         create_log(category_text, user, log_text, conn)
 
@@ -1071,6 +1078,7 @@ def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn
         filename_to_filepath_map = defaultdict(str)
         filepath_to_checksum_map = defaultdict(dict)
         filepath_to_sizes_map = defaultdict(dict)
+        filepath_to_mod_time_map = defaultdict(dict)
 
         for file in fileset["rom"]:
             base_name = os.path.basename(normalised_path(file["name"])).lower()
@@ -1085,6 +1093,7 @@ def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn
                     sizes[key] = file[key]
 
             filepath_to_sizes_map[file["name"]] = sizes
+            filepath_to_mod_time_map[file["name"]] = file["modification-time"]
             filepath_to_checksum_map[file["name"]] = checksums
             same_filename_count[base_name] += 1
             filename_to_filepath_map[base_name] = file["name"]
@@ -1128,21 +1137,30 @@ def update_all_files(fileset, candidate_fileset_id, is_candidate_detection, conn
                 UPDATE file
                 SET size = %s,
                 `size-r` = %s,
-                `size-rd` = %s
+                `size-rd` = %s,
+                `modification-time` = %s
             """
             sizes = filepath_to_sizes_map[filepath]
+            mod_time = filepath_to_mod_time_map[filepath]
             if is_candidate_detection:
                 query += ",name = %s WHERE id = %s"
                 params = (
                     sizes["size"],
                     sizes["size-r"],
                     sizes["size-rd"],
+                    mod_time,
                     normalised_path(filepath),
                     file_id,
                 )
             else:
                 query += "WHERE id = %s"
-                params = (sizes["size"], sizes["size-r"], sizes["size-rd"], file_id)
+                params = (
+                    sizes["size"],
+                    sizes["size-r"],
+                    sizes["size-rd"],
+                    mod_time,
+                    file_id,
+                )
             cursor.execute(query, params)
 
 
@@ -1224,7 +1242,12 @@ def filter_candidate_filesets(roms, transaction_id, conn):
                         file[key],
                         name.lower(),
                         int(file["size"]),
-                        int(file["size-r"]),
+                    )
+                )
+                set_checksums.add(
+                    (
+                        file[key],
+                        name.lower(),
                         int(file["size-rd"]),
                     )
                 )
@@ -1233,16 +1256,11 @@ def filter_candidate_filesets(roms, transaction_id, conn):
                         file[key],
                         name.lower(),
                         -1,
-                        int(file["size-r"]),
-                        int(file["size-rd"]),
                     )
                 )
-        set_file_name_size.add(
-            (name.lower(), -1, int(file["size-r"]), int(file["size-rd"]))
-        )
-        set_file_name_size.add(
-            (name.lower(), int(file["size"]), int(file["size-r"]), int(file["size-rd"]))
-        )
+        set_file_name_size.add((name.lower(), -1))
+        set_file_name_size.add((name.lower(), int(file["size-rd"])))
+        set_file_name_size.add((name.lower(), int(file["size"])))
 
     # Filter candidates by detection filename and file size (including -1) and increase matched file count
     # if filesize = -1,
@@ -1254,50 +1272,43 @@ def filter_candidate_filesets(roms, transaction_id, conn):
         with conn.cursor() as cursor:
             for f in files:
                 filename = os.path.basename(f["name"]).lower()
-                size = f["size"]
-                size_r = f["size-r"]
-                size_rd = f["size-rd"]
-                if (filename, size, size_r, size_rd) in set_file_name_size:
-                    if size == -1:
-                        count += 1
-                    else:
-                        cursor.execute(
-                            """
-                            SELECT checksum, checksize, checktype
-                            FROM filechecksum
-                            WHERE file = %s
-                        """,
-                            (f["file_id"],),
-                        )
-                        checksums = cursor.fetchall()
-                        not_inc_count = False
-                        for c in checksums:
-                            filesize = size
-                            checksum = c["checksum"]
-                            checksize = c["checksize"]
-                            checktype = c["checktype"]
-                            # Macfiles handling
-                            if checktype in ["md5-r", "md5-rt"]:
-                                filesize = size_rd
-
-                            if checksize == "1M":
-                                checksize = 1048576
-                            elif checksize == "0":
-                                checksize = filesize
-                            if filesize <= int(checksize):
-                                if (
-                                    checksum,
-                                    filename,
-                                    size,
-                                    size_r,
-                                    size_rd,
-                                ) in set_checksums:
-                                    count += 1
-                                not_inc_count = True
-                                # if it was a true match, checksum should be present
-                                break
-                        if not not_inc_count:
+                sizes = [f["size"], f["size-rd"]]
+                for size in sizes:
+                    if (filename, size) in set_file_name_size:
+                        if size == -1:
                             count += 1
+                        else:
+                            cursor.execute(
+                                """
+                                SELECT checksum, checksize, checktype
+                                FROM filechecksum
+                                WHERE file = %s
+                            """,
+                                (f["file_id"],),
+                            )
+                            checksums = cursor.fetchall()
+                            not_inc_count = False
+                            for c in checksums:
+                                filesize = size
+                                checksum = c["checksum"]
+                                checksize = c["checksize"]
+
+                                if checksize == "1M":
+                                    checksize = 1048576
+                                elif checksize == "0":
+                                    checksize = filesize
+                                if filesize <= int(checksize):
+                                    if (
+                                        checksum,
+                                        filename,
+                                        size,
+                                    ) in set_checksums:
+                                        count += 1
+                                    not_inc_count = True
+                                    # if it was a true match, checksum should be present
+                                    break
+                            if not not_inc_count:
+                                count += 1
         if count > 0 and total_detection_files_map[fileset_id] <= count:
             match_counts[fileset_id] = count
 
