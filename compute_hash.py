@@ -818,7 +818,7 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
                 timestamp,
             ) in hash_of_dir.items():
                 filename = encode_path_components(filename)
-                data = f"name '{filename}' size {size} size-r {size_r} size-rd {size_rd} modification-time {timestamp}"
+                data = f"""name "{filename}" size {size} size-r {size_r} size-rd {size_rd} modification-time {timestamp}"""
                 for key, value in hashes:
                     data += f" {key} {value}"
 
