@@ -3,8 +3,7 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-td,
-th {
+td {
   padding-inline: 5px;
 }
 
@@ -33,13 +32,11 @@ td.filter {
 }
 
 th {
-  padding-top: 5px;
-  padding-bottom: 5px;
   text-align: center;
   background-color: var(--primary-color);
   color: white;
-  height: 30px;
   vertical-align: middle;
+  padding: 4px;
 }
 
 th a {
@@ -84,12 +81,10 @@ nav {
   justify-content: space-between;
   text-decoration: none;
   color: inherit;
-  padding: 4px 8px;
 }
 
 .filter-icon {
-  height: auto;
-  margin-left: 8px;
+  width: 18px;
 }
 
 button {

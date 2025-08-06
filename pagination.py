@@ -209,7 +209,7 @@ def create_page(
     for key in filters.keys():
         base_params = {k: v for k, v in request.args.items() if k != "sort"}
         icon_path = "icons/filter/"
-        icon_name = ""
+        icon_name = "no_icon"
 
         if key == sort_key:
             if sort_dir == "asc":
@@ -220,26 +220,35 @@ def create_page(
                 icon_name = "arrow_drop_down.png"
             else:
                 next_sort_dir = "asc"
-                icon_name = "unfold_more.png"
 
             if next_sort_dir != "default":
                 sort_param = f"{key}-{next_sort_dir}"
                 base_params["sort"] = sort_param
         else:
-            icon_name = "unfold_more.png"
             sort_param = f"{key}-asc"
             base_params["sort"] = sort_param
 
         query_string = "&".join(f"{k}={v}" for k, v in base_params.items())
         if key != "checksum":
             icon_src = url_for("static", filename=icon_path + icon_name)
-            html += f"""<th>
-                <a href='{filename}?{query_string}' class="header-link">
-                    <span></span>
-                    <span class="key-text">{key}</span>
-                    <img class="filter-icon" src="{icon_src}" alt="asc" width="25">
-                </a>
-            </th>"""
+            if icon_name != "no_icon":
+                html += f"""<th>
+                    <a href='{filename}?{query_string}' class="header-link">
+                        <div style="display:flex; align-items:center; width:100%;">
+                            <span style="flex:1; text-align:center;">{key}</span>
+                            <img src="{icon_src}" class="filter-icon" alt="asc" style="margin-left:auto;">
+                        </div>
+                    </a>
+                </th>"""
+            else:
+                html += f"""<th>
+                    <a href='{filename}?{query_string}' class="header-link">
+                        <div style="display:flex; align-items:center; width:100%;">
+                            <span style="flex:1; text-align:center;">{key}</span>
+                            <span style="width: 18px"></span>
+                        </div>
+                    </a>
+                </th>"""
 
     if results:
         counter = offset + 1
