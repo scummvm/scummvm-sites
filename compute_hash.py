@@ -553,7 +553,8 @@ def extract_macbin_filename_from_header(file):
         header = f.read(128)
         name_len = header[1]
         filename_bytes = header[2 : 2 + name_len]
-        return filename_bytes.decode("utf-8")
+        filename = filename_bytes.decode("mac_roman")
+        return filename
 
 
 def file_classification(filepath):
@@ -562,7 +563,8 @@ def file_classification(filepath):
 
     # 1. Macbinary
     if is_macbin(filepath):
-        return [FileType.MAC_BINARY, extract_macbin_filename_from_header(filepath)]
+        base_name = extract_macbin_filename_from_header(filepath)
+        return [FileType.MAC_BINARY, base_name]
 
     # 2. Appledouble .rsrc
     if is_appledouble_rsrc(filepath):
