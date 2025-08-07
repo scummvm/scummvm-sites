@@ -298,7 +298,9 @@ def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
         if "md5" not in checktype:
             return
         size_name = "size"
-        if checktype[-1] == "r":
+
+        # e.g md5-r or md5-rt-5000
+        if checktype.endswith("r") or checktype.endswith("rt"):
             size_name += "-rd"
 
         cursor.execute(f"SELECT `{size_name}` FROM file WHERE id = %s", (file_id,))
@@ -320,7 +322,13 @@ def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
                 "default": ["md5-0", "md5-1M", "md5-5000", "md5-t-5000"],
             }
 
-            key = checktype[-1] if checktype[-1] in md5_variants_map else "default"
+            if checktype.endswith("rt") or checktype.endswith("r"):
+                key = "r"
+            elif checktype.endswith("dt") or checktype.endswith("d"):
+                key = "d"
+            else:
+                key = "default"
+
             variants = md5_variants_map[key]
             inserted_checksum_type = f"{checktype}-{checksize}"
 
