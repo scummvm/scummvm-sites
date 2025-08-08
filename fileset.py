@@ -31,7 +31,18 @@ from db_functions import (
 from collections import defaultdict
 from schema import init_database
 
+from validate_user_payload import validate_user_payload
+
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
 app = Flask(__name__)
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=[],
+    storage_uri="memory://",
+)
 
 secret_key = os.urandom(24)
 
@@ -1348,6 +1359,7 @@ def get_width(name, default):
 
 
 @app.route("/validate", methods=["POST"])
+@limiter.limit("3 per minute")
 def validate():
     error_codes = {
         "unknown": -1,
@@ -1361,9 +1373,19 @@ def validate():
     ip = request.remote_addr
     ip = ".".join(ip.split(".")[:3]) + ".X"
 
-    game_metadata = {k: v for k, v in json_object.items() if k != "files"}
-
+    is_valid_payload, response_message = validate_user_payload(json_object)
     json_response = {"error": error_codes["success"], "files": []}
+
+    if not is_valid_payload:
+        json_response["error"] = error_codes["unknown"]
+        json_response["status"] = response_message
+        category = "Invalid user payload."
+        text = f"User payload is not valid. User IP: {ip}, Status: {response_message}"
+        conn = db_connect()
+        create_log(category, ip, text, conn)
+        return jsonify(json_response)
+
+    game_metadata = {k: v for k, v in json_object.items() if k != "files"}
 
     file_object = json_object["files"]
     if not file_object:
@@ -1527,4 +1549,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(port=5001, debug=True, host="0.0.0.0")
+    app.run(debug=False, host="0.0.0.0")

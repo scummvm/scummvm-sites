@@ -16,3 +16,4 @@ pytest
 setuptools
 Werkzeug
 wheel
+Flask-Limiter
