@@ -1,8 +1,8 @@
 import re
 import os
 import sys
-from db_functions import db_insert, match_fileset
 import argparse
+from src.scripts.db_functions import db_insert, match_fileset
 
 
 def remove_quotes(string):

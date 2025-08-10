@@ -8,35 +8,32 @@ from flask import (
     render_template,
     make_response,
 )
-
-import pymysql.cursors
 import json
 import html as html_lib
 import os
 import getpass
-from pagination import create_page
+from src.app.pagination import create_page
 import difflib
-from db_functions import (
+from src.scripts.db_functions import (
     get_all_related_filesets,
     convert_log_text_to_links,
     user_integrity_check,
-    db_connect,
     create_log,
-    db_connect_root,
     delete_original_fileset,
     normalised_path,
     insert_file,
     insert_filechecksum,
 )
+from src.utils.db_config import db_connect, db_connect_root
 from collections import defaultdict
-from schema import init_database
-
-from validate_user_payload import validate_user_payload
-
+from src.scripts.schema import init_database
+from src.app.validate_user_payload import validate_user_payload
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from src.utils.cookie import get_filesets_per_page, get_logs_per_page
+from src.utils.db_config import STATIC_DIR, TEMPLATES_DIR
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=STATIC_DIR, template_folder=TEMPLATES_DIR)
 limiter = Limiter(
     get_remote_address,
     app=app,
@@ -81,20 +78,7 @@ def fileset():
     old_id = request.args.get("redirected_from", default=None, type=int)
     widetable = request.args.get("widetable", default="partial", type=str)
     # Load MySQL credentials from a JSON file
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    # Create a connection to the MySQL server
-    connection = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    connection = db_connect()
 
     try:
         with connection.cursor() as cursor:
@@ -469,19 +453,7 @@ def merge_fileset(id):
     if request.method == "POST":
         search_query = request.form["search"]
 
-        base_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(base_dir, "mysql_config.json")
-        with open(config_path) as f:
-            mysql_cred = json.load(f)
-
-        connection = pymysql.connect(
-            host=mysql_cred["servername"],
-            user=mysql_cred["username"],
-            password=mysql_cred["password"],
-            db=mysql_cred["dbname"],
-            charset="utf8mb4",
-            cursorclass=pymysql.cursors.DictCursor,
-        )
+        connection = db_connect()
 
         try:
             with connection.cursor() as cursor:
@@ -587,19 +559,7 @@ def merge_fileset(id):
 
 @app.route("/fileset/<int:id>/possible_merge", methods=["GET", "POST"])
 def possible_merge_filesets(id):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    connection = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    connection = db_connect()
 
     try:
         with connection.cursor() as cursor:
@@ -723,19 +683,7 @@ def confirm_merge(id):
         else request.form.get("target_id")
     )
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    connection = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    connection = db_connect()
 
     try:
         with connection.cursor() as cursor:
@@ -1109,19 +1057,7 @@ def execute_merge(id):
     options = data.get("options")
     matched_dict = json.loads(data.get("matched_files"))
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    connection = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    connection = db_connect()
 
     try:
         with connection.cursor() as cursor:
@@ -1346,18 +1282,6 @@ def config():
     )
 
 
-def get_filesets_per_page():
-    return int(request.cookies.get("filesets_per_page", "25"))
-
-
-def get_logs_per_page():
-    return int(request.cookies.get("logs_per_page", "25"))
-
-
-def get_width(name, default):
-    return int(request.cookies.get(name, default))
-
-
 @app.route("/validate", methods=["POST"])
 @limiter.limit("3 per minute")
 def validate():
@@ -1549,4 +1473,4 @@ def delete_files(id):
 
 if __name__ == "__main__":
     app.secret_key = secret_key
-    app.run(debug=False, host="0.0.0.0")
+    app.run(port=5001, debug=True, host="0.0.0.0")

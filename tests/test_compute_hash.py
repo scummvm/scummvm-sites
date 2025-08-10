@@ -1,9 +1,5 @@
-import sys
 import os
-
-sys.path.insert(0, ".")
-
-from compute_hash import is_macbin
+from src.scripts.compute_hash import is_macbin
 
 
 def test_is_macbin():
