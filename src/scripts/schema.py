@@ -1,32 +1,12 @@
-import json
 import pymysql
 import random
 import string
 from datetime import datetime
-import os
+from src.utils.db_config import db_connect_root
 
 
 def init_database():
-    # Load MySQL credentials
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    servername = mysql_cred["servername"]
-    username = mysql_cred["username"]
-    password = mysql_cred["password"]
-    dbname = mysql_cred["dbname"]
-
-    # Create connection
-    conn = pymysql.connect(
-        host=servername,
-        user=username,
-        password=password,
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False,
-    )
+    (conn, dbname) = db_connect_root()
 
     # Check connection
     if conn is None:

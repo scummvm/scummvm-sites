@@ -1,5 +1,4 @@
 import pymysql
-import json
 import getpass
 import time
 import hashlib
@@ -7,45 +6,15 @@ import os
 from collections import defaultdict
 import re
 import copy
-import sys
-
-
-def db_connect():
-    console_log("Connecting to the Database.")
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    conn = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=False,
-    )
-    console_log(f"Connected to Database - {mysql_cred['dbname']}")
-    return conn
-
-
-def db_connect_root():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    conn = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-        autocommit=True,
-    )
-
-    return (conn, mysql_cred["dbname"])
+from src.utils.db_config import db_connect
+from src.utils.console_log import (
+    console_log,
+    console_log_candidate_filtering,
+    console_log_detection,
+    console_log_file_update,
+    console_log_matching,
+    console_log_total_filesets,
+)
 
 
 def get_checksum_props(checkcode, checksum):
@@ -2776,38 +2745,3 @@ def add_usercount(fileset, ip, conn):
             category_text = "Existing user fileset - same user."
             log_text = f"User Fileset:{fileset} exists. Match count: {count}."
             create_log(category_text, ip, log_text, conn)
-
-
-def console_log(message):
-    sys.stdout.write(" " * 50 + "\r")
-    sys.stdout.flush()
-    print(message)
-
-
-def console_log_candidate_filtering(fileset_count):
-    sys.stdout.write(f"Filtering Candidates - Fileset {fileset_count}\r")
-    sys.stdout.flush()
-
-
-def console_log_file_update(fileset_count):
-    sys.stdout.write(f"Updating files - Fileset {fileset_count}\r")
-    sys.stdout.flush()
-
-
-def console_log_matching(fileset_count):
-    sys.stdout.write(f"Performing Match - Fileset {fileset_count}\r")
-    sys.stdout.flush()
-
-
-def console_log_detection(fileset_count):
-    sys.stdout.write(f"Processing - Fileset {fileset_count}\r")
-    sys.stdout.flush()
-
-
-def console_log_total_filesets(file_path):
-    count = 0
-    with open(file_path, "r") as f:
-        for line in f:
-            if line.strip().startswith("game ("):
-                count += 1
-    print(f"Total filesets present - {count}.")

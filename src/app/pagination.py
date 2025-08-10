@@ -1,11 +1,9 @@
 from flask import Flask, request, url_for
-import pymysql
-import json
 import re
 import os
-
 from urllib.parse import urlencode
-
+from src.utils.db_config import db_connect, STATIC_DIR
+from src.utils.cookie import get_width
 
 app = Flask(__name__)
 
@@ -54,19 +52,7 @@ def create_page(
     filters={},
     mapping={},
 ):
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(base_dir, "mysql_config.json")
-    with open(config_path) as f:
-        mysql_cred = json.load(f)
-
-    conn = pymysql.connect(
-        host=mysql_cred["servername"],
-        user=mysql_cred["username"],
-        password=mysql_cred["password"],
-        db=mysql_cred["dbname"],
-        charset="utf8mb4",
-        cursorclass=pymysql.cursors.DictCursor,
-    )
+    conn = db_connect()
 
     with conn.cursor() as cursor:
         tables = set()
@@ -143,7 +129,7 @@ def create_page(
 
     # Initial html code including the navbar is stored in a separate html file.
     html = ""
-    navbar_path = os.path.join(app.root_path, "static", "navbar_string.html")
+    navbar_path = os.path.join(STATIC_DIR, "navbar_string.html")
     with open(navbar_path, "r") as f:
         html = f.read()
 
@@ -152,8 +138,6 @@ def create_page(
         <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
         <table class="fixed-table" style="margin-top: 80px;">
     """
-
-    from fileset import get_width
 
     if records_table == "fileset":
         fileset_dashboard_widths_default = {

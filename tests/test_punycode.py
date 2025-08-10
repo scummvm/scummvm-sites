@@ -1,4 +1,4 @@
-from db_functions import punycode_need_encode, encode_punycode
+from src.scripts.compute_hash import punycode_need_encode, encode_punycode
 
 
 def test_needs_punyencoding():
