@@ -6,6 +6,7 @@ import sys
 from enum import Enum
 from datetime import datetime, date, timedelta
 from collections import defaultdict
+import traceback
 
 
 class FileType(Enum):
@@ -345,8 +346,8 @@ def appledouble_get_datafork(filepath, fileinfo):
         with open(data_fork_path, "rb") as f:
             data = f.read()
             return (data, len(data))
-    except (FileNotFoundError, IsADirectoryError):
-        return b""
+    except (FileNotFoundError, IsADirectoryError) as e:
+        raise e
 
 
 def raw_rsrc_get_datafork(filepath):
@@ -355,8 +356,8 @@ def raw_rsrc_get_datafork(filepath):
         with open(filepath[:-5] + ".data", "rb") as f:
             data = f.read()
             return (data, len(data))
-    except (FileNotFoundError, IsADirectoryError):
-        return b""
+    except (FileNotFoundError, IsADirectoryError) as e:
+        raise e
 
 
 def raw_rsrc_get_resource_fork_data(filepath):
@@ -380,8 +381,8 @@ def actual_mac_fork_get_data_fork(filepath):
         with open(filepath, "rb") as f:
             data = f.read()
             return (data, len(data))
-    except (FileNotFoundError, IsADirectoryError):
-        return b""
+    except (FileNotFoundError, IsADirectoryError) as e:
+        raise e
 
 
 def actual_mac_fork_get_resource_fork_data(filepath):
@@ -560,42 +561,46 @@ def extract_macbin_filename_from_header(file):
 def file_classification(filepath):
     """Returns [ Filetype, Filename ]. Filetype is an enum value - NON_MAC, MAC_BINARY, APPLE_DOUBLE_RSRC, APPLE_DOUBLE_MACOSX, APPLE_DOUBLE_DOT_, RAW_RSRC
     Filename for a normal file is the same as the original. Extensions are dropped for macfiles."""
+    try:
+        # 1. Macbinary
+        if is_macbin(filepath):
+            base_name = extract_macbin_filename_from_header(filepath)
+            return [FileType.MAC_BINARY, base_name]
 
-    # 1. Macbinary
-    if is_macbin(filepath):
-        base_name = extract_macbin_filename_from_header(filepath)
-        return [FileType.MAC_BINARY, base_name]
+        # 2. Appledouble .rsrc
+        if is_appledouble_rsrc(filepath):
+            base_name, _ = os.path.splitext(os.path.basename(filepath))
+            return [FileType.APPLE_DOUBLE_RSRC, base_name]
 
-    # 2. Appledouble .rsrc
-    if is_appledouble_rsrc(filepath):
-        base_name, _ = os.path.splitext(os.path.basename(filepath))
-        return [FileType.APPLE_DOUBLE_RSRC, base_name]
+        # 3. Raw .rsrc
+        if is_raw_rsrc(filepath):
+            base_name, _ = os.path.splitext(os.path.basename(filepath))
+            return [FileType.RAW_RSRC, base_name]
 
-    # 3. Raw .rsrc
-    if is_raw_rsrc(filepath):
-        base_name, _ = os.path.splitext(os.path.basename(filepath))
-        return [FileType.RAW_RSRC, base_name]
+        # 4. Appledouble in ._
+        if is_appledouble_in_dot_(filepath):
+            filename = os.path.basename(filepath)
+            actual_filename = filename[2:]
+            return [FileType.APPLE_DOUBLE_DOT_, actual_filename]
 
-    # 4. Appledouble in ._
-    if is_appledouble_in_dot_(filepath):
-        filename = os.path.basename(filepath)
-        actual_filename = filename[2:]
-        return [FileType.APPLE_DOUBLE_DOT_, actual_filename]
+        # 5. Appledouble in __MACOSX folder
+        if is_appledouble_in_macosx(filepath):
+            filename = os.path.basename(filepath)
+            actual_filename = filename[2:]
+            return [FileType.APPLE_DOUBLE_MACOSX, actual_filename]
 
-    # 5. Appledouble in __MACOSX folder
-    if is_appledouble_in_macosx(filepath):
-        filename = os.path.basename(filepath)
-        actual_filename = filename[2:]
-        return [FileType.APPLE_DOUBLE_MACOSX, actual_filename]
+        # 6. Actual resource fork of mac
+        if is_actual_resource_fork_mac(filepath):
+            filename = os.path.basename(filepath)
+            return [FileType.ACTUAL_FORK_MAC, filename]
 
-    # 6. Actual resource fork of mac
-    if is_actual_resource_fork_mac(filepath):
-        filename = os.path.basename(filepath)
-        return [FileType.ACTUAL_FORK_MAC, filename]
-
-    # Normal file
-    else:
-        return [FileType.NON_MAC, os.path.basename(filepath)]
+        # Normal file
+        else:
+            return [FileType.NON_MAC, os.path.basename(filepath)]
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {filepath}")
+    except OSError as e:
+        raise OSError(f"Could not read file: {filepath}") from e
 
 
 def file_filter(files):
@@ -649,42 +654,46 @@ def compute_hash_of_dirs(
     res = []
 
     for directory in get_dirs_at_depth(root_directory, depth):
-        hash_of_dir = dict()
-        files = []
-        # Dictionary with key : path and value : [ Filetype, Filename ]
-        file_collection = dict()
-        # Getting only files of directory and subdirectories recursively
-        for root, _, contents in os.walk(directory):
-            files.extend([os.path.join(root, f) for f in contents])
+        try:
+            hash_of_dir = dict()
+            files = []
+            # Dictionary with key : path and value : [ Filetype, Filename ]
+            file_collection = dict()
+            # Getting only files of directory and subdirectories recursively
+            for root, _, contents in os.walk(directory):
+                files.extend([os.path.join(root, f) for f in contents])
 
-        # Filter out the files based on user input date - limit_timestamps_date
-        filtered_file_map = filter_files_by_timestamp(files, limit_timestamp_date)
+            # Filter out the files based on user input date - limit_timestamps_date
+            filtered_file_map = filter_files_by_timestamp(files, limit_timestamps_date)
 
-        # Produce filetype and filename(name to be used in game entry) for each file
-        for filepath in filtered_file_map:
-            file_collection[filepath] = file_classification(filepath)
+            # Produce filetype and filename(name to be used in game entry) for each file
+            for filepath in filtered_file_map:
+                file_collection[filepath] = file_classification(filepath)
 
-        # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
-        # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
-        file_filter(file_collection)
+            # Remove extra entries of macfiles to avoid extra checksum calculation in form of non mac files
+            # Checksum for both the forks are calculated using a single file, so other files should be removed from the collection
+            file_filter(file_collection)
 
-        # Calculate checksum of files
-        for file_path, file_info in file_collection.items():
-            # relative_path is used for the name field in game entry
-            relative_path = os.path.relpath(file_path, directory)
-            base_name = file_info[1]
-            relative_dir = os.path.dirname(relative_path)
-            relative_path = os.path.join(relative_dir, base_name)
-
-            if file_info[0] == FileType.APPLE_DOUBLE_MACOSX:
-                relative_dir = os.path.dirname(os.path.dirname(relative_path))
+            # Calculate checksum of files
+            for file_path, file_info in file_collection.items():
+                # relative_path is used for the name field in game entry
+                relative_path = os.path.relpath(file_path, directory)
+                base_name = file_info[1]
+                relative_dir = os.path.dirname(relative_path)
                 relative_path = os.path.join(relative_dir, base_name)
 
-            hash_of_dir[relative_path] = file_checksum(
-                file_path, alg, size, file_info
-            ) + (filtered_file_map[file_path],)
+                if file_info[0] == FileType.APPLE_DOUBLE_MACOSX:
+                    relative_dir = os.path.dirname(os.path.dirname(relative_path))
+                    relative_path = os.path.join(relative_dir, base_name)
 
-        res.append(hash_of_dir)
+                hash_of_dir[relative_path] = file_checksum(
+                    file_path, alg, size, file_info
+                ) + (filtered_file_map[file_path],)
+
+            res.append(hash_of_dir)
+        except Exception:
+            print(f"Error: Could not process the given directory: {directory}.")
+            raise
     return res
 
 
@@ -726,7 +735,7 @@ def extract_mtime_appledouble(file_byte_stream):
         if id == 8:
             date_info_data = file_byte_stream[offset : offset + length]
             if len(date_info_data) < 16:
-                raise ValueError("FileDatesInfo block is too short.")
+                raise ValueError("Error: FileDatesInfo block is too short.")
             appledouble_epoch = datetime(2000, 1, 1)
             modify_seconds = read_be_32(date_info_data[4:8], signed=True)
             return (appledouble_epoch + timedelta(seconds=modify_seconds)).date()
@@ -739,21 +748,28 @@ def macfile_timestamp(filepath):
     Returns the modification times for the mac file from their finderinfo.
     If the file is not a macfile, it returns None
     """
-    with open(filepath, "rb") as f:
-        data = f.read()
-        # Macbinary
-        if is_macbin(filepath):
-            return extract_macbin_mtime(data)
+    try:
+        with open(filepath, "rb") as f:
+            data = f.read()
+            # Macbinary
+            if is_macbin(filepath):
+                return extract_macbin_mtime(data)
 
-        # Appledouble
-        if (
-            is_appledouble_rsrc(filepath)
-            or is_appledouble_in_dot_(filepath)
-            or is_appledouble_in_macosx(filepath)
-        ):
-            return extract_mtime_appledouble(data)
+            # Appledouble
+            if (
+                is_appledouble_rsrc(filepath)
+                or is_appledouble_in_dot_(filepath)
+                or is_appledouble_in_macosx(filepath)
+            ):
+                return extract_mtime_appledouble(data)
 
-    return None
+        return None
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {filepath}")
+    except OSError as e:
+        raise OSError(f"Could not read file: {filepath}") from e
+    except ValueError as e:
+        raise e
 
 
 def validate_date(date_str):
@@ -767,7 +783,9 @@ def validate_date(date_str):
             return datetime.strptime(date_str, fmt).date()
         except ValueError:
             continue
-    raise ValueError("Invalid date format. Use YYYY, YYYY-MM, or YYYY-MM-DD")
+    raise ValueError(
+        f"Error: Invalid date format: {date_str}. Use YYYY, YYYY-MM, or YYYY-MM-DD"
+    )
 
 
 def filter_files_by_timestamp(files, limit_timestamps_date):
@@ -779,8 +797,8 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
 
     filtered_file_map = defaultdict(str)
 
-    if limit_timestamp_date is not None:
-        user_date = validate_date(limit_timestamps_date)
+    if limit_timestamps_date is not None:
+        user_date = limit_timestamps_date
     today = date.today()
 
     for filepath in files:
@@ -826,6 +844,23 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
             file.write(")\n\n")
 
 
+def parse_positive_int(value, name):
+    """
+    Parser the size and depth values passed as cli arguements.
+    """
+    try:
+        num = int(value) if value else 0
+    except ValueError:
+        print(f"Error: Invalid {name} argument: {value}")
+        sys.exit(1)
+    if num < 0:
+        print(
+            f"Error: Invalid {name} value: {num}. Use a value greater than or equal to 0."
+        )
+        sys.exit(1)
+    return num
+
+
 class MyParser(argparse.ArgumentParser):
     def error(self, message):
         sys.stderr.write("Error: %s\n" % message)
@@ -833,22 +868,54 @@ class MyParser(argparse.ArgumentParser):
         sys.exit(2)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--directory", help="Path of directory with game files")
-parser.add_argument("--depth", help="Depth from root to game directories")
-parser.add_argument("--size", help="Use first n bytes of file to calculate checksum")
-parser.add_argument(
-    "--limit-timestamps",
-    help="Format - YYYY-MM-DD or YYYY-MM or YYYY. Filters out the files those were modified after the given timestamp. Note that if the modification time is today, it would not be filtered out.",
-)
-args = parser.parse_args()
-path = os.path.abspath(args.directory) if args.directory else os.getcwd()
-depth = int(args.depth) if args.depth else 0
-checksum_size = int(args.size) if args.size else 0
-limit_timestamp_date = str(args.limit_timestamps) if args.limit_timestamps else None
+def main():
+    try:
+        parser = argparse.ArgumentParser()
+        parser.add_argument(
+            "--directory", required=True, help="Path of directory with game files"
+        )
+        parser.add_argument("--depth", help="Depth from root to game directories")
+        parser.add_argument(
+            "--size", help="Use first n bytes of file to calculate checksum"
+        )
+        parser.add_argument(
+            "--limit-timestamps",
+            help="Format - YYYY-MM-DD or YYYY-MM or YYYY. Filters out the files those were modified after the given timestamp. Note that if the modification time is today, it would not be filtered out.",
+        )
 
-create_dat_file(
-    compute_hash_of_dirs(path, depth, checksum_size, limit_timestamp_date),
-    path,
-    checksum_size,
-)
+        args = parser.parse_args()
+        path = args.directory
+        if not os.path.isdir(path):
+            print(f"Error: Directory does not exist: {path}.")
+            sys.exit(1)
+        path = os.path.abspath(path)
+
+        depth = parse_positive_int(args.depth, "depth")
+        checksum_size = parse_positive_int(args.size, "size")
+
+        limit_timestamps_date = None
+        try:
+            if args.limit_timestamps:
+                limit_timestamps_date = validate_date(str(args.limit_timestamps))
+        except ValueError as ve:
+            print(ve)
+            sys.exit(1)
+
+        create_dat_file(
+            compute_hash_of_dirs(path, depth, checksum_size, limit_timestamps_date),
+            path,
+            checksum_size,
+        )
+    except KeyboardInterrupt:
+        print("Operation cancelled by user")
+        sys.exit(0)
+    except Exception:
+        traceback.print_exc()
+        print(
+            "Could not handle the exception. Look through the traceback and open an issue at: https://github.com/scummvm/scummvm-sites/issues"
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
