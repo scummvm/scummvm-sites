@@ -2,6 +2,7 @@ import re
 import os
 import sys
 import argparse
+import traceback
 from src.scripts.db_functions import db_insert, match_fileset
 
 
@@ -217,8 +218,11 @@ def main():
     except KeyboardInterrupt:
         print("Operation cancelled by user")
         sys.exit(0)
-    except Exception as e:
-        print(f"Error: Unexpected error in main: {e}")
+    except Exception:
+        traceback.print_exc()
+        print(
+            "Could not handle the exception. Look through the traceback and open an issue at: https://github.com/scummvm/scummvm-sites/issues"
+        )
         sys.exit(1)
 
 
