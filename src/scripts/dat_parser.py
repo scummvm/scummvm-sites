@@ -200,8 +200,8 @@ def main():
                     else:
                         print(f"Error: Failed to parse file for upload: {filepath}")
                 except Exception as e:
-                    print(f"Error uploading {filepath}: {e}")
-                    continue
+                    print(f"Error uploading {filepath}.")
+                    raise e
 
         if args.match:
             for filepath in args.match:
@@ -212,8 +212,8 @@ def main():
                     else:
                         print(f"Error: Failed to parse file for matching: {filepath}")
                 except Exception as e:
-                    print(f"Error matching {filepath}: {e}")
-                    continue
+                    print(f"Error matching {filepath}:")
+                    raise e
 
     except KeyboardInterrupt:
         print("Operation cancelled by user")

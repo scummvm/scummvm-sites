@@ -580,7 +580,7 @@ def db_insert(data_arr, username=None, skiplog=False):
         conn.commit()
     except Exception as e:
         conn.rollback()
-        print(f"Transaction failed: {e}")
+        raise e
     finally:
         conn.close()
 
@@ -661,7 +661,7 @@ def match_fileset(data_arr, username=None, skiplog=False):
         conn.commit()
     except Exception as e:
         conn.rollback()
-        print(f"Transaction failed: {e}")
+        raise e
     finally:
         conn.close()
 
