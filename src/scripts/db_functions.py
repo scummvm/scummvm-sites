@@ -83,6 +83,7 @@ def insert_fileset(
     ip="",
     username=None,
     skiplog=None,
+    note="",
 ):
     status = "detection" if detection else src
     game = "NULL"
@@ -148,15 +149,14 @@ def insert_fileset(
         log_text = f"Created Fileset:{fileset_last}, {log_text}"
         if src == "user":
             query = """
-                INSERT INTO queue (time, fileset, ip)
-                VALUES (FROM_UNIXTIME(@fileset_time_last), %s, %s)
+                INSERT INTO queue (time, fileset, ip, notes)
+                VALUES (FROM_UNIXTIME(@fileset_time_last), %s, %s, %s)
             """
-            cursor.execute(query, (fileset_id, ip))
+            cursor.execute(query, (fileset_id, ip, note))
             cursor.execute(
                 "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
                 (fileset_id,),
             )
-            cursor.execute(query, (fileset_id, ip))
             log_text = f"Created Fileset:{fileset_last}, from user: IP {ip}."
 
     user = f"cli:{getpass.getuser()}" if username is None else username
@@ -962,7 +962,7 @@ def scan_perform_match(
 
             # Drop the fileset, note down the file differences
             elif status == "full":
-                (_, unmatched_candidate_files, unmatched_scan_files) = (
+                (_, unmatched_candidate_files, unmatched_scan_files, _, _) = (
                     get_unmatched_files(matched_fileset_id, fileset, conn)
                 )
                 fully_matched = (
@@ -1403,13 +1403,27 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
     """
     with conn.cursor() as cursor:
         cursor.execute(
-            "SELECT id, name FROM file WHERE fileset = %s", (candidate_fileset,)
+            "SELECT id, name, size, `size-rd` AS size_rd FROM file WHERE fileset = %s",
+            (candidate_fileset,),
         )
         candidate_file_rows = cursor.fetchall()
         candidate_files = {row["id"]: row["name"] for row in candidate_file_rows}
 
+        candidate_sizes = set()
+        candidate_name_by_size = {}
+        for candidate_file in candidate_file_rows:
+            base_name = os.path.basename(
+                normalised_path(candidate_file["name"])
+            ).lower()
+            size = candidate_file["size"]
+            if candidate_file["size_rd"] != 0:
+                size = candidate_file["size_rd"]
+            candidate_sizes.add((base_name, size))
+            candidate_name_by_size[(base_name, size)] = candidate_file["name"]
+
         dat_checksums = set()
         dat_names_by_checksum = {}
+        dat_sizes_by_name = {}
 
         for file in fileset["rom"]:
             base_name = os.path.basename(normalised_path(file["name"])).lower()
@@ -1417,6 +1431,12 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
                 if key.startswith("md5"):
                     dat_checksums.add((file[key], base_name))
                     dat_names_by_checksum[(file[key], base_name)] = file["name"]
+            file_sizes = []
+            if "size" in file:
+                file_sizes.append((base_name, int(file["size"])))
+            if "size-rd" in file:
+                file_sizes.append((base_name, int(file["size-rd"])))
+            dat_sizes_by_name[file["name"]] = file_sizes
 
         unmatched_candidate_files = []
         matched_dat_pairs = set()
@@ -1444,14 +1464,37 @@ def get_unmatched_files(candidate_fileset, fileset, conn):
             for key in dat_checksums
             if key not in matched_dat_pairs
         }
-        matched_dat_files = {
+        all_matched_dat_files = {
             dat_names_by_checksum[key]
             for key in dat_checksums
             if key in matched_dat_pairs
         }
+
+        partially_matched_dat_files = all_matched_dat_files & unmatched_dat_files
+        matched_dat_files = all_matched_dat_files - partially_matched_dat_files
+
         unmatched_dat_files = list(unmatched_dat_files)
 
-        return (matched_dat_files, unmatched_candidate_files, unmatched_dat_files)
+        mismatched_dat_files = []
+        additional_dat_files = []
+
+        # Mismatched file
+        for unmatched_dat_file in unmatched_dat_files:
+            mismatch = False
+            for file_size in dat_sizes_by_name[unmatched_dat_file]:
+                if file_size in candidate_sizes:
+                    mismatched_dat_files.append(unmatched_dat_file)
+                    mismatch = True
+            if not mismatch:
+                additional_dat_files.append(unmatched_dat_file)
+
+        return (
+            matched_dat_files,
+            unmatched_candidate_files,
+            unmatched_dat_files,
+            mismatched_dat_files,
+            additional_dat_files,
+        )
 
 
 def is_full_detection_checksum_match(candidate_fileset, files, conn):
@@ -1856,7 +1899,7 @@ def set_perform_match(
                     matched_fileset_id, manual_merge_map, set_to_candidate_dict, conn
                 )
             elif status == "partial" or status == "full":
-                (_, unmatched_candidate_files, unmatched_dat_files) = (
+                (_, unmatched_candidate_files, unmatched_dat_files, _, _) = (
                     get_unmatched_files(matched_fileset_id, fileset, conn)
                 )
                 is_match = (
@@ -2473,13 +2516,15 @@ def log_user_match_with_full(
     unmatched_user_files,
     matched_user_files,
     fully_matched,
+    mismatched_user_files,
+    additional_user_files,
     user,
     conn,
 ):
-    category_text = "User fileset mismatch"
+    category_text = "User fileset report"
     if fully_matched:
-        category_text = "User fileset matched"
-    log_text = f"""Candidate Full Fileset:{candidate_id}. Total matched user files = {len(matched_user_files)}. Missing/mismatch Files = {len(unmatched_full_files)}. Unknown Files = {len(unmatched_user_files)}. List of Missing/mismatch files : {", ".join(scan_file for scan_file in unmatched_full_files)}, List of unknown files : {", ".join(scan_file for scan_file in unmatched_user_files)}"""
+        category_text = "User fileset report"
+    log_text = f"""Matched with Full Fileset:{candidate_id}. Total matched user files = {len(matched_user_files)}. Missing Files = {len(unmatched_full_files)} Mismatched Files = {len(mismatched_user_files)}. Extra Files = {len(additional_user_files)}. List of Missing Files: {", ".join(user_file for user_file in unmatched_full_files)}, List of Mismatched Files: {", ".join(user_file for user_file in mismatched_user_files)} List of extra files: {", ".join(user_file for user_file in additional_user_files)}"""
     create_log(category_text, user, log_text, conn)
 
 
@@ -2496,6 +2541,12 @@ def finalize_fileset_insertion(
         if src != "user":
             log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}, author {author}, version {version}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
             create_log(category_text, user, log_text, conn)
+        else:
+            cursor.execute("SELECT MAX(`transaction`) FROM transactions")
+            old_transaction_id = cursor.fetchone()["MAX(`transaction`)"]
+            if old_transaction_id == transaction_id:
+                log_text = f"Completed loading user data. Transaction: {transaction_id}"
+                create_log(category_text, user, log_text, conn)
 
 
 def user_perform_match(
@@ -2507,6 +2558,8 @@ def user_perform_match(
     transaction_id,
     conn,
     ip,
+    mismatched,
+    user_fileset_id=-1,
 ):
     with conn.cursor() as cursor:
         single_candidate_id = candidate_filesets[0]
@@ -2517,16 +2570,39 @@ def user_perform_match(
         if len(candidate_filesets) == 1 and status == "full":
             if status == "full":
                 # Checks how many files match
-                (matched_dat_files, unmatched_full_files, unmatched_user_files) = (
-                    get_unmatched_files(single_candidate_id, fileset, conn)
-                )
+                (
+                    matched_dat_files,
+                    unmatched_full_files,
+                    unmatched_user_files,
+                    mismatched_user_files,
+                    additional_user_files,
+                ) = get_unmatched_files(single_candidate_id, fileset, conn)
+                if len(mismatched_user_files) != 0 and not mismatched:
+                    note = "mismatch"
+                    print(note)
+                    user_fileset_id = create_user_fileset(
+                        fileset,
+                        game_metadata,
+                        src,
+                        transaction_id,
+                        user,
+                        conn,
+                        ip,
+                        note,
+                    )
+                    category_text = "New User Fileset"
+                    log_text = f"New User Fileset:{user_fileset_id} created. Matched with full Fileset:{single_candidate_id} with mismatched files."
+                    create_log(category_text, user, log_text, conn)
+
                 return (
                     "full",
-                    -1,
+                    user_fileset_id,
                     single_candidate_id,
                     matched_dat_files,
                     unmatched_full_files,
                     unmatched_user_files,
+                    mismatched_user_files,
+                    additional_user_files,
                 )
         # Includes cases for
         # - single candidate with detection or partial status
@@ -2545,10 +2621,12 @@ def user_perform_match(
                     user,
                     conn,
                 )
-            return ("multiple", fileset_id, -1, [], [], [])
+            return ("multiple", fileset_id, -1, [], [], [], [], [])
 
 
-def create_user_fileset(fileset, game_metadata, src, transaction_id, user, conn, ip):
+def create_user_fileset(
+    fileset, game_metadata, src, transaction_id, user, conn, ip, note=""
+):
     with conn.cursor() as cursor:
         key = calc_key(fileset)
         try:
@@ -2564,7 +2642,7 @@ def create_user_fileset(fileset, game_metadata, src, transaction_id, user, conn,
             return
 
         (fileset_id, _) = insert_fileset(
-            src, False, key, "", transaction_id, None, conn, ip=ip
+            src, False, key, "", transaction_id, None, conn, ip=ip, note=note
         )
 
         insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn)
@@ -2586,6 +2664,7 @@ def user_integrity_check(data, ip, game_metadata=None):
     src = "user"
     source_status = src
     new_files = []
+    user = ip
 
     for file in data["files"]:
         new_file = {
@@ -2619,13 +2698,6 @@ def user_integrity_check(data, ip, game_metadata=None):
                 transaction_id = 0
             transaction_id += 1
 
-            category_text = f"Uploaded from {src}"
-            log_text = f"Started loading file, State {source_status}. Transaction: {transaction_id}"
-
-            user = f"cli:{getpass.getuser()}"
-
-            create_log(category_text, user, log_text, conn)
-
             # Check if the key already exists in the db
             query = """
                 SELECT id
@@ -2635,16 +2707,42 @@ def user_integrity_check(data, ip, game_metadata=None):
             """
             cursor.execute(query, (key,))
             existing_entry = cursor.fetchone()
+            mismatched = False
+            existing_fileset_id = -1
             if existing_entry is not None:
                 match_type = "no_candidate"
                 existing_fileset_id = existing_entry["id"]
-                add_usercount(existing_fileset_id, ip, conn)
-                conn.commit()
-                return (match_type, existing_fileset_id, [], [], [])
+                query = """
+                    SELECT id
+                    FROM queue
+                    WHERE fileset = %s
+                    AND notes = 'mismatch'
+                """
+                cursor.execute(query, (existing_fileset_id,))
+                result = cursor.fetchall()
+                if not result:
+                    add_usercount(existing_fileset_id, ip, conn)
+                    finalize_fileset_insertion(
+                        conn, transaction_id, src, None, user, 0, source_status, user
+                    )
+                    conn.commit()
+                    return (match_type, existing_fileset_id, [], [], [], [], [])
+                else:
+                    mismatched = True
 
-            candidate_filesets = filter_candidate_filesets(
+            all_candidate_filesets = filter_candidate_filesets(
                 data["rom"], transaction_id, conn
             )
+            candidate_filesets = []
+            # Filter by key
+            query = """
+                SELECT * FROM fileset WHERE id = %s AND `KEY` != %s
+            """
+            for candidate_fileset in all_candidate_filesets:
+                cursor.execute(query, (candidate_fileset, key))
+                result = cursor.fetchall()
+                if result:
+                    candidate_filesets.append(candidate_fileset)
 
             if len(candidate_filesets) == 0:
                 (user_fileset_id, _) = insert_new_fileset(
@@ -2655,26 +2753,21 @@ def user_integrity_check(data, ip, game_metadata=None):
                     key,
                     None,
                     transaction_id,
-                    log_text,
+                    "",
                     user,
                     ip=ip,
                 )
                 match_type = "no_candidate"
                 category_text = "New User Fileset"
-                engineid = (
-                    game_metadata["engineid"] if "engineid" in game_metadata else ""
+                log_text = (
+                    f"New User Fileset:{user_fileset_id} with no matching candidates."
                 )
-                gameid = game_metadata["gameid"] if "gameid" in game_metadata else ""
-                platform = (
-                    game_metadata["platform"] if "platform" in game_metadata else ""
-                )
-                language = (
-                    game_metadata["language"] if "language" in game_metadata else ""
-                )
-                log_text = f"New User Fileset:{user_fileset_id} with no matching candidates. Engine: {engineid} Name: {gameid}-{platform}-{language}"
                 create_log(category_text, user, log_text, conn)
+                finalize_fileset_insertion(
+                    conn, transaction_id, src, None, user, 0, source_status, user
+                )
                 conn.commit()
-                return (match_type, user_fileset_id, [], [], [])
+                return (match_type, user_fileset_id, [], [], [], [], [])
 
             else:
                 (
@@ -2684,6 +2777,8 @@ def user_integrity_check(data, ip, game_metadata=None):
                     matched_user_files,
                     unmatched_full_files,
                     unmatched_user_files,
+                    mismatched_user_files,
+                    additional_user_files,
                 ) = user_perform_match(
                     data,
                     src,
@@ -2693,6 +2788,8 @@ def user_integrity_check(data, ip, game_metadata=None):
                     transaction_id,
                     conn,
                     ip,
+                    mismatched,
+                    existing_fileset_id,
                 )
                 if match_type == "multiple":
                     # If multiple candidates matched, we will do manual review and ask user for more details.
@@ -2704,6 +2801,9 @@ def user_integrity_check(data, ip, game_metadata=None):
                         log_text,
                         conn,
                     )
+                    finalize_fileset_insertion(
+                        conn, transaction_id, src, None, user, 0, source_status, user
+                    )
                     conn.commit()
                     return (
                         match_type,
@@ -2711,6 +2811,8 @@ def user_integrity_check(data, ip, game_metadata=None):
                         matched_user_files,
                         unmatched_full_files,
                         unmatched_user_files,
+                        mismatched_user_files,
+                        additional_user_files,
                     )
                 if match_type == "full":
                     fully_matched = (
@@ -2725,28 +2827,29 @@ def user_integrity_check(data, ip, game_metadata=None):
                         unmatched_user_files,
                         matched_user_files,
                         fully_matched,
+                        mismatched_user_files,
+                        additional_user_files,
                         user,
                         conn,
+                    )
+
+                    finalize_fileset_insertion(
+                        conn, transaction_id, src, None, user, 0, source_status, user
                     )
                     conn.commit()
                     return (
                         match_type,
-                        matched_id,
+                        user_fileset_id,
                         matched_user_files,
                         unmatched_full_files,
                         unmatched_user_files,
+                        mismatched_user_files,
+                        additional_user_files,
                     )
-
-            finalize_fileset_insertion(
-                conn, transaction_id, src, None, user, 0, source_status, user
-            )
     except Exception as e:
         conn.rollback()
         print(f"Error processing user data: {e}")
     finally:
-        category_text = f"Uploaded from {src}"
-        log_text = f"Completed loading file, State {source_status}. Transaction: {transaction_id}"
-        create_log(category_text, user, log_text, conn)
         conn.close()
 
 
@@ -2800,7 +2903,6 @@ def add_usercount(fileset, ip, conn):
         """
         cursor.execute(query, (fileset, ip))
         duplicate = True if cursor.fetchone()["count"] != 0 else False
-        print("dupe ", duplicate)
         if not duplicate:
             cursor.execute(
                 "UPDATE fileset SET user_count = COALESCE(user_count, 0) + 1 WHERE id = %s",
