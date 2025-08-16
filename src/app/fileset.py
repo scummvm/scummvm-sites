@@ -1327,6 +1327,8 @@ def validate():
             matched_user_files,
             unmatched_full_files,
             unmatched_user_files,
+            mismatched_user_files,
+            additional_user_files,
         ) = user_integrity_check(json_object, ip, game_metadata)
     except Exception as e:
         json_response["error"] = -1
@@ -1355,16 +1357,20 @@ def validate():
         return jsonify(json_response)
 
     # If match was with full
+    json_response["fileset"] = str(fileset_id)
     for file in matched_user_files:
         json_response["files"].append(
             {"status": "ok", "fileset_id": fileset_id, "name": file}
         )
     for file in unmatched_full_files:
         json_response["files"].append(
-            {"status": "missing/unmatched", "fileset_id": fileset_id, "name": file}
+            {"status": "missing", "fileset_id": fileset_id, "name": file}
         )
-
-    for file in unmatched_user_files:
+    for file in mismatched_user_files:
+        json_response["files"].append(
+            {"status": "checksum_mismatch", "fileset_id": fileset_id, "name": file}
+        )
+    for file in additional_user_files:
         json_response["files"].append(
             {"status": "unknown_file", "fileset_id": fileset_id, "name": file}
         )
