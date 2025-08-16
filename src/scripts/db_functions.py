@@ -40,6 +40,12 @@ def get_checksum_props(checkcode, checksum):
             checktype += "-" + prefix
 
         checksum = checksum.split(":")[1]
+    if checktype == "md5-full":
+        checktype = "md5"
+    if checktype == "md5-r-full":
+        checktype = "md5-r"
+    if checktype == "md5-d-full":
+        checktype = "md5-d"
     return checksize, checktype, checksum
 
 
@@ -182,7 +188,7 @@ def normalised_path(name):
     return "/".join(path_list)
 
 
-def insert_file(file, detection, src, conn, fileset_id=None):
+def insert_file(file, detection, src, conn, fileset_id=None, detection_type=""):
     # Find full md5, or else use first checksum value
     checksum = ""
     checksize = 5000
@@ -204,9 +210,14 @@ def insert_file(file, detection, src, conn, fileset_id=None):
     if not detection:
         checktype = "None"
         detection = 0
-    detection_type = (
-        f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
-    )
+
+    if detection_type != "":
+        checksum = file[detection_type]
+        checksize, checktype, checksum = get_checksum_props(detection_type, checksum)
+    else:
+        detection_type = (
+            f"{checktype}-{checksize}" if checktype != "None" else f"{checktype}"
+        )
 
     name = normalised_path(file["name"])
 

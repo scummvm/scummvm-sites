@@ -710,9 +710,9 @@ def confirm_merge(id):
             )
             source_fileset = cursor.fetchone()
 
-            # Select all filesw
+            # Select all files
             file_query = """
-                SELECT f.name, f.size, f.`size-r`, f.`size-rd`, 
+                SELECT f.name, f.size, f.`size-r`, f.`size-rd`, f.detection_type,
                 fc.checksum, fc.checksize, fc.checktype, f.detection
                 FROM file f
                 LEFT JOIN filechecksum fc ON fc.file = f.id
@@ -762,6 +762,9 @@ def confirm_merge(id):
             matched_files = get_file_status(
                 target_id, source_fileset_with_files, connection
             )
+            source_to_target_matched_map = {
+                s.lower(): t.lower() for (t, s) in matched_files
+            }
 
             def highlight_differences(source, target):
                 diff = difflib.ndiff(source, target)
@@ -846,6 +849,7 @@ def confirm_merge(id):
                     size = file["size"]
                     size_r = file["size-r"]
                     size_rd = file["size-rd"]
+                    detection_type = file["detection_type"]
                     if file["checksum"] is None:
                         checksum = ""
                         checksize = ""
@@ -864,6 +868,9 @@ def confirm_merge(id):
                     source_files_map[file["name"].lower()]["size"] = size
                     source_files_map[file["name"].lower()]["size-r"] = size_r
                     source_files_map[file["name"].lower()]["size-rd"] = size_rd
+                    source_files_map[file["name"].lower()]["detection_type"] = (
+                        detection_type
+                    )
 
             if target_files:
                 for file in target_files:
@@ -877,10 +884,17 @@ def confirm_merge(id):
                     target_files_map[file["name"].lower()]["size"] = file["size"]
                     target_files_map[file["name"].lower()]["size-r"] = file["size-r"]
                     target_files_map[file["name"].lower()]["size-rd"] = file["size-rd"]
+                    target_files_map[file["name"].lower()]["detection_type"] = file[
+                        "detection_type"
+                    ]
                     if file["detection"] == 1:
                         detection_files_set.add(file["name"].lower())
 
             html += """<tr><th>Files</th><td colspan='2'><label><input type="checkbox" id="toggle-common-files"> Show Only Common Files</label><label style='margin-left: 50px;' ><input type="checkbox" id="toggle-all-fields"> Show All Fields</label></td></tr>"""
+
+            for candidate_file_name, dat_file_name in matched_files:
+                if candidate_file_name in detection_files_set:
+                    detection_files_set.add(dat_file_name)
 
             all_source_unmatched_filenames = sorted(set(source_files_map.keys()))
             all_target_unmatched_filenames = sorted(set(target_files_map.keys()))
@@ -934,6 +948,8 @@ def confirm_merge(id):
                     </tr>"""
 
                     for key in keys:
+                        if key == "detection_type":
+                            continue
                         source_value = str(source_dict.get(key, ""))
                         target_value = str(target_dict.get(key, ""))
 
@@ -952,12 +968,27 @@ def confirm_merge(id):
                             ("source", source_checksum),
                             ("target", target_checksum),
                         ]:
+                            detection_type = ""
                             is_detection = "0"
                             if (
                                 side == "target"
                                 and target_filename.lower() in detection_files_set
                             ):
                                 is_detection = "1"
+                                detection_type = target_files_map[
+                                    target_filename.lower()
+                                ].get("detection_type", "")
+                            if (
+                                side == "source"
+                                and source_filename.lower() in detection_files_set
+                            ):
+                                is_detection = "1"
+                                fname = source_to_target_matched_map[
+                                    source_filename.lower()
+                                ]
+                                detection_type = target_files_map[fname].get(
+                                    "detection_type", ""
+                                )
 
                             vals[side] = html_lib.escape(
                                 json.dumps(
@@ -969,6 +1000,7 @@ def confirm_merge(id):
                                         "prop": key,
                                         "value": checksum,
                                         "detection": is_detection,
+                                        "detection_type": detection_type,
                                     }
                                 )
                             )
@@ -1051,16 +1083,18 @@ def confirm_merge(id):
 
 @app.route("/fileset/<int:id>/merge/execute", methods=["POST"])
 def execute_merge(id):
-    data = request.get_json()
-    source_id = data.get("source_id")
-    target_id = data.get("target_id")
-    options = data.get("options")
-    matched_dict = json.loads(data.get("matched_files"))
-
     connection = db_connect()
+    with connection.cursor() as cursor:
+        data = request.get_json()
+        source_id = data.get("source_id")
+        target_id = data.get("target_id")
+        options = data.get("options")
+        matched_dict = json.loads(data.get("matched_files"))
 
-    try:
-        with connection.cursor() as cursor:
+        cursor.execute("SELECT status FROM fileset WHERE id = %s", (source_id))
+        source_status = cursor.fetchone()["status"]
+
+        try:
             cursor.execute("SELECT * FROM fileset WHERE id = %s", (source_id,))
             source_fileset = cursor.fetchone()
 
@@ -1087,6 +1121,7 @@ def execute_merge(id):
 
             for file in options:
                 filename = file["filename"].lower()
+                detection_type = file.get("detection_type", "")
                 if filename in matched_dict:
                     filename = matched_dict[filename]
                 file_details_map[filename]["name"] = filename
@@ -1096,7 +1131,7 @@ def execute_merge(id):
                     and file_details_map[filename]["detection"] != "1"
                 ):
                     file_details_map[filename]["detection"] = file["detection"]
-                    file_details_map[filename]["detection_type"] = file["prop"]
+                    file_details_map[filename]["detection_type"] = detection_type
                 if file["prop"].startswith("md5"):
                     file_details_map[filename][file["prop"]] = file["value"]
                 if file["prop"].startswith("size"):
@@ -1104,14 +1139,23 @@ def execute_merge(id):
 
             query = "DELETE FROM file WHERE fileset = %s"
             cursor.execute(query, (target_id,))
-            query = "DELETE FROM fileset WHERE id = %s"
-            cursor.execute(query, (source_id,))
+
+            if source_status != "user":
+                query = "DELETE FROM fileset WHERE id = %s"
+                cursor.execute(query, (source_id,))
 
             for filename, details in file_details_map.items():
                 detection = (
                     details["detection"] == "1" if "detection" in details else False
                 )
-                insert_file(details, detection, "", connection, target_id)
+                insert_file(
+                    details,
+                    detection,
+                    "",
+                    connection,
+                    target_id,
+                    details["detection_type"],
+                )
                 cursor.execute("SELECT @file_last AS file_id")
                 file_id = cursor.fetchone()["file_id"]
                 for key in details:
@@ -1125,15 +1169,16 @@ def execute_merge(id):
                     ]:
                         insert_filechecksum(details, key, file_id, connection)
 
-            cursor.execute(
-                """
-            INSERT INTO history (`timestamp`, fileset, oldfileset)
-            VALUES (NOW(), %s, %s)
-            """,
-                (target_id, source_id),
-            )
+            if source_status != "user":
+                cursor.execute(
+                    """
+                INSERT INTO history (`timestamp`, fileset, oldfileset)
+                VALUES (NOW(), %s, %s)
+                """,
+                    (target_id, source_id),
+                )
+                delete_original_fileset(source_id, connection)
 
-            delete_original_fileset(source_id, connection)
             category_text = "Manually Merged"
             user = f"cli:{getpass.getuser()}"
             log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id} by user: {user}."
@@ -1149,8 +1194,8 @@ def execute_merge(id):
 
             return redirect(url_for("fileset", id=target_id))
 
-    finally:
-        connection.close()
+        finally:
+            connection.close()
 
 
 @app.route("/fileset/<int:id>/mark_full", methods=["POST"])
