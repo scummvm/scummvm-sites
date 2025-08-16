@@ -20,9 +20,12 @@ def get_join_columns(table1, table2, mapping):
 
 
 def build_search_condition(value, column):
+    def sql_escape(s):
+        return s.replace("'", "''")
+
     phrases = re.findall(r'"([^"]+)"', value)
     if phrases:
-        conditions = [f"{column} REGEXP '{re.escape(p)}'" for p in phrases]
+        conditions = [f"{column} REGEXP '{sql_escape(p)}'" for p in phrases]
         return " AND ".join(conditions)
 
     if "+" in value:
@@ -32,15 +35,17 @@ def build_search_condition(value, column):
             or_terms = term.strip().split()
             if len(or_terms) > 1:
                 or_cond = " OR ".join(
-                    [f"{column} REGEXP '{re.escape(t)}'" for t in or_terms if t]
+                    [f"{column} REGEXP '{sql_escape(t)}'" for t in or_terms if t]
                 )
                 and_conditions.append(f"({or_cond})")
             else:
-                and_conditions.append(f"{column} REGEXP '{re.escape(term.strip())}'")
+                and_conditions.append(f"{column} REGEXP '{sql_escape(term.strip())}'")
         return " AND ".join(and_conditions)
     else:
         or_terms = value.split()
-        return " OR ".join([f"{column} REGEXP '{re.escape(t)}'" for t in or_terms if t])
+        return " OR ".join(
+            [f"{column} REGEXP '{sql_escape(t)}'" for t in or_terms if t]
+        )
 
 
 def create_page(
