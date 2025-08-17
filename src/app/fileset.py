@@ -1507,16 +1507,11 @@ def fileset_search():
 def delete_files(id):
     file_ids = request.form.getlist("file_ids")
     if file_ids:
-        # Convert the list to comma-separated string for SQL
-        ids_to_delete = ",".join(file_ids)
         connection = db_connect()
         with connection.cursor() as cursor:
             # SQL statements to delete related records
-            cursor.execute(
-                "DELETE FROM filechecksum WHERE file IN (%s)", (ids_to_delete,)
-            )
-            cursor.execute("DELETE FROM file WHERE id IN (%s)", (ids_to_delete,))
-
+            placeholders = ",".join(["%s"] * len(file_ids))
+            cursor.execute(f"DELETE FROM file WHERE id IN ({placeholders})", file_ids)
             # Commit the deletions
             connection.commit()
     return redirect(url_for("fileset", id=id))
