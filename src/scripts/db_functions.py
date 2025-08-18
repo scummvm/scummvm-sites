@@ -703,7 +703,6 @@ def scan_process(
     match_with_full_fileset = 0
     mismatch_with_full_fileset = 0
     dropped_early_no_candidate = 0
-    manual_merged_with_detection = 0
     filesets_with_missing_files = 0
     duplicate_or_existing_entry = 0
 
@@ -733,6 +732,11 @@ def scan_process(
         )
         if existing:
             duplicate_or_existing_entry += 1
+            category_text = "Skip fileset"
+            relative_path = fileset["data_path"]
+            log_text = f"Existing or duplicate fileset. data_path: {relative_path} Existing Fileset:{fileset_id}"
+            create_log(category_text, user, log_text, conn)
+            console_log(f"Existing or duplicate fileset. data_path: {relative_path}")
             continue
 
         id_to_fileset_mapping[fileset_id] = fileset
@@ -754,11 +758,10 @@ def scan_process(
         )
         if len(candidate_filesets) == 0:
             category_text = "Drop fileset - No Candidates"
-            fileset_name = fileset["name"] if "name" in fileset else ""
-            fileset_description = (
-                fileset["description"] if "description" in fileset else ""
+            relative_path = fileset["data_path"]
+            log_text = (
+                f"Drop fileset as no matching candidates. data_path: {relative_path}"
             )
-            log_text = f"Drop fileset as no matching candidates. Name: {fileset_name} Description: {fileset_description}."
             create_log(category_text, user, log_text, conn)
             dropped_early_no_candidate += 1
             delete_original_fileset(fileset_id, conn)
@@ -769,7 +772,6 @@ def scan_process(
             manual_merged_filesets,
             match_with_full_fileset,
             mismatch_with_full_fileset,
-            manual_merged_with_detection,
             filesets_with_missing_files,
         ) = scan_perform_match(
             fileset,
@@ -782,7 +784,6 @@ def scan_process(
             manual_merged_filesets,
             match_with_full_fileset,
             mismatch_with_full_fileset,
-            manual_merged_with_detection,
             filesets_with_missing_files,
             conn,
             skiplog,
@@ -803,7 +804,7 @@ def scan_process(
         log_text = f"Completed loading DAT file, filename {filepath}, size {os.path.getsize(filepath)}. State {source_status}. Number of filesets: {fileset_insertion_count}. Transaction: {transaction_id}"
         create_log(category_text, user, log_text, conn)
         category_text = "Upload information"
-        log_text = f"Number of filesets: {fileset_insertion_count}. Duplicate or existing filesets: {duplicate_or_existing_entry}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets requiring manual merge (matched with detection): {manual_merged_with_detection}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
+        log_text = f"Number of filesets: {fileset_insertion_count}. Duplicate or existing filesets: {duplicate_or_existing_entry}. Filesets automatically merged: {automatic_merged_filesets}. Filesets requiring manual merge (multiple candidates): {manual_merged_filesets}. Filesets dropped, no candidate: {dropped_early_no_candidate}. Filesets matched with existing Full fileset: {match_with_full_fileset}. Filesets with mismatched files with Full fileset: {mismatch_with_full_fileset}. Filesets missing files compared to partial fileset candidate: {filesets_with_missing_files}."
         console_log(log_text)
         create_log(category_text, user, log_text, conn)
 
@@ -889,7 +890,6 @@ def scan_perform_match(
     manual_merged_filesets,
     match_with_full_fileset,
     mismatch_with_full_fileset,
-    manual_merged_with_detection,
     filesets_with_missing_files,
     conn,
     skiplog,
@@ -904,8 +904,7 @@ def scan_perform_match(
         Put them for manual merge.
     """
     with conn.cursor() as cursor:
-        fileset_name = fileset["name"] if "name" in fileset else ""
-        fileset_description = fileset["description"] if "description" in fileset else ""
+        relative_path = fileset["data_path"]
         if len(candidate_filesets) == 1:
             matched_fileset_id = candidate_filesets[0]
             cursor.execute(
@@ -917,7 +916,9 @@ def scan_perform_match(
             if status == "partial":
                 # Partial filesets contain all the files, so does the scanned filesets, so this case should not ideally happen.
                 if total_files(matched_fileset_id, conn) > total_fileset_files(fileset):
-                    log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+                    log_text = (
+                        f"Created Fileset:{fileset_id}. data_path: {relative_path}"
+                    )
                     category_text = "Uploaded from scan."
                     create_log(
                         category_text,
@@ -991,13 +992,14 @@ def scan_perform_match(
                     unmatched_candidate_files,
                     unmatched_scan_files,
                     fully_matched,
+                    relative_path,
                     user,
                     conn,
                 )
                 delete_original_fileset(fileset_id, conn)
 
         elif len(candidate_filesets) > 1:
-            log_text = f"Created Fileset:{fileset_id}. Name: {fileset_name} Description: {fileset_description}"
+            log_text = f"Created Fileset:{fileset_id}. data_path: {relative_path}"
             category_text = "Uploaded from scan."
             create_log(category_text, user, log_text, conn)
             console_log(log_text)
@@ -1019,7 +1021,6 @@ def scan_perform_match(
         manual_merged_filesets,
         match_with_full_fileset,
         mismatch_with_full_fileset,
-        manual_merged_with_detection,
         filesets_with_missing_files,
     )
 
@@ -2506,13 +2507,14 @@ def log_match_with_full(
     unmatched_candidate_files,
     unmatched_scan_files,
     fully_matched,
+    relative_path,
     user,
     conn,
 ):
     category_text = "Mismatch with Full set"
     if fully_matched:
         category_text = "Existing as Full set."
-    log_text = f"""Files mismatched with Full Fileset:{candidate_id}. Unmatched Files in scan fileset = {len(unmatched_scan_files)}. Unmatched Files in full fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {", ".join(scan_file for scan_file in unmatched_scan_files)}, List of unmatched files full fileset : {", ".join(scan_file for scan_file in unmatched_candidate_files)}"""
+    log_text = f"""Files mismatched with Full Fileset:{candidate_id}. data_path: {relative_path}.Unmatched Files in scan fileset = {len(unmatched_scan_files)}. Unmatched Files in full fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {", ".join(scan_file for scan_file in unmatched_scan_files)}, List of unmatched files full fileset : {", ".join(scan_file for scan_file in unmatched_candidate_files)}"""
     if fully_matched:
         log_text = (
             f"Fileset matched completely with Full Fileset:{candidate_id}. Dropping."

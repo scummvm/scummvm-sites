@@ -688,7 +688,7 @@ def compute_hash_of_dirs(
 
                 hash_of_dir[relative_path] = file_checksum(
                     file_path, alg, size, file_info
-                ) + (filtered_file_map[file_path],)
+                ) + (filtered_file_map[file_path], os.path.basename(directory))
 
             res.append(hash_of_dir)
         except Exception:
@@ -828,13 +828,18 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
         # Game files
         for hash_of_dir in hash_of_dirs:
             file.write("game (\n")
+            path_added = False
             for filename, (
                 hashes,
                 size,
                 size_r,
                 size_rd,
                 timestamp,
+                relative_path,
             ) in hash_of_dir.items():
+                if not path_added:
+                    file.write(f"\tdata_path {relative_path}\n")
+                    path_added = True
                 filename = encode_path_components(filename)
                 data = f"""name "{filename}" size {size} size-r {size_r} size-rd {size_rd} modification-time {timestamp}"""
                 for key, value in hashes:
