@@ -171,7 +171,7 @@ def fileset():
                     """SELECT id, game, status, src, `key`, timestamp, set_dat_metadata FROM fileset WHERE id = %s""",
                     (id,),
                 )
-            elif status == "user":
+            elif status == "user" or status == "ReadyForReview":
                 cursor.execute(
                     """SELECT id, game, status, src, `key`, timestamp, user_count FROM fileset WHERE id = %s""",
                     (id,),
@@ -207,7 +207,7 @@ def fileset():
                 cursor.execute(query, (id,))
                 result = {**result, **cursor.fetchone()}
             else:
-                if status == "user":
+                if status == "user" or status == "ReadyForReview":
                     html += "<h4>Add additional metadata</h4>"
 
                     cursor.execute(
@@ -323,14 +323,18 @@ def fileset():
             html += "<tr>\n"
             for column, value in result.items():
                 if column != "id" and column != "game":
-                    if not result["game"] and status == "user":
+                    if not result["game"] and (
+                        status == "user" or status == "ReadyForReview"
+                    ):
                         html += f"<td>{value}</td>"
                     else:
                         html += f"""<td><input style='all: unset;' type="text" name="{column}" value="{value if value is not None else ""}" /></td>"""
             html += "</tr>\n"
 
             html += "</table>\n"
-            if not (not result["game"] and status == "user"):
+            if not (
+                not result["game"] and (status == "user" or status == "ReadyForReview")
+            ):
                 html += "<button type='submit' name='action' value='update_metadata'>Update metadata</button>"
             html += "</form>"
 
@@ -1510,7 +1514,7 @@ def execute_merge(id):
             query = "DELETE FROM file WHERE fileset = %s"
             cursor.execute(query, (target_id,))
 
-            if source_status != "user":
+            if source_status != "user" and source_status != "ReadyForReview":
                 query = "DELETE FROM fileset WHERE id = %s"
                 cursor.execute(query, (source_id,))
 
@@ -1539,7 +1543,7 @@ def execute_merge(id):
                     ]:
                         insert_filechecksum(details, key, file_id, connection)
 
-            if source_status != "user":
+            if source_status != "user" and source_status != "ReadyForReview":
                 cursor.execute(
                     """
                 INSERT INTO history (`timestamp`, fileset, oldfileset)
