@@ -326,14 +326,17 @@ def fileset():
                     if not result["game"] and status == "user":
                         html += f"<td>{value}</td>"
                     else:
-                        html += f"""<td><input class='track-update' style='all: unset;' type="text" name="{column}" value="{value if value is not None else ""}" /></td>"""
+                        html += f"""<td><input style='all: unset;' type="text" name="{column}" value="{value if value is not None else ""}" /></td>"""
             html += "</tr>\n"
 
             html += "</table>\n"
-            html += "<div id='updateNotice' style='display:none; color:red;'>Updates pending...</div>"
             if not (not result["game"] and status == "user"):
                 html += "<button type='submit' name='action' value='update_metadata'>Update metadata</button>"
             html += "</form>"
+
+            # -------------------------------------------------------------------------------------------------
+            #                                       Files
+            # -------------------------------------------------------------------------------------------------
 
             # Files in the fileset
             html += "<h3>Files in the fileset</h3>"
@@ -349,9 +352,7 @@ def fileset():
                 html += "<input type='submit' value='Hide extra checksums' />"
             html += "</form>"
 
-            html += (
-                f"""<form method="POST" action="{url_for("delete_files", id=id)}">"""
-            )
+            html += f"""<form id="file_action_form" method="POST" action="{url_for("files_action", id=id)}">"""
             # Table
             html += "<table>\n"
 
@@ -414,7 +415,7 @@ def fileset():
             # Generate table header
             html += "<tr>\n"
             html += "<th/>"  # Numbering column
-            html += "<th>Select</th>"  # Checkbox column
+            html += "<th>delete</th>"  # Checkbox column
             sortable_columns = share_columns + list(temp_set)
 
             for column in sortable_columns:
@@ -436,21 +437,25 @@ def fileset():
                 for column in all_columns:
                     if column != "id":
                         value = row.get(column, "")
+                        input_name = f"files[{row['id']}][{column}]"
                         if (
                             column == row.get("detection_type")
                             and row.get("detection") == 1
                         ):
-                            html += (
-                                f"<td style='background-color: yellow;'>{value}</td>\n"
-                            )
+                            html += f"""<td><input style='all: unset; background-color: yellow;' type="text" name="{input_name}" value="{value if value is not None else ""}" /></td>\n"""
                         else:
-                            html += f"<td>{value}</td>\n"
+                            html += f"""<td><input style='all: unset;' type="text" name="{input_name}" value="{value if value is not None else ""}" /></td>\n"""
                 html += "</tr>\n"
                 counter += 1
 
             html += "</table>\n"
-            html += "<input type='submit' value='Delete Selected Files' />"
+            html += """<input type="submit" name="action" value="Update Files">"""
+            html += """<input style="margin-left: 10px;" type="submit" name="action" value="Delete Selected Files">"""
             html += "</form>\n"
+
+            # -------------------------------------------------------------------------------------------------
+            #                                       developer actions
+            # -------------------------------------------------------------------------------------------------
 
             # Generate the HTML for the developer actions
             html += "<h3>Developer Actions</h3>"
@@ -463,6 +468,10 @@ def fileset():
                 )
                 connection.commit()
                 html += "<p id='delete-confirm'>Fileset marked for deletion</p>"
+
+            # -------------------------------------------------------------------------------------------------
+            #                                       logs
+            # -------------------------------------------------------------------------------------------------
 
             # Generate the HTML for the fileset history
             cursor.execute(
@@ -536,6 +545,10 @@ def fileset():
 
             html += "</table>\n"
 
+            # -------------------------------------------------------------------------------------------------
+            #                                       manual merge
+            # -------------------------------------------------------------------------------------------------
+
             # Manual merge final candidates
             query = """
                 SELECT
@@ -578,6 +591,119 @@ def fileset():
             return render_template_string(html)
     finally:
         connection.close()
+
+
+@app.route("/files_action/<int:id>", methods=["POST"])
+def files_action(id):
+    action = request.form.get("action")
+    if action == "Delete Selected Files":
+        file_ids = request.form.getlist("file_ids")
+        if file_ids:
+            connection = db_connect()
+            with connection.cursor() as cursor:
+                placeholders = ",".join(["%s"] * len(file_ids))
+                cursor.execute(
+                    f"DELETE FROM file WHERE id IN ({placeholders})", file_ids
+                )
+                connection.commit()
+
+        user = f"cli:{getpass.getuser()}"
+        log_text = (
+            f"{len(file_ids)} file(s) of Fileset:{id} deleted by moderator: {user}."
+        )
+        create_log("Files Deleted", user, log_text, connection)
+        connection.commit()
+
+    elif action == "Update Files":
+        connection = db_connect()
+        with connection.cursor() as cursor:
+            # Mapping from file id to a dictionary with field: value of any changes
+            changes_map = defaultdict(dict)
+            for k, v in request.form.items():
+                # e.g files[18704][detection]  : 1
+                if k.startswith("files["):
+                    file_id = k.split("[")[1].split("]")[0]
+                    column = k.split("[")[2].split("]")[0]
+                    changes_map[file_id][column] = v
+
+            allowed_columns = [
+                "name",
+                "size",
+                "size-r",
+                "size-rd",
+                "checksum",
+                "detection",
+                "detection_type",
+                "timestampmodification-time",
+                "language",
+                "md5-0",
+                "md5-1M",
+                "md5-1048576",
+                "md5-5000",
+                "md5-t-5000",
+                "md5-r-0",
+                "md5-r-1M",
+                "md5-r-1048576",
+                "md5-r-5000",
+                "md5-rt-5000",
+                "md5-d-0",
+                "md5-d-1M",
+                "md5-d-1048576",
+                "md5-d-5000",
+                "md5-dt-5000",
+            ]
+
+            table_map = {
+                "name": "file",
+                "size": "file",
+                "size-r": "file",
+                "size-rd": "file",
+                "checksum": "file",
+                "detection": "file",
+                "detection_type": "file",
+                "timestamp": "file",
+                "modification-time": "file",
+                "language": "file",
+                "md5-0": "filechecksum",
+                "md5-1M": "filechecksum",
+                "md5-1048576": "filechecksum",
+                "md5-5000": "filechecksum",
+                "md5-t-5000": "filechecksum",
+                "md5-r-0": "filechecksum",
+                "md5-r-1M": "filechecksum",
+                "md5-r-1048576": "filechecksum",
+                "md5-r-5000": "filechecksum",
+                "md5-rt-5000": "filechecksum",
+                "md5-d-0": "filechecksum",
+                "md5-d-1M": "filechecksum",
+                "md5-d-1048576": "filechecksum",
+                "md5-d-5000": "filechecksum",
+                "md5-dt-5000": "filechecksum",
+            }
+            for file, changes in changes_map.items():
+                updates_by_table = {"file": [], "filechecksum": []}
+                values_by_table = {"file": [], "filechecksum": []}
+                for col in allowed_columns:
+                    if col in changes:
+                        table = table_map[col]
+                        updates_by_table[table].append(f"`{col}` = %s")
+                        values_by_table[table].append(changes[col])
+
+                if updates_by_table["file"]:
+                    query = f"UPDATE file SET {', '.join(updates_by_table['file'])} WHERE id = %s"
+                    values = values_by_table["file"] + [file]
+                    cursor.execute(query, values)
+
+                if updates_by_table["filechecksum"]:
+                    query = f"UPDATE filechecksum SET {', '.join(updates_by_table['filechecksum'])} WHERE file = %s"
+                    values = values_by_table["filechecksum"] + [file]
+                    cursor.execute(query, values)
+                print(f"File:{file} for Fileset:{id} updated successfully.")
+            user = f"cli:{getpass.getuser()}"
+            log_text = f"{len(changes_map)} file(s) of Fileset:{id} updated by moderator: {user}."
+            create_log("Files Updated", user, log_text, connection)
+            connection.commit()
+    return redirect(url_for("fileset", id=id))
 
 
 @app.route("/fileset/<int:id>/update", methods=["POST"])
@@ -648,6 +774,9 @@ def update_fileset(id):
                     query = f"UPDATE engine SET {', '.join(updates_by_table['engine'])} WHERE id = %s"
                     values = values_by_table["engine"] + [engine_id]
                     cursor.execute(query, values)
+                user = f"cli:{getpass.getuser()}"
+                log_text = f"Fileset:{id} metadata updated by moderator: {user}."
+                create_log("Metadata Updated", user, log_text, connection)
                 print(f"Fileset:{id} updated successfully.")
                 connection.commit()
             elif request.form.get("action") == "add_metadata":
@@ -676,6 +805,11 @@ def update_fileset(id):
                 cursor.execute(
                     "UPDATE fileset SET game = %s WHERE id = %s", (game_pk_id, id)
                 )
+                user = f"cli:{getpass.getuser()}"
+                log_text = (
+                    f"Fileset:{id} additional metadata added by moderator: {user}."
+                )
+                create_log("Metadata Added", user, log_text, connection)
                 print(f"Fileset:{id} added additional metadata.")
                 connection.commit()
     finally:
@@ -1417,8 +1551,8 @@ def execute_merge(id):
 
             category_text = "Manually Merged"
             user = f"cli:{getpass.getuser()}"
-            log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id} by user: {user}."
-            create_log(category_text, "Moderator", log_text, connection)
+            log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id} by moderator: {user}."
+            create_log(category_text, user, log_text, connection)
 
             query = """
                 DELETE FROM possible_merges
@@ -1737,20 +1871,6 @@ def fileset_search():
             mapping,
         )
     )
-
-
-@app.route("/delete_files/<int:id>", methods=["POST"])
-def delete_files(id):
-    file_ids = request.form.getlist("file_ids")
-    if file_ids:
-        connection = db_connect()
-        with connection.cursor() as cursor:
-            # SQL statements to delete related records
-            placeholders = ",".join(["%s"] * len(file_ids))
-            cursor.execute(f"DELETE FROM file WHERE id IN ({placeholders})", file_ids)
-            # Commit the deletions
-            connection.commit()
-    return redirect(url_for("fileset", id=id))
 
 
 if __name__ == "__main__":

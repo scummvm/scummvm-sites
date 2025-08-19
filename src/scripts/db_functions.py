@@ -2807,7 +2807,10 @@ def user_integrity_check(data, ip, game_metadata=None):
                 if match_type == "multiple":
                     # If multiple candidates matched, we will do manual review and ask user for more details.
                     category_text = "User fileset - Multiple candidates"
-                    log_text = f"Possible new variant Fileset:{user_fileset_id} from user. Multiple filesets candidates {', '.join(f'Fileset:{id}' for id in candidate_filesets)}"
+                    match_text = f"Candidates {', '.join(f'Fileset:{id}' for id in candidate_filesets)}"
+                    if len(candidate_filesets) == 1:
+                        match_text = f"Matched Fileset:{candidate_filesets[0]}"
+                    log_text = f"Possible new variant Fileset:{user_fileset_id} from user. {match_text}"
                     create_log(
                         category_text,
                         user,
