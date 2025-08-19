@@ -15,6 +15,7 @@ import getpass
 from src.app.pagination import create_page
 import difflib
 from src.scripts.db_functions import (
+    insert_game,
     get_all_related_filesets,
     convert_log_text_to_links,
     user_integrity_check,
@@ -149,7 +150,6 @@ def fileset():
             if old_id is not None:
                 html += f"""<h3><u>Redirected from Fileset: {old_id}</u></h3>"""
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Manual Merge</button>"
-            # html += f"<button type='button' onclick=\"location.href='/fileset/{id}/possible_merge'\">Possible Merges</button>"
             html += f"""
                     <form action="/fileset/{id}/mark_full" method="post" style="display:inline;">
                         <button type='submit'>Mark as full</button>
@@ -168,29 +168,153 @@ def fileset():
 
             if status == "dat":
                 cursor.execute(
-                    """SELECT id, game, status, src, `key`, megakey, `delete`, timestamp, set_dat_metadata FROM fileset WHERE id = %s""",
+                    """SELECT id, game, status, src, `key`, timestamp, set_dat_metadata FROM fileset WHERE id = %s""",
+                    (id,),
+                )
+            elif status == "user":
+                cursor.execute(
+                    """SELECT id, game, status, src, `key`, timestamp, user_count FROM fileset WHERE id = %s""",
                     (id,),
                 )
             else:
                 cursor.execute(
-                    """SELECT id, game, status, src, `key`, megakey, `delete`, timestamp, detection_size, user_count FROM fileset WHERE id = %s""",
+                    """SELECT id, game, status, src, `key`, megakey, timestamp FROM fileset WHERE id = %s""",
                     (id,),
                 )
 
             result = cursor.fetchone()
             html += "<h3>Fileset details</h3>"
-            html += "<table>\n"
+            html += f"<form method='POST' action='/fileset/{id}/update'>"
+            html += "<table'>\n"
+
             if result["game"]:
                 if status == "dat":
-                    query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language, fileset.set_dat_metadata FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
+                    query = """
+                        SELECT game.name AS 'game name', engineid, gameid, extra, platform, language, fileset.set_dat_metadata
+                        FROM fileset 
+                        JOIN game ON game.id = fileset.game
+                        JOIN engine ON engine.id = game.engine
+                        WHERE fileset.id = %s
+                    """
                 else:
-                    query = """SELECT game.name as 'game name', engineid, gameid, extra, platform, language FROM fileset JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine WHERE fileset.id = %s"""
+                    query = """
+                        SELECT game.name AS 'game name', engineid, gameid, extra, platform, language
+                        FROM fileset
+                        JOIN game ON game.id = fileset.game
+                        JOIN engine ON engine.id = game.engine
+                        WHERE fileset.id = %s
+                    """
                 cursor.execute(query, (id,))
                 result = {**result, **cursor.fetchone()}
             else:
-                # result.pop('key', None)
-                # result.pop('status', None)
-                result.pop("delete", None)
+                if status == "user":
+                    html += "<h4>Add additional metadata</h4>"
+
+                    cursor.execute(
+                        "SELECT DISTINCT engineid FROM engine WHERE engineid IS NOT NULL"
+                    )
+                    engine_ids = [row["engineid"] for row in cursor.fetchall()]
+
+                    cursor.execute(
+                        "SELECT DISTINCT name FROM engine WHERE name IS NOT NULL"
+                    )
+                    engine_names = [row["name"] for row in cursor.fetchall()]
+
+                    cursor.execute(
+                        "SELECT DISTINCT gameid FROM game WHERE gameid IS NOT NULL"
+                    )
+                    game_ids = [row["gameid"] for row in cursor.fetchall()]
+
+                    cursor.execute(
+                        "SELECT DISTINCT name FROM game WHERE name IS NOT NULL"
+                    )
+                    titles = [row["name"] for row in cursor.fetchall()]
+
+                    cursor.execute(
+                        "SELECT DISTINCT platform FROM game WHERE platform IS NOT NULL"
+                    )
+                    platforms = [row["platform"] for row in cursor.fetchall()]
+
+                    cursor.execute(
+                        "SELECT DISTINCT language FROM game WHERE language IS NOT NULL"
+                    )
+                    languages = [row["language"] for row in cursor.fetchall()]
+
+                    db_options = {
+                        "engine_ids": engine_ids,
+                        "game_ids": game_ids,
+                        "platforms": platforms,
+                        "languages": languages,
+                        "engine_names": engine_names,
+                        "titles": titles,
+                    }
+
+                    datalist_html = ""
+
+                    if "engine_ids" in db_options:
+                        datalist_html += "<datalist id='engine-options'>"
+                        for engine in db_options["engine_ids"]:
+                            datalist_html += f"<option value='{engine}'></option>"
+                        datalist_html += "</datalist>"
+
+                    if "game_ids" in db_options:
+                        datalist_html += "<datalist id='game-id-options'>"
+                        for gameid in db_options["game_ids"]:
+                            datalist_html += f"<option value='{gameid}'></option>"
+                        datalist_html += "</datalist>"
+
+                    if "titles" in db_options:
+                        datalist_html += "<datalist id='title-options'>"
+                        for title in db_options["titles"]:
+                            datalist_html += f"<option value='{title}'></option>"
+                        datalist_html += "</datalist>"
+
+                    if "engine_names" in db_options:
+                        datalist_html += "<datalist id='engine-name-options'>"
+                        for name in db_options["engine_names"]:
+                            datalist_html += f"<option value='{name}'>"
+                        datalist_html += "</datalist>"
+
+                    if "languages" in db_options:
+                        datalist_html += "<datalist id='language-options'>"
+                        for lang in db_options["languages"]:
+                            datalist_html += f"<option value='{lang}'>"
+                        datalist_html += "</datalist>"
+
+                    if "platforms" in db_options:
+                        datalist_html += "<datalist id='platform-options'>"
+                        for platform in db_options["platforms"]:
+                            datalist_html += f"<option value='{platform}'>"
+                        datalist_html += "</datalist>"
+
+                    html += datalist_html
+
+                    html += """
+                    <div style='display: grid; grid-template-columns: 150px 1fr; gap: 8px 12px; margin-bottom: 1em;'>
+                        <label for="engineid">Engine ID:</label>
+                        <input required type="text" id="engineid" name="engineid" list="engine-options" placeholder="Required: Type or select...">
+
+                        <label for="gameid">Game ID:</label>
+                        <input required type="text" id="gameid" name="gameid" list="game-id-options" placeholder="Required: Type or select...">
+
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" list="title-options" placeholder="Optional: Type or select...">
+
+                        <label for="engine_name">Engine Name:</label>
+                        <input type="text" id="engine_name" name="engine_name" list="engine-name-options" placeholder="Optional: Type or select...">
+
+                        <label for="language">Language:</label>
+                        <input type="text" id="language" name="language" list="language-options" placeholder="Optional: Type or select...">
+
+                        <label for="platform">Platform:</label>
+                        <input type="text" id="platform" name="platform" list="platform-options" placeholder="Optional: Type or select...">
+
+                        <label for="extra">Extra:</label>
+                        <input type="text" id="extra" name="extra" placeholder="Optional: Type">
+                    </div>
+                    """
+
+                    html += "<button style='margin-bottom: 10px;' type='submit' name='action' value='add_metadata'>Add metadata</button>"
 
             for column in result.keys():
                 if column != "id" and column != "game":
@@ -199,9 +323,17 @@ def fileset():
             html += "<tr>\n"
             for column, value in result.items():
                 if column != "id" and column != "game":
-                    html += f"<td>{value}</td>"
+                    if not result["game"] and status == "user":
+                        html += f"<td>{value}</td>"
+                    else:
+                        html += f"""<td><input class='track-update' style='all: unset;' type="text" name="{column}" value="{value if value is not None else ""}" /></td>"""
             html += "</tr>\n"
+
             html += "</table>\n"
+            html += "<div id='updateNotice' style='display:none; color:red;'>Updates pending...</div>"
+            if not (not result["game"] and status == "user"):
+                html += "<button type='submit' name='action' value='update_metadata'>Update metadata</button>"
+            html += "</form>"
 
             # Files in the fileset
             html += "<h3>Files in the fileset</h3>"
@@ -442,10 +574,114 @@ def fileset():
                     </tr>
                     """
                 html += "</table>\n"
-
+            html += "<script src='{{ url_for('static', filename='js/track_metadata_update.js') }}'></script>"
             return render_template_string(html)
     finally:
         connection.close()
+
+
+@app.route("/fileset/<int:id>/update", methods=["POST"])
+def update_fileset(id):
+    connection = db_connect()
+    try:
+        with connection.cursor() as cursor:
+            if request.form.get("action") == "update_metadata":
+                allowed_columns = [
+                    "status",
+                    "src",
+                    "key",
+                    "megakey",
+                    "game name",
+                    "engineid",
+                    "gameid",
+                    "extra",
+                    "platform",
+                    "language",
+                ]
+
+                table_map = {
+                    "status": "fileset",
+                    "src": "fileset",
+                    "key": "fileset",
+                    "megakey": "fileset",
+                    "timestamp": "fileset",
+                    "game name": "game",
+                    "engineid": "engine",
+                    "gameid": "game",
+                    "extra": "game",
+                    "platform": "game",
+                    "language": "game",
+                }
+
+                updates_by_table = {"fileset": [], "game": [], "engine": []}
+                values_by_table = {"fileset": [], "game": [], "engine": []}
+                for col in allowed_columns:
+                    if col in request.form:
+                        table = table_map[col]
+                        db_col = col
+                        if col == "game name":
+                            db_col = "name"
+                        updates_by_table[table].append(f"`{db_col}` = %s")
+                        values_by_table[table].append(request.form[col])
+
+                if updates_by_table["fileset"]:
+                    query = f"UPDATE fileset SET {', '.join(updates_by_table['fileset'])} WHERE id = %s"
+                    values = values_by_table["fileset"] + [id]
+                    cursor.execute(query, values)
+
+                if updates_by_table["game"]:
+                    cursor.execute("SELECT game FROM fileset WHERE id = %s", (id,))
+                    game_id = cursor.fetchone()["game"]
+                    query = f"UPDATE game SET {', '.join(updates_by_table['game'])} WHERE id = %s"
+                    values = values_by_table["game"] + [game_id]
+                    cursor.execute(query, values)
+
+                if updates_by_table["engine"]:
+                    cursor.execute(
+                        "SELECT engine.id AS engine_id FROM engine "
+                        "JOIN game ON game.engine = engine.id "
+                        "JOIN fileset ON fileset.game = game.id "
+                        "WHERE fileset.id = %s",
+                        (id,),
+                    )
+                    engine_id = cursor.fetchone()["engine_id"]
+                    query = f"UPDATE engine SET {', '.join(updates_by_table['engine'])} WHERE id = %s"
+                    values = values_by_table["engine"] + [engine_id]
+                    cursor.execute(query, values)
+                print(f"Fileset:{id} updated successfully.")
+                connection.commit()
+            elif request.form.get("action") == "add_metadata":
+                engine_name = request.form.get("engine_name", "")
+                engine_id = request.form.get("engineid")
+                title = request.form.get("title", "")
+                gameid = request.form.get("gameid")
+                extra = request.form.get("extra", "")
+                platform = request.form.get("platform", "")
+                lang = request.form.get("lang", "")
+
+                insert_game(
+                    engine_name,
+                    engine_id,
+                    title,
+                    gameid,
+                    extra,
+                    platform,
+                    lang,
+                    connection,
+                )
+                cursor.execute("SELECT @game_last")
+                row = cursor.fetchone()
+                game_pk_id = row["@game_last"]
+
+                cursor.execute(
+                    "UPDATE fileset SET game = %s WHERE id = %s", (game_pk_id, id)
+                )
+                print(f"Fileset:{id} added additional metadata.")
+                connection.commit()
+    finally:
+        connection.close()
+
+    return redirect(url_for("fileset", id=id))
 
 
 @app.route("/fileset/<int:id>/merge", methods=["GET", "POST"])
@@ -692,7 +928,7 @@ def confirm_merge(id):
                 SELECT 
                     fs.id, fs.status, fs.src, fs.`key`, fs.megakey,
                     fs.timestamp, fs.detection_size, fs.set_dat_metadata,
-                    g.name AS game_name, 
+                    g.name AS game_name,
                     e.name AS game_engine,
                     g.platform AS game_platform,
                     g.language AS game_language,
