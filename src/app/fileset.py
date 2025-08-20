@@ -184,7 +184,7 @@ def fileset():
 
             result = cursor.fetchone()
             html += "<h3>Fileset details</h3>"
-            html += f"<form method='POST' action='/fileset/{id}/update'>"
+            html += f"""<form method='POST' action='/fileset/{id}/update' onsubmit="return confirm('Are you sure you want to perform this action on the metadata?');">"""
             html += "<table'>\n"
 
             if result["game"]:
@@ -356,7 +356,7 @@ def fileset():
                 html += "<input type='submit' value='Hide extra checksums' />"
             html += "</form>"
 
-            html += f"""<form id="file_action_form" method="POST" action="{url_for("files_action", id=id)}">"""
+            html += f"""<form id="file_action_form" method="POST" action="{url_for("files_action", id=id)}" onsubmit="return confirm('Are you sure you want to perform this action on the files?');">"""
             # Table
             html += "<table>\n"
 
