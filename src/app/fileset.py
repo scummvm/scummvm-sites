@@ -45,6 +45,11 @@ limiter = Limiter(
 secret_key = os.urandom(24)
 
 
+def get_current_user():
+    user = f"cli:{getpass.getuser()}"
+    return user
+
+
 @app.route("/")
 def index():
     return redirect(url_for("logs"))
@@ -463,15 +468,9 @@ def fileset():
 
             # Generate the HTML for the developer actions
             html += "<h3>Developer Actions</h3>"
-            html += f"<button id='delete-button' type='button' onclick='delete_id({id})'>Mark Fileset for Deletion</button>"
-
-            if "delete" in request.form:
-                cursor.execute(
-                    "UPDATE fileset SET `delete` = TRUE WHERE id = %s",
-                    (request.form["delete"],),
-                )
-                connection.commit()
-                html += "<p id='delete-confirm'>Fileset marked for deletion</p>"
+            html += f"""<form action="{url_for("delete_fileset", id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to delete the fileset?');">"""
+            html += "<button type='submit'>Delete the Fileset</button>"
+            html += "</form>"
 
             # -------------------------------------------------------------------------------------------------
             #                                       logs
@@ -595,6 +594,19 @@ def fileset():
             return render_template_string(html)
     finally:
         connection.close()
+
+
+@app.route("/fileset/delete/<int:id>", methods=["POST"])
+def delete_fileset(id):
+    connection = db_connect()
+    with connection.cursor() as cursor:
+        query = "DELETE FROM fileset WHERE id = %s"
+        cursor.execute(query, (id,))
+        user = get_current_user()
+        log_text = f"Fileset deleted by moderator: {user} id:{id}"
+        create_log("Filset Deleted", user, log_text, connection)
+        connection.commit()
+    return redirect(url_for("logs"))
 
 
 @app.route("/files_action/<int:id>", methods=["POST"])
