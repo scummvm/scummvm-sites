@@ -1889,6 +1889,21 @@ def fileset_search():
     )
 
 
+@app.route("/email_notification/<int:fileset_id>", methods=["GET"])
+def email_notification(fileset_id):
+    connection = db_connect()
+    log_text = f"User email received for Fileset:{fileset_id}"
+    create_log("Email Received", "Mail Server", log_text, connection)
+    connection.commit()
+    return jsonify(
+        {
+            "status": "success",
+            "fileset_id": fileset_id,
+            "message": "Email notification logged",
+        }
+    ), 200
+
+
 if __name__ == "__main__":
     app.secret_key = secret_key
     app.run(port=5001, debug=True, host="0.0.0.0")
