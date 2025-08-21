@@ -2514,7 +2514,7 @@ def log_match_with_full(
     category_text = "Mismatch with Full set"
     if fully_matched:
         category_text = "Existing as Full set."
-    log_text = f"""Files mismatched with Full Fileset:{candidate_id}. data_path: {relative_path}.Unmatched Files in scan fileset = {len(unmatched_scan_files)}. Unmatched Files in full fileset = {len(unmatched_candidate_files)}. List of unmatched files scan.dat : {", ".join(scan_file for scan_file in unmatched_scan_files)}, List of unmatched files full fileset : {", ".join(scan_file for scan_file in unmatched_candidate_files)}"""
+    log_text = f"""Files mismatched with Full Fileset:{candidate_id}. data_path: {relative_path} Unmatched Files in scan fileset: {len(unmatched_scan_files)} Unmatched Files in full fileset: {len(unmatched_candidate_files)} List of unmatched files scan.dat: {", ".join(scan_file for scan_file in unmatched_scan_files)} List of unmatched files full fileset: {", ".join(scan_file for scan_file in unmatched_candidate_files)}"""
     if fully_matched:
         log_text = (
             f"Fileset matched completely with Full Fileset:{candidate_id}. Dropping."
@@ -2810,7 +2810,7 @@ def user_integrity_check(data, ip, game_metadata=None):
                     match_text = f"Candidates {', '.join(f'Fileset:{id}' for id in candidate_filesets)}"
                     if len(candidate_filesets) == 1:
                         match_text = f"Matched Fileset:{candidate_filesets[0]}"
-                    log_text = f"Possible new variant Fileset:{user_fileset_id} from user. {match_text}"
+                    log_text = f"Possible new variant Fileset:{user_fileset_id} from user. {match_text}. Match count: 1."
                     create_log(
                         category_text,
                         user,

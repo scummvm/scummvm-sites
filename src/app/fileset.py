@@ -1589,9 +1589,15 @@ def mark_as_full(id):
     try:
         conn = db_connect()
         with conn.cursor() as cursor:
+            user = f"cli:{getpass.getuser()}"
             update_query = "UPDATE fileset SET status = 'full' WHERE id = %s"
             cursor.execute(update_query, (id,))
-            create_log("Manual from Web", "Dev", f"Marked Fileset:{id} as full", conn)
+            create_log(
+                "Fileset marked full",
+                user,
+                f"Fileset:{id} marked as full by moderator: {user}",
+                conn,
+            )
             conn.commit()
     except Exception as e:
         print(f"Error updating fileset status: {e}")
