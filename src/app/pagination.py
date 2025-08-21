@@ -91,7 +91,7 @@ def create_page(
                         from_query += " JOIN engine ON engine.id = game.engine"
                     else:
                         from_query += " JOIN game ON game.id = fileset.game JOIN engine ON engine.id = game.engine"
-                if t == "filechecksum":
+                elif t == "filechecksum":
                     from_query += " JOIN file ON file.fileset = fileset.id JOIN filechecksum ON file.id = filechecksum.file"
                 else:
                     from_query += (
