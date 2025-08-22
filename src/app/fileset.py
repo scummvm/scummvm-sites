@@ -1842,15 +1842,13 @@ def logs():
         "text": "log",
     }
     logs_per_page = get_logs_per_page()
-    return render_template_string(
-        create_page(
-            filename, logs_per_page, records_table, select_query, order, filters
-        )
+    render_html_string, _, _ = create_page(
+        filename, logs_per_page, records_table, select_query, order, filters
     )
+    return render_template_string(render_html_string)
 
 
-@app.route("/fileset_search")
-def fileset_search():
+def get_fileset_search_details():
     filename = "fileset_search"
     records_table = "fileset"
     select_query = """
@@ -1882,17 +1880,76 @@ def fileset_search():
         "file.id": "filechecksum.file",
     }
     filesets_per_page = get_filesets_per_page()
-    return render_template_string(
-        create_page(
-            filename,
-            filesets_per_page,
-            records_table,
-            select_query,
-            order,
-            filters,
-            mapping,
-        )
+
+    return (
+        filename,
+        records_table,
+        select_query,
+        order,
+        filters,
+        mapping,
+        filesets_per_page,
     )
+
+
+@app.route("/fileset_search")
+def fileset_search():
+    (
+        filename,
+        records_table,
+        select_query,
+        order,
+        filters,
+        mapping,
+        filesets_per_page,
+    ) = get_fileset_search_details()
+    render_html_string, _, _ = create_page(
+        filename,
+        filesets_per_page,
+        records_table,
+        select_query,
+        order,
+        filters,
+        mapping,
+    )
+    return render_template_string(render_html_string)
+
+
+@app.route("/delete_filtered_filesets", methods=["GET"])
+def delete_filtered_filesets():
+    (
+        filename,
+        records_table,
+        select_query,
+        order,
+        filters,
+        mapping,
+        filesets_per_page,
+    ) = get_fileset_search_details()
+    _, select_query, condition = create_page(
+        filename,
+        filesets_per_page,
+        records_table,
+        select_query,
+        order,
+        filters,
+        mapping,
+    )
+    query = f"{select_query} {condition}"
+    connection = db_connect()
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        filtered_filesets = cursor.fetchall()
+        filtered_filesets_id = [f["fileset"] for f in filtered_filesets]
+        placeholders = ",".join(["%s"] * len(filtered_filesets_id))
+        cursor.execute(
+            f"DELETE FROM fileset WHERE id IN ({placeholders})", filtered_filesets_id
+        )
+        user = f"cli:{getpass.getuser()}"
+        log_text = f"{len(filtered_filesets_id)} filesets deleted by moderator: {user}."
+        create_log("Filesets Deleted", user, log_text, connection)
+        connection.commit()
+    return redirect("/logs")
 
 
 @app.route("/email_notification/<int:fileset_id>", methods=["GET"])

@@ -324,12 +324,6 @@ def add_all_equal_checksums(checksize, checktype, checksum, file_id, conn):
                     )
 
 
-def delete_filesets(conn):
-    query = "DELETE FROM fileset WHERE `delete` = TRUE"
-    with conn.cursor() as cursor:
-        cursor.execute(query)
-
-
 def create_log(category, user, text, conn):
     with conn.cursor() as cursor:
         try:
