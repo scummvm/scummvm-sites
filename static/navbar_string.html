@@ -1,11 +1,59 @@
 <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-        <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    </head>
-    <body>
+<html>
+
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <style>
+        .dev {
+            background-color: #fafeff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-left: auto;
+        }
+
+        button {
+            background-color: #d9534f;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        button:hover {
+            background-color: #c9302c;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        @media (max-width: 768px) {
+            .fileset_database {
+                font-size: 48px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .fileset_database {
+                font-size: 32px;
+            }
+
+            nav {
+                padding: 10px;
+            }
+
+            .nav-buttons a {
+                margin-bottom: 5px;
+                display: block;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
     <nav>
         <div class="logo">
             <a href="{{ url_for('home') }}">
@@ -18,5 +66,13 @@
             <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
             <a href="{{ url_for('logs') }}">Logs</a>
             <a href="{{ url_for('config') }}">Config</a>
+        </div>
+        <div class="dev">
+            <form onsubmit="return confirm('Are you sure you want to delete the filtered filesets?');" action="{{ url_for('delete_filtered_filesets') }}" method="GET">
+                {% for key, value in request.args.items() %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                {% endfor %}
+                <button type="submit">Delete Filtered Filesets</button>
+            </form>
         </div>
     </nav>

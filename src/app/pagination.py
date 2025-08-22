@@ -138,6 +138,12 @@ def create_page(
     with open(navbar_path, "r") as f:
         html = f.read()
 
+    if records_table != "fileset":
+        html = html.replace(
+            '<button type="submit">Delete Filtered Filesets</button>',
+            '<button type="submit" style="display:none;" disabled>Delete Filtered Filesets</button>',
+        )
+
     # Generate HTML
     html += """
         <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
@@ -319,4 +325,4 @@ def create_page(
         html += "<input type='submit' value='Submit'>"
         html += "</div></form>"
 
-    return html
+    return html, select_query, condition
