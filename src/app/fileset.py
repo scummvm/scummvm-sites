@@ -154,13 +154,6 @@ def fileset():
             """
             if old_id is not None:
                 html += f"""<h3><u>Redirected from Fileset: {old_id}</u></h3>"""
-            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Compare Filesets</button>"
-            html += f"""
-                    <form action="/fileset/{id}/mark_full" method="post" style="display:inline;">
-                        <button type='submit'>Mark as full</button>
-                    </form>
-                    """
-
             cursor.execute(
                 "SELECT fileset FROM history WHERE oldfileset = %s AND oldfileset != fileset",
                 (id,),
@@ -170,6 +163,32 @@ def fileset():
                 id = row["fileset"]
             cursor.execute("SELECT status FROM fileset WHERE id = %s", (id,))
             status = cursor.fetchone()["status"]
+
+            # -------------------------------------------------------------------------------------------------
+            #                                       developer actions
+            # -------------------------------------------------------------------------------------------------
+
+            html += "<h3>Developer Actions</h3>"
+
+            # Compare Fileset
+            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Compare Filesets</button>"
+
+            # Mark fileset full
+            if status != "full":
+                html += f"""
+                        <form action="/fileset/{id}/mark_full" method="post" onsubmit="return confirm('Are you sure you want to mark the fileset as full?');">
+                            <button type='submit' style="margin-left: 10px;">Mark as full</button>
+                        </form>
+                        """
+
+            # Delete a fileset
+            html += f"""<form action="{url_for("delete_fileset", id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to delete the fileset?');">"""
+            html += "<button type='submit' style='margin-left: 10px;'>Delete the Fileset</button>"
+            html += "</form>"
+
+            # -------------------------------------------------------------------------------------------------
+            #                                        metadata
+            # -------------------------------------------------------------------------------------------------
 
             if status == "dat":
                 cursor.execute(
@@ -461,16 +480,6 @@ def fileset():
             html += """<input type="submit" name="action" value="Update Files">"""
             html += """<input style="margin-left: 10px;" type="submit" name="action" value="Delete Selected Files">"""
             html += "</form>\n"
-
-            # -------------------------------------------------------------------------------------------------
-            #                                       developer actions
-            # -------------------------------------------------------------------------------------------------
-
-            # Generate the HTML for the developer actions
-            html += "<h3>Developer Actions</h3>"
-            html += f"""<form action="{url_for("delete_fileset", id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to delete the fileset?');">"""
-            html += "<button type='submit'>Delete the Fileset</button>"
-            html += "</form>"
 
             # -------------------------------------------------------------------------------------------------
             #                                       logs
