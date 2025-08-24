@@ -154,7 +154,7 @@ def fileset():
             """
             if old_id is not None:
                 html += f"""<h3><u>Redirected from Fileset: {old_id}</u></h3>"""
-            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Manual Merge</button>"
+            html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Compare Filesets</button>"
             html += f"""
                     <form action="/fileset/{id}/mark_full" method="post" style="display:inline;">
                         <button type='submit'>Mark as full</button>
@@ -836,111 +836,8 @@ def update_fileset(id):
 
 @app.route("/fileset/<int:id>/merge", methods=["GET", "POST"])
 def merge_fileset(id):
-    if request.method == "POST":
-        search_query = request.form["search"]
-
-        connection = db_connect()
-
-        try:
-            with connection.cursor() as cursor:
-                query = f"""
-                SELECT 
-                    fs.*, 
-                    g.name AS game_name, 
-                    g.engine AS game_engine, 
-                    g.platform AS game_platform,
-                    g.language AS game_language,
-                    g.extra AS extra
-                FROM 
-                    fileset fs
-                LEFT JOIN 
-                    game g ON fs.game = g.id
-                WHERE g.name LIKE '%{search_query}%' OR g.platform LIKE '%{search_query}%' OR g.language LIKE '%{search_query}%'
-                """
-                cursor.execute(query)
-                results = cursor.fetchall()
-
-                html = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <link rel="stylesheet" type="text/css" href="{{{{ url_for('static', filename='style.css') }}}}">
-                    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-                    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-                </head>
-                <body>
-                <nav>
-                    <div class="logo">
-                        <a href="{{{{ url_for('home') }}}}">
-                            <img src="{{{{ url_for('static', filename='integrity_service_logo_256.png') }}}}" alt="Logo">
-                        </a>
-                    </div>
-                    <div class="nav-buttons">
-                        <a href="{{{{ url_for('user_games_list') }}}}">User Games List</a>
-                        <a href="{{{{ url_for('ready_for_review') }}}}">Ready for review</a>
-                        <a href="{{{{ url_for('fileset_search') }}}}">Fileset Search</a>
-                        <a href="{{{{ url_for('logs') }}}}">Logs</a>
-                        <a href="{{{{ url_for('config') }}}}">Config</a>
-                    </div>
-                </nav>
-                <h2 style="margin-top: 80px;">Search Results for '{search_query}'</h2>
-                <form method="POST">
-                    <input type="text" name="search" placeholder="Search fileset">
-                    <input type="submit" value="Search">
-                </form>
-                <table>
-                <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Action</th></tr>
-                """
-                for result in results:
-                    html += f"""
-                    <tr>
-                        <td>{result["id"]}</td>
-                        <td>{result["game_name"]}</td>
-                        <td>{result["game_platform"]}</td>
-                        <td>{result["game_language"]}</td>
-                        <td>{result["extra"]}</td>
-                        <td><a href="/fileset/{id}/merge/confirm?target_id={result["id"]}">Select</a></td>
-                    </tr>
-                    """
-                html += "</table>\n"
-                html += "</body>\n</html>"
-
-                return render_template_string(html)
-
-        finally:
-            connection.close()
-
-    return """
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
-        <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
-    </head>
-    <body>
-    <nav>
-        <div class="logo">
-            <a href="{{ url_for('home') }}">
-                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
-            </a>
-        </div>
-        <div class="nav-buttons">
-            <a href="{{ url_for('user_games_list') }}">User Games List</a>
-            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-            <a href="{{ url_for('logs') }}">Logs</a>
-            <a href="{{ url_for('config') }}">Config</a>
-        </div>
-    </nav>
-    <h2 style="margin-top: 80px;">Search Fileset to Merge</h2>
-    <form method="POST">
-        <input type="text" name="search" placeholder="Search fileset">
-        <input type="submit" value="Search">
-    </form>
-    </body>
-    </html>
-    """
+    url = f"/fileset_search?source_id={id}"
+    return redirect(url)
 
 
 @app.route("/fileset/<int:id>/possible_merge", methods=["GET", "POST"])
@@ -1296,7 +1193,7 @@ def confirm_merge(id):
                 # For matched_files, files is a tuple of filename from source file and target file
                 # For unmatched_files, files is the filename of the files that was not common.
                 for files in file_category:
-                    if is_common_file:
+                    if is_common_file and len(matched_files) != 0:
                         (target_filename, source_filename) = files
 
                         # Also remove common files from source and target filenames set
@@ -1325,7 +1222,11 @@ def confirm_merge(id):
 
                     keys = sorted(set(source_dict.keys()) | set(target_dict.keys()))
 
-                    tr_class = "matched" if is_common_file else "unmatched"
+                    tr_class = (
+                        "matched"
+                        if (is_common_file and len(matched_files) != 0)
+                        else "unmatched"
+                    )
                     html += f"""<tr class="{tr_class}">
                         <td colspan='3'>
                                 <strong>{source_filename}</strong> {" - mac_file" if is_mac_file else ""}
@@ -1369,9 +1270,14 @@ def confirm_merge(id):
                                 and source_filename.lower() in detection_files_set
                             ):
                                 is_detection = "1"
-                                fname = source_to_target_matched_map[
+                                fname = (
                                     source_filename.lower()
-                                ]
+                                    if source_filename.lower()
+                                    not in source_to_target_matched_map
+                                    else source_to_target_matched_map[
+                                        source_filename.lower()
+                                    ]
+                                )
                                 detection_type = target_files_map[fname].get(
                                     "detection_type", ""
                                 )
