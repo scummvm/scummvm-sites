@@ -62,9 +62,10 @@ def create_page(
     with conn.cursor() as cursor:
         tables = set()
         where_clauses = []
+        compare_fileset_source_id = request.args.get("source_id", "")
 
         for key, value in request.args.items():
-            if key in ("page", "sort") or value == "":
+            if key in ("page", "sort", "source_id") or value == "":
                 continue
             tables.add(filters[key])
             col = f"{filters[key]}.{'id' if key == 'fileset' else key}"
@@ -138,7 +139,7 @@ def create_page(
     with open(navbar_path, "r") as f:
         html = f.read()
 
-    if records_table != "fileset":
+    if records_table != "fileset" or compare_fileset_source_id != "":
         html = html.replace(
             '<button type="submit">Delete Filtered Filesets</button>',
             '<button type="submit" style="display:none;" disabled>Delete Filtered Filesets</button>',
@@ -181,7 +182,6 @@ def create_page(
             width = get_width(name, default)
             html += f"<col style='width: {width}%;'>"
         html += "</colgroup>"
-
     if filters:
         html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
         for key in filters.keys():
@@ -245,6 +245,13 @@ def create_page(
                     </a>
                 </th>"""
 
+    if compare_fileset_source_id != "":
+        html += """<th>
+                        <div style="display:flex; align-items:center; width:100%;">
+                            <span style="flex:1; text-align:center;">Action</span>
+                        </div>
+                </th>"""
+
     if results:
         counter = offset + 1
         for row in results:
@@ -284,6 +291,8 @@ def create_page(
                         )
 
                 html += f"<td>{'' if value is None else value}</td>\n"
+            if compare_fileset_source_id != "":
+                html += f"""<td><a href="/fileset/{compare_fileset_source_id}/merge/confirm?target_id={fileset_id}">Compare</a></td>"""
             html += "</tr>\n"
             counter += 1
 
