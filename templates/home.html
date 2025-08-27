@@ -88,16 +88,28 @@
             </a>
         </div>
         <div class="nav-buttons">
-            <a href="{{ url_for('user_games_list') }}">User Games List</a>
-            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-            <a href="{{ url_for('logs')}}">Logs</a>
-            <a href="{{ url_for('config') }}">Config</a>
+            {% if username == "" %}
+                <a href="{{ url_for('login') }}">Login with GitHub</a>
+            {% else %}
+                <a href="{{ url_for('user_games_list') }}">User Games List</a>
+                <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+                <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+                <a href="{{ url_for('logs')}}">Logs</a>
+                <a href="{{ url_for('config') }}">Config</a>
+                <a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?');">Logout</a>
+            {% endif %}
         </div>
         <div class="dev">
-            <form action="{{ url_for('clear_database') }}" method="POST">
-                <button type="submit">Clear Database</button>
-            </form>
+             {% if user_role == "Admin" %}
+                 <form style="margin-right: 20px;" action="{{ url_for('clear_database') }}" method="POST">
+                     <button type="submit" onclick="return confirm('Are you sure you want to clear the database?');">Clear Database</button>
+                 </form>
+             {% endif %}
+             {% if username != "" %}
+                 <span>{{username}} - {{user_role}}</span>
+             {% else %}
+                 <span>{{user_role}}</span>
+             {% endif %}
         </div>
     </nav>
     <div class="title">

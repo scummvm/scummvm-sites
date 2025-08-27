@@ -72,7 +72,9 @@
                 {% for key, value in request.args.items() %}
                 <input type="hidden" name="{{ key }}" value="{{ value }}">
                 {% endfor %}
-                <button type="submit">Delete Filtered Filesets</button>
+                {% if user_role == "Admin" %}
+                    <button type="submit">Delete Filtered Filesets</button>
+                {% endif %}
             </form>
         </div>
     </nav>

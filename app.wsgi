@@ -1,9 +1,12 @@
 import sys
+import os
 import logging
 
-sys.path.insert(0, "/home/ubuntu/projects/python/scummvm_sites_2025/scummvm-sites")
+project_root = os.path.dirname(os.path.abspath(__file__))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-from src.app.fileset import app as application
+from src.app.fileset import app as application  # noqa
 
 logging.basicConfig(stream=sys.stderr)
 sys.stderr = sys.stdout
