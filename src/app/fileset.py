@@ -29,18 +29,10 @@ from src.utils.db_config import db_connect, db_connect_root
 from collections import defaultdict
 from src.scripts.schema import init_database
 from src.app.validate_user_payload import validate_user_payload
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 from src.utils.cookie import get_filesets_per_page, get_logs_per_page
 from src.utils.db_config import STATIC_DIR, TEMPLATES_DIR
 
 app = Flask(__name__, static_folder=STATIC_DIR, template_folder=TEMPLATES_DIR)
-limiter = Limiter(
-    get_remote_address,
-    app=app,
-    default_limits=[],
-    storage_uri="memory://",
-)
 
 secret_key = os.urandom(24)
 
@@ -1636,7 +1628,6 @@ def config():
 
 
 @app.route("/validate", methods=["POST"])
-@limiter.limit("3 per minute")
 def validate():
     error_codes = {
         "unknown": -1,
