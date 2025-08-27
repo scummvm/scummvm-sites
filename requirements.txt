@@ -16,3 +16,7 @@ pytest
 setuptools
 Werkzeug
 wheel
+authlib
+python-dotenv
+requests
+Flask-Dance

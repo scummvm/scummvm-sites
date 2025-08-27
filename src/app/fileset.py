@@ -7,13 +7,20 @@ from flask import (
     jsonify,
     render_template,
     make_response,
+    session,
 )
+
+
+import requests
+from datetime import timedelta
 import json
 import html as html_lib
 import os
 import getpass
 from src.app.pagination import create_page
 import difflib
+
+import src.app.env_loader  # noqa
 from src.scripts.db_functions import (
     insert_game,
     get_all_related_filesets,
@@ -31,15 +38,20 @@ from src.scripts.schema import init_database
 from src.app.validate_user_payload import validate_user_payload
 from src.utils.cookie import get_filesets_per_page, get_logs_per_page
 from src.utils.db_config import STATIC_DIR, TEMPLATES_DIR
+from src.app.auth.github_oauth import init_oauth, GITHUB_ORG, TEAM_ROLES
+from src.app.auth.role_based_auth import role_required
+from src.app.auth.helper import (
+    get_user_role,
+    get_current_user,
+    get_username,
+    is_moderator_access,
+)
 
 app = Flask(__name__, static_folder=STATIC_DIR, template_folder=TEMPLATES_DIR)
-
-secret_key = os.urandom(24)
-
-
-def get_current_user():
-    user = f"cli:{getpass.getuser()}"
-    return user
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
+oauth = init_oauth(app)
+github = oauth.github
 
 
 @app.route("/")
@@ -47,12 +59,58 @@ def index():
     return redirect(url_for("logs"))
 
 
+@app.route("/login")
+def login():
+    redirect_uri = url_for("authorize", _external=True)
+    return github.authorize_redirect(
+        redirect_uri, prompt="select_account", allow_signup="false"
+    )
+
+
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/home")
+
+
+@app.route("/authorize")
+def authorize():
+    token = github.authorize_access_token()
+    access_token = token["access_token"]
+    headers = {"Authorization": f"Bearer {access_token}"}
+
+    user_resp = requests.get("https://api.github.com/user", headers=headers)
+    user_data = user_resp.json()
+    username = user_data["login"]
+
+    role = "No Access"
+    for team_name in TEAM_ROLES:
+        team_url = f"https://api.github.com/orgs/{GITHUB_ORG}/teams/{team_name}/memberships/{username}"
+
+        team_resp = requests.get(team_url, headers=headers)
+        if team_resp.status_code == 200:
+            if team_name == "integrity-devs":
+                role = "Moderator"
+            if team_name == "integrity-admins":
+                role = "Admin"
+            if team_name == "integrity-ro":
+                role = "Read Only"
+            break
+
+    session["user"] = {"username": username, "role": role}
+
+    return redirect("/home")
+
+
 @app.route("/home")
 def home():
-    return render_template("home.html")
+    user_role = get_user_role()
+    username = get_username()
+    return render_template("home.html", user_role=user_role, username=username)
 
 
 @app.route("/clear_database", methods=["POST"])
+@role_required("Admin")
 def clear_database():
     try:
         (conn, db_name) = db_connect_root()
@@ -71,6 +129,7 @@ def clear_database():
 
 
 @app.route("/fileset", methods=["GET", "POST"])
+@role_required("Admin", "Moderator", "Read Only")
 def fileset():
     id = request.args.get("id", default=1, type=int)
     old_id = request.args.get("redirected_from", default=None, type=int)
@@ -157,26 +216,30 @@ def fileset():
             status = cursor.fetchone()["status"]
 
             # -------------------------------------------------------------------------------------------------
-            #                                       developer actions
+            #                                       Compare Filesets
             # -------------------------------------------------------------------------------------------------
-
-            html += "<h3>Developer Actions</h3>"
 
             # Compare Fileset
             html += f"<button type='button' onclick=\"location.href='/fileset/{id}/merge'\">Compare Filesets</button>"
 
-            # Mark fileset full
-            if status != "full":
-                html += f"""
-                        <form action="/fileset/{id}/mark_full" method="post" onsubmit="return confirm('Are you sure you want to mark the fileset as full?');">
-                            <button type='submit' style="margin-left: 10px;">Mark as full</button>
-                        </form>
-                        """
+            # -------------------------------------------------------------------------------------------------
+            #                                       developer actions
+            # -------------------------------------------------------------------------------------------------
+            if is_moderator_access():
+                html += "<h3>Developer Actions</h3>"
 
-            # Delete a fileset
-            html += f"""<form action="{url_for("delete_fileset", id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to delete the fileset?');">"""
-            html += "<button type='submit' style='margin-left: 10px;'>Delete the Fileset</button>"
-            html += "</form>"
+                # Mark fileset full
+                if status != "full":
+                    html += f"""
+                            <form action="/fileset/{id}/mark_full" method="post" onsubmit="return confirm('Are you sure you want to mark the fileset as full?');">
+                                <button type='submit'>Mark as full</button>
+                            </form>
+                            """
+
+                # Delete a fileset
+                html += f"""<form action="{url_for("delete_fileset", id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to delete the fileset?');">"""
+                html += "<button type='submit' style='margin-left: 10px;'>Delete the Fileset</button>"
+                html += "</form>"
 
             # -------------------------------------------------------------------------------------------------
             #                                        metadata
@@ -351,7 +414,8 @@ def fileset():
             if not (
                 not result["game"] and (status == "user" or status == "ReadyForReview")
             ):
-                html += "<button type='submit' name='action' value='update_metadata'>Update metadata</button>"
+                if is_moderator_access():
+                    html += "<button type='submit' name='action' value='update_metadata'>Update metadata</button>"
             html += "</form>"
 
             # -------------------------------------------------------------------------------------------------
@@ -435,7 +499,8 @@ def fileset():
             # Generate table header
             html += "<tr>\n"
             html += "<th/>"  # Numbering column
-            html += "<th>delete</th>"  # Checkbox column
+            if is_moderator_access():
+                html += "<th>delete</th>"  # Checkbox column
             sortable_columns = share_columns + list(temp_set)
 
             for column in sortable_columns:
@@ -453,7 +518,8 @@ def fileset():
             for row in result:
                 html += "<tr>\n"
                 html += f"<td>{counter}.</td>\n"
-                html += f"<td><input type='checkbox' name='file_ids' value='{row['id']}' /></td>\n"  # Checkbox for selecting file
+                if is_moderator_access():
+                    html += f"<td><input type='checkbox' name='file_ids' value='{row['id']}' /></td>\n"  # Checkbox for selecting file
                 for column in all_columns:
                     if column != "id":
                         value = row.get(column, "")
@@ -469,8 +535,9 @@ def fileset():
                 counter += 1
 
             html += "</table>\n"
-            html += """<input type="submit" name="action" value="Update Files">"""
-            html += """<input style="margin-left: 10px;" type="submit" name="action" value="Delete Selected Files">"""
+            if is_moderator_access():
+                html += """<input type="submit" name="action" value="Update Files">"""
+                html += """<input style="margin-left: 10px;" type="submit" name="action" value="Delete Selected Files">"""
             html += "</form>\n"
 
             # -------------------------------------------------------------------------------------------------
@@ -576,8 +643,10 @@ def fileset():
                 html += """
                     <h3 style="margin-top: 30px;">Possible Merges</h3>
                     <table>
-                    <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Details</th><th>Action</th></tr>
+                    <tr><th>ID</th><th>Game Name</th><th>Platform</th><th>Language</th><th>Extra</th><th>Details</th>
                 """
+                if is_moderator_access():
+                    html += "<th>Action</th>"
                 for result in results:
                     html += f"""
                     <tr>
@@ -587,9 +656,10 @@ def fileset():
                         <td>{result["game_language"]}</td>
                         <td>{result["extra"]}</td>
                         <td><a href="/fileset?id={result["id"]}">View Details</a></td>
-                        <td><a href="/fileset/{id}/merge/confirm?target_id={result["id"]}">Merge</a></td>
-                    </tr>
                     """
+                    if is_moderator_access():
+                        f"""<td><a href="/fileset/{id}/merge/confirm?target_id={result["id"]}">Merge</a></td>"""
+                    html += "</tr>"
                 html += "</table>\n"
             html += "<script src='{{ url_for('static', filename='js/track_metadata_update.js') }}'></script>"
             return render_template_string(html)
@@ -598,6 +668,7 @@ def fileset():
 
 
 @app.route("/fileset/delete/<int:id>", methods=["POST"])
+@role_required("Admin", "Moderator")
 def delete_fileset(id):
     connection = db_connect()
     with connection.cursor() as cursor:
@@ -611,6 +682,7 @@ def delete_fileset(id):
 
 
 @app.route("/files_action/<int:id>", methods=["POST"])
+@role_required("Admin", "Moderator")
 def files_action(id):
     action = request.form.get("action")
     if action == "Delete Selected Files":
@@ -725,6 +797,7 @@ def files_action(id):
 
 
 @app.route("/fileset/<int:id>/update", methods=["POST"])
+@role_required("Admin", "Moderator")
 def update_fileset(id):
     connection = db_connect()
     try:
@@ -837,12 +910,14 @@ def update_fileset(id):
 
 
 @app.route("/fileset/<int:id>/merge", methods=["GET", "POST"])
+@role_required("Admin", "Moderator", "Read Only")
 def merge_fileset(id):
     url = f"/fileset_search?source_id={id}"
     return redirect(url)
 
 
 @app.route("/fileset/<int:id>/possible_merge", methods=["GET", "POST"])
+@role_required("Admin", "Moderator")
 def possible_merge_filesets(id):
     connection = db_connect()
 
@@ -961,6 +1036,7 @@ def get_file_status(candidate_fileset, fileset, conn):
 
 
 @app.route("/fileset/<int:id>/merge/confirm", methods=["GET", "POST"])
+@role_required("Admin", "Moderator", "Read Only")
 def confirm_merge(id):
     target_id = (
         request.args.get("target_id", type=int)
@@ -1344,14 +1420,25 @@ def confirm_merge(id):
             </table>
                 <input type="hidden" name="source_id" value="{{ source_fileset['id'] }}">
                 <input type="hidden" name="target_id" value="{{ target_fileset['id'] }}">
-                <button id="confirm_merge_submit" type="submit">Confirm Merge</button>
-            </form>
-            <div id="merging-status" style="display: none; font-weight: bold; margin-top: 10px;">
-                Merging... Please wait.
-            </div>
-            <form action="{{ url_for('fileset', id=id) }}">
-                <input id="confirm_merge_cancel" type="submit" value="Cancel">
-            </form>
+            """
+
+            if is_moderator_access():
+                """<button id="confirm_merge_submit" type="submit">Confirm Merge</button>"""
+
+            html += """</form>
+                <div id="merging-status" style="display: none; font-weight: bold; margin-top: 10px;">
+                    Merging... Please wait.
+                </div>
+            """
+
+            if is_moderator_access():
+                html += """
+                    <form action="{{ url_for('fileset', id=id) }}">
+                        <input id="confirm_merge_cancel" type="submit" value="Cancel">
+                    </form>
+                """
+
+            html += """
             <script src="{{ url_for('static', filename='js/confirm_merge_form_handler.js') }}"></script>
             <script src="{{ url_for('static', filename='js/update_merge_table_rows.js') }}"></script>
             <script>
@@ -1376,6 +1463,7 @@ def confirm_merge(id):
 
 
 @app.route("/fileset/<int:id>/merge/execute", methods=["POST"])
+@role_required("Admin", "Moderator")
 def execute_merge(id):
     connection = db_connect()
     with connection.cursor() as cursor:
@@ -1493,6 +1581,7 @@ def execute_merge(id):
 
 
 @app.route("/fileset/<int:id>/mark_full", methods=["POST"])
+@role_required("Admin", "Moderator")
 def mark_as_full(id):
     try:
         conn = db_connect()
@@ -1517,6 +1606,7 @@ def mark_as_full(id):
 
 
 @app.route("/config", methods=["GET", "POST"])
+@role_required("Admin", "Moderator", "Read Only")
 def config():
     """
     Stores the user configurations in the cookies
@@ -1724,18 +1814,21 @@ def validate():
 
 
 @app.route("/user_games_list")
+@role_required("Admin", "Moderator", "Read Only")
 def user_games_list():
     url = "fileset_search?extra=&platform=&language=&megakey=&status=user"
     return redirect(url)
 
 
 @app.route("/ready_for_review")
+@role_required("Admin", "Moderator", "Read Only")
 def ready_for_review():
     url = "fileset_search?extra=&platform=&language=&megakey=&status=ReadyForReview"
     return redirect(url)
 
 
 @app.route("/logs")
+@role_required("Admin", "Moderator", "Read Only")
 def logs():
     filename = "logs"
     records_table = "log"
@@ -1800,6 +1893,7 @@ def get_fileset_search_details():
 
 
 @app.route("/fileset_search")
+@role_required("Admin", "Moderator", "Read Only")
 def fileset_search():
     (
         filename,
@@ -1819,10 +1913,12 @@ def fileset_search():
         filters,
         mapping,
     )
-    return render_template_string(render_html_string)
+    user_role = get_user_role()
+    return render_template_string(render_html_string, user_role=user_role)
 
 
 @app.route("/delete_filtered_filesets", methods=["GET"])
+@role_required("Admin")
 def delete_filtered_filesets():
     (
         filename,
@@ -1875,5 +1971,4 @@ def email_notification(fileset_id):
 
 
 if __name__ == "__main__":
-    app.secret_key = secret_key
     app.run(port=5001, debug=True, host="0.0.0.0")
