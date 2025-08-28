@@ -91,11 +91,13 @@
             {% if username == "" %}
                 <a href="{{ url_for('login') }}">Login with GitHub</a>
             {% else %}
-                <a href="{{ url_for('user_games_list') }}">User Games List</a>
-                <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
-                <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
-                <a href="{{ url_for('logs')}}">Logs</a>
-                <a href="{{ url_for('config') }}">Config</a>
+                {% if user_role != "No Access" %}
+                    <a href="{{ url_for('user_games_list') }}">User Games List</a>
+                    <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+                    <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+                    <a href="{{ url_for('logs')}}">Logs</a>
+                    <a href="{{ url_for('config') }}">Config</a>
+                {% endif %}
                 <a href="{{ url_for('logout') }}" onclick="return confirm('Are you sure you want to log out?');">Logout</a>
             {% endif %}
         </div>

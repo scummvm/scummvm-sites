@@ -16,6 +16,9 @@ def role_required(*roles):
             user = session.get("user")
             user_role = user["role"]
 
+            if user_role == "No Access":
+                return redirect(url_for("home"))
+
             if user_role not in roles:
                 abort(403)
             return f(*args, **kwargs)
