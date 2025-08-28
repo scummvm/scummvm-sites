@@ -239,6 +239,11 @@ def fileset():
                 html += "<button type='submit' style='margin-left: 10px;'>Delete the Fileset</button>"
                 html += "</form>"
 
+                # Manually log email notification
+                html += f"""<form action="{url_for("manual_email_notification", fileset_id=id)}" method="POST" onsubmit="return confirm('Are you sure you want to log a user email notification for the given fileset?');">"""
+                html += "<button type='submit' style='margin-left: 10px;'>Log User Email Notification</button>"
+                html += "</form>"
+
             # -------------------------------------------------------------------------------------------------
             #                                        metadata
             # -------------------------------------------------------------------------------------------------
@@ -1953,12 +1958,16 @@ def delete_filtered_filesets():
     return redirect("/logs")
 
 
-@app.route("/email_notification/<int:fileset_id>", methods=["GET"])
-def email_notification(fileset_id):
+def log_user_email_notification(fileset_id):
     connection = db_connect()
     log_text = f"User email received for Fileset:{fileset_id}"
     create_log("Email Received", "Mail Server", log_text, connection)
     connection.commit()
+
+
+@app.route("/email_notification/<int:fileset_id>", methods=["POST"])
+def email_notification(fileset_id):
+    log_user_email_notification(fileset_id)
     return jsonify(
         {
             "status": "success",
@@ -1966,6 +1975,13 @@ def email_notification(fileset_id):
             "message": "Email notification logged",
         }
     ), 200
+
+
+@app.route("/manual_email_notification/<int:fileset_id>", methods=["POST"])
+@role_required("Admin", "Moderator")
+def manual_email_notification(fileset_id):
+    log_user_email_notification(fileset_id)
+    return redirect("/logs")
 
 
 if __name__ == "__main__":
