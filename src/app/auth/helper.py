@@ -1,10 +1,4 @@
-import getpass
 from flask import session
-
-
-def get_current_user():
-    user = f"cli:{getpass.getuser()}"
-    return user
 
 
 def get_user_role():

@@ -16,7 +16,6 @@ from datetime import timedelta
 import json
 import html as html_lib
 import os
-import getpass
 from src.app.pagination import create_page
 import difflib
 
@@ -42,7 +41,6 @@ from src.app.auth.github_oauth import init_oauth, GITHUB_ORG, TEAM_ROLES
 from src.app.auth.role_based_auth import role_required
 from src.app.auth.helper import (
     get_user_role,
-    get_current_user,
     get_username,
     is_moderator_access,
 )
@@ -674,7 +672,7 @@ def delete_fileset(id):
     with connection.cursor() as cursor:
         query = "DELETE FROM fileset WHERE id = %s"
         cursor.execute(query, (id,))
-        user = get_current_user()
+        user = get_username()
         log_text = f"Fileset deleted by moderator: {user} id:{id}"
         create_log("Filset Deleted", user, log_text, connection)
         connection.commit()
@@ -696,7 +694,7 @@ def files_action(id):
                 )
                 connection.commit()
 
-        user = f"cli:{getpass.getuser()}"
+        user = get_username()
         log_text = (
             f"{len(file_ids)} file(s) of Fileset:{id} deleted by moderator: {user}."
         )
@@ -789,7 +787,7 @@ def files_action(id):
                     values = values_by_table["filechecksum"] + [file]
                     cursor.execute(query, values)
                 print(f"File:{file} for Fileset:{id} updated successfully.")
-            user = f"cli:{getpass.getuser()}"
+            user = get_username()
             log_text = f"{len(changes_map)} file(s) of Fileset:{id} updated by moderator: {user}."
             create_log("Files Updated", user, log_text, connection)
             connection.commit()
@@ -865,7 +863,7 @@ def update_fileset(id):
                     query = f"UPDATE engine SET {', '.join(updates_by_table['engine'])} WHERE id = %s"
                     values = values_by_table["engine"] + [engine_id]
                     cursor.execute(query, values)
-                user = f"cli:{getpass.getuser()}"
+                user = get_username()
                 log_text = f"Fileset:{id} metadata updated by moderator: {user}."
                 create_log("Metadata Updated", user, log_text, connection)
                 print(f"Fileset:{id} updated successfully.")
@@ -896,7 +894,7 @@ def update_fileset(id):
                 cursor.execute(
                     "UPDATE fileset SET game = %s WHERE id = %s", (game_pk_id, id)
                 )
-                user = f"cli:{getpass.getuser()}"
+                user = get_username()
                 log_text = (
                     f"Fileset:{id} additional metadata added by moderator: {user}."
                 )
@@ -1562,7 +1560,7 @@ def execute_merge(id):
                 delete_original_fileset(source_id, connection)
 
             category_text = "Manually Merged"
-            user = f"cli:{getpass.getuser()}"
+            user = get_username()
             log_text = f"Manually merged Fileset:{source_id} with Fileset:{target_id} by moderator: {user}."
             create_log(category_text, user, log_text, connection)
 
@@ -1586,7 +1584,7 @@ def mark_as_full(id):
     try:
         conn = db_connect()
         with conn.cursor() as cursor:
-            user = f"cli:{getpass.getuser()}"
+            user = get_username()
             update_query = "UPDATE fileset SET status = 'full' WHERE id = %s"
             cursor.execute(update_query, (id,))
             create_log(
@@ -1948,7 +1946,7 @@ def delete_filtered_filesets():
         cursor.execute(
             f"DELETE FROM fileset WHERE id IN ({placeholders})", filtered_filesets_id
         )
-        user = f"cli:{getpass.getuser()}"
+        user = get_username()
         log_text = f"{len(filtered_filesets_id)} filesets deleted by moderator: {user}."
         create_log("Filesets Deleted", user, log_text, connection)
         connection.commit()
