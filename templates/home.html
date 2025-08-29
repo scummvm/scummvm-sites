@@ -114,9 +114,11 @@
              {% endif %}
         </div>
     </nav>
-    <div class="title">
-        <div class="fileset_database">Fileset Database</div>
-    </div>
+    {% if username != "" %}
+        <div class="title">
+            <div class="fileset_database">Fileset Database</div>
+        </div>
+    {% endif %}
 </body>
 
 </html>
