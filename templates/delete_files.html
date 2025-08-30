@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/favicon-16x16.png">
+    <style>
+    button {
+        background-color: #d9534f;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s, box-shadow 0.3s;
+    }
+
+    button:hover {
+        background-color: #c9302c;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+</style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">
+            <a href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='integrity_service_logo_256.png') }}" alt="Logo">
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="{{ url_for('user_games_list') }}">User Games List</a>
+            <a href="{{ url_for('ready_for_review') }}">Ready for review</a>
+            <a href="{{ url_for('fileset_search') }}">Fileset Search</a>
+            <a href="{{ url_for('logs') }}">Logs</a>
+            <a href="{{ url_for('config') }}">Config</a>
+        </div>
+    </nav>
+    <h2 style="margin-top: 80px;"><u>Fileset: {{id}}</u></h2>
+    <div>
+        <h2>Are you sure you want to delete the given {{total_files}} file(s)?</h2>
+        <form method="POST" onsubmit="return confirm('{{total_files}} file(s) will be deleted.');"
+            action="{{ url_for('delete_files_confirmation', id=id) }}">
+            <input type="hidden" name="file_ids" value="{{ file_ids }}">
+            <button style="margin-bottom: 10px;" type="submit">Yes, delete</button>
+        </form>
+        <ol>
+            {% for file in files %}
+            <li>{{ file.name }} (ID: {{ file.id }})</li>
+            {% endfor %}
+        </ol>
+    </div>
+</body>
+
+</html>
