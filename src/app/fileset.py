@@ -289,7 +289,9 @@ def fileset():
                 cursor.execute(query, (id,))
                 result = {**result, **cursor.fetchone()}
             else:
-                if status == "user" or status == "ReadyForReview":
+                if (
+                    status == "user" or status == "ReadyForReview"
+                ) and is_moderator_access():
                     html += "<h4>Add additional metadata</h4>"
 
                     cursor.execute(
