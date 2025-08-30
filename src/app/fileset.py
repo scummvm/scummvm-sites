@@ -1845,7 +1845,7 @@ def logs():
         "text": "log",
     }
     logs_per_page = get_logs_per_page()
-    render_html_string, _, _ = create_page(
+    render_html_string = create_page(
         filename, logs_per_page, records_table, select_query, order, filters
     )
     return render_template_string(render_html_string)
@@ -1907,7 +1907,7 @@ def fileset_search():
         mapping,
         filesets_per_page,
     ) = get_fileset_search_details()
-    render_html_string, _, _ = create_page(
+    render_html_string = create_page(
         filename,
         filesets_per_page,
         records_table,
@@ -1920,9 +1920,9 @@ def fileset_search():
     return render_template_string(render_html_string, user_role=user_role)
 
 
-@app.route("/delete_filtered_filesets", methods=["GET"])
+@app.route("/fileset_search/delete_filtered_filesets/confirmation", methods=["GET"])
 @role_required("Admin")
-def delete_filtered_filesets():
+def delete_filtered_filesets_confirmation():
     (
         filename,
         records_table,
@@ -1932,7 +1932,8 @@ def delete_filtered_filesets():
         mapping,
         filesets_per_page,
     ) = get_fileset_search_details()
-    _, select_query, condition = create_page(
+    filesets_per_page = 1000000
+    page = create_page(
         filename,
         filesets_per_page,
         records_table,
@@ -1940,19 +1941,26 @@ def delete_filtered_filesets():
         order,
         filters,
         mapping,
+        delete_confirmation=True,
     )
-    query = f"{select_query} {condition}"
+    return render_template_string(page)
+
+
+@app.route("/fileset_search/delete_filtered_filesets/execute", methods=["POST"])
+@role_required("Admin")
+def delete_filtered_filesets():
     connection = db_connect()
     with connection.cursor() as cursor:
-        cursor.execute(query)
-        filtered_filesets = cursor.fetchall()
-        filtered_filesets_id = [f["fileset"] for f in filtered_filesets]
-        placeholders = ",".join(["%s"] * len(filtered_filesets_id))
-        cursor.execute(
-            f"DELETE FROM fileset WHERE id IN ({placeholders})", filtered_filesets_id
-        )
+        ids_str = request.form.get("ids")
+        filters_for_logging = request.form.get("filters")
+        ids = [int(i) for i in ids_str.split(",")]
+        placeholders = ",".join(["%s"] * len(ids))
+        query = f"DELETE FROM fileset WHERE id IN ({placeholders})"
+        cursor.execute(query, ids)
         user = get_username()
-        log_text = f"{len(filtered_filesets_id)} filesets deleted by moderator: {user}."
+        log_text = (
+            f"{len(ids)} filesets deleted by moderator: {user}. {filters_for_logging}"
+        )
         create_log("Filesets Deleted", user, log_text, connection)
         connection.commit()
     return redirect("/logs")
