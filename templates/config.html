@@ -20,6 +20,26 @@
         }
 
         .title {
+            margin-top: 220px;
+            text-align: center;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 10px;
+            align-self: flex-start;
+            margin-left: 2vh;
+        }
+
+        .config_title_admin {
+            margin-top: 20px;
+            text-align: center;
+            background-color: #ffffff;
+            color: #000000;
+            padding: 10px;
+            align-self: flex-start;
+            margin-left: 2vh;
+        }
+
+        .config_title {
             margin-top: 150px;
             text-align: center;
             background-color: #ffffff;
@@ -96,6 +116,23 @@
             flex-wrap: wrap;
         }
 
+        .clear_database {
+            background-color: #d9534f;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            margin-left: 0;
+        }
+
+        .clear_database:hover {
+            background-color: #c9302c;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
         @media (max-width: 768px) {
             .config {
                 font-size: 40px;
@@ -136,7 +173,15 @@
         </div>
     </nav>
     <div class="content">
-        <h1 class="title">User Configurations</h1>
+        {% if user_role == "Admin" %}
+            <h2 class="title">Admin Features</h2>
+            <form style="align-self: flex-start; margin-left: 40px;" action="{{ url_for('clear_database') }}" method="POST">
+                    <button class="clear_database" type="submit" onclick="return confirm('Are you sure you want to clear the database?');">Clear Database</button>
+            </form>
+            <h2 class="config_title_admin">User Configurations</h2>
+        {% else %}
+            <h2 class="config_title">User Configurations</h2>
+        {% endif %}
         <div class="main">
             <form class="config-form" method="POST" action="{{ url_for('config') }}">
                 <div class="config-section">

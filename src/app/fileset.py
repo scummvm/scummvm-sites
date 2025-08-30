@@ -1742,6 +1742,7 @@ def config():
         for field, default in log_dashboard_widths_default.items()
     }
 
+    user_role = get_user_role()
     return render_template(
         "config.html",
         filesets_per_page=filesets_per_page,
@@ -1750,6 +1751,7 @@ def config():
         fileset_fields=fileset_fields,
         log_dashboard_widths=log_dashboard_widths,
         log_fields=log_fields,
+        user_role=user_role,
     )
 
 
