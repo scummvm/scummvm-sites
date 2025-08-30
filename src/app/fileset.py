@@ -439,7 +439,7 @@ def fileset():
                 html += "<input type='submit' value='Hide extra checksums' />"
             html += "</form>"
 
-            html += f"""<form id="file_action_form" method="POST" action="{url_for("files_action", id=id)}" onsubmit="return confirm('Are you sure you want to perform this action on the files?');">"""
+            html += f"""<form id="file_action_form" method="POST" action="{url_for("files_action", id=id)}">"""
             # Table
             html += "<table>\n"
 
@@ -539,7 +539,7 @@ def fileset():
 
             html += "</table>\n"
             if is_moderator_access():
-                html += """<input type="submit" name="action" value="Update Files">"""
+                html += """<input type="submit" name="action" value="Update Files" onclick="return update_files()">"""
                 html += """<input style="margin-left: 10px;" type="submit" name="action" value="Delete Selected Files">"""
             html += "</form>\n"
 
@@ -665,6 +665,7 @@ def fileset():
                     html += "</tr>"
                 html += "</table>\n"
             html += "<script src='{{ url_for('static', filename='js/track_metadata_update.js') }}'></script>"
+            html += "<script src='{{ url_for('static', filename='js/update_files.js') }}'></script>"
             return render_template_string(html)
     finally:
         connection.close()
@@ -684,12 +685,29 @@ def delete_fileset(id):
     return redirect(url_for("logs"))
 
 
-@app.route("/files_action/<int:id>", methods=["POST"])
+@app.route("/files_action/<int:id>/delete_files/confirm", methods=["GET", "POST"])
 @role_required("Admin", "Moderator")
-def files_action(id):
-    action = request.form.get("action")
-    if action == "Delete Selected Files":
-        file_ids = request.form.getlist("file_ids")
+def delete_files_confirmation(id):
+    if request.method == "GET":
+        file_ids_str = request.args.get("file_ids")
+        file_ids = [i for i in file_ids_str.split(",")]
+        connection = db_connect()
+        with connection.cursor() as cursor:
+            placeholders = ",".join(["%s"] * len(file_ids))
+            cursor.execute(
+                f"SELECT id, name FROM file WHERE id IN ({placeholders})", file_ids
+            )
+            files = cursor.fetchall()
+        return render_template(
+            "delete_files.html",
+            id=id,
+            files=files,
+            file_ids=",".join(file_ids),
+            total_files=len(files),
+        )
+
+    elif request.method == "POST":
+        file_ids = request.form.get("file_ids").split(",")
         if file_ids:
             connection = db_connect()
             with connection.cursor() as cursor:
@@ -699,12 +717,27 @@ def files_action(id):
                 )
                 connection.commit()
 
-        user = get_username()
-        log_text = (
-            f"{len(file_ids)} file(s) of Fileset:{id} deleted by moderator: {user}."
-        )
-        create_log("Files Deleted", user, log_text, connection)
-        connection.commit()
+            user = get_username()
+            log_text = (
+                f"{len(file_ids)} file(s) of Fileset:{id} deleted by moderator: {user}."
+            )
+            create_log("Files Deleted", user, log_text, connection)
+            connection.commit()
+
+        return redirect(url_for("fileset", id=id))
+
+
+@app.route("/files_action/<int:id>", methods=["POST"])
+@role_required("Admin", "Moderator")
+def files_action(id):
+    action = request.form.get("action")
+    if action == "Delete Selected Files":
+        file_ids = request.form.getlist("file_ids")
+        if file_ids:
+            ids_str = ",".join(file_ids)
+            return redirect(
+                url_for("delete_files_confirmation", id=id, file_ids=ids_str)
+            )
 
     elif action == "Update Files":
         connection = db_connect()
