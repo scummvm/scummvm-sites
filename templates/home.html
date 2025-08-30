@@ -102,11 +102,6 @@
             {% endif %}
         </div>
         <div class="dev">
-             {% if user_role == "Admin" %}
-                 <form style="margin-right: 20px;" action="{{ url_for('clear_database') }}" method="POST">
-                     <button type="submit" onclick="return confirm('Are you sure you want to clear the database?');">Clear Database</button>
-                 </form>
-             {% endif %}
              {% if username != "" %}
                  <span>{{username}} - {{user_role}}</span>
              {% else %}
