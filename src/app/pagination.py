@@ -56,6 +56,7 @@ def create_page(
     order,
     filters={},
     mapping={},
+    delete_confirmation=False,
 ):
     conn = db_connect()
 
@@ -63,11 +64,15 @@ def create_page(
         tables = set()
         where_clauses = []
         compare_fileset_source_id = request.args.get("source_id", "")
+        total_filtered_filesets = 0
+        ids = []
+        filters_for_logging = ""
 
         for key, value in request.args.items():
             if key in ("page", "sort", "source_id") or value == "":
                 continue
             tables.add(filters[key])
+            filters_for_logging += f"{key}: {value} "
             col = f"{filters[key]}.{'id' if key == 'fileset' else key}"
             parsed = build_search_condition(value, col)
             if parsed:
@@ -133,6 +138,14 @@ def create_page(
         cursor.execute(query)
         results = cursor.fetchall()
 
+        # Total filesets
+        if delete_confirmation:
+            query = f"{select_query} {condition}"
+            cursor.execute(query)
+            all_ids = cursor.fetchall()
+            ids = [ids["fileset"] for ids in all_ids]
+            total_filtered_filesets = len(all_ids)
+
     # Initial html code including the navbar is stored in a separate html file.
     html = ""
     navbar_path = os.path.join(STATIC_DIR, "navbar_string.html")
@@ -144,12 +157,28 @@ def create_page(
             '<button type="submit">Delete Filtered Filesets</button>',
             '<button type="submit" style="display:none;" disabled>Delete Filtered Filesets</button>',
         )
-
-    # Generate HTML
-    html += """
-        <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
-        <table class="fixed-table" style="margin-top: 80px;">
-    """
+    if delete_confirmation:
+        ids_str = ",".join(map(str, ids))
+        html += f"""
+        <div style="margin-top: 100px;">
+            <h2>Are you sure you want to delete the given {total_filtered_filesets} filtered filesets?</h2>
+            <form onsubmit="return confirm('{total_filtered_filesets} filesets will be deleted.');" action="/fileset_search/delete_filtered_filesets/execute" method="POST">
+                <input type="hidden" name="ids" value="{ids_str}">
+                <input type="hidden" name="filters" value="{filters_for_logging}">
+                <button style="margin-bottom: 10px;" type="submit">Yes, delete</button>
+            </form>
+        </div>
+        """
+        html += """
+            <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
+            <table class="fixed-table">
+        """
+    else:
+        # Generate HTML
+        html += """
+            <form id='filters-form' method='GET' onsubmit='remove_empty_inputs()'>
+            <table class="fixed-table" style="margin-top: 80px;">
+        """
 
     if records_table == "fileset":
         fileset_dashboard_widths_default = {
@@ -182,19 +211,21 @@ def create_page(
             width = get_width(name, default)
             html += f"<col style='width: {width}%;'>"
         html += "</colgroup>"
-    if filters:
-        html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
-        for key in filters.keys():
-            if key == "checksum":
-                continue
-            filter_value = request.args.get(key, "")
-            if key == "transaction":
-                html += f"<td style='display: flex;' class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/>"
-                filter_value = request.args.get("checksum", "")
-                html += f"<input type='text' class='filter' placeholder='checksum' name='checksum' value='{filter_value}'/></td>"
-            else:
-                html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
-        html += "</tr>"
+
+    if not delete_confirmation:
+        if filters:
+            html += """<tr class='filter'><td class='filter'><input type='submit' value='Submit'></td>"""
+            for key in filters.keys():
+                if key == "checksum":
+                    continue
+                filter_value = request.args.get(key, "")
+                if key == "transaction":
+                    html += f"<td style='display: flex;' class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/>"
+                    filter_value = request.args.get("checksum", "")
+                    html += f"<input type='text' class='filter' placeholder='checksum' name='checksum' value='{filter_value}'/></td>"
+                else:
+                    html += f"<td class='filter'><input type='text' class='filter' placeholder='{key}' name='{key}' value='{filter_value}'/></td>"
+            html += "</tr>"
 
     html += "<th>S. No.</th>"
     current_sort = request.args.get("sort", "")
@@ -224,26 +255,45 @@ def create_page(
             base_params["sort"] = sort_param
 
         query_string = "&".join(f"{k}={v}" for k, v in base_params.items())
+        icon_src = url_for("static", filename=icon_path + icon_name)
+
         if key != "checksum":
-            icon_src = url_for("static", filename=icon_path + icon_name)
-            if icon_name != "no_icon":
-                html += f"""<th>
-                    <a href='{filename}?{query_string}' class="header-link">
+            if not delete_confirmation:
+                # clickable header (sorting allowed)
+                if icon_name != "no_icon":
+                    html += f"""<th>
+                        <a href='{filename}?{query_string}' class="header-link">
+                            <div style="display:flex; align-items:center; width:100%;">
+                                <span style="flex:1; text-align:center;">{key}</span>
+                                <img src="{icon_src}" class="filter-icon" alt="asc" style="margin-left:auto;">
+                            </div>
+                        </a>
+                    </th>"""
+                else:
+                    html += f"""<th>
+                        <a href='{filename}?{query_string}' class="header-link">
+                            <div style="display:flex; align-items:center; width:100%;">
+                                <span style="flex:1; text-align:center;">{key}</span>
+                                <span style="width: 18px"></span>
+                            </div>
+                        </a>
+                    </th>"""
+            else:
+                # non-clickable header (sorting disabled)
+                if icon_name != "no_icon":
+                    html += f"""<th>
                         <div style="display:flex; align-items:center; width:100%;">
                             <span style="flex:1; text-align:center;">{key}</span>
-                            <img src="{icon_src}" class="filter-icon" alt="asc" style="margin-left:auto;">
+                            <img src="{icon_src}" class="filter-icon disabled" alt="asc" style="margin-left:auto; opacity:0.5;">
                         </div>
-                    </a>
-                </th>"""
-            else:
-                html += f"""<th>
-                    <a href='{filename}?{query_string}' class="header-link">
+                    </th>"""
+                else:
+                    html += f"""<th>
                         <div style="display:flex; align-items:center; width:100%;">
                             <span style="flex:1; text-align:center;">{key}</span>
                             <span style="width: 18px"></span>
                         </div>
-                    </a>
-                </th>"""
+                    </th>"""
 
     if compare_fileset_source_id != "":
         html += """<th>
@@ -334,4 +384,4 @@ def create_page(
         html += "<input type='submit' value='Submit'>"
         html += "</div></form>"
 
-    return html, select_query, condition
+    return html
