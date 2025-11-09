@@ -878,6 +878,7 @@ def main():
         parser.add_argument(
             "--limit-timestamps",
             help="Format - YYYY-MM-DD or YYYY-MM or YYYY. Filters out the files those were modified after the given timestamp. Note that if the modification time is today, it would not be filtered out.",
+            type=validate_date
         )
 
         args = parser.parse_args()
@@ -891,12 +892,8 @@ def main():
         checksum_size = args.size
 
         limit_timestamps_date = None
-        try:
-            if args.limit_timestamps:
-                limit_timestamps_date = validate_date(str(args.limit_timestamps))
-        except ValueError as ve:
-            print(ve)
-            sys.exit(1)
+        if args.limit_timestamps:
+            limit_timestamps_date = args.limit_timestamps
 
         create_dat_file(
             compute_hash_of_dirs(path, depth, checksum_size, limit_timestamps_date),
