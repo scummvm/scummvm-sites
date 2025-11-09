@@ -1,12 +1,14 @@
+import argparse
+import collections
 import hashlib
 import os
-import argparse
 import struct
 import sys
+import traceback
+import typing
+
 from enum import Enum
 from datetime import datetime, date, timedelta
-from collections import defaultdict
-import traceback
 
 
 class FileType(Enum):
@@ -69,12 +71,12 @@ def crc16xmodem(data, crc=0):
 # fmt: on
 
 
-def filesize(filepath):
+def filesize(filepath: str) -> int:
     """Returns size of file"""
     return os.stat(filepath).st_size
 
 
-def get_dirs_at_depth(directory, depth):
+def get_dirs_at_depth(directory: str, depth: int) -> typing.Iterable[str]:
     directory = directory.rstrip(os.path.sep)
     assert os.path.isdir(directory)
     num_sep = directory.count(os.path.sep)
@@ -105,7 +107,7 @@ def escape_string(s: str) -> str:
     return new_name
 
 
-def encode_punycode(orig):
+def encode_punycode(orig: str) -> str:
     """
     Punyencode strings
 
@@ -124,7 +126,7 @@ def encode_punycode(orig):
     return orig
 
 
-def punycode_need_encode(orig):
+def punycode_need_encode(orig: str) -> bool:
     """
     A filename needs to be punyencoded when it:
 
@@ -140,7 +142,7 @@ def punycode_need_encode(orig):
     return False
 
 
-def encode_path_components(filepath):
+def encode_path_components(filepath: str) -> str:
     """
     Puny encodes all separate components of filepath
     """
@@ -151,20 +153,20 @@ def encode_path_components(filepath):
     return os.path.join(*encoded_parts)
 
 
-def read_be_32(byte_stream, signed=False):
+def read_be_32(byte_stream: bytes, signed: bool = False) -> int:
     """Return unsigned integer of size_in_bits, assuming the data is big-endian"""
     format = ">i" if signed else ">I"
     (uint,) = struct.unpack(format, byte_stream[: 32 // 8])
     return uint
 
 
-def read_be_16(byte_stream):
+def read_be_16(byte_stream: bytes) -> int:
     """Return unsigned integer of size_in_bits, assuming the data is big-endian"""
     (uint,) = struct.unpack(">H", byte_stream[: 16 // 8])
     return uint
 
 
-def is_raw_rsrc(filepath):
+def is_raw_rsrc(filepath: str) -> bool:
     """Returns boolean, checking if the given .rsrc file is a raw .rsrc file and not appledouble."""
     filename = os.path.basename(filepath)
     if filename.endswith(".rsrc"):
@@ -173,7 +175,7 @@ def is_raw_rsrc(filepath):
     return False
 
 
-def is_appledouble_rsrc(filepath):
+def is_appledouble_rsrc(filepath: str) -> bool:
     """Returns boolean, checking whether the given .rsrc file is an appledouble or not."""
     filename = os.path.basename(filepath)
     if filename.endswith(".rsrc"):
@@ -182,7 +184,7 @@ def is_appledouble_rsrc(filepath):
     return False
 
 
-def is_appledouble_in_dot_(filepath):
+def is_appledouble_in_dot_(filepath: str) -> bool:
     """Returns boolean, checking whether the given ._ file is an appledouble or not. It also checks that the parent directory is not __MACOSX as that case is handled differently"""
     filename = os.path.basename(filepath)
     parent_dir = os.path.basename(os.path.dirname(filepath))
@@ -192,7 +194,7 @@ def is_appledouble_in_dot_(filepath):
     return False
 
 
-def is_appledouble_in_macosx(filepath):
+def is_appledouble_in_macosx(filepath: str) -> bool:
     """Returns boolean, checking whether the given ._ file in __MACOSX folder is an appledouble or not."""
     filename = os.path.basename(filepath)
     parent_dir = os.path.basename(os.path.dirname(filepath))
@@ -202,7 +204,7 @@ def is_appledouble_in_macosx(filepath):
     return False
 
 
-def is_macbin(filepath):
+def is_macbin(filepath: str) -> bool:
     with open(filepath, "rb") as file:
         header = file.read(128)
         if len(header) != 128:
@@ -241,14 +243,14 @@ def is_macbin(filepath):
             return True
 
 
-def is_actual_resource_fork_mac(filepath):
+def is_actual_resource_fork_mac(filepath: str) -> bool:
     """Returns boolean, checking the actual mac fork if it exists."""
 
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
     return os.path.exists(resource_fork_path)
 
 
-def is_appledouble(file_byte_stream):
+def is_appledouble(file_byte_stream: bytes) -> bool:
     """
     Appledouble Structure -
 
@@ -795,7 +797,7 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
     Returns filtered map with filepath and its modification time
     """
 
-    filtered_file_map = defaultdict(str)
+    filtered_file_map = collections.defaultdict(str)
 
     if limit_timestamps_date is not None:
         user_date = limit_timestamps_date

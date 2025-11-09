@@ -1,5 +1,7 @@
 import re
 
+import typing
+
 MAX_FILES = 10000
 MAX_CHECKSUMS_PER_FILE = 8
 VALID_KEYS = {"gameid", "engineid", "extra", "platform", "language", "files"}
@@ -64,7 +66,7 @@ def validate_field_len(field_name, value, max_size):
     return True, "valid"
 
 
-def validate_user_payload(json_object):
+def validate_user_payload(json_object: dict) -> typing.Tuple[bool, str]:
     """
     All the checks on user data are performed here.
     - Datatype of all values
