@@ -68,7 +68,10 @@ def insert_game(engine_name, engineid, title, gameid, extra, platform, lang, con
             "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, %s, %s, %s, %s, %s)",
             (title, engine_last, gameid, extra, platform, lang),
         )
+        # Try to get rid of @game_last and pass the variable explicitly instead
         cursor.execute("SET @game_last = LAST_INSERT_ID()")
+        game_last = cursor.lastrowid
+        return game_last
 
 
 def insert_fileset(
@@ -483,8 +486,7 @@ def db_insert(data_arr, username=None, skiplog=False):
         console_log(log_text)
         console_log_total_filesets(filepath)
 
-        fileset_count = 1
-        for fileset in game_data:
+        for fileset_count, fileset in enumerate(game_data, start=1):
             console_log_detection(fileset_count)
             key = calc_key(fileset)
             megakey = calc_megakey(fileset)
@@ -556,8 +558,6 @@ def db_insert(data_arr, username=None, skiplog=False):
                             "crc",
                         ]:
                             insert_filechecksum(file, key, file_id, conn)
-
-            fileset_count += 1
 
         cur = conn.cursor()
 
