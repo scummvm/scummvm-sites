@@ -1,0 +1,32 @@
+version: 2
+
+# Security sensitive updates (ie: upgrades which fix vulnerabilities)
+# aren't affected by any filtering we define below so this is
+# purely to do with keeping dependencies compatible and supported.
+updates:
+
+# These entries are for our development dependencies
+# which we want to keep up to date but only really
+# care about major versions for supportability.
+- package-ecosystem: "github-actions"
+  directory: "/.github/workflows"
+  schedule:
+    interval: "daily"
+  ignore:
+  - dependency-name: "*"
+    update-types:
+    - "version-update:semver-minor"
+    - "version-update:semver-patch"
+
+- package-ecosystem: "uv"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  allow:
+  - dependency-type: "direct"
+  - dependency-type: "indirect"
+  ignore:
+  - dependency-name: "*"
+    update-types:
+    - "version-update:semver-minor"
+    - "version-update:semver-patch"
