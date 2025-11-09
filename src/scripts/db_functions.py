@@ -50,29 +50,23 @@ def get_checksum_props(checkcode, checksum):
 
 
 def insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn):
-    # Set @engine_last if engine already present in table
-    exists = False
     with conn.cursor() as cursor:
         cursor.execute("SELECT id FROM engine WHERE engineid = %s", (engineid,))
         res = cursor.fetchone()
         if res is not None:
-            exists = True
-            cursor.execute("SET @engine_last = %s", (res["id"],))
-
-    # Insert into table if not present
-    if not exists:
-        with conn.cursor() as cursor:
+            engine_last = res["id"]
+        else:
             cursor.execute(
                 "INSERT INTO engine (name, engineid) VALUES (%s, %s)",
                 (engine_name, engineid),
             )
-            cursor.execute("SET @engine_last = LAST_INSERT_ID()")
+            engine_last = cursor.lastrowid
 
     # Insert into game
     with conn.cursor() as cursor:
         cursor.execute(
-            "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, @engine_last, %s, %s, %s, %s)",
-            (title, gameid, extra, platform, lang),
+            "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, %s, %s, %s, %s, %s)",
+            (title, engine_last, gameid, extra, platform, lang),
         )
         cursor.execute("SET @game_last = LAST_INSERT_ID()")
 
