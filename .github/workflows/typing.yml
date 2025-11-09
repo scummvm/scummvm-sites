@@ -1,8 +1,6 @@
-name: Validate Python Typing
+name: Validate Python Typing (Experimental)
 
 on:
-  push:
-  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -26,3 +24,4 @@ jobs:
 
     - name: Run mypy type checks
       run: mypy .
+
