@@ -2,9 +2,8 @@ name: Validate Python Typing
 
 on:
   push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   type-check:
@@ -27,3 +26,4 @@ jobs:
 
     - name: Run mypy type checks
       run: mypy .
+
