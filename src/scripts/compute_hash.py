@@ -1,6 +1,7 @@
 import argparse
 import collections
 import hashlib
+import logging
 import os
 import struct
 import sys
@@ -10,6 +11,13 @@ import typing
 from enum import Enum
 from datetime import datetime, date, timedelta
 
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s'
+)
 
 class FileType(Enum):
     NON_MAC = "non_mac"
@@ -696,7 +704,7 @@ def compute_hash_of_dirs(
 
             res.append(hash_of_dir)
         except Exception:
-            print(f"Error: Could not process the given directory: {directory}.")
+            logging.error(f"Could not process the given directory: {directory}.")
             raise
     return res
 
@@ -818,7 +826,9 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
 
 
 def create_dat_file(hash_of_dirs, path, checksum_size=0):
-    with open(f"{os.path.basename(path)}.dat", "w") as file:
+    dat_pathname = f"{os.path.basename(path)}.dat"
+    logging.info(f"Writing dat file to: {dat_pathname} ")
+    with open(dat_pathname, "w") as file:
         # Header
         file.writelines(
             [
@@ -884,7 +894,7 @@ def main():
         args = parser.parse_args()
         path = args.directory
         if not os.path.isdir(path):
-            print(f"Error: Directory does not exist: {path}.")
+            logging.error(f"Directory does not exist: {path}.")
             sys.exit(1)
         path = os.path.abspath(path)
 
