@@ -241,6 +241,8 @@ def is_macbin(filepath: str) -> bool:
                 return False
 
             return True
+    # Catch-all
+    return False
 
 
 def is_actual_resource_fork_mac(filepath: str) -> bool:
@@ -352,7 +354,7 @@ def appledouble_get_datafork(filepath, fileinfo):
         raise e
 
 
-def raw_rsrc_get_datafork(filepath):
+def raw_rsrc_get_datafork(filepath: str) -> typing.Tuple[bytes, int]:
     """Returns the data fork's content as bytes and size of the data fork corresponding to raw rsrc file."""
     try:
         with open(filepath[:-5] + ".data", "rb") as f:
@@ -362,7 +364,7 @@ def raw_rsrc_get_datafork(filepath):
         raise e
 
 
-def raw_rsrc_get_resource_fork_data(filepath):
+def raw_rsrc_get_resource_fork_data(filepath: str) -> typing.Tuple[bytes, int, int]:
     """Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of a raw rsrc file."""
     with open(filepath, "rb") as f:
         resource_fork_stream = f.read()
@@ -377,7 +379,7 @@ def raw_rsrc_get_resource_fork_data(filepath):
         )
 
 
-def actual_mac_fork_get_data_fork(filepath):
+def actual_mac_fork_get_data_fork(filepath: str) -> typing.Tuple[bytes, int]:
     """Returns the data fork's content as bytes and its size if the actual mac fork exists"""
     try:
         with open(filepath, "rb") as f:
@@ -387,7 +389,7 @@ def actual_mac_fork_get_data_fork(filepath):
         raise e
 
 
-def actual_mac_fork_get_resource_fork_data(filepath):
+def actual_mac_fork_get_resource_fork_data(filepath: str) -> typing.Tuple[bytes, int, int]:
     """Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of the actual mac fork."""
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
     with open(resource_fork_path, "rb") as f:
@@ -550,7 +552,7 @@ def checksum(file, alg, size, filepath):
     return hashes
 
 
-def extract_macbin_filename_from_header(file):
+def extract_macbin_filename_from_header(file: str) -> str:
     """Extracts the filename from the header of the macbinary."""
     with open(file, "rb") as f:
         header = f.read(128)
@@ -851,28 +853,16 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
             file.write(")\n\n")
 
 
-def parse_positive_int(value, name):
+def parse_positive_int(value):
     """
     Parser the size and depth values passed as cli arguements.
     """
-    try:
-        num = int(value) if value else 0
-    except ValueError:
-        print(f"Error: Invalid {name} argument: {value}")
-        sys.exit(1)
+    num = int(value)
     if num < 0:
-        print(
-            f"Error: Invalid {name} value: {num}. Use a value greater than or equal to 0."
+        raise ValueError(
+            f"Error: Invalid value: {num}. Use a value greater than or equal to 0."
         )
-        sys.exit(1)
     return num
-
-
-class MyParser(argparse.ArgumentParser):
-    def error(self, message):
-        sys.stderr.write("Error: %s\n" % message)
-        self.print_help()
-        sys.exit(2)
 
 
 def main():
@@ -881,9 +871,9 @@ def main():
         parser.add_argument(
             "--directory", required=True, help="Path of directory with game files"
         )
-        parser.add_argument("--depth", help="Depth from root to game directories")
+        parser.add_argument("--depth", help="Depth from root to game directories", type=parse_positive_int, default="0")
         parser.add_argument(
-            "--size", help="Use first n bytes of file to calculate checksum"
+            "--size", help="Use first n bytes of file to calculate checksum", type=parse_positive_int, default="0"
         )
         parser.add_argument(
             "--limit-timestamps",
@@ -897,8 +887,8 @@ def main():
             sys.exit(1)
         path = os.path.abspath(path)
 
-        depth = parse_positive_int(args.depth, "depth")
-        checksum_size = parse_positive_int(args.size, "size")
+        depth = args.depth
+        checksum_size = args.size
 
         limit_timestamps_date = None
         try:
