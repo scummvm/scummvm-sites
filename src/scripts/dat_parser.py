@@ -1,10 +1,17 @@
-import re
-import os
-import sys
 import argparse
+import logging
+import os
+import re
+import sys
 import traceback
 from src.scripts.db_functions import db_insert, match_fileset
 
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s'
+)
 
 def remove_quotes(string):
     # Remove quotes from value if they are present
@@ -104,7 +111,7 @@ def match_outermost_brackets(input):
 
         elif char == ")" and not inside_quotes:
             if depth == 0:
-                print(f"Warning: unmatched ')' at line {line_number}")
+                logging.warning(f"Unmatched ')' at line {line_number}")
                 continue
             depth -= 1
             if depth == 0:
@@ -125,14 +132,14 @@ def parse_dat(dat_filepath):
     associated arrays
     """
     if not os.path.isfile(dat_filepath):
-        print(f"Error: File does not exist or is unreadable: {dat_filepath}.")
+        logger.error(f"File does not exist or is unreadable: {dat_filepath}.")
         return None
 
     try:
         with open(dat_filepath, "r", encoding="utf-8") as dat_file:
             content = dat_file.read()
     except (IOError, UnicodeDecodeError) as e:
-        print(f"Error: Failed to read file {dat_filepath}: {e}")
+        logger.error(f"Failed to read file {dat_filepath}: {e}")
         return None
 
     header = {}
@@ -142,7 +149,7 @@ def parse_dat(dat_filepath):
     try:
         matches = match_outermost_brackets(content)
     except Exception as e:
-        print(f"Error: Failed to parse outer brackets in {dat_filepath}: {e}")
+        logger.error(f"Failed to parse outer brackets in {dat_filepath}: {e}")
         return None
     if matches:
         for data_segment in matches:
@@ -161,7 +168,7 @@ def parse_dat(dat_filepath):
                     temp = map_key_values(data_segment[0], temp)
                     resources[temp["name"]] = temp
             except Exception as e:
-                print(f"Error: Failed to parse a data_segment: {e}")
+                logger.error(f"Failed to parse a data_segment: {e}")
                 return None
 
     return header, game_data, resources, dat_filepath
@@ -187,7 +194,7 @@ def main():
         args = parser.parse_args()
 
         if not args.upload and not args.match:
-            print("Error: No action specified. Use --upload or --match")
+            logger.error("No action specified. Use --upload or --match")
             parser.print_help()
             sys.exit(1)
 
@@ -198,29 +205,29 @@ def main():
                     if parsed_data is not None:
                         db_insert(parsed_data, args.user, args.skiplog)
                     else:
-                        print(f"Error: Failed to parse file for upload: {filepath}")
+                        logger.error(f"Failed to parse file for upload: {filepath}")
                 except Exception as e:
-                    print(f"Error uploading {filepath}.")
+                    logger.error(f"Error uploading {filepath}.")
                     raise e
 
         if args.match:
             for filepath in args.match:
                 try:
                     parsed_data = parse_dat(filepath)
-                    if parsed_data[0] is not None:
+                    if parsed_data is not None:
                         match_fileset(parsed_data, args.user, args.skiplog)
                     else:
-                        print(f"Error: Failed to parse file for matching: {filepath}")
+                        logger.error(f"Failed to parse file for matching: {filepath}")
                 except Exception as e:
-                    print(f"Error matching {filepath}:")
+                    logger.error(f"Unable to match {filepath}:")
                     raise e
 
     except KeyboardInterrupt:
-        print("Operation cancelled by user")
+        logger.warning("Operation cancelled by user")
         sys.exit(0)
     except Exception:
         traceback.print_exc()
-        print(
+        logger.error(
             "Could not handle the exception. Look through the traceback and open an issue at: https://github.com/scummvm/scummvm-sites/issues"
         )
         sys.exit(1)

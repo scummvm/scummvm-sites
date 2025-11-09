@@ -178,8 +178,8 @@ def insert_fileset(
 
 
 def normalised_path(name):
-    """
-    Converts \ to / in filepaths, to avoid filesystem independent filepath parsing.
+    r"""
+    Converts \ to / in filepaths, to ensure filesystem independent filepath parsing.
     """
     path_list = name.split("\\")
     return "/".join(path_list)
