@@ -1,11 +1,11 @@
-import pymysql
+from collections import defaultdict
+import copy
 import getpass
-import time
 import hashlib
 import os
-from collections import defaultdict
-import re
-import copy
+import time
+
+import pymysql
 from src.utils.db_config import db_connect
 from src.utils.console_log import (
     console_log,
@@ -387,21 +387,6 @@ def get_all_related_filesets(fileset_id, conn, visited=None):
         print(f"Error fetching related filesets: {e}")
 
     return related_filesets
-
-
-def convert_log_text_to_links(log_text):
-    log_text = re.sub(
-        r"Fileset:(\d+)", r'<a href="/fileset?id=\1">Fileset:\1</a>', log_text
-    )
-    log_text = re.sub(
-        r"user:(\w+)", r'<a href="/log?search=user:\1">user:\1</a>', log_text
-    )
-    log_text = re.sub(
-        r"Transaction:(\d+)",
-        r'<a href="/transaction?id=\1">Transaction:\1</a>',
-        log_text,
-    )
-    return log_text
 
 
 def calc_key(fileset):

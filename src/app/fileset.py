@@ -1,3 +1,13 @@
+from collections import defaultdict
+from datetime import timedelta
+import html as html_lib
+import json
+import os
+import re
+import urllib.parse
+
+import difflib
+
 from flask import (
     Flask,
     request,
@@ -10,20 +20,14 @@ from flask import (
     session,
 )
 
-
 import requests
-from datetime import timedelta
-import json
-import html as html_lib
-import os
+
 from src.app.pagination import create_page
-import difflib
 
 import src.app.env_loader  # noqa
 from src.scripts.db_functions import (
     insert_game,
     get_all_related_filesets,
-    convert_log_text_to_links,
     user_integrity_check,
     create_log,
     delete_original_fileset,
@@ -32,7 +36,6 @@ from src.scripts.db_functions import (
     insert_filechecksum,
 )
 from src.utils.db_config import db_connect, db_connect_root
-from collections import defaultdict
 from src.scripts.schema import init_database
 from src.app.validate_user_payload import validate_user_payload
 from src.utils.cookie import get_filesets_per_page, get_logs_per_page
@@ -124,6 +127,21 @@ def clear_database():
         conn.close()
 
     return redirect("/")
+
+
+def convert_log_text_to_links(log_text):
+    log_text = re.sub(
+        r"Fileset:(\d+)", r'<a href="/fileset?id=\1">Fileset:\1</a>', log_text
+    )
+    log_text = re.sub(
+        r"user:(\w+)", r'<a href="/log?search=user:\1">user:\1</a>', log_text
+    )
+    log_text = re.sub(
+        r"Transaction:(\d+)",
+        r'<a href="/transaction?id=\1">Transaction:\1</a>',
+        log_text,
+    )
+    return log_text
 
 
 @app.route("/fileset", methods=["GET", "POST"])
@@ -511,7 +529,8 @@ def fileset():
             for column in sortable_columns:
                 if column not in ["id"]:
                     vars = "&".join(
-                        [f"{k}={v}" for k, v in request.args.items() if k != "sort"]
+                        f"{urllib.parse.quote_plus(str(k))}={urllib.parse.quote_plus(str(v))}"
+                        for k, v in request.args.items() if k != "sort"
                     )
                     sort_link = f"{column}"
                     if sort == column:
@@ -599,7 +618,7 @@ def fileset():
                         )
                         log_text = cursor.fetchone()["text"]
                         log_text = convert_log_text_to_links(log_text)
-                        html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a>: {log_text}</td>\n"
+                        html += f"<td><a href='logs?id={html_lib.escape(h['log'])}'>Log {html_lib.escape(h['log'])}</a>: {html_lib.escape(log_text)}</td>\n"
                     else:
                         html += "<td>No log available</td>\n"
                     html += "</tr>\n"
@@ -614,7 +633,7 @@ def fileset():
                     cursor.execute("SELECT `text` FROM log WHERE id = %s", (h["log"],))
                     log_text = cursor.fetchone()["text"]
                     log_text = convert_log_text_to_links(log_text)
-                    html += f"<td><a href='logs?id={h['log']}'>Log {h['log']}</a>: {log_text}</td>\n"
+                    html += f"<td><a href='logs?id={html_lib.escape(h['log'])}'>Log {html_lib.escape(h['log'])}</a>: {html_lib.escape(log_text)}</td>\n"
                 else:
                     html += "<td>No log available</td>\n"
                 html += "</tr>\n"
