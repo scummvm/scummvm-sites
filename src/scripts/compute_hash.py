@@ -1,13 +1,23 @@
-import hashlib
-import os
 import argparse
+import collections
+import hashlib
+import logging
+import os
 import struct
 import sys
+import traceback
+import typing
+
 from enum import Enum
 from datetime import datetime, date, timedelta
-from collections import defaultdict
-import traceback
 
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='[%(levelname)s] %(asctime)s - %(name)s - %(message)s'
+)
 
 class FileType(Enum):
     NON_MAC = "non_mac"
@@ -69,12 +79,12 @@ def crc16xmodem(data, crc=0):
 # fmt: on
 
 
-def filesize(filepath):
+def filesize(filepath: str) -> int:
     """Returns size of file"""
     return os.stat(filepath).st_size
 
 
-def get_dirs_at_depth(directory, depth):
+def get_dirs_at_depth(directory: str, depth: int) -> typing.Iterable[str]:
     directory = directory.rstrip(os.path.sep)
     assert os.path.isdir(directory)
     num_sep = directory.count(os.path.sep)
@@ -105,7 +115,7 @@ def escape_string(s: str) -> str:
     return new_name
 
 
-def encode_punycode(orig):
+def encode_punycode(orig: str) -> str:
     """
     Punyencode strings
 
@@ -124,7 +134,7 @@ def encode_punycode(orig):
     return orig
 
 
-def punycode_need_encode(orig):
+def punycode_need_encode(orig: str) -> bool:
     """
     A filename needs to be punyencoded when it:
 
@@ -140,7 +150,7 @@ def punycode_need_encode(orig):
     return False
 
 
-def encode_path_components(filepath):
+def encode_path_components(filepath: str) -> str:
     """
     Puny encodes all separate components of filepath
     """
@@ -151,20 +161,20 @@ def encode_path_components(filepath):
     return os.path.join(*encoded_parts)
 
 
-def read_be_32(byte_stream, signed=False):
+def read_be_32(byte_stream: bytes, signed: bool = False) -> int:
     """Return unsigned integer of size_in_bits, assuming the data is big-endian"""
     format = ">i" if signed else ">I"
     (uint,) = struct.unpack(format, byte_stream[: 32 // 8])
     return uint
 
 
-def read_be_16(byte_stream):
+def read_be_16(byte_stream: bytes) -> int:
     """Return unsigned integer of size_in_bits, assuming the data is big-endian"""
     (uint,) = struct.unpack(">H", byte_stream[: 16 // 8])
     return uint
 
 
-def is_raw_rsrc(filepath):
+def is_raw_rsrc(filepath: str) -> bool:
     """Returns boolean, checking if the given .rsrc file is a raw .rsrc file and not appledouble."""
     filename = os.path.basename(filepath)
     if filename.endswith(".rsrc"):
@@ -173,7 +183,7 @@ def is_raw_rsrc(filepath):
     return False
 
 
-def is_appledouble_rsrc(filepath):
+def is_appledouble_rsrc(filepath: str) -> bool:
     """Returns boolean, checking whether the given .rsrc file is an appledouble or not."""
     filename = os.path.basename(filepath)
     if filename.endswith(".rsrc"):
@@ -182,7 +192,7 @@ def is_appledouble_rsrc(filepath):
     return False
 
 
-def is_appledouble_in_dot_(filepath):
+def is_appledouble_in_dot_(filepath: str) -> bool:
     """Returns boolean, checking whether the given ._ file is an appledouble or not. It also checks that the parent directory is not __MACOSX as that case is handled differently"""
     filename = os.path.basename(filepath)
     parent_dir = os.path.basename(os.path.dirname(filepath))
@@ -192,7 +202,7 @@ def is_appledouble_in_dot_(filepath):
     return False
 
 
-def is_appledouble_in_macosx(filepath):
+def is_appledouble_in_macosx(filepath: str) -> bool:
     """Returns boolean, checking whether the given ._ file in __MACOSX folder is an appledouble or not."""
     filename = os.path.basename(filepath)
     parent_dir = os.path.basename(os.path.dirname(filepath))
@@ -202,7 +212,7 @@ def is_appledouble_in_macosx(filepath):
     return False
 
 
-def is_macbin(filepath):
+def is_macbin(filepath: str) -> bool:
     with open(filepath, "rb") as file:
         header = file.read(128)
         if len(header) != 128:
@@ -239,16 +249,18 @@ def is_macbin(filepath):
                 return False
 
             return True
+    # Catch-all
+    return False
 
 
-def is_actual_resource_fork_mac(filepath):
+def is_actual_resource_fork_mac(filepath: str) -> bool:
     """Returns boolean, checking the actual mac fork if it exists."""
 
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
     return os.path.exists(resource_fork_path)
 
 
-def is_appledouble(file_byte_stream):
+def is_appledouble(file_byte_stream: bytes) -> bool:
     """
     Appledouble Structure -
 
@@ -350,7 +362,7 @@ def appledouble_get_datafork(filepath, fileinfo):
         raise e
 
 
-def raw_rsrc_get_datafork(filepath):
+def raw_rsrc_get_datafork(filepath: str) -> typing.Tuple[bytes, int]:
     """Returns the data fork's content as bytes and size of the data fork corresponding to raw rsrc file."""
     try:
         with open(filepath[:-5] + ".data", "rb") as f:
@@ -360,7 +372,7 @@ def raw_rsrc_get_datafork(filepath):
         raise e
 
 
-def raw_rsrc_get_resource_fork_data(filepath):
+def raw_rsrc_get_resource_fork_data(filepath: str) -> typing.Tuple[bytes, int, int]:
     """Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of a raw rsrc file."""
     with open(filepath, "rb") as f:
         resource_fork_stream = f.read()
@@ -375,7 +387,7 @@ def raw_rsrc_get_resource_fork_data(filepath):
         )
 
 
-def actual_mac_fork_get_data_fork(filepath):
+def actual_mac_fork_get_data_fork(filepath: str) -> typing.Tuple[bytes, int]:
     """Returns the data fork's content as bytes and its size if the actual mac fork exists"""
     try:
         with open(filepath, "rb") as f:
@@ -385,7 +397,7 @@ def actual_mac_fork_get_data_fork(filepath):
         raise e
 
 
-def actual_mac_fork_get_resource_fork_data(filepath):
+def actual_mac_fork_get_resource_fork_data(filepath: str) -> typing.Tuple[bytes, int, int]:
     """Returns the resource fork's data section as bytes, size of resource fork (size-r) and size of data section of resource fork (size-rd) of the actual mac fork."""
     resource_fork_path = os.path.join(filepath, "..namedfork", "rsrc")
     with open(resource_fork_path, "rb") as f:
@@ -548,7 +560,7 @@ def checksum(file, alg, size, filepath):
     return hashes
 
 
-def extract_macbin_filename_from_header(file):
+def extract_macbin_filename_from_header(file: str) -> str:
     """Extracts the filename from the header of the macbinary."""
     with open(file, "rb") as f:
         header = f.read(128)
@@ -692,7 +704,7 @@ def compute_hash_of_dirs(
 
             res.append(hash_of_dir)
         except Exception:
-            print(f"Error: Could not process the given directory: {directory}.")
+            logging.error(f"Could not process the given directory: {directory}.")
             raise
     return res
 
@@ -795,7 +807,7 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
     Returns filtered map with filepath and its modification time
     """
 
-    filtered_file_map = defaultdict(str)
+    filtered_file_map = collections.defaultdict(str)
 
     if limit_timestamps_date is not None:
         user_date = limit_timestamps_date
@@ -814,7 +826,9 @@ def filter_files_by_timestamp(files, limit_timestamps_date):
 
 
 def create_dat_file(hash_of_dirs, path, checksum_size=0):
-    with open(f"{os.path.basename(path)}.dat", "w") as file:
+    dat_pathname = f"{os.path.basename(path)}.dat"
+    logging.info(f"Writing dat file to: {dat_pathname} ")
+    with open(dat_pathname, "w") as file:
         # Header
         file.writelines(
             [
@@ -849,28 +863,16 @@ def create_dat_file(hash_of_dirs, path, checksum_size=0):
             file.write(")\n\n")
 
 
-def parse_positive_int(value, name):
+def parse_positive_int(value):
     """
     Parser the size and depth values passed as cli arguements.
     """
-    try:
-        num = int(value) if value else 0
-    except ValueError:
-        print(f"Error: Invalid {name} argument: {value}")
-        sys.exit(1)
+    num = int(value)
     if num < 0:
-        print(
-            f"Error: Invalid {name} value: {num}. Use a value greater than or equal to 0."
+        raise ValueError(
+            f"Error: Invalid value: {num}. Use a value greater than or equal to 0."
         )
-        sys.exit(1)
     return num
-
-
-class MyParser(argparse.ArgumentParser):
-    def error(self, message):
-        sys.stderr.write("Error: %s\n" % message)
-        self.print_help()
-        sys.exit(2)
 
 
 def main():
@@ -879,32 +881,29 @@ def main():
         parser.add_argument(
             "--directory", required=True, help="Path of directory with game files"
         )
-        parser.add_argument("--depth", help="Depth from root to game directories")
+        parser.add_argument("--depth", help="Depth from root to game directories", type=parse_positive_int, default="0")
         parser.add_argument(
-            "--size", help="Use first n bytes of file to calculate checksum"
+            "--size", help="Use first n bytes of file to calculate checksum", type=parse_positive_int, default="0"
         )
         parser.add_argument(
             "--limit-timestamps",
             help="Format - YYYY-MM-DD or YYYY-MM or YYYY. Filters out the files those were modified after the given timestamp. Note that if the modification time is today, it would not be filtered out.",
+            type=validate_date
         )
 
         args = parser.parse_args()
         path = args.directory
         if not os.path.isdir(path):
-            print(f"Error: Directory does not exist: {path}.")
+            logging.error(f"Directory does not exist: {path}.")
             sys.exit(1)
         path = os.path.abspath(path)
 
-        depth = parse_positive_int(args.depth, "depth")
-        checksum_size = parse_positive_int(args.size, "size")
+        depth = args.depth
+        checksum_size = args.size
 
         limit_timestamps_date = None
-        try:
-            if args.limit_timestamps:
-                limit_timestamps_date = validate_date(str(args.limit_timestamps))
-        except ValueError as ve:
-            print(ve)
-            sys.exit(1)
+        if args.limit_timestamps:
+            limit_timestamps_date = args.limit_timestamps
 
         create_dat_file(
             compute_hash_of_dirs(path, depth, checksum_size, limit_timestamps_date),

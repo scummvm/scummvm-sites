@@ -99,6 +99,9 @@ GITHUB_CLIENT_SECRET=github_client_secret_from_oauth_app
 FLASK_SECRET_KEY=any_random_key
 ```
 
+### 10. Local Development instance:
+`uv run -m src.app.fileset`
+
 ## Deployment Guide
 The Flask application is deployed using `mod_wsgi`, an Apache module for hosting WSGI applications.  
 Assuming Apache and mod_wsgi are already installed:
@@ -182,4 +185,5 @@ There exists a check_integrity button in the scummvm application which makes a P
 http://localhost:5000/validate
 ```
 with the request body in JSON format as shown in `sample_json_request.json` present in the root directory.
+
 

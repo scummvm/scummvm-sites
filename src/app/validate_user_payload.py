@@ -1,5 +1,7 @@
 import re
 
+import typing
+
 MAX_FILES = 10000
 MAX_CHECKSUMS_PER_FILE = 8
 VALID_KEYS = {"gameid", "engineid", "extra", "platform", "language", "files"}
@@ -64,7 +66,57 @@ def validate_field_len(field_name, value, max_size):
     return True, "valid"
 
 
-def validate_user_payload(json_object):
+def is_valid_file(file_entry) -> typing.Tuple[bool, str]:
+    if not isinstance(file_entry, dict):
+        return False, "invalid_file_entry"
+
+    # Ensure filename exist
+    if "name" not in file_entry:
+        return False, "missing_filename"
+    # Validating file keys maximum length other than checksums
+    for file_key in ["name", "size", "size-r", "size-rd"]:
+        if file_key in file_entry:
+            valid, res = validate_field_len(
+                file_key, file_entry[file_key], FIELD_MAX_SIZES[file_key]
+            )
+            if file_key.startswith("size"):
+                value = file_entry[file_key]
+                if not value.isdigit():
+                    return False, f"{file_key}_not_a_number"
+        if not valid:
+            return False, res
+
+    # Validation for checksums
+    checksums_raw = file_entry.get("checksums", [])
+    if not isinstance(checksums_raw, list):
+        return False, "invalid_checksum_format: not a list"
+    # Maximum number of checksums should be 8 in case of mac files.
+    if len(checksums_raw) > MAX_CHECKSUMS_PER_FILE:
+        return False, f"checksums_number_exceeded: {len(checksums_raw)}"
+
+    for checksum_entry in checksums_raw:
+        if not isinstance(checksum_entry, dict):
+            return False, f"invalid_checksum_entry - {checksum_entry}"
+        if "type" not in checksum_entry or "checksum" not in checksum_entry:
+            return False, "checksum_missing_fields"
+        ctype = checksum_entry["type"]
+        cvalue = checksum_entry["checksum"]
+        if not ctype.startswith("md5"):
+            return False, f"unsupported_checksum_type: {ctype}"
+        # md5 should be 32 character long and have only a-fA-F0-9
+        if not is_valid_md5(cvalue):
+            return False, f"invalid_md5_format: {ctype}"
+
+    # Check if other keys than md5 are valid
+    for key in file_entry:
+        if key.startswith("md5"):
+            continue
+        if key not in VALID_FILE_KEYS:
+            return False, f"invalid_file_key: {file_entry['name']} - {key}"
+    return True, ""
+
+
+def validate_user_payload(json_object: dict) -> typing.Tuple[bool, str]:
     """
     All the checks on user data are performed here.
     - Datatype of all values
@@ -104,53 +156,10 @@ def validate_user_payload(json_object):
     if len(files) > MAX_FILES:
         return False, f"too_many_files - {len(files)}"
 
-    # Processing every file entry
+    # Process every file entry
     for file_entry in files:
-        if not isinstance(file_entry, dict):
-            return False, "invalid_file_entry"
-
-        # Ensure filename exist
-        if "name" not in file_entry:
-            return False, "missing_filename"
-        # Validating file keys maximum length other than checksums
-        for file_key in ["name", "size", "size-r", "size-rd"]:
-            if file_key in file_entry:
-                valid, res = validate_field_len(
-                    file_key, file_entry[file_key], FIELD_MAX_SIZES[file_key]
-                )
-                if file_key.startswith("size"):
-                    value = file_entry[file_key]
-                    if not value.isdigit():
-                        return False, f"{file_key}_not_a_number"
-            if not valid:
-                return False, res
-
-        # Validation for checksums
-        checksums_raw = file_entry.get("checksums", [])
-        if not isinstance(checksums_raw, list):
-            return False, "invalid_checksum_format: not a list"
-        # Maximum number of checksums should be 8 in case of mac files.
-        if len(checksums_raw) > MAX_CHECKSUMS_PER_FILE:
-            return False, f"checksums_number_exceeded: {len(checksums_raw)}"
-
-        for checksum_entry in checksums_raw:
-            if not isinstance(checksum_entry, dict):
-                return False, f"invalid_checksum_entry - {checksum_entry}"
-            if "type" not in checksum_entry or "checksum" not in checksum_entry:
-                return False, "checksum_missing_fields"
-            ctype = checksum_entry["type"]
-            cvalue = checksum_entry["checksum"]
-            if not ctype.startswith("md5"):
-                return False, f"unsupported_checksum_type: {ctype}"
-            # md5 should be 32 character long and have only a-fA-F0-9
-            if not is_valid_md5(cvalue):
-                return False, f"invalid_md5_format: {ctype}"
-
-        # Check if other keys than md5 are valid
-        for key in file_entry:
-            if key.startswith("md5"):
-                continue
-            if key not in VALID_FILE_KEYS:
-                return False, f"invalid_file_key: {file_entry['name']} - {key}"
+        success, msg = is_valid_file(file_entry)
+        if not success:
+            return msg
 
     return True, "valid"

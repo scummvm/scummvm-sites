@@ -1,11 +1,11 @@
-import pymysql
+from collections import defaultdict
+import copy
 import getpass
-import time
 import hashlib
 import os
-from collections import defaultdict
-import re
-import copy
+import time
+
+import pymysql
 from src.utils.db_config import db_connect
 from src.utils.console_log import (
     console_log,
@@ -50,31 +50,28 @@ def get_checksum_props(checkcode, checksum):
 
 
 def insert_game(engine_name, engineid, title, gameid, extra, platform, lang, conn):
-    # Set @engine_last if engine already present in table
-    exists = False
     with conn.cursor() as cursor:
         cursor.execute("SELECT id FROM engine WHERE engineid = %s", (engineid,))
         res = cursor.fetchone()
         if res is not None:
-            exists = True
-            cursor.execute("SET @engine_last = %s", (res["id"],))
-
-    # Insert into table if not present
-    if not exists:
-        with conn.cursor() as cursor:
+            engine_last = res["id"]
+        else:
             cursor.execute(
                 "INSERT INTO engine (name, engineid) VALUES (%s, %s)",
                 (engine_name, engineid),
             )
-            cursor.execute("SET @engine_last = LAST_INSERT_ID()")
+            engine_last = cursor.lastrowid
 
     # Insert into game
     with conn.cursor() as cursor:
         cursor.execute(
-            "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, @engine_last, %s, %s, %s, %s)",
-            (title, gameid, extra, platform, lang),
+            "INSERT INTO game (name, engine, gameid, extra, platform, language) VALUES (%s, %s, %s, %s, %s, %s)",
+            (title, engine_last, gameid, extra, platform, lang),
         )
+        # Try to get rid of @game_last and pass the variable explicitly instead
         cursor.execute("SET @game_last = LAST_INSERT_ID()")
+        game_last = cursor.lastrowid
+        return game_last
 
 
 def insert_fileset(
@@ -181,8 +178,8 @@ def insert_fileset(
 
 
 def normalised_path(name):
-    """
-    Converts \ to / in filepaths, to avoid filesystem independent filepath parsing.
+    r"""
+    Converts \ to / in filepaths, to ensure filesystem independent filepath parsing.
     """
     path_list = name.split("\\")
     return "/".join(path_list)
@@ -392,21 +389,6 @@ def get_all_related_filesets(fileset_id, conn, visited=None):
     return related_filesets
 
 
-def convert_log_text_to_links(log_text):
-    log_text = re.sub(
-        r"Fileset:(\d+)", r'<a href="/fileset?id=\1">Fileset:\1</a>', log_text
-    )
-    log_text = re.sub(
-        r"user:(\w+)", r'<a href="/log?search=user:\1">user:\1</a>', log_text
-    )
-    log_text = re.sub(
-        r"Transaction:(\d+)",
-        r'<a href="/transaction?id=\1">Transaction:\1</a>',
-        log_text,
-    )
-    return log_text
-
-
 def calc_key(fileset):
     key_string = ""
 
@@ -489,8 +471,7 @@ def db_insert(data_arr, username=None, skiplog=False):
         console_log(log_text)
         console_log_total_filesets(filepath)
 
-        fileset_count = 1
-        for fileset in game_data:
+        for fileset_count, fileset in enumerate(game_data, start=1):
             console_log_detection(fileset_count)
             key = calc_key(fileset)
             megakey = calc_megakey(fileset)
@@ -562,8 +543,6 @@ def db_insert(data_arr, username=None, skiplog=False):
                             "crc",
                         ]:
                             insert_filechecksum(file, key, file_id, conn)
-
-            fileset_count += 1
 
         cur = conn.cursor()
 
