@@ -6,8 +6,8 @@ Failures and warnings help spot problem areas and regressions.
 It's located at: https://john.scummvm.org/
 
 ## Installation:
-install python poetry: https://python-poetry.org/
-$ poetry install
+install uv https://docs.astral.sh/uv/getting-started/installation/
+$ uv sync --locked
 
 Check the director/env.py file for a list of enviroment variables that are used.
 These variables can be in a .env file that must be placed in the root of the project directory.
@@ -40,13 +40,15 @@ This has been achieved. It reports changes on our discord channel.
 
 ## Run it yourself
 
-Install python-poetry and run:
-$ poetry install
+Install uv and run:
+$ uv sync --all-groups
 
 To run buildbot:
-$ buildbot start .
+$ uv run buildbot start --nodaemon .
 
-Open a browser: http://localhost:8010
+Note: Currently the environment variables aren't documented for local development mode.
+
+Open a browser: http://localhost:5000
 
 ## Wait for: All D5 targets
 - Director 5 and higher
