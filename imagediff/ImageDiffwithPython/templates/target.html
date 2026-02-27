@@ -101,6 +101,31 @@
             </tr>
             </tbody>
         </table>
+        <div class="pagination-container">
+    {% if total_pages > 1 %}
+        <div class="pagination">
+
+            {% if page > 1 %}
+                <a class="page-btn"
+                   href="{{ url_for('target_detail', target=target) }}?page={{ page - 1 }}">
+                    ⬅ Previous
+                </a>
+            {% endif %}
+
+            <span class="page-info">
+                Page {{ page }} of {{ total_pages }}
+            </span>
+
+            {% if page < total_pages %}
+                <a class="page-btn"
+                   href="{{ url_for('target_detail', target=target) }}?page={{ page + 1 }}">
+                    Next ➡
+                </a>
+            {% endif %}
+
+        </div>
+    {% endif %}
+</div>
     </div>
 </section>
 
@@ -120,7 +145,7 @@
 
         // Build API URL
         const target = '{{ target }}';
-        const apiUrl = '/api/target_data/' + encodeURIComponent(target);
+        const apiUrl = `/api/target_data/${encodeURIComponent(target)}?page={{ page }}`;
 
         // Start timestamp for calculating loading time
         const startTime = new Date().getTime();

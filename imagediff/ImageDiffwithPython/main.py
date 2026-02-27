@@ -8,78 +8,56 @@ from imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
 
-#cache functions
-#making cache directory if it does not exist
-if not os.path.exists(CACHE_DIR):
-    os.makedirs(CACHE_DIR)
+# cache functions
+def get_cache_page_path(target, page):
+    """Generates path: cache/<target>/page_<page>.json"""
+    target_dir = os.path.join(CACHE_DIR, target)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    return os.path.join(target_dir, f"page_{page}.json")
 
-#make target cache file
-def get_target_cache_file(target):
-    if not os.path.exists(f"{target}_cache.json"):
-        with open(f"{target}_cache.json", "w") as f:
-            json.dump({}, f)
-    return f"{target}_cache.json"
-    
-#make target movie cache file
-def get_target_movie_cache_file(target):
-    if not os.path.exists(f"{target}_movie_cache.json"):
-        with open(f"{target}_movie_cache.json", "w") as f:
-            json.dump({}, f)
-    return f"{target}_movie_cache.json"
-
-def get_cache_file(target_file_name,page_number):
-    if not os.path.exists(get_cache_file(target_file_name,page_number)):
-        with open(get_cache_file(target_file_name,page_number), "w") as f:
-            json.dump({}, f)
-    return os.path.join(CACHE_DIR, f"{target_file_name}_page_{page_number}.json")
-
-
-#save string keys and values for json file
-def make_cache_key(target,build1, build2, movie, frame):
-        return f"{target}_{build1}_{build2}_{movie}_{frame}"
-    
-    # Pre-calculate image difference results
-
-def load_cache(target_file_name, page_number):
-# if file does not exist → create it
-    cache_file = get_cache_file(target_file_name, page_number)
-    if not os.path.exists(cache_file):
-        with open(cache_file, "w") as f:
-            json.dump({}, f)
-        return {}
-
+def load_target_cache(target, page):
+    """Loads cache from disk for a specific target and page."""
+    path = get_cache_page_path(target, page)
+    if not os.path.exists(path):
+        return None
     try:
-        with open(cache_file, "r") as f:
-            return json.load(f)
-    except json.JSONDecodeError:
-        # corrupted JSON → reset cache
-        return {}
+        with open(path, "r") as f:
+            data = json.load(f)
+            return data if data else None
+    except (json.JSONDecodeError, IOError):
+        return None
 
-def save_cache(cache, target_file_name, page_number):
-    cache_file = get_cache_file(target_file_name, page_number)
-    with open(cache_file, 'w') as f:
+def save_target_cache(target, page, cache):
+    """Saves the calculated data to the specific page file."""
+    path = get_cache_page_path(target, page)
+    with open(path, "w") as f:
         json.dump(cache, f)
 
-def make_movie_diff_cache_key(build1, build2, target, movie):
-    return f"{build1}_{build2}_{target}_{movie}_movie"
+def get_frame_cache_path(target):
+    target_dir = os.path.join(CACHE_DIR, target)
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    return os.path.join(target_dir, "frame_diffs.json")
 
-def load_movie_diff_cache():
-    if not os.path.exists(MOVIE_CACHE_FILE):
-        with open(MOVIE_CACHE_FILE, "w") as f:
-            json.dump({}, f)
+def load_frame_cache(target):
+    path = get_frame_cache_path(target)
+    if not os.path.exists(path):
         return {}
     try:
-        with open(MOVIE_CACHE_FILE, "r") as f:
+        with open(path, "r") as f:
             return json.load(f)
-    except json.JSONDecodeError:
+    except:
         return {}
-def save_movie_diff_cache(cache):
-    with open(MOVIE_CACHE_FILE, 'w') as f:
+
+def save_frame_cache(target, cache):
+    path = get_frame_cache_path(target)
+    with open(path, "w") as f:
         json.dump(cache, f)
 
-# precalculate image difference results and store in cache
-image_diff_cache = load_cache()
-movie_diff_cache = load_movie_diff_cache()
+# save string keys for frame-level diffs if needed
+def make_cache_key(target, build1, build2, movie, frame):
+    return f"{target}_{build1}_{build2}_{movie}_{frame}"
 
 def get_frame_number(filename):
     """Extract frame number from filename."""
@@ -208,15 +186,28 @@ def target_detail(target):
     end = start + page_size
     paginated_builds = builds[start:end]
     total_pages = (len(builds) + page_size - 1) // page_size
+
+    # Load cache for this target and page
+    cache_data = load_target_cache(target, page)
+
     return render_template('target.html',
         target=target,
         builds=paginated_builds,
         page=page,
-        total_pages=total_pages)
+        total_pages=total_pages,
+        cache_data=cache_data)
+
 
 # Handle time-consuming data calculations
 @app.route('/api/target_data/<target>')
 def target_data_api(target):
+    page = int(request.args.get('page', 1))
+    page_size = 10
+
+    cached_data = load_target_cache(target, page)
+    if cached_data:
+        return jsonify(cached_data)
+    
     target_path = os.path.join(SCREENSHOTS_DIR, target)
 
     if not os.path.exists(target_path) or not os.path.isdir(target_path):
@@ -225,8 +216,13 @@ def target_data_api(target):
     builds = get_sorted_builds(target_path)
     builds_ascending = get_sorted_builds(target_path, reverse=False)
 
+    start_index = (page - 1) * page_size
+    end_index = start_index + page_size
+    current_page_builds = builds[start_index:end_index]
+    builds_to_process = builds[start_index:end_index + 1] if end_index < len(builds) else builds[start_index:end_index]
+
     # Collect movie frame data
-    all_movies, build_movie_frames, _ = collect_movie_frames(target_path, builds)
+    all_movies, build_movie_frames, _ = collect_movie_frames(target_path,builds_to_process)
 
     # Calculate first build for each movie
     first_build_for_movie = find_first_build_for_movies(
@@ -273,6 +269,7 @@ def target_data_api(target):
 
     def get_image_diff(current_build, prev_build, movie, frame):
         cache_key = make_cache_key(target, current_build, prev_build, movie, frame)
+        image_diff_cache = load_frame_cache(target)
         if cache_key in image_diff_cache:
             return image_diff_cache[cache_key]
 
@@ -287,7 +284,7 @@ def target_data_api(target):
                 image_diff_cache[cache_key] = {'has_diff': True}
         else:
             image_diff_cache[cache_key] = {'has_diff': True}
-        save_cache(image_diff_cache)
+        save_frame_cache(target, image_diff_cache)
         return image_diff_cache[cache_key]
 
     # Modified movie difference function to only compare specified frames
@@ -307,12 +304,12 @@ def target_data_api(target):
     # Pre-calculate movie difference results
 
     
-    def get_movie_diff_cached(current_build, prev_build, target, movie):
-        cache_key = make_movie_diff_cache_key(current_build, prev_build, target, movie)
-        if cache_key not in movie_diff_cache:
-            movie_diff_cache[cache_key] = movie_diff(current_build, prev_build, target, movie)
-            save_movie_diff_cache(movie_diff_cache)
-        return movie_diff_cache[cache_key]
+    # def get_movie_diff_cached(current_build, prev_build, target, movie):
+    #     cache_key = (current_build, prev_build, target, movie)
+    #     if cache_key not in movie_diff:
+    #         movie_diff_cache[cache_key] = movie_diff(current_build, prev_build, target, movie)
+    #         save_movie_diff_cache(movie_diff_cache, target)
+    #     return movie_diff_cache[cache_key]
 
     movies = sorted(list(all_movies))
     continuous_bars = {}
@@ -380,7 +377,7 @@ def target_data_api(target):
                             'is_partial': True
                         })
                     else:
-                        has_diff = get_movie_diff_cached(current_build, prev_build, target, movie)
+                        has_diff = movie_diff(current_build, prev_build, target, movie)
 
                         continuous_bars[movie].append({
                             'build': current_build,
@@ -429,12 +426,12 @@ def target_data_api(target):
     # Return all data to frontend
     data = {
         'target': target,
-        'builds': builds,
+        'builds': current_page_builds,
         'movies': movies,
         'continuous_bars': continuous_bars,
         'urls': urls
     }
-
+    save_target_cache(target, page, data)
     return jsonify(data)
 
 @app.route('/movie/<movie>')
@@ -442,39 +439,38 @@ def movie(movie):
     target_builds = {}
     all_builds = set()
     diff_matrix = {}
-    page_size = 10
-    page = int(request.args.get('page', 1))
 
     # Scan through all targets
     for target in os.listdir(SCREENSHOTS_DIR):
         target_path = os.path.join(SCREENSHOTS_DIR, target)
         if os.path.isdir(target_path):
+            # Get sorted builds
             builds = get_sorted_builds(target_path)
+
+            # Find builds containing this movie
             builds_with_movie = []
             for build in builds:
                 build_path = os.path.join(target_path, build)
                 movie_files = get_movie_frames(build_path, movie)
+
                 if movie_files:
                     builds_with_movie.append(build)
                     all_builds.add(build)
 
-            # Pagination for builds_with_movie
-            total_pages = (len(builds_with_movie) + page_size - 1) // page_size
-            start = (page - 1) * page_size
-            end = start + page_size
-            paginated_builds_with_movie = builds_with_movie[start:end]
+            # Calculate diffs between consecutive builds
+            for i in range(len(builds_with_movie) - 1):
+                current_build = builds_with_movie[i]
+                prev_build = builds_with_movie[i + 1]
 
-            # Calculate diffs between consecutive builds (only for paginated builds)
-            for i in range(len(paginated_builds_with_movie) - 1):
-                current_build = paginated_builds_with_movie[i]
-                prev_build = paginated_builds_with_movie[i + 1]
                 has_diff = movie_diff(current_build, prev_build, target, movie)
+
                 if target not in diff_matrix:
                     diff_matrix[target] = {}
+
                 diff_matrix[target][(current_build, prev_build)] = has_diff
 
             if builds_with_movie:
-                target_builds[target] = paginated_builds_with_movie
+                target_builds[target] = builds_with_movie
 
     all_builds = sorted(list(all_builds), reverse=True)
 
@@ -482,9 +478,7 @@ def movie(movie):
                            movie=movie,
                            target_builds=target_builds,
                            all_builds=all_builds,
-                           diff_matrix=diff_matrix,
-                           page=page,
-                           total_pages=total_pages)
+                           diff_matrix=diff_matrix)
 
 @app.route('/build/<build>')
 def build(build):
