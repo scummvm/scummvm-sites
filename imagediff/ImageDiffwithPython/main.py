@@ -1,12 +1,58 @@
 import os
-
+import json
 from PIL import Image
 from flask import Flask, render_template, jsonify, url_for, send_from_directory
 
-from config import SCREENSHOTS_DIR
+from config import MOVIE_CACHE_FILE,CACHE_FILE, SCREENSHOTS_DIR
 from imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
+
+#cache functions
+#save string keys and values for json file
+def make_cache_key(build1, build2, movie, frame):
+        return f"{build1}_{build2}_{movie}_{frame}"
+    
+    # Pre-calculate image difference results
+
+def load_cache():
+# if file does not exist → create it
+    if not os.path.exists(CACHE_FILE):
+        with open(CACHE_FILE, "w") as f:
+            json.dump({}, f)
+        return {}
+
+    try:
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        # corrupted JSON → reset cache
+        return {}
+
+def save_cache(cache):
+    with open(CACHE_FILE, 'w') as f:
+        json.dump(cache, f)
+
+def make_movie_diff_cache_key(build1, build2, target, movie):
+    return f"{build1}_{build2}_{target}_{movie}_movie"
+
+def load_movie_diff_cache():
+    if not os.path.exists(MOVIE_CACHE_FILE):
+        with open(MOVIE_CACHE_FILE, "w") as f:
+            json.dump({}, f)
+        return {}
+    try:
+        with open(MOVIE_CACHE_FILE, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return {}
+def save_movie_diff_cache(cache):
+    with open(MOVIE_CACHE_FILE, 'w') as f:
+        json.dump(cache, f)
+
+
+image_diff_cache = load_cache()
+movie_diff_cache = load_movie_diff_cache()
 
 def get_frame_number(filename):
     """Extract frame number from filename."""
@@ -17,6 +63,7 @@ def get_frame_number(filename):
         except ValueError:
             return 0
     return 0
+
 
 def get_sorted_builds(target_path, reverse=True):
     """Get sorted list of builds for a target."""
@@ -159,7 +206,6 @@ def target_data_api(target):
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
 
             if not has_in_current:
-                # Reference build needs to have the movie
                 reference_build = None
                 for j in range(i+1, len(builds)):
                     next_build = builds[j]
@@ -168,21 +214,17 @@ def target_data_api(target):
                         break
                 movie_reference_builds[movie][current_build] = {
                     'build': reference_build,
-                    'frames': []  # Empty since current build doesn't have the movie
+                    'frames': []
                 }
             else:
-                # Current build has the movie, find a reference build with matching frames
                 reference_data = {
                     'build': None,
                     'frames': current_frames
                 }
-
                 for j in range(i+1, len(builds)):
                     next_build = builds[j]
                     if movie in build_movie_frames.get(next_build, {}):
                         next_frames = build_movie_frames.get(next_build, {}).get(movie, [])
-
-                        # Check if current frames exist in the next build
                         common_frames = set(current_frames).intersection(set(next_frames))
                         if common_frames:
                             reference_data = {
@@ -190,26 +232,25 @@ def target_data_api(target):
                                 'frames': list(common_frames)
                             }
                             break
-
                 movie_reference_builds[movie][current_build] = reference_data
 
-    # Pre-calculate image difference results
-    image_diff_cache = {}
     def get_image_diff(current_build, prev_build, movie, frame):
-        cache_key = (current_build, prev_build, movie, frame)
-        if cache_key not in image_diff_cache:
-            current_frame_path = os.path.join(target_path, current_build, f"{movie}-{frame}.png")
-            prev_frame_path = os.path.join(target_path, prev_build, f"{movie}-{frame}.png")
+        cache_key = make_cache_key(current_build, prev_build, movie, frame)
+        if cache_key in image_diff_cache:
+            return image_diff_cache[cache_key]
 
-            if os.path.exists(current_frame_path) and os.path.exists(prev_frame_path):
-                try:
-                    image_diff_cache[cache_key] = image_diff(current_frame_path, prev_frame_path)
-                except Exception as e:
-                    print(f"Error comparing frames {movie}-{frame}: {e}")
-                    image_diff_cache[cache_key] = {'has_diff': True}
-            else:
+        current_frame_path = os.path.join(target_path, current_build, f"{movie}-{frame}.png")
+        prev_frame_path = os.path.join(target_path, prev_build, f"{movie}-{frame}.png")
+
+        if os.path.exists(current_frame_path) and os.path.exists(prev_frame_path):
+            try:
+                image_diff_cache[cache_key] = image_diff(current_frame_path, prev_frame_path)
+            except Exception as e:
+                print(f"Error comparing frames {movie}-{frame}: {e}")
                 image_diff_cache[cache_key] = {'has_diff': True}
-
+        else:
+            image_diff_cache[cache_key] = {'has_diff': True}
+        save_cache(image_diff_cache)
         return image_diff_cache[cache_key]
 
     # Modified movie difference function to only compare specified frames
@@ -227,11 +268,13 @@ def target_data_api(target):
         return has_any_diff
 
     # Pre-calculate movie difference results
-    movie_diff_cache = {}
+
+    
     def get_movie_diff_cached(current_build, prev_build, target, movie):
-        cache_key = (current_build, prev_build, target, movie)
+        cache_key = make_cache_key(current_build, prev_build, movie, "movie")
         if cache_key not in movie_diff_cache:
             movie_diff_cache[cache_key] = movie_diff(current_build, prev_build, target, movie)
+            save_movie_diff_cache(movie_diff_cache)
         return movie_diff_cache[cache_key]
 
     movies = sorted(list(all_movies))
