@@ -50,7 +50,7 @@ def save_movie_diff_cache(cache):
     with open(MOVIE_CACHE_FILE, 'w') as f:
         json.dump(cache, f)
 
-
+# precalculate image difference results and store in cache
 image_diff_cache = load_cache()
 movie_diff_cache = load_movie_diff_cache()
 
@@ -206,6 +206,7 @@ def target_data_api(target):
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
 
             if not has_in_current:
+                 # Reference build needs to have the movie
                 reference_build = None
                 for j in range(i+1, len(builds)):
                     next_build = builds[j]
@@ -213,10 +214,11 @@ def target_data_api(target):
                         reference_build = next_build
                         break
                 movie_reference_builds[movie][current_build] = {
-                    'build': reference_build,
-                    'frames': []
+                    'build': reference_build, 
+                    'frames': [] # Empty since current build doesn't have the movie
                 }
             else:
+                # Current build has the movie, find a reference build with matching frames
                 reference_data = {
                     'build': None,
                     'frames': current_frames
