@@ -99,9 +99,13 @@ def make_cache_key(target, build1, build2, movie, frame):
 
 def get_frame_number(filename):
     """Extract frame number from filename."""
-    parts = filename.rsplit('-', 1)
-    return int(parts[1].split('.')[0])
-    return 0
+    parts = filename.split('-')
+    if len(parts) > 1:
+        try:
+            return int(parts[1].rsplit('.')[0])
+        except ValueError:
+            return 0
+        
 
 
 def get_sorted_builds(target_path, reverse=True):
