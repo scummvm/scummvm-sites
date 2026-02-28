@@ -76,7 +76,7 @@
     <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
 </header>
 
-<h1>Target: <span class="code">{{ target }}</span></h1>
+<h1>Target: <span class="code">{{ display_target }}</span></h1>
 
 <section>
     <h2>Recent Results</h2>
@@ -211,11 +211,14 @@
         let tableContent = '';
 
         // Generate table content based on returned data
-        data.movies.forEach(movie => {
+        data.movies.forEach((movie, idx) => {
+         const displayName = data.display_movies[idx];
+            console.log(data);
+            console.log("Processing movie:", movie, "Display name:", displayName);
             tableContent += `
                 <tr>
                     <th>
-                        <a href="${data.urls.movie_url.replace('MOVIE_PLACEHOLDER', movie)}">${movie}</a>
+                        <a href="${data.urls.movie_url.replace('MOVIE_PLACEHOLDER', movie)}">${displayName}</a>
                     </th>
             `;
 

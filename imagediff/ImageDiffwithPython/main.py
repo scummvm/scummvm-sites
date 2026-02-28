@@ -8,6 +8,44 @@ from imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
 
+# String decoding functions
+def unescape_string(s: str) -> str:
+    """unescape strings"""
+    orig_name = ""
+    s_iter = iter(s)
+    hi = next(s_iter, None)
+    while hi is not None:
+        if hi == "\x81":
+            low = next(s_iter, None)
+            assert low is not None, "Error decoding string"
+            if low == "\x79":
+                orig_name += "\x81"
+            else:
+                orig_name += chr(ord(low) - 0x80)
+        else:
+            orig_name += hi
+        hi = next(s_iter, None)
+    return orig_name
+
+def decode_string(orig: str) -> str:
+    """
+    Decode punyencoded strings
+    """
+    print("Decoding string:", orig)
+    if not orig.startswith("xn--"):
+        return orig
+    
+    print("called for xn")
+    i = len(orig) - 1
+    while i >= 0 and orig[i] == "-":
+        i -= 1
+    
+    orig = orig[:i+1]
+
+    st = orig[4:].encode("ascii").decode("punycode")
+    return unescape_string(st)
+
+
 # cache functions
 def get_cache_page_path(target, page):
     """Generates path: cache/<target>/page_<page>.json"""
@@ -61,12 +99,8 @@ def make_cache_key(target, build1, build2, movie, frame):
 
 def get_frame_number(filename):
     """Extract frame number from filename."""
-    parts = filename.split('-')
-    if len(parts) > 1:
-        try:
-            return int(parts[1].split('.')[0])
-        except ValueError:
-            return 0
+    parts = filename.rsplit('-', 1)
+    return int(parts[1].split('.')[0])
     return 0
 
 
@@ -95,16 +129,15 @@ def collect_movie_frames(target_path, builds):
             if not os.path.isfile(os.path.join(target_path, build, file)):
                 continue
 
-            if "-" in file:
-                parts = file.split("-")
-                movie_name = parts[0]
-                frame_num = parts[1].split('.')[0]
+            
+            movie_name, frame_part = file.rsplit("-", 1)
+            frame_num = frame_part.split('.')[0]
 
-                if movie_name not in build_movie_frames[build]:
-                    build_movie_frames[build][movie_name] = []
+            if movie_name not in build_movie_frames[build]:
+                build_movie_frames[build][movie_name] = []
 
-                build_movie_frames[build][movie_name].append(frame_num)
-                all_movies.add(movie_name)
+            build_movie_frames[build][movie_name].append(frame_num)
+            all_movies.add(movie_name)
 
     return all_movies, build_movie_frames, build_files
 
@@ -154,7 +187,7 @@ def extract_movie_names(files):
     movies = set()
     for file in files:
         if "-" in file:
-            movie_name = file.split("-")[0]
+            movie_name = file.rsplit("-", 1)[0]
             movies.add(movie_name)
     return movies
 
@@ -192,6 +225,7 @@ def target_detail(target):
 
     return render_template('target.html',
         target=target,
+        display_target=decode_string(target),
         builds=paginated_builds,
         page=page,
         total_pages=total_pages,
@@ -428,6 +462,7 @@ def target_data_api(target):
         'target': target,
         'builds': current_page_builds,
         'movies': movies,
+        'display_movies': [decode_string(m) for m in movies],
         'continuous_bars': continuous_bars,
         'urls': urls
     }
@@ -476,6 +511,7 @@ def movie(movie):
 
     return render_template('movie.html',
                            movie=movie,
+                           display_movie=decode_string(movie),
                            target_builds=target_builds,
                            all_builds=all_builds,
                            diff_matrix=diff_matrix)
