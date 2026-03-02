@@ -473,3 +473,8 @@ composer.lock
 *.sass.map
 *.scss.map
 sample-target 
+ImageDiffwithPython/screenshots/director
+ImageDiffwithPython/screenshots/sample-target
+ImageDiffwithPython/screenshots/theapartment-mac
+cache/
+__pycache__
