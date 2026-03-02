@@ -30,6 +30,28 @@ Web tool to compare and highlight differences between two images (built with Fla
    pip install -r requirements.txt
    ```
 
+## Setting things up
+### SCREENSHOT_DIR
+
+ > The directory which stores the screenshots of the scenes
+
+```tree
+SCREENSHOTS_DIR/
+  <target>/
+    <build_number>/
+      <movie_name>/
+        998.png
+        1000.png
+        1100.png
+```
+
+### CACHE_DIR(Must be writable)
+
+> The application builds comparison timelines and stores computed results in a cache.
+
+
+Paths can be configured in config.py 
+
 ## Running the server
 
 Start the application:
