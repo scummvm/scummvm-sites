@@ -473,8 +473,9 @@ composer.lock
 *.sass.map
 *.scss.map
 sample-target 
-ImageDiffwithPython/screenshots/director
-ImageDiffwithPython/screenshots/sample-target
-ImageDiffwithPython/screenshots/theapartment-mac
+director/
+sample-target/
+theapartment-mac/
 cache/
 __pycache__
+venv
