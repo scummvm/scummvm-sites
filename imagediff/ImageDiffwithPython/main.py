@@ -112,7 +112,12 @@ def get_sorted_builds(target_path, reverse=True):
     """Get sorted list of builds for a target."""
     builds = [b for b in os.listdir(target_path)
               if os.path.isdir(os.path.join(target_path, b))]
-    return sorted(builds, reverse=reverse)
+    # Sort numerically to handle build IDs correctly (e.g., "2" < "245" < "2452")
+    try:
+        return sorted(builds, key=lambda x: int(x), reverse=reverse)
+    except ValueError:
+        # Fall back to string sort if build IDs are not numeric
+        return sorted(builds, reverse=reverse)
 
 def collect_movie_frames(target_path, builds):
     """Collect all movie frames information for all builds."""
@@ -214,11 +219,11 @@ def target_detail(target):
         return "Target not found", 404
 
     # Only get the build list, other time-consuming operations moved to API
-    builds = get_sorted_builds(target_path)
+    builds = get_sorted_builds(target_path,reverse=False)
 
     # Only return the page framework with build list but without table data
     page = int(request.args.get('page', 1))
-    page_size = 10
+    page_size = 20
     start = (page - 1) * page_size
     end = start + page_size
     paginated_builds = builds[start:end]
@@ -240,7 +245,7 @@ def target_detail(target):
 @app.route('/api/target_data/<target>')
 def target_data_api(target):
     page = int(request.args.get('page', 1))
-    page_size = 10
+    page_size = 20
 
     cached_data = load_target_cache(target, page)
     if cached_data:
@@ -251,13 +256,15 @@ def target_data_api(target):
     if not os.path.exists(target_path) or not os.path.isdir(target_path):
         return jsonify({"error": "Target not found"}), 404
 
-    builds = get_sorted_builds(target_path)
+    builds = get_sorted_builds(target_path,reverse=False)
     builds_ascending = get_sorted_builds(target_path, reverse=False)
 
     start_index = (page - 1) * page_size
     end_index = start_index + page_size
     current_page_builds = builds[start_index:end_index]
-    builds_to_process = builds[start_index:end_index + 1] if end_index < len(builds) else builds[start_index:end_index]
+    # Include previous build (from previous page) for comparison continuity
+    process_start = start_index - 1 if start_index > 0 else start_index
+    builds_to_process = builds[process_start:end_index + 1] if end_index < len(builds) else builds[process_start:end_index]
 
     # Collect movie frame data
     all_movies, build_movie_frames, _ = collect_movie_frames(target_path,builds_to_process)
@@ -266,19 +273,19 @@ def target_data_api(target):
     first_build_for_movie = find_first_build_for_movies(
         all_movies, builds_ascending, build_movie_frames)
 
-    # Calculate reference builds
+    # Calculate reference builds (only for builds we're processing)
     movie_reference_builds = {}
     for movie in all_movies:
         movie_reference_builds[movie] = {}
-        for i, current_build in enumerate(builds):
+        for i, current_build in enumerate(builds_to_process):
             has_in_current = movie in build_movie_frames.get(current_build, {})
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
 
             if not has_in_current:
                  # Reference build needs to have the movie
                 reference_build = None
-                for j in range(i+1, len(builds)):
-                    next_build = builds[j]
+                for j in range(i-1, -1, -1):
+                    next_build = builds_to_process[j]
                     if movie in build_movie_frames.get(next_build, {}):
                         reference_build = next_build
                         break
@@ -292,8 +299,8 @@ def target_data_api(target):
                     'build': None,
                     'frames': current_frames
                 }
-                for j in range(i+1, len(builds)):
-                    next_build = builds[j]
+                for j in range(i-1, -1, -1):
+                    next_build = builds_to_process[j]
                     if movie in build_movie_frames.get(next_build, {}):
                         next_frames = build_movie_frames.get(next_build, {}).get(movie, [])
                         common_frames = set(current_frames).intersection(set(next_frames))
@@ -350,17 +357,48 @@ def target_data_api(target):
     #     return movie_diff_cache[cache_key]
 
     movies = sorted(list(all_movies))
+    
+    # Define display_builds early: include previous page's last build for continuity
+    display_builds = []
+    if start_index > 0:
+        # Include last build from previous page for continuity
+        display_builds.append(builds[start_index - 1])
+    display_builds.extend(current_page_builds)
+    
+    # True if a build is the context/carry-over build from the previous page
+    context_build = builds[start_index - 1] if start_index > 0 else None
+
     continuous_bars = {}
 
     # Create continuous bars for visualization with updated skip logic
     for movie in movies:
         continuous_bars[movie] = []
 
-        for i, current_build in enumerate(builds):
-            prev_build = builds[i+1] if i < len(builds)-1 else None
+        for i, current_build in enumerate(display_builds):
+            prev_build = display_builds[i-1] if i > 0 else None
 
+            is_context_build = (current_build == context_build)
             has_in_current = movie in build_movie_frames.get(current_build, {})
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
+
+            # For the context build: check if this movie appears later in this page
+            # (means it was continuous from previous page — show green, no gap)
+            if is_context_build and not has_in_current:
+                movie_appears_later = any(
+                    movie in build_movie_frames.get(b, {})
+                    for b in display_builds[i+1:]
+                )
+                if movie_appears_later:
+                    continuous_bars[movie].append({
+                        'build': current_build,
+                        'type': 'no_prev'  # green, no magnifier
+                    })
+                else:
+                    continuous_bars[movie].append({
+                        'build': current_build,
+                        'type': 'missing'
+                    })
+                continue
 
             prev_frames = []
             if prev_build:
@@ -442,11 +480,20 @@ def target_data_api(target):
                         'no_reference': reference_build is None
                     })
             elif not prev_build:
-                continuous_bars[movie].append({
-                    'build': current_build,
-                    'type': 'unknown'
-                })
+                # No previous build context available (first entry on this page slice)
+                # Show green if movie exists (continuity carry-over), white if not
+                if has_in_current:
+                    continuous_bars[movie].append({
+                        'build': current_build,
+                        'type': 'no_prev',   # green with no magnifier — nothing to compare against
+                    })
+                else:
+                    continuous_bars[movie].append({
+                        'build': current_build,
+                        'type': 'missing'
+                    })
 
+    # continuous_bars is now already built with display_builds in the correct order
     # Generate URL templates needed by frontend
     urls = {
         'movie_url': url_for('movie', movie='MOVIE_PLACEHOLDER'),
@@ -464,7 +511,7 @@ def target_data_api(target):
     # Return all data to frontend
     data = {
         'target': target,
-        'builds': current_page_builds,
+        'builds': display_builds,
         'movies': movies,
         'display_movies': [decode_string(m) for m in movies],
         'continuous_bars': continuous_bars,
@@ -484,7 +531,7 @@ def movie(movie):
         target_path = os.path.join(SCREENSHOTS_DIR, target)
         if os.path.isdir(target_path):
             # Get sorted builds
-            builds = get_sorted_builds(target_path)
+            builds = get_sorted_builds(target_path,reverse=False)
 
             # Find builds containing this movie
             builds_with_movie = []
@@ -497,9 +544,9 @@ def movie(movie):
                     all_builds.add(build)
 
             # Calculate diffs between consecutive builds
-            for i in range(len(builds_with_movie) - 1):
+            for i in range(1,len(builds_with_movie)):
                 current_build = builds_with_movie[i]
-                prev_build = builds_with_movie[i + 1]
+                prev_build = builds_with_movie[i - 1]
 
                 has_diff = movie_diff(current_build, prev_build, target, movie)
 
@@ -511,7 +558,7 @@ def movie(movie):
             if builds_with_movie:
                 target_builds[target] = builds_with_movie
 
-    all_builds = sorted(list(all_builds), reverse=True)
+    all_builds = sorted(list(all_builds), reverse=False)
 
     return render_template('movie.html',
                            movie=movie,
@@ -530,7 +577,7 @@ def build(build):
             continue
 
         # Get sorted builds
-        builds = get_sorted_builds(target_path)
+        builds = get_sorted_builds(target_path,reverse=False)
 
         # Check if current build exists in this target
         if build not in builds:
@@ -538,7 +585,7 @@ def build(build):
 
         # Find the previous build
         build_index = builds.index(build)
-        prev_build = builds[build_index + 1] if build_index < len(builds) - 1 else None
+        prev_build = builds[build_index - 1] if build_index > 0 else None
 
         # Find all movies in this build
         build_path = os.path.join(target_path, build)

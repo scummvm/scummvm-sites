@@ -281,6 +281,10 @@
             `;
         } else if (cell.type === 'missing') {
             return `<td class="no-data"></td>`;
+        } else if (cell.type === 'no_prev') {
+            // Movie exists but no previous build to compare against (page boundary context)
+            // Show plain green — continuous color, no magnifier
+            return `<td class="success no-diff" title="Build ${cell.build}: exists, no previous data to compare"></td>`;
         } else if (cell.type === 'readded') {
             if (cell.compare_with) {
                 return `
