@@ -29,6 +29,10 @@
      item.updated > 30.days.ago
    }.sort { |a, b| b.updated <=> a.updated }
 
+   if items.size < 10
+     items = site.items.sort { |a, b| b.updated <=> a.updated }.first(10)
+   end
+
    index = 0
    ItemCursor.new( items ).each do |item, new_date, new_feed|
      index += 1
