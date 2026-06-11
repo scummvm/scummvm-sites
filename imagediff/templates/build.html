@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Build: {{ build }}</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+  <style>
+    .result-table{
+      thead{
+        border-bottom: 1px solid #00000029;
+      }
+
+      th, td {
+        padding: 3px 6px;
+        text-align: left;
+      }
+
+      tbody{
+        tr.new-target {
+          border-top: 2px dashed #00000029;
+        }
+
+        tr:first-child.new-target {
+          border-top: none;
+        }
+      }
+    }
+
+    .first-build {
+      color: #888;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
+</header>
+
+<h1>Information on {{ build }}</h1>
+
+{% if target_info %}
+<section class="metadata">
+  <h2>Metadata</h2>
+  <ul>
+    {% for target, info in target_info.items() %}
+    {% if loop.first %}
+    <li>Parent:
+      {% if info.prev_build %}
+      <a href="{{ url_for('build', build=info.prev_build) }}">{{ info.prev_build }}</a>
+      {% else %}
+      None (First build)
+      {% endif %}
+    </li>
+    {% endif %}
+    {% endfor %}
+  </ul>
+</section>
+
+<section>
+  <h2>Test Results</h2>
+  <div class="quote">
+    <table class="result-table">
+      <thead>
+      <tr>
+        <th>Target</th>
+        <th>Movie</th>
+        <th>Result</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for target, info in target_info.items() %}
+      {% for movie in info.movies %}
+      <tr class="{% if loop.first %}new-target{% endif %}">
+        {% if loop.first %}
+        <td rowspan="{{ info.movies|length }}">
+          <a href="{{ url_for('index') }}#{{ target }}">{{ target }}</a>
+        </td>
+        {% endif %}
+
+        <td>
+          <a href="{{ url_for('movie', movie=movie) }}">{{ movie }}</a>
+        </td>
+
+        <td>
+          {% if info.prev_build %}
+          {% if info.movie_diffs.get(movie, False) %}
+          <b>
+            <a href="{{ url_for('compare', build1=build, build2=info.prev_build, target=target, movie=movie) }}">
+              DIFF
+            </a>
+          </b>
+          {% else %}
+          <span class="no-diff">No Diff</span>
+          {% endif %}
+          {% else %}
+          <span class="first-build">First build (no comparison available)</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% else %}
+
+<p>This build was not found in any target.</p>
+
+{% endif %}
+</body>
+</html>

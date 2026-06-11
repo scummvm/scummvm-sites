@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ build1 }} vs. {{ build2 }}/ {{movie}}/ {{target}}</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
+    <style>
+        .diff-indicator {
+            color: red;
+            font-weight: bold;
+        }
+        .no-diff-indicator {
+            color: green;
+        }
+        .missing-frame {
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
+</header>
+
+<h2><a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a> vs. <a href="{{ url_for('build', build=build2) }}">{{ build2 }}</a> / <a href="{{ url_for('movie', movie=movie) }}">{{ movie }}</a> / <a href="{{ url_for('index') }}#{{ target }}">{{ target }}</a></h2>
+
+{% if comparisons %}
+<div class="quote">
+    <b>Different Frames: {{ stats.different_frames }}</b>
+</div>
+
+<table class="comparison-table">
+    <thead>
+    <tr>
+        <th><a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a></th>
+        <th>Diff</th>
+        <th><a href="{{ url_for('build', build=build2) }}">{{ build2 }}</a></th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for comp in comparisons %}
+    <tr class="{% if comp.has_diff %}has-diff{% else %}no-diff{% endif %}" data-frame="{{ comp.frame_number }}">
+        <td>
+            {% if comp.diff_data and comp.diff_data.src_img_data %}
+            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.src_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build1 }}">
+            {% else %}
+            <div class="missing-frame">Image data not available</div>
+            {% endif %}
+        </td>
+        <td>
+            {% if comp.has_diff %}
+            {% if comp.diff_data and comp.diff_data.diff_img_data %}
+            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.diff_img_data }}" alt="Difference for frame {{ comp.frame_number }}">
+            {% else %}
+            <span class="diff-indicator">DIFFERENT</span>
+            {% endif %}
+            {% else %}
+            <span class="no-diff-indicator">No difference</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if comp.diff_data and comp.diff_data.cmp_img_data %}
+            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.cmp_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build2 }}">
+            {% else %}
+            <div class="missing-frame">Image data not available</div>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<div class="quote">
+    <p>No frames found for comparison.</p>
+</div>
+{% endif %}
+</body>
+</html>
