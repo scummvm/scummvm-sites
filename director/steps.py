@@ -1,15 +1,18 @@
+import os
 import re
 from typing import Any, Optional
 
 from buildbot import config
 from buildbot.plugins import steps, util
 from buildbot.process import buildstep, logobserver
-from buildbot.process.properties import Property
-from buildbot.process.results import FAILURE, worst_status
+from buildbot.process.results import FAILURE, SUCCESS, WARNINGS, worst_status
 from twisted.internet import defer
 
 from .build_factory import default_env, master_file, worker_file
 from .env import settings
+from .screenshot_diff import EXIT_DIFF, EXIT_ERROR, EXIT_NO_BASELINE
+
+_master_dir = os.path.dirname(os.path.dirname(__file__))
 
 download_step = steps.FileDownload(
     mastersrc=master_file,
@@ -101,6 +104,70 @@ class ScummVMTest(steps.WarningCountingShellCommand):
         if self.errorCount:
             result = worst_status(result, FAILURE)
         return result
+
+
+class ScreenshotDiffStep(steps.ShellCommand):
+    """Compare screenshots from the current build against the previous build."""
+
+    renderables = ["command", "env"]
+
+    def __init__(
+        self,
+        target_key: str,
+        movie_prefix: Optional[str] = None,
+        strict: Optional[bool] = None,
+        **kwargs: Any,
+    ):
+        if strict is None:
+            strict_value = settings["SCREENSHOT_DIFF_STRICT"]
+            if isinstance(strict_value, bool):
+                strict = strict_value
+            else:
+                strict = str(strict_value).lower() in ("1", "true", "yes")
+        self.strict = strict
+
+        env = default_env.copy()
+        imagediff_dir = os.path.join(_master_dir, "imagediff")
+        env["PYTHONPATH"] = os.pathsep.join([_master_dir, imagediff_dir])
+        env["SCREENSHOTS_DIR"] = settings["SCREENSHOTS_DIR"]
+        if settings["IMAGEDIFF_URL"]:
+            env["IMAGEDIFF_URL"] = settings["IMAGEDIFF_URL"]
+
+        command = [
+            "python3",
+            "-m",
+            "director.screenshot_diff",
+            "--screenshots-dir",
+            settings["SCREENSHOTS_DIR"],
+            "--target",
+            target_key,
+            "--build",
+            util.Interpolate("%(prop:buildnumber)s"),
+        ]
+        if movie_prefix:
+            command.extend(["--movie-prefix", movie_prefix])
+        if settings["IMAGEDIFF_URL"]:
+            command.extend(["--imagediff-url", settings["IMAGEDIFF_URL"]])
+
+        kwargs.setdefault("haltOnFailure", False)
+        kwargs.setdefault("flunkOnFailure", False)
+        kwargs.setdefault("warnOnFailure", False)
+        kwargs["command"] = command
+        kwargs["env"] = env
+        kwargs["logEnviron"] = False
+        super().__init__(**kwargs)
+
+    def evaluateCommand(self, cmd):
+        exit_code = cmd.exitCode
+        if exit_code in (0, None):
+            return SUCCESS
+        if exit_code == EXIT_NO_BASELINE:
+            return SUCCESS
+        if exit_code == EXIT_DIFF:
+            return FAILURE if self.strict else WARNINGS
+        if exit_code == EXIT_ERROR:
+            return FAILURE
+        return super().evaluateCommand(cmd)
 
 
 class GenerateStartMovieCommands(buildstep.ShellMixin, steps.BuildStep):

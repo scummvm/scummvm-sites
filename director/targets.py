@@ -7,7 +7,7 @@ from buildbot.plugins import steps, util
 
 from .build_factory import default_env
 from .env import settings
-from .steps import ScummVMTest, download_step
+from .steps import ScummVMTest, ScreenshotDiffStep, download_step
 
 
 @dataclass(frozen=True)
@@ -61,7 +61,7 @@ def generate_command(target: TestTarget, moviename: str) -> list[str]:
         "../scummvm",
         "-c",
         "scummvm.conf",
-        "--screenshotpath=/home/director-buildbot/screenshots",
+        f"--screenshotpath={settings['SCREENSHOTS_DIR']}",
         f"--start-movie={moviename}",
     ]
     if target.debugflags:
@@ -96,6 +96,7 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
             logEnviron=False,
         )
     )
+    screenshot_enabled = "screenshot" in target.debugflags
     for moviename in target.movienames:
         name = moviename
         env = default_env.copy()
@@ -120,6 +121,18 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
                 logEnviron=False,
             )
         )
+        if screenshot_enabled:
+            diff_name = f"{name} screenshot diff"
+            if len(diff_name) > 49:
+                diff_name = diff_name[-49:]
+            factory.addStep(
+                ScreenshotDiffStep(
+                    name=diff_name,
+                    description=f"Compare screenshots for {moviename}",
+                    descriptionDone=f"Compared screenshots for {moviename}",
+                    target_key=target.game_id,
+                )
+            )
 
     return BuilderConfig(
         name=target.builder_name, workernames=workernames, factory=factory
