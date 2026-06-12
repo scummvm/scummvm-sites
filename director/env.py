@@ -23,6 +23,10 @@ default_vars = {
     # base directory which contains all the targets
     "TARGETS_BASEDIR": "~/wb1/",
     "UI": False,
+    # Screenshot comparison (ImageDiff integration)
+    "SCREENSHOTS_DIR": "/home/director-buildbot/screenshots",
+    "IMAGEDIFF_URL": "",
+    "SCREENSHOT_DIFF_STRICT": False,
 }
 
 
