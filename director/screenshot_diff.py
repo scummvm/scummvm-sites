@@ -7,11 +7,10 @@ ScreenshotDiffStep after ScummVMTest when screenshot debugflags are enabled.
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import os
 import sys
 import urllib.parse
-from typing import Callable, Optional
+from typing import Optional
 
 EXIT_OK = 0
 EXIT_DIFF = 1
@@ -19,45 +18,15 @@ EXIT_NO_BASELINE = 2
 EXIT_ERROR = 3
 
 _repo_root = os.path.dirname(os.path.dirname(__file__))
+_imagediff_dir = os.path.join(_repo_root, "imagediff")
 _seen_prefixes_name = ".screenshot_prefixes_seen"
 
+# imagediff/imagediff.py does `from config import SCREENSHOTS_DIR` at module
+# level, so imagediff/ must be on sys.path before we import it.
+if _imagediff_dir not in sys.path:
+    sys.path.insert(0, _imagediff_dir)
 
-def _load_movie_diff(screenshots_dir: str) -> Callable[..., bool]:
-    """Load movie_diff from the vendored imagediff package."""
-    os.environ["SCREENSHOTS_DIR"] = screenshots_dir
-    imagediff_dir = os.path.join(_repo_root, "imagediff")
-
-    config_spec = importlib.util.spec_from_file_location(
-        "imagediff_config", os.path.join(imagediff_dir, "config.py")
-    )
-    if config_spec is None or config_spec.loader is None:
-        raise ImportError("unable to load imagediff config")
-    config_module = importlib.util.module_from_spec(config_spec)
-    sys.modules["config"] = config_module
-    config_spec.loader.exec_module(config_module)
-
-    core_spec = importlib.util.spec_from_file_location(
-        "imagediff_core", os.path.join(imagediff_dir, "imagediff.py")
-    )
-    if core_spec is None or core_spec.loader is None:
-        raise ImportError("unable to load imagediff core")
-    core_module = importlib.util.module_from_spec(core_spec)
-    core_spec.loader.exec_module(core_module)
-    return core_module.movie_diff
-
-
-def list_movie_prefixes(build_path: str) -> list[str]:
-    """Return sorted movie filename prefixes in a build directory."""
-    prefixes: set[str] = set()
-    if not os.path.isdir(build_path):
-        return []
-
-    for name in os.listdir(build_path):
-        if not name.endswith(".png") or "-" not in name:
-            continue
-        prefixes.add(name.rsplit("-", 1)[0])
-
-    return sorted(prefixes)
+import imagediff as _imagediff  # imagediff/imagediff.py
 
 
 def _seen_prefixes_path(screenshots_dir: str, target: str, build: str) -> str:
@@ -86,7 +55,7 @@ def prefixes_for_step(
 ) -> list[str]:
     """Return prefixes to compare for this step."""
     build_path = os.path.join(screenshots_dir, target, build)
-    current = set(list_movie_prefixes(build_path))
+    current = set(_imagediff.list_movie_prefixes(build_path))
     if not only_new:
         return sorted(current)
 
@@ -95,37 +64,6 @@ def prefixes_for_step(
     new_prefixes = sorted(current - seen)
     _write_seen_prefixes(seen_path, seen | set(new_prefixes))
     return new_prefixes
-
-
-def find_baseline_build(
-    screenshots_dir: str, target: str, current_build: str
-) -> Optional[str]:
-    """Return the highest prior build number that has stored screenshots."""
-    target_path = os.path.join(screenshots_dir, target)
-    if not os.path.isdir(target_path):
-        return None
-
-    try:
-        current_number = int(current_build)
-    except ValueError:
-        return None
-
-    candidates: list[int] = []
-    for entry in os.listdir(target_path):
-        path = os.path.join(target_path, entry)
-        if not os.path.isdir(path):
-            continue
-        try:
-            build_number = int(entry)
-        except ValueError:
-            continue
-        if build_number < current_number:
-            candidates.append(build_number)
-
-    if not candidates:
-        return None
-
-    return str(max(candidates))
 
 
 def compare_url(
@@ -159,7 +97,9 @@ def check_screenshots(
         )
 
     if baseline_build is None:
-        baseline_build = find_baseline_build(screenshots_dir, target, current_build)
+        baseline_build = _imagediff.find_baseline_build(
+            screenshots_dir, target, current_build
+        )
 
     if baseline_build is None:
         return EXIT_NO_BASELINE, (
@@ -168,12 +108,10 @@ def check_screenshots(
 
     if movie_prefix:
         prefixes = [movie_prefix]
-    elif only_new:
-        prefixes = prefixes_for_step(
-            screenshots_dir, target, current_build, only_new=True
-        )
     else:
-        prefixes = list_movie_prefixes(current_path)
+        prefixes = prefixes_for_step(
+            screenshots_dir, target, current_build, only_new=only_new
+        )
 
     if not prefixes:
         return EXIT_NO_BASELINE, (
@@ -181,15 +119,12 @@ def check_screenshots(
             f"build {current_build}"
         )
 
-    try:
-        movie_diff = _load_movie_diff(screenshots_dir)
-    except ImportError as exc:
-        return EXIT_ERROR, f"Failed to load imagediff: {exc}"
-
     diff_prefixes = [
         prefix
         for prefix in prefixes
-        if movie_diff(current_build, baseline_build, target, prefix)
+        if _imagediff.movie_diff(
+            current_build, baseline_build, target, prefix, screenshots_dir
+        )
     ]
 
     if not diff_prefixes:
@@ -239,7 +174,7 @@ def main(argv: Optional[list[str]] = None) -> int:
 
     print(message)
     if exit_code == EXIT_DIFF and args.imagediff_url:
-        baseline = args.baseline or find_baseline_build(
+        baseline = args.baseline or _imagediff.find_baseline_build(
             args.screenshots_dir, args.target, args.build
         )
         if baseline:
