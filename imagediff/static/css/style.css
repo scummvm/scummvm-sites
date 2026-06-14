@@ -129,3 +129,66 @@ a:hover {
         max-height: 300px;
     }
 }
+
+.pagination-container {
+    margin-top: 12px;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.page-btn {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #337ab7;
+    background: #fff;
+    cursor: pointer;
+    text-decoration: none;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.page-btn:hover {
+    background: #e8f0fe;
+    text-decoration: none;
+}
+
+.page-btn.current {
+    background: #337ab7;
+    color: #fff;
+    border-color: #337ab7;
+    font-weight: bold;
+}
+
+.page-btn.disabled {
+    color: #aaa;
+    border-color: #eee;
+    cursor: default;
+    pointer-events: none;
+}
+
+.page-ellipsis {
+    padding: 4px 4px;
+    color: #666;
+}
+
+.page-jump-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.page-jump-input {
+    width: 60px;
+    padding: 4px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
