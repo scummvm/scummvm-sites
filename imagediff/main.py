@@ -108,6 +108,21 @@ def get_frame_number(filename):
         
 
 
+def get_pagination_pages(page, total_pages, window=2):
+    """Return list of page numbers with None for ellipsis gaps."""
+    pages = set([1, total_pages])
+    for i in range(max(1, page - window), min(total_pages, page + window) + 1):
+        pages.add(i)
+    result = []
+    prev = None
+    for p in sorted(pages):
+        if prev is not None and p - prev > 1:
+            result.append(None)
+        result.append(p)
+        prev = p
+    return result
+
+
 def get_sorted_builds(target_path, reverse=True):
     """Get sorted list of builds for a target."""
     builds = [b for b in os.listdir(target_path)
@@ -218,18 +233,17 @@ def target_detail(target):
     if not os.path.exists(target_path) or not os.path.isdir(target_path):
         return "Target not found", 404
 
-    # Only get the build list, other time-consuming operations moved to API
-    builds = get_sorted_builds(target_path,reverse=False)
-
-    # Only return the page framework with build list but without table data
-    page = int(request.args.get('page', 1))
+    builds = get_sorted_builds(target_path, reverse=False)
     page_size = 20
+    total_pages = max(1, (len(builds) + page_size - 1) // page_size)
+    page_param = request.args.get('page')
+    page = int(page_param) if page_param is not None else total_pages
+    page = max(1, min(page, total_pages))
     start = (page - 1) * page_size
     end = start + page_size
     paginated_builds = builds[start:end]
-    total_pages = (len(builds) + page_size - 1) // page_size
+    pagination_pages = get_pagination_pages(page, total_pages)
 
-    # Load cache for this target and page
     cache_data = load_target_cache(target, page)
 
     return render_template('target.html',
@@ -238,6 +252,7 @@ def target_detail(target):
         builds=paginated_builds,
         page=page,
         total_pages=total_pages,
+        pagination_pages=pagination_pages,
         cache_data=cache_data)
 
 

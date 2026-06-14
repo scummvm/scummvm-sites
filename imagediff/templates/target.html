@@ -104,25 +104,37 @@
         <div class="pagination-container">
     {% if total_pages > 1 %}
         <div class="pagination">
-
             {% if page > 1 %}
-                <a class="page-btn"
-                   href="{{ url_for('target_detail', target=target) }}?page={{ page - 1 }}">
-                    ⬅ Previous
-                </a>
+                <a class="page-btn" href="{{ url_for('target_detail', target=target) }}?page=1">|&lt;</a>
+                <a class="page-btn" href="{{ url_for('target_detail', target=target) }}?page={{ page - 1 }}">&lt;</a>
+            {% else %}
+                <span class="page-btn disabled">|&lt;</span>
+                <span class="page-btn disabled">&lt;</span>
             {% endif %}
 
-            <span class="page-info">
-                Page {{ page }} of {{ total_pages }}
-            </span>
+            {% for p in pagination_pages %}
+                {% if p is none %}
+                    <span class="page-ellipsis">…</span>
+                {% elif p == page %}
+                    <span class="page-btn current">{{ p }}</span>
+                {% else %}
+                    <a class="page-btn" href="{{ url_for('target_detail', target=target) }}?page={{ p }}">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
 
             {% if page < total_pages %}
-                <a class="page-btn"
-                   href="{{ url_for('target_detail', target=target) }}?page={{ page + 1 }}">
-                    Next ➡
-                </a>
+                <a class="page-btn" href="{{ url_for('target_detail', target=target) }}?page={{ page + 1 }}">&gt;</a>
+                <a class="page-btn" href="{{ url_for('target_detail', target=target) }}?page={{ total_pages }}">&gt;|</a>
+            {% else %}
+                <span class="page-btn disabled">&gt;</span>
+                <span class="page-btn disabled">&gt;|</span>
             {% endif %}
 
+            <form method="get" class="page-jump-form">
+                <input type="number" name="page" min="1" max="{{ total_pages }}"
+                       placeholder="{{ page }}" class="page-jump-input">
+                <button type="submit" class="page-btn">Go</button>
+            </form>
         </div>
     {% endif %}
 </div>
