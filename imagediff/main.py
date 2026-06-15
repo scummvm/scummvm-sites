@@ -328,24 +328,11 @@ def target_data_api(target):
                 movie_reference_builds[movie][current_build] = reference_data
 
     def get_image_diff(current_build, prev_build, movie, frame):
-        cache_key = make_cache_key(target, current_build, prev_build, movie, frame)
-        image_diff_cache = load_frame_cache(target)
-        if cache_key in image_diff_cache:
-            return image_diff_cache[cache_key]
-
         current_frame_path = os.path.join(target_path, current_build, f"{movie}-{frame}.png")
         prev_frame_path = os.path.join(target_path, prev_build, f"{movie}-{frame}.png")
-
-        if os.path.exists(current_frame_path) and os.path.exists(prev_frame_path):
-            try:
-                image_diff_cache[cache_key] = image_diff(current_frame_path, prev_frame_path)
-            except Exception as e:
-                print(f"Error comparing frames {movie}-{frame}: {e}")
-                image_diff_cache[cache_key] = {'has_diff': True}
-        else:
-            image_diff_cache[cache_key] = {'has_diff': True}
-        save_frame_cache(target, image_diff_cache)
-        return image_diff_cache[cache_key]
+        # File presence is the diff signal, engine only saves when it detects a change
+        has_diff = os.path.exists(current_frame_path) and os.path.exists(prev_frame_path)
+        return {'has_diff': has_diff}
 
     # Modified movie difference function to only compare specified frames
     def get_movie_diff_for_frames(current_build, reference_build, target, movie, frames_to_compare):
@@ -468,7 +455,8 @@ def target_data_api(target):
                             'is_partial': True
                         })
                     else:
-                        has_diff = movie_diff(current_build, prev_build, target, movie)
+                        has_diff = get_movie_diff_for_frames(
+                            current_build, prev_build, target, movie, list(common_frames))
 
                         continuous_bars[movie].append({
                             'build': current_build,
