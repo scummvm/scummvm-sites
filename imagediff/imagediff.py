@@ -67,72 +67,23 @@ def find_baseline_build(screenshots_dir, target, current_build):
 
 def movie_diff(src_build, cmp_build, target, movie, screenshots_dir=None):
     """
-    Compare all frames of a movie between two builds and determine if there are any differences.
+    Determine if a movie differs between two builds by checking file presence.
 
-    Args:
-        src_build (str): The source build name
-        cmp_build (str): The comparison build name
-        target (str): The target name
-        movie (str): The movie name
-        screenshots_dir (str): Override for SCREENSHOTS_DIR from config
-
-    Returns:
-        bool: True if any frame has differences, False otherwise
+    The Director engine only saves a screenshot when it detects a change vs the
+    previous build (using pixel comparison with a threshold). So if a frame file
+    exists in a build, the engine already confirmed it differs. No PIL comparison
+    needed here, file presence IS the diff signal.
     """
     screenshots_dir = screenshots_dir or SCREENSHOTS_DIR
     src_build_path = os.path.join(screenshots_dir, target, src_build)
     cmp_build_path = os.path.join(screenshots_dir, target, cmp_build)
 
-    # Ensure both build paths exist
     if not os.path.exists(src_build_path) or not os.path.exists(cmp_build_path):
         return False
 
-    # Get all frames for this movie in both builds
-    src_frames = [f for f in os.listdir(src_build_path)
-                  if os.path.isfile(os.path.join(src_build_path, f)) and f.startswith(f"{movie}-")]
+    cmp_frames = {f for f in os.listdir(cmp_build_path) if f.startswith(f"{movie}-")}
 
-    cmp_frames = [f for f in os.listdir(cmp_build_path)
-                  if os.path.isfile(os.path.join(cmp_build_path, f)) and f.startswith(f"{movie}-")]
+    # The engine only saves a screenshot file when it detects a change vs the previous build.
+    # So any file in cmp_build means cmp_build differs from src_build.
+    return len(cmp_frames) > 0
 
-    # If frame counts differ, there's definitely a difference
-    if len(src_frames) != len(cmp_frames):
-        return True
-
-    # Helper function to extract frame number from filename
-    def get_frame_number(filename):
-        parts = filename.split('-')
-        if len(parts) > 1:
-            try:
-                return int(parts[1].split('.')[0])
-            except ValueError:
-                return 0
-        return 0
-
-    src_frame_map = {get_frame_number(f): f for f in src_frames}
-    cmp_frame_map = {get_frame_number(f): f for f in cmp_frames}
-
-    all_frame_numbers = sorted(set(list(src_frame_map.keys()) + list(cmp_frame_map.keys())))
-
-    if set(src_frame_map.keys()) != set(cmp_frame_map.keys()):
-        return True
-
-    for frame_num in all_frame_numbers:
-        src_frame = src_frame_map.get(frame_num)
-        cmp_frame = cmp_frame_map.get(frame_num)
-
-        if src_frame and cmp_frame:
-            src_img_path = os.path.join(src_build_path, src_frame)
-            cmp_img_path = os.path.join(cmp_build_path, cmp_frame)
-
-            try:
-                diff_result = image_diff(src_img_path, cmp_img_path)
-
-                if diff_result.get('has_diff', False):
-                    return True
-            except Exception as e:
-                print(f"Error comparing frames {src_frame} and {cmp_frame}: {e}")
-                return True
-        else:
-            return True
-
-    return False
