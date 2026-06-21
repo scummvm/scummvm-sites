@@ -1,9 +1,14 @@
 import os
 import json
-from PIL import Image
+import sys
+
 from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
 
-from config import CACHE_DIR,SCREENSHOTS_DIR
+_imagediff_dir = os.path.dirname(__file__)
+if _imagediff_dir not in sys.path:
+    sys.path.insert(0, _imagediff_dir)
+
+from config import CACHE_DIR, SCREENSHOTS_DIR
 from imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
@@ -220,11 +225,13 @@ def create_frame_map(frames):
     return {get_frame_number(f): f for f in frames}
 
 @app.route('/')
+@app.route('/index.html')
 def index():
     targets = [d for d in os.listdir(SCREENSHOTS_DIR)
                if os.path.isdir(os.path.join(SCREENSHOTS_DIR, d))]
 
     return render_template('index.html', targets=targets)
+
 
 @app.route('/target/<target>')
 def target_detail(target):

@@ -300,6 +300,7 @@ version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "buildbot", extra = ["bundle"] },
+    { name = "buildbot-wsgi-dashboards" },
     { name = "certifi" },
     { name = "environs" },
     { name = "flask" },
@@ -320,6 +321,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "buildbot", extras = ["bundle"], specifier = "<4.4.0" },
+    { name = "buildbot-wsgi-dashboards", specifier = ">=4.3.0" },
     { name = "certifi" },
     { name = "environs" },
     { name = "flask", specifier = ">=3.0.0" },
@@ -368,6 +370,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/57/b3/7beb6948021f4cc040384bfc73bfa5d8017b757f63bf757364ef63522552/buildbot_worker-4.3.0.tar.gz", hash = "sha256:14f5e806c32ef9669e58a3398e9d53ca54fa9080cd6f04956fed1e251da9f4dc", size = 135399, upload-time = "2025-05-12T21:41:44.139Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/12/1176d49759b0caf41751ccb9f9f0aae78719ff078680b72136050f1ac450/buildbot_worker-4.3.0-py2.py3-none-any.whl", hash = "sha256:cbde571bb635a84c3f9e1395d27f760d8cc02956c55765f19869cf1319e2ea19", size = 93518, upload-time = "2025-05-12T21:41:32.228Z" },
+]
+
+[[package]]
+name = "buildbot-wsgi-dashboards"
+version = "4.3.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/28/9f/b0ee66b7918cb2c128d7529cc2ba6ed681fd9f48607ceab7a6e3ae5a26d7/buildbot_wsgi_dashboards-4.3.0.tar.gz", hash = "sha256:be87cac6921f6c0b3b1d1e3763ba231cb4049fafd621d8d93e066278132ccfbe", size = 434342, upload-time = "2025-05-12T21:41:45.906Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/9b/e8/d106d3810179bd906b2ba229a70217feedce34326dbc2f39f70524de5bc5/buildbot_wsgi_dashboards-4.3.0-py3-none-any.whl", hash = "sha256:250eac05f678e2edb277c6a5535cdcce46fc0140819a98d78a31b200e6f63a0b", size = 434937, upload-time = "2025-05-12T21:41:33.836Z" },
 ]
 
 [[package]]
