@@ -13,6 +13,7 @@ from director.build_factory import build_factory
 from director.discord import DiscordStatusPush
 from director.lingo_factory import lingo_factory
 from director.targets import generate_builder, test_targets
+from imagediff.main import app as imagediff_app
 
 # This is a sample buildmaster config file. It must be installed as
 # 'master.cfg' in your buildmaster's base directory.
@@ -208,10 +209,19 @@ if WEB_UI:
     # minimalistic config to activate new web UI
     c["www"] = dict(
         port=env("WEB_UI_CONNECTION", "tcp:5000:interface=127.0.0.1"),
-        plugins=dict(grid_view={}),
+        plugins=dict(grid_view={},
+                     wsgi_dashboards=[{
+                         'name': 'imagediff',
+                         'caption': 'ImageDiff',
+                         'app': imagediff_app,
+                         'order': 5,
+                         'icon': 'area-chart',
+                     }]),
         change_hook_dialects={"github": github_hook},
         allowed_origins=["*"],
     )
+
+
 
     c["www"]["auth"] = util.GitHubAuth(
         env("GITHUB_CLIENT_ID"),

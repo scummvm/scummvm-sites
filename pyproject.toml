@@ -12,6 +12,7 @@ dependencies = [
   "certifi",
   "Pillow>=10.0.0",
   "flask>=3.0.0",
+  "buildbot-wsgi-dashboards>=4.3.0",
 ]
 
 [dependency-groups]
