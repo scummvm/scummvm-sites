@@ -1,5 +1,6 @@
 import os
 import json
+import sys
 import base64
 from io import BytesIO
 
@@ -9,8 +10,11 @@ from config import SCREENSHOTS_DIR
 
 from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
 
-from imagediff.config import CACHE_DIR, SCREENSHOTS_DIR
-from imagediff.imagediff import image_diff, encode_image, movie_diff
+_imagediff_dir = os.path.dirname(__file__)
+if _imagediff_dir not in sys.path:
+    sys.path.insert(0, _imagediff_dir)
+
+from config import CACHE_DIR, SCREENSHOTS_DIR
 
 app = Flask(__name__)
 
