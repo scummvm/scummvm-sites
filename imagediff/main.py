@@ -376,7 +376,7 @@ def target_data_api(target):
     builds_to_process = builds[process_start:end_index + 1] if end_index < len(builds) else builds[process_start:end_index]
 
     # Collect movie frame data
-    all_movies, build_movie_frames, _ = collect_movie_frames(target_path,builds_to_process)
+    all_movies, build_movie_frames, _ = collect_movie_frames(target_path,builds)
 
     # Calculate first build for each movie
     first_build_for_movie = find_first_build_for_movies(
