@@ -9,6 +9,9 @@ from buildbot.plugins import schedulers, util, worker
 from environs import Env
 from twisted.python import log
 
+env = Env()
+env.read_env()
+
 from director.build_factory import build_factory
 from director.discord import DiscordStatusPush
 from director.lingo_factory import lingo_factory

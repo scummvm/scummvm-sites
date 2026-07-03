@@ -157,7 +157,15 @@
 
         // Build API URL
         const target = '{{ target }}';
-        const apiUrl = `/api/target_data/${encodeURIComponent(target)}?page={{ page }}`;
+	// const apiUrl = `{{ url_for('target_data_api', target=target) }}?page={{ page }}`;
+	// const apiUrl = `{{ url_for('target_data_api', target=target) }}?page={{ page }}`;
+	const basePath = window.location.pathname.replace(/\/target\/[^/]*$/, '');
+        const apiUrl = `${basePath}/api/target_data/${encodeURIComponent(target)}?page={{ page }}`;
+	console.log('pathname:', window.location.pathname, 'basePath:', basePath);
+
+
+
+
 
         // Start timestamp for calculating loading time
         const startTime = new Date().getTime();

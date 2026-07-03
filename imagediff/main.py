@@ -1,6 +1,5 @@
 import os
 import json
-import sys
 import base64
 from io import BytesIO
 
@@ -10,11 +9,8 @@ from config import SCREENSHOTS_DIR
 
 from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
 
-_imagediff_dir = os.path.dirname(__file__)
-if _imagediff_dir not in sys.path:
-    sys.path.insert(0, _imagediff_dir)
-
-from config import CACHE_DIR, SCREENSHOTS_DIR
+from imagediff.config import CACHE_DIR, SCREENSHOTS_DIR
+from imagediff.imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
 
@@ -119,7 +115,7 @@ def unescape_string(s: str) -> str:
         hi = next(s_iter, None)
     return orig_name
 
-def decode_string(orig: str) -> str:
+def decode_string2(orig: str) -> str:
     """
     Decode punyencoded strings
     """
@@ -137,6 +133,15 @@ def decode_string(orig: str) -> str:
     st = orig[4:].encode("ascii").decode("punycode")
     return unescape_string(st)
 
+def decode_string(orig: str) -> str:
+    """
+    Decode punyencoded strings
+    """
+    if not orig.startswith("xn--"):
+        return orig
+
+    st = orig[4:].encode("ascii").decode("punycode")
+    return unescape_string(st)
 
 # cache functions
 def get_cache_page_path(target, page):
@@ -243,6 +248,8 @@ def collect_movie_frames(target_path, builds):
 
         for file in build_files[build]:
             if not os.path.isfile(os.path.join(target_path, build, file)):
+                continue
+            if "-" not in file:
                 continue
 
 
@@ -610,7 +617,7 @@ def target_data_api(target):
         'target': target,
         'builds': display_builds,
         'movies': movies,
-        'display_movies': [decode_string(m) for m in movies],
+        'display_movies': [print(f"DEBUG movie: {repr(m)}") or decode_string(m) for m in movies],
         'continuous_bars': continuous_bars,
         'urls': urls
     }
@@ -803,4 +810,4 @@ def screenshots(filename):
     return send_from_directory(SCREENSHOTS_DIR, filename)
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, host = '0.0.0.0', port=5002)

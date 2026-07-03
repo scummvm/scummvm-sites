@@ -89,7 +89,9 @@ def generate_builder(target: TestTarget, workernames: list[str]) -> BuilderConfi
             command=[
                 "rsync",
                 "-av",
+                "--no-o",
                 "--delete",
+                "--link-dest", os.path.join(base_dir, to_directory),
                 os.path.join(base_dir, to_directory),
                 target.directory,
             ],

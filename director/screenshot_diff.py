@@ -17,16 +17,9 @@ EXIT_DIFF = 1
 EXIT_NO_BASELINE = 2
 EXIT_ERROR = 3
 
-_repo_root = os.path.dirname(os.path.dirname(__file__))
-_imagediff_dir = os.path.join(_repo_root, "imagediff")
 _seen_prefixes_name = ".screenshot_prefixes_seen"
 
-# imagediff/imagediff.py does `from config import SCREENSHOTS_DIR` at module
-# level, so imagediff/ must be on sys.path before we import it.
-if _imagediff_dir not in sys.path:
-    sys.path.insert(0, _imagediff_dir)
-
-import imagediff as _imagediff  # imagediff/imagediff.py
+from imagediff import imagediff as _imagediff  # imagediff/imagediff.py
 
 
 def _seen_prefixes_path(screenshots_dir: str, target: str, build: str) -> str:
