@@ -1,6 +1,12 @@
 import os
 import json
 import sys
+import base64
+from io import BytesIO
+
+from PIL import Image, ImageChops
+
+from config import SCREENSHOTS_DIR
 
 from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
 
@@ -9,9 +15,90 @@ if _imagediff_dir not in sys.path:
     sys.path.insert(0, _imagediff_dir)
 
 from config import CACHE_DIR, SCREENSHOTS_DIR
-from imagediff import image_diff, encode_image, movie_diff
 
 app = Flask(__name__)
+
+def encode_image(image):
+    """Encode an image to a base64 string."""
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    return base64.b64encode(buffered.getvalue()).decode('utf-8')
+
+def image_diff(src_img_path, cmp_img_path):
+    """
+    Compute the difference between two images and return the results.
+    """
+    try:
+        src_img = Image.open(src_img_path)
+        cmp_img = Image.open(cmp_img_path)
+        diff_img = ImageChops.difference(src_img, cmp_img).convert('RGB')
+
+        has_diff = diff_img.getbbox() is not None
+
+        return {
+            'src_img_data': encode_image(src_img),
+            'cmp_img_data': encode_image(cmp_img),
+            'diff_img_data': encode_image(diff_img) if has_diff else None,
+            'has_diff': has_diff
+        }
+    except IOError:
+        return {}
+
+def list_movie_prefixes(build_path):
+    """Return sorted movie filename prefixes present in a build directory."""
+    prefixes = set()
+    if not os.path.isdir(build_path):
+        return []
+    for name in os.listdir(build_path):
+        if name.endswith(".png") and "-" in name:
+            prefixes.add(name.rsplit("-", 1)[0])
+    return sorted(prefixes)
+
+
+def find_baseline_build(screenshots_dir, target, current_build):
+    """Return the highest prior build number that has stored screenshots."""
+    target_path = os.path.join(screenshots_dir, target)
+    if not os.path.isdir(target_path):
+        return None
+    try:
+        current_number = int(current_build)
+    except ValueError:
+        return None
+    candidates = []
+    for entry in os.listdir(target_path):
+        if not os.path.isdir(os.path.join(target_path, entry)):
+            continue
+        try:
+            build_number = int(entry)
+        except ValueError:
+            continue
+        if build_number < current_number:
+            candidates.append(build_number)
+    return str(max(candidates)) if candidates else None
+
+
+def movie_diff(src_build, cmp_build, target, movie, screenshots_dir=None):
+    """
+    Determine if a movie differs between two builds by checking file presence.
+
+    The Director engine only saves a screenshot when it detects a change vs the
+    previous build (using pixel comparison with a threshold). So if a frame file
+    exists in a build, the engine already confirmed it differs. No PIL comparison
+    needed here, file presence IS the diff signal.
+    """
+    screenshots_dir = screenshots_dir or SCREENSHOTS_DIR
+    src_build_path = os.path.join(screenshots_dir, target, src_build)
+    cmp_build_path = os.path.join(screenshots_dir, target, cmp_build)
+
+    if not os.path.exists(src_build_path) or not os.path.exists(cmp_build_path):
+        return False
+
+    cmp_frames = {f for f in os.listdir(cmp_build_path) if f.startswith(f"{movie}-")}
+
+    # The engine only saves a screenshot file when it detects a change vs the previous build.
+    # So any file in cmp_build means cmp_build differs from src_build.
+    return len(cmp_frames) > 0
+
 
 # String decoding functions
 def unescape_string(s: str) -> str:
@@ -39,12 +126,12 @@ def decode_string(orig: str) -> str:
     print("Decoding string:", orig)
     if not orig.startswith("xn--"):
         return orig
-    
+
     print("called for xn")
     i = len(orig) - 1
     while i >= 0 and orig[i] == "-":
         i -= 1
-    
+
     orig = orig[:i+1]
 
     st = orig[4:].encode("ascii").decode("punycode")
@@ -110,7 +197,7 @@ def get_frame_number(filename):
             return int(parts[1].rsplit('.')[0])
         except ValueError:
             return 0
-        
+
 
 
 def get_pagination_pages(page, total_pages, window=2):
@@ -158,7 +245,7 @@ def collect_movie_frames(target_path, builds):
             if not os.path.isfile(os.path.join(target_path, build, file)):
                 continue
 
-            
+
             movie_name, frame_part = file.rsplit("-", 1)
             frame_num = frame_part.split('.')[0]
 
@@ -272,7 +359,7 @@ def target_data_api(target):
     cached_data = load_target_cache(target, page)
     if cached_data:
         return jsonify(cached_data)
-    
+
     target_path = os.path.join(SCREENSHOTS_DIR, target)
 
     if not os.path.exists(target_path) or not os.path.isdir(target_path):
@@ -312,7 +399,7 @@ def target_data_api(target):
                         reference_build = next_build
                         break
                 movie_reference_builds[movie][current_build] = {
-                    'build': reference_build, 
+                    'build': reference_build,
                     'frames': [] # Empty since current build doesn't have the movie
                 }
             else:
@@ -357,7 +444,7 @@ def target_data_api(target):
 
     # Pre-calculate movie difference results
 
-    
+
     # def get_movie_diff_cached(current_build, prev_build, target, movie):
     #     cache_key = (current_build, prev_build, target, movie)
     #     if cache_key not in movie_diff:
@@ -366,14 +453,14 @@ def target_data_api(target):
     #     return movie_diff_cache[cache_key]
 
     movies = sorted(list(all_movies))
-    
+
     # Define display_builds early: include previous page's last build for continuity
     display_builds = []
     if start_index > 0:
         # Include last build from previous page for continuity
         display_builds.append(builds[start_index - 1])
     display_builds.extend(current_page_builds)
-    
+
     # True if a build is the context/carry-over build from the previous page
     context_build = builds[start_index - 1] if start_index > 0 else None
 
