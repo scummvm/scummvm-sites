@@ -4,15 +4,15 @@ import sys
 import base64
 from io import BytesIO
 
-from PIL import Image, ImageChops
-
-from config import SCREENSHOTS_DIR
-
-from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
-
+# config.py lives next to this file; make it importable no matter where we
+# are imported from (buildbot master, worker step, or standalone).
 _imagediff_dir = os.path.dirname(__file__)
 if _imagediff_dir not in sys.path:
     sys.path.insert(0, _imagediff_dir)
+
+from PIL import Image, ImageChops
+
+from flask import Flask, render_template, jsonify, url_for, send_from_directory, request
 
 from config import CACHE_DIR, SCREENSHOTS_DIR
 
@@ -118,24 +118,6 @@ def unescape_string(s: str) -> str:
             orig_name += hi
         hi = next(s_iter, None)
     return orig_name
-
-def decode_string2(orig: str) -> str:
-    """
-    Decode punyencoded strings
-    """
-    print("Decoding string:", orig)
-    if not orig.startswith("xn--"):
-        return orig
-
-    print("called for xn")
-    i = len(orig) - 1
-    while i >= 0 and orig[i] == "-":
-        i -= 1
-
-    orig = orig[:i+1]
-
-    st = orig[4:].encode("ascii").decode("punycode")
-    return unescape_string(st)
 
 def decode_string(orig: str) -> str:
     """
@@ -621,7 +603,7 @@ def target_data_api(target):
         'target': target,
         'builds': display_builds,
         'movies': movies,
-        'display_movies': [print(f"DEBUG movie: {repr(m)}") or decode_string(m) for m in movies],
+        'display_movies': [decode_string(m) for m in movies],
         'continuous_bars': continuous_bars,
         'urls': urls
     }
