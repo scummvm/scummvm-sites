@@ -1,6 +1,6 @@
 """Screenshot comparison for Director buildbot tests.
 
-Uses comparison logic from imagediff/imagediff.py. Invoked on the worker by
+Uses comparison logic from imagediff/main.py. Invoked on the worker by
 ScreenshotDiffStep after ScummVMTest when screenshot debugflags are enabled.
 """
 
@@ -19,7 +19,7 @@ EXIT_ERROR = 3
 
 _seen_prefixes_name = ".screenshot_prefixes_seen"
 
-from imagediff import imagediff as _imagediff  # imagediff/imagediff.py
+from imagediff import main as _imagediff  # imagediff/main.py
 
 
 def _seen_prefixes_path(screenshots_dir: str, target: str, build: str) -> str:
