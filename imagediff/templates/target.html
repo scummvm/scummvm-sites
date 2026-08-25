@@ -252,7 +252,12 @@
         // Generate HTML based on cell type
         if (cell.type === 'diff') {
             if (cell.is_skipped) {
-                return `<td class="success no-diff" title="Build skipped (no changes from ${cell.reference_build})"></td>`;
+                return `<td class="success no-diff" title="No changes since build ${cell.reference_build}">
+                    <a href="${urls.single_build_url
+                        .replace('BUILD_PLACEHOLDER', cell.reference_build)
+                        .replace('TARGET_PLACEHOLDER', target)
+                        .replace('MOVIE_PLACEHOLDER', movie)}" style="opacity:0.4">🔍</a>
+                </td>`;
             } else if (cell.is_partial) {
                 if (cell.has_diff) {
                     return `

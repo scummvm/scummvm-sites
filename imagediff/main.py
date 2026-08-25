@@ -375,25 +375,38 @@ def target_data_api(target):
     first_build_for_movie = find_first_build_for_movies(
         all_movies, builds_ascending, build_movie_frames)
 
-    # Calculate reference builds (only for builds we're processing)
+    # Pre-compute for each movie the sorted list of builds where it appears
+    movie_builds_index = {}
+    for movie in all_movies:
+        movie_builds_index[movie] = [b for b in builds_ascending if movie in build_movie_frames.get(b, {})]
+
+    # Calculate reference builds searching ALL builds globally
     movie_reference_builds = {}
     for movie in all_movies:
         movie_reference_builds[movie] = {}
-        for i, current_build in enumerate(builds_to_process):
+        movie_build_list = movie_builds_index[movie]
+        for current_build in builds_to_process:
             has_in_current = movie in build_movie_frames.get(current_build, {})
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
 
             if not has_in_current:
-                 # Reference build needs to have the movie
+                # Search ALL builds before current_build for the most recent one with this movie
                 reference_build = None
-                for j in range(i-1, -1, -1):
-                    next_build = builds_to_process[j]
-                    if movie in build_movie_frames.get(next_build, {}):
-                        reference_build = next_build
-                        break
+                try:
+                    current_number = int(current_build)
+                except ValueError:
+                    current_number = None
+                if current_number is not None:
+                    for b in reversed(movie_build_list):
+                        try:
+                            if int(b) < current_number:
+                                reference_build = b
+                                break
+                        except ValueError:
+                            continue
                 movie_reference_builds[movie][current_build] = {
                     'build': reference_build,
-                    'frames': [] # Empty since current build doesn't have the movie
+                    'frames': build_movie_frames.get(reference_build, {}).get(movie, []) if reference_build else []
                 }
             else:
                 # Current build has the movie, find a reference build with matching frames
@@ -401,17 +414,24 @@ def target_data_api(target):
                     'build': None,
                     'frames': current_frames
                 }
-                for j in range(i-1, -1, -1):
-                    next_build = builds_to_process[j]
-                    if movie in build_movie_frames.get(next_build, {}):
-                        next_frames = build_movie_frames.get(next_build, {}).get(movie, [])
-                        common_frames = set(current_frames).intersection(set(next_frames))
-                        if common_frames:
-                            reference_data = {
-                                'build': next_build,
-                                'frames': list(common_frames)
-                            }
-                            break
+                try:
+                    current_number = int(current_build)
+                except ValueError:
+                    current_number = None
+                if current_number is not None:
+                    for b in reversed(movie_build_list):
+                        try:
+                            if int(b) < current_number:
+                                next_frames = build_movie_frames.get(b, {}).get(movie, [])
+                                common_frames = set(current_frames).intersection(set(next_frames))
+                                if common_frames:
+                                    reference_data = {
+                                        'build': b,
+                                        'frames': list(common_frames)
+                                    }
+                                    break
+                        except ValueError:
+                            continue
                 movie_reference_builds[movie][current_build] = reference_data
 
     def get_image_diff(current_build, prev_build, movie, frame):
@@ -462,6 +482,7 @@ def target_data_api(target):
     # Create continuous bars for visualization with updated skip logic
     for movie in movies:
         continuous_bars[movie] = []
+        movie_build_list = movie_builds_index[movie]
 
         for i, current_build in enumerate(display_builds):
             prev_build = display_builds[i-1] if i > 0 else None
@@ -470,17 +491,12 @@ def target_data_api(target):
             has_in_current = movie in build_movie_frames.get(current_build, {})
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
 
-            # For the context build: check if this movie appears later in this page
-            # (means it was continuous from previous page — show green, no gap)
+            # For the context build: show green if the movie ever appeared before
             if is_context_build and not has_in_current:
-                movie_appears_later = any(
-                    movie in build_movie_frames.get(b, {})
-                    for b in display_builds[i+1:]
-                )
-                if movie_appears_later:
+                if movie_build_list:
                     continuous_bars[movie].append({
                         'build': current_build,
-                        'type': 'no_prev'  # green, no magnifier
+                        'type': 'no_prev'
                     })
                 else:
                     continuous_bars[movie].append({
@@ -503,7 +519,6 @@ def target_data_api(target):
                     'type': 'first'
                 })
             elif not has_in_current and prev_build:
-                # Modified skip build logic
                 reference_data = movie_reference_builds[movie].get(current_build, {'build': None, 'frames': []})
                 reference_build = reference_data['build']
 
@@ -512,7 +527,7 @@ def target_data_api(target):
                         'build': current_build,
                         'reference_build': reference_build,
                         'type': 'diff',
-                        'has_diff': False,  # No diff since current build doesn't have the movie
+                        'has_diff': False,
                         'is_skipped': True,
                         'compare_with': reference_build
                     })
@@ -526,7 +541,6 @@ def target_data_api(target):
                     common_frames = set(current_frames).intersection(set(prev_frames))
 
                     if len(current_frames) < len(prev_frames):
-                        # End difference check loop early
                         has_any_diff = False
                         for frame in common_frames:
                             diff_result = get_image_diff(current_build, prev_build, movie, frame)
@@ -552,7 +566,7 @@ def target_data_api(target):
                             'type': 'diff'
                         })
                 else:
-                    # Modified readded build logic
+                    # Movie is in current but not in prev — find global reference
                     reference_data = movie_reference_builds[movie].get(current_build, {'build': None, 'frames': []})
                     reference_build = reference_data['build']
                     comparable_frames = reference_data['frames']
@@ -570,18 +584,30 @@ def target_data_api(target):
                         'no_reference': reference_build is None
                     })
             elif not prev_build:
-                # No previous build context available (first entry on this page slice)
-                # Show green if movie exists (continuity carry-over), white if not
+                # First page, first entry — no context build available
                 if has_in_current:
                     continuous_bars[movie].append({
                         'build': current_build,
-                        'type': 'no_prev',   # green with no magnifier — nothing to compare against
+                        'type': 'no_prev',
                     })
                 else:
-                    continuous_bars[movie].append({
-                        'build': current_build,
-                        'type': 'missing'
-                    })
+                    # Check if movie ever appeared in a previous build globally
+                    reference_data = movie_reference_builds[movie].get(current_build, {'build': None, 'frames': []})
+                    reference_build = reference_data['build']
+                    if reference_build:
+                        continuous_bars[movie].append({
+                            'build': current_build,
+                            'reference_build': reference_build,
+                            'type': 'diff',
+                            'has_diff': False,
+                            'is_skipped': True,
+                            'compare_with': reference_build
+                        })
+                    else:
+                        continuous_bars[movie].append({
+                            'build': current_build,
+                            'type': 'missing'
+                        })
 
     # continuous_bars is now already built with display_builds in the correct order
     # Generate URL templates needed by frontend
