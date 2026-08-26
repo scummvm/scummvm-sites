@@ -467,43 +467,40 @@ def target_data_api(target):
 
     movies = sorted(list(all_movies))
 
-    # Define display_builds early: include previous page's last build for continuity
-    display_builds = []
-    if start_index > 0:
-        # Include last build from previous page for continuity
-        display_builds.append(builds[start_index - 1])
-    display_builds.extend(current_page_builds)
-
-    # True if a build is the context/carry-over build from the previous page
+    # Context build is used only for determining "previous" state,
+    # but NOT included in output (output must match current_page_builds columns)
     context_build = builds[start_index - 1] if start_index > 0 else None
 
     continuous_bars = {}
 
-    # Create continuous bars for visualization with updated skip logic
+    # Create continuous bars for visualization
     for movie in movies:
         continuous_bars[movie] = []
         movie_build_list = movie_builds_index[movie]
 
-        for i, current_build in enumerate(display_builds):
-            prev_build = display_builds[i-1] if i > 0 else None
+        # Find the next build (globally) where this movie reappears after a given build
+        def find_next_appearance(after_build):
+            try:
+                after_num = int(after_build)
+            except ValueError:
+                return None
+            for b in movie_build_list:
+                try:
+                    if int(b) > after_num:
+                        return b
+                except ValueError:
+                    continue
+            return None
 
-            is_context_build = (current_build == context_build)
+        for i, current_build in enumerate(current_page_builds):
+            # Determine the effective previous build for comparison
+            if i == 0:
+                prev_build = context_build
+            else:
+                prev_build = current_page_builds[i - 1]
+
             has_in_current = movie in build_movie_frames.get(current_build, {})
             current_frames = build_movie_frames.get(current_build, {}).get(movie, [])
-
-            # For the context build: show green if the movie ever appeared before
-            if is_context_build and not has_in_current:
-                if movie_build_list:
-                    continuous_bars[movie].append({
-                        'build': current_build,
-                        'type': 'no_prev'
-                    })
-                else:
-                    continuous_bars[movie].append({
-                        'build': current_build,
-                        'type': 'missing'
-                    })
-                continue
 
             prev_frames = []
             if prev_build:
@@ -523,13 +520,15 @@ def target_data_api(target):
                 reference_build = reference_data['build']
 
                 if reference_build:
+                    next_build = find_next_appearance(current_build)
                     continuous_bars[movie].append({
                         'build': current_build,
                         'reference_build': reference_build,
                         'type': 'diff',
                         'has_diff': False,
                         'is_skipped': True,
-                        'compare_with': reference_build
+                        'compare_with': reference_build,
+                        'next_appearance': next_build
                     })
                 else:
                     continuous_bars[movie].append({
@@ -595,13 +594,15 @@ def target_data_api(target):
                     reference_data = movie_reference_builds[movie].get(current_build, {'build': None, 'frames': []})
                     reference_build = reference_data['build']
                     if reference_build:
+                        next_build = find_next_appearance(current_build)
                         continuous_bars[movie].append({
                             'build': current_build,
                             'reference_build': reference_build,
                             'type': 'diff',
                             'has_diff': False,
                             'is_skipped': True,
-                            'compare_with': reference_build
+                            'compare_with': reference_build,
+                            'next_appearance': next_build
                         })
                     else:
                         continuous_bars[movie].append({
@@ -627,7 +628,7 @@ def target_data_api(target):
     # Return all data to frontend
     data = {
         'target': target,
-        'builds': display_builds,
+        'builds': current_page_builds,
         'movies': movies,
         'display_movies': [decode_string(m) for m in movies],
         'continuous_bars': continuous_bars,

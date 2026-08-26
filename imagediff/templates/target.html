@@ -18,6 +18,14 @@
             right: 0;
         }
 
+        .clickable-cell {
+            cursor: pointer;
+        }
+
+        .clickable-cell:hover {
+            opacity: 0.7;
+        }
+
         /* Loading animation styles */
         #loading-overlay {
             position: fixed;
@@ -252,12 +260,17 @@
         // Generate HTML based on cell type
         if (cell.type === 'diff') {
             if (cell.is_skipped) {
-                return `<td class="success no-diff" title="No changes since build ${cell.reference_build}">
-                    <a href="${urls.single_build_url
-                        .replace('BUILD_PLACEHOLDER', cell.reference_build)
+                if (cell.next_appearance) {
+                    return `<td class="success no-diff clickable-cell" title="No changes between builds ${cell.reference_build} and ${cell.next_appearance}" onclick="window.location.href='${urls.compare_url
+                        .replace('BUILD1_PLACEHOLDER', cell.reference_build)
+                        .replace('BUILD2_PLACEHOLDER', cell.next_appearance)
                         .replace('TARGET_PLACEHOLDER', target)
-                        .replace('MOVIE_PLACEHOLDER', movie)}" style="opacity:0.4">🔍</a>
-                </td>`;
+                        .replace('MOVIE_PLACEHOLDER', movie)}'"></td>`;
+                }
+                return `<td class="success no-diff clickable-cell" title="No changes since build ${cell.reference_build}" onclick="window.location.href='${urls.single_build_url
+                    .replace('BUILD_PLACEHOLDER', cell.reference_build)
+                    .replace('TARGET_PLACEHOLDER', target)
+                    .replace('MOVIE_PLACEHOLDER', movie)}'"></td>`;
             } else if (cell.is_partial) {
                 if (cell.has_diff) {
                     return `
