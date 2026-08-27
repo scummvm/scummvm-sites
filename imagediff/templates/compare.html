@@ -31,17 +31,17 @@
 <table class="comparison-table">
     <thead>
     <tr>
-        <th><a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a></th>
-        <th>Diff</th>
         <th><a href="{{ url_for('build', build=build2) }}">{{ build2 }}</a></th>
+        <th>Diff</th>
+        <th><a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a></th>
     </tr>
     </thead>
     <tbody>
     {% for comp in comparisons %}
     <tr class="{% if comp.has_diff %}has-diff{% else %}no-diff{% endif %}" data-frame="{{ comp.frame_number }}">
         <td>
-            {% if comp.diff_data and comp.diff_data.src_img_data %}
-            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.src_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build1 }}">
+            {% if comp.diff_data and comp.diff_data.cmp_img_data %}
+            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.cmp_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build2 }}">
             {% else %}
             <div class="missing-frame">Image data not available</div>
             {% endif %}
@@ -58,8 +58,8 @@
             {% endif %}
         </td>
         <td>
-            {% if comp.diff_data and comp.diff_data.cmp_img_data %}
-            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.cmp_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build2 }}">
+            {% if comp.diff_data and comp.diff_data.src_img_data %}
+            <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.src_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build1 }}">
             {% else %}
             <div class="missing-frame">Image data not available</div>
             {% endif %}
