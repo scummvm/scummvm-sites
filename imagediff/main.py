@@ -732,22 +732,17 @@ def compare(build1, build2, target, movie):
     build1_path = os.path.join(SCREENSHOTS_DIR, target, build1)
     build2_path = os.path.join(SCREENSHOTS_DIR, target, build2)
 
-    # Get all frames for this movie in both builds
     build1_frames = get_movie_frames(build1_path, movie)
     build2_frames = get_movie_frames(build2_path, movie)
 
-    # Map frame numbers to filenames for easy lookup
     build1_frame_map = create_frame_map(build1_frames)
     build2_frame_map = create_frame_map(build2_frames)
 
-    # Find only common frames between the two builds
-    common_frame_numbers = sorted(set(build1_frame_map.keys()).intersection(set(build2_frame_map.keys())))
+    all_frame_numbers = sorted(set(build1_frame_map.keys()) | set(build2_frame_map.keys()))
 
-    # For each common frame number, create a comparison entry
     frame_comparisons = []
 
-    # Process only common frames
-    for frame_num in common_frame_numbers:
+    for frame_num in all_frame_numbers:
         build1_frame = build1_frame_map.get(frame_num)
         build2_frame = build2_frame_map.get(frame_num)
 
@@ -756,26 +751,45 @@ def compare(build1, build2, target, movie):
             'build1_frame': build1_frame,
             'build2_frame': build2_frame,
             'has_diff': False,
-            'diff_data': None
+            'diff_data': None,
+            'only_in_build1': build1_frame is not None and build2_frame is None,
+            'only_in_build2': build2_frame is not None and build1_frame is None,
         }
 
-        # Calculate diff
-        img1_path = os.path.join(build1_path, build1_frame)
-        img2_path = os.path.join(build2_path, build2_frame)
-
-        try:
-            diff_result = image_diff(img1_path, img2_path)
-            comparison['has_diff'] = diff_result.get('has_diff', False)
-            comparison['diff_data'] = diff_result
-        except Exception as e:
-            print(f"Error comparing images: {e}")
+        if build1_frame and build2_frame:
+            img1_path = os.path.join(build1_path, build1_frame)
+            img2_path = os.path.join(build2_path, build2_frame)
+            try:
+                diff_result = image_diff(img1_path, img2_path)
+                comparison['has_diff'] = diff_result.get('has_diff', False)
+                comparison['diff_data'] = diff_result
+            except Exception as e:
+                print(f"Error comparing images: {e}")
+        elif build1_frame:
+            img_path = os.path.join(build1_path, build1_frame)
+            try:
+                img = Image.open(img_path)
+                comparison['diff_data'] = {'src_img_data': encode_image(img)}
+                comparison['has_diff'] = True
+            except Exception as e:
+                print(f"Error reading image: {e}")
+        elif build2_frame:
+            img_path = os.path.join(build2_path, build2_frame)
+            try:
+                img = Image.open(img_path)
+                comparison['diff_data'] = {'cmp_img_data': encode_image(img)}
+                comparison['has_diff'] = True
+            except Exception as e:
+                print(f"Error reading image: {e}")
 
         frame_comparisons.append(comparison)
 
-    # Calculate summary statistics
     stats = {
-        'total_common_frames': len(common_frame_numbers),
-        'different_frames': sum(1 for comp in frame_comparisons if comp.get('has_diff', False))
+        'total_frames': len(all_frame_numbers),
+        'total_common_frames': sum(1 for c in frame_comparisons if not c['only_in_build1'] and not c['only_in_build2']),
+        'different_frames': sum(1 for c in frame_comparisons if c.get('has_diff', False)),
+        'only_in_build1': sum(1 for c in frame_comparisons if c['only_in_build1']),
+        'only_in_build2': sum(1 for c in frame_comparisons if c['only_in_build2']),
     }
 
     return render_template('compare.html',

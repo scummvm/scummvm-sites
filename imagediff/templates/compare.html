@@ -4,6 +4,9 @@
     <title>{{ build1 }} vs. {{ build2 }}/ {{movie}}/ {{target}}</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}" />
     <style>
+        body {
+            background-color: #f0f0f0;
+        }
         .diff-indicator {
             color: red;
             font-weight: bold;
@@ -13,6 +16,23 @@
         }
         .missing-frame {
             color: #999;
+        }
+        .frame-cell {
+            vertical-align: top;
+        }
+        .frame-wrapper {
+            display: inline-flex;
+            align-items: flex-start;
+        }
+        .frame-number {
+            font-size: 11px;
+            color: #666;
+            padding-top: 2px;
+            margin-right: 0.5em;
+            white-space: nowrap;
+        }
+        .only-in-one {
+            background-color: #fff8e1;
         }
     </style>
 </head>
@@ -26,6 +46,9 @@
 {% if comparisons %}
 <div class="quote">
     <b>Different Frames: {{ stats.different_frames }}</b>
+    {% if stats.only_in_build1 or stats.only_in_build2 %}
+    &nbsp;|&nbsp; Only in {{ build1 }}: {{ stats.only_in_build1 }} &nbsp;|&nbsp; Only in {{ build2 }}: {{ stats.only_in_build2 }}
+    {% endif %}
 </div>
 
 <table class="comparison-table">
@@ -38,16 +61,27 @@
     </thead>
     <tbody>
     {% for comp in comparisons %}
-    <tr class="{% if comp.has_diff %}has-diff{% else %}no-diff{% endif %}" data-frame="{{ comp.frame_number }}">
-        <td>
+    <tr class="{% if comp.has_diff %}has-diff{% else %}no-diff{% endif %}{% if comp.only_in_build1 or comp.only_in_build2 %} only-in-one{% endif %}" data-frame="{{ comp.frame_number }}">
+        <td class="frame-cell">
+            <div class="frame-wrapper">
+            <span class="frame-number">{{ comp.frame_number }}</span>
             {% if comp.diff_data and comp.diff_data.cmp_img_data %}
             <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.cmp_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build2 }}">
+            {% elif comp.only_in_build1 %}
+            <div class="missing-frame">Not in this build</div>
             {% else %}
             <div class="missing-frame">Image data not available</div>
             {% endif %}
+            </div>
         </td>
-        <td>
-            {% if comp.has_diff %}
+        <td class="frame-cell">
+            <div class="frame-wrapper">
+            <span class="frame-number">{{ comp.frame_number }}</span>
+            {% if comp.only_in_build1 %}
+            <span class="diff-indicator">Only in {{ build1 }}</span>
+            {% elif comp.only_in_build2 %}
+            <span class="diff-indicator">Only in {{ build2 }}</span>
+            {% elif comp.has_diff %}
             {% if comp.diff_data and comp.diff_data.diff_img_data %}
             <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.diff_img_data }}" alt="Difference for frame {{ comp.frame_number }}">
             {% else %}
@@ -56,13 +90,19 @@
             {% else %}
             <span class="no-diff-indicator">No difference</span>
             {% endif %}
+            </div>
         </td>
-        <td>
+        <td class="frame-cell">
+            <div class="frame-wrapper">
+            <span class="frame-number">{{ comp.frame_number }}</span>
             {% if comp.diff_data and comp.diff_data.src_img_data %}
             <img class="frame-image" src="data:image/png;base64,{{ comp.diff_data.src_img_data }}" alt="Frame {{ comp.frame_number }} in {{ build1 }}">
+            {% elif comp.only_in_build2 %}
+            <div class="missing-frame">Not in this build</div>
             {% else %}
             <div class="missing-frame">Image data not available</div>
             {% endif %}
+            </div>
         </td>
     </tr>
     {% endfor %}
