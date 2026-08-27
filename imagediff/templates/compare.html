@@ -41,7 +41,7 @@
     <h1><a href="{{ url_for('index') }}">ImageDiff</a></h1>
 </header>
 
-<h2><a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a> vs. <a href="{{ url_for('build', build=build2) }}">{{ build2 }}</a> / <a href="{{ url_for('movie', movie=movie) }}">{{ movie }}</a> / <a href="{{ url_for('index') }}#{{ target }}">{{ target }}</a></h2>
+<h2><a href="{{ url_for('index') }}#{{ target }}">{{ target }}</a> / <a href="{{ url_for('movie', movie=movie) }}">{{ movie }}</a> / <a href="{{ url_for('build', build=build2) }}">{{ build2 }}</a> vs. <a href="{{ url_for('build', build=build1) }}">{{ build1 }}</a></h2>
 
 {% if comparisons %}
 <div class="quote">
