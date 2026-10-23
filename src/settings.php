@@ -19,7 +19,7 @@ return [
         // Dropbox settings
         'dropbox' => [
           'provider' => 'dropbox',
-          'client_id' => 'vgij09edeilbrtm',
+          'client_id' => '6cbetq3f5lfi8nd',
           'client_secret' => getenv('DROPBOX_SECRET'),
           'redirect_uri' => 'https://cloud.scummvm.org/dropbox',
           'grant_type' => '',
