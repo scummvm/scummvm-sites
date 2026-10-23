@@ -7,7 +7,7 @@ use Slim\Http\Response;
 function getCloudProviderAndScope($settings)
 {
     $scope = [];
-    switch ($settings['provider']) {
+    switch ($settings['provider'] ?? null) {
     case 'dropbox':
         $options = [
             'clientId'          => $settings['client_id'],
